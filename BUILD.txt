@@ -14,6 +14,8 @@ C:\Users\Jonathan\AppData\Roaming\Arduino15\packages\arduino\hardware\sam\1.6.4
 On Mac OS X it's located in:
 
 /Applications/Arduino.app/Contents/Resources/Java/hardware/arduino/sam
+Or
+~/Library/Arduino15/packages/arduino/hardware/sam/1.6.6
 
 2. You'll need to open the file in a text editor and find the line:
 
