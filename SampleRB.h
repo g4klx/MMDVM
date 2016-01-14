@@ -39,6 +39,8 @@ public:
 
   void get(uint16_t& sample, uint8_t& control);
 
+  bool hasOverflowed();
+
 private:
   uint16_t           m_length;
   volatile uint16_t* m_samples;
@@ -46,6 +48,7 @@ private:
   volatile uint16_t  m_head;
   volatile uint16_t  m_tail;
   volatile bool      m_full;
+  bool               m_overflow;
 };
 
 #endif

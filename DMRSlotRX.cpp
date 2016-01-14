@@ -246,6 +246,11 @@ void CDMRSlotRX::correlateSync(q15_t sample)
 void CDMRSlotRX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
 {
   for (uint8_t i = 0U; i < count; i++, start += DMR_RADIO_SYMBOL_LENGTH) {
+    if (m_control == 0x20U || m_control == 0x40U) {
+      if (i == 77U)
+        DEBUG4("DMRSlotRX: slot/frame pos/sample pos", m_slot ? 2U : 1U, i, start);
+    }
+
     q15_t sample = m_buffer[start] - centre;
 
     if (sample < -threshold) {

@@ -401,3 +401,13 @@ bool CIO::hasADCOverflow()
   return overflow;
 }
 
+bool CIO::hasTXOverflow()
+{
+  return m_txBuffer.hasOverflowed();
+}
+
+bool CIO::hasRXOverflow()
+{
+  return m_rxBuffer.hasOverflowed();
+}
+

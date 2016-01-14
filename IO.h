@@ -41,7 +41,10 @@ public:
 
   void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t txLevel);
 
-  bool  hasADCOverflow();
+  bool hasADCOverflow();
+
+  bool hasTXOverflow();
+  bool hasRXOverflow();
 
 private:
 #if defined(__MBED__)
