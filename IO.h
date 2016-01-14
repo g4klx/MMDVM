@@ -1,0 +1,82 @@
+/*
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+#if !defined(IO_H)
+#define  IO_H
+
+#include "Globals.h"
+
+#include "SampleRB.h"
+
+class CIO {
+public:
+  CIO();
+
+  void start();
+
+  void process();
+
+  void write(q15_t* samples, uint16_t length, const uint8_t* control = NULL);
+
+  uint16_t getSpace() const;
+
+  void setDecode(bool dcd);
+
+  void interrupt();
+
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t txLevel);
+
+  bool  hasADCOverflow();
+
+private:
+#if defined(__MBED__)
+  DigitalOut           m_pinPTT;
+  DigitalOut           m_pinCOSLED;
+  DigitalOut           m_pinLED;
+
+  AnalogIn             m_pinADC;
+  AnalogOut            m_pinDAC;
+
+  Ticker               m_ticker;
+#endif
+
+  bool                 m_started;
+
+  CSampleRB            m_rxBuffer;
+  CSampleRB            m_txBuffer;
+
+  arm_fir_instance_q15 m_C4FSKFilter;
+  arm_fir_instance_q15 m_GMSKFilter;
+  q15_t                m_C4FSKState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+  q15_t                m_GMSKState[40U];     // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
+
+  bool                 m_pttInvert;
+  q15_t                m_rxLevel;
+  q15_t                m_txLevel;
+
+  uint32_t             m_ledCount;
+  bool                 m_ledValue;
+
+  bool                 m_dcd;
+
+  uint16_t             m_overflow;
+  uint16_t             m_overcount;
+};
+
+#endif
+
