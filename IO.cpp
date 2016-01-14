@@ -32,8 +32,8 @@ const uint16_t GMSK_FILTER_LEN = 12U;
 
 const uint16_t DC_OFFSET = 2048U;
 
-const uint16_t TX_BUFFER_SIZE = 451U;
-const uint16_t RX_BUFFER_SIZE = 301U;
+const uint16_t TX_BUFFER_SIZE = 1001U;
+const uint16_t RX_BUFFER_SIZE = 501U;
 
 #if defined(__SAM3X8E__)
 // An Arduino Due
