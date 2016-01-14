@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@ const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 static q15_t DSTAR_GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
 const uint16_t DSTAR_GMSK_FILTER_LEN = 12U;
 
-q15_t DSTAR_1[] = { 1827,  1827,  1827,  1827,  1827};
-q15_t DSTAR_0[] = {-1827, -1827, -1827, -1827, -1827};
+q15_t DSTAR_1[] = { 1684,  1684,  1684,  1684,  1684};
+q15_t DSTAR_0[] = {-1684, -1684, -1684, -1684, -1684};
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
