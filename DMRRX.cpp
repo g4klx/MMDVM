@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,45 +22,34 @@
 
 CDMRRX::CDMRRX() :
 m_slot1RX(false),
-m_slot2RX(true),
-m_slotNo(0U),
-m_dcd1(false),
-m_dcd2(false)
+m_slot2RX(true)
 {
 }
 
 void CDMRRX::samples(const q15_t* samples, const uint8_t* control, uint8_t length)
 {
-  for (uint16_t i = 0U; i < length; i++) {
-    if (control[i] == MARK_SLOT1 && m_slotNo != 1U) {
-      m_slot2RX.stop();
-      m_slot1RX.start();
-      m_slotNo = 1U;
-    } else if (control[i] == MARK_SLOT2 && m_slotNo != 2U) {
-      m_slot1RX.stop();
-      m_slot2RX.start();
-      m_slotNo = 2U;
-    } else if (control[i] == MARK_END && m_slotNo != 0U) {
-      if (m_slotNo == 1U)
-        m_slot1RX.stop();
-      if (m_slotNo == 2U)
-        m_slot2RX.stop();
-      m_slotNo = 0U;
-    }
+  bool dcd1 = false;
+  bool dcd2 = false;
 
-    switch (m_slotNo) {
-      case 1U:
-        m_dcd1 = m_slot1RX.processSample(samples[i]);
+  for (uint16_t i = 0U; i < length; i++) {
+    switch (control[i]) {
+      case MARK_SLOT1:
+        m_slot2RX.stop();
+        m_slot1RX.start();
         break;
-      case 2U:
-        m_dcd2 = m_slot2RX.processSample(samples[i]);
+      case MARK_SLOT2:
+        m_slot1RX.stop();
+        m_slot2RX.start();
         break;
       default:
         break;
     }
+
+    dcd1 = m_slot1RX.processSample(samples[i]);
+    dcd2 = m_slot2RX.processSample(samples[i]);
   }
 
-  io.setDecode(m_dcd1 || m_dcd2);
+  io.setDecode(dcd1 || dcd2);
 }
 
 void CDMRRX::setColorCode(uint8_t colorCode)
@@ -73,6 +62,5 @@ void CDMRRX::reset()
 {
   m_slot1RX.reset();
   m_slot2RX.reset();
-  m_slotNo = 0U;
 }
 

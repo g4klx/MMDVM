@@ -266,7 +266,7 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
   }
 
   ::memcpy(m_poBuffer, m_shortLC + m_cachPtr, 3U);
-  m_markBuffer[0U] = MARK_END;
+  m_markBuffer[0U] = MARK_NONE;
   m_markBuffer[1U] = MARK_NONE;
   m_markBuffer[2U] = rxSlotIndex == 1U ? MARK_SLOT2 : MARK_SLOT1;
 

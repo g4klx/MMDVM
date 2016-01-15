@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -35,9 +35,6 @@ public:
 private:
   CDMRSlotRX m_slot1RX;
   CDMRSlotRX m_slot2RX;
-  uint8_t    m_slotNo;
-  bool       m_dcd1;
-  bool       m_dcd2;
 };
 
 #endif

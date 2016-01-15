@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -57,7 +57,6 @@ enum MMDVM_STATE {
 
 const uint8_t  MARK_SLOT1 = 0x08U;
 const uint8_t  MARK_SLOT2 = 0x04U;
-const uint8_t  MARK_END   = 0x0CU;
 const uint8_t  MARK_NONE  = 0x00U;
 
 const uint16_t RX_BLOCK_SIZE = 20U;
