@@ -98,7 +98,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
   // The approximate position of the sync samples, XXX to be updated later
   // XXX change range when m_endPtr is set, make it tighter.
-  if (m_dataPtr >= 375U && m_dataPtr <= 530U)
+  if (m_dataPtr >= 160U && m_dataPtr <= 530U)
     correlateSync(sample);
 
   if (m_dataPtr == m_endPtr) {
