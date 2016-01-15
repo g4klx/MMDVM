@@ -98,7 +98,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
   // The approximate position of the sync samples, XXX to be updated later
   // XXX change range when m_endPtr is set, make it tighter.
-  if (m_dataPtr >= 160U && m_dataPtr <= 530U)
+  if (m_dataPtr >= 375U && m_dataPtr <= 530U)
     correlateSync(sample);
 
   if (m_dataPtr == m_endPtr) {
@@ -118,15 +118,10 @@ bool CDMRSlotRX::processSample(q15_t sample)
       frame[0U] |= dataType;
 
       switch (dataType) {
+        case DT_DATA_HEADER:
         case DT_VOICE_LC_HEADER:
-          DEBUG3("DMRSlotRX: LC header for slot with color code", m_slot ? 2U : 1U, colorCode);
-          m_receiving = true;
-          m_syncCount = 0U;
-          m_n         = 0U;
-          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-          break;
         case DT_VOICE_PI_HEADER:
-          DEBUG3("DMRSlotRX: PI header for slot with color code", m_slot ? 2U : 1U, colorCode);
+          DEBUG4("DMRSlotRX: header for slot with color code/data type", m_slot ? 2U : 1U, colorCode, dataType);
           m_receiving = true;
           m_syncCount = 0U;
           m_n         = 0U;

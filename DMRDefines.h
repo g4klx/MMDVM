@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@ const uint8_t DT_VOICE_PI_HEADER    = 0U;
 const uint8_t DT_VOICE_LC_HEADER    = 1U;
 const uint8_t DT_TERMINATOR_WITH_LC = 2U;
 const uint8_t DT_CSBK               = 3U;
+const uint8_t DT_DATA_HEADER        = 6U;
 const uint8_t DT_IDLE               = 9U;
 // All others are for data transfer
 
