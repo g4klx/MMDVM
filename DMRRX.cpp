@@ -34,11 +34,9 @@ void CDMRRX::samples(const q15_t* samples, const uint8_t* control, uint8_t lengt
   for (uint16_t i = 0U; i < length; i++) {
     switch (control[i]) {
       case MARK_SLOT1:
-        m_slot2RX.stop();
         m_slot1RX.start();
         break;
       case MARK_SLOT2:
-        m_slot1RX.stop();
         m_slot2RX.start();
         break;
       default:

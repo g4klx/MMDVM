@@ -30,8 +30,6 @@ public:
 
   bool processSample(q15_t sample);
 
-  void stop();
-
   void setColorCode(uint8_t colorCode);
 
   void reset();
@@ -42,6 +40,7 @@ private:
   q15_t    m_buffer[900U];
   uint16_t m_bitPtr;
   uint16_t m_dataPtr;
+  uint16_t m_syncPtr;
   uint16_t m_endPtr;
   q31_t    m_maxCorr;
   q15_t    m_centre;
