@@ -346,9 +346,8 @@ void CIO::interrupt()
   uint8_t control = MARK_NONE;
   uint16_t sample = DC_OFFSET;
 
-  if (m_txBuffer.getData() > 0U)
-    m_txBuffer.get(sample, control);
-    
+  m_txBuffer.get(sample, control);
+
 #if defined(__SAM3X8E__)
   DACC->DACC_CDR = sample;
   sample = ADC->ADC_CDR[ADC_CDR_Chan];
