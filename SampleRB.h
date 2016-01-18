@@ -35,9 +35,9 @@ public:
   
   uint16_t getData() const;
 
-  void put(uint16_t sample, uint8_t control);
+  bool put(uint16_t sample, uint8_t control);
 
-  void get(uint16_t& sample, uint8_t& control);
+  bool get(uint16_t& sample, uint8_t& control);
 
   bool hasOverflowed();
 

@@ -58,10 +58,10 @@ uint16_t CSerialRB::getData() const
     return m_length - m_tail + m_head;
 }
 
-void CSerialRB::put(uint8_t c)
+bool CSerialRB::put(uint8_t c)
 {
   if (m_full)
-    return;
+    return false;
 
   m_buffer[m_head] = c;
 
@@ -71,6 +71,8 @@ void CSerialRB::put(uint8_t c)
 
   if (m_head == m_tail)
     m_full = true;
+
+  return true;
 }
 
 uint8_t CSerialRB::peek() const

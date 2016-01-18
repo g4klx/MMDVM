@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -48,7 +48,6 @@ private:
   uint8_t  m_control;
   uint8_t  m_syncCount;
   uint8_t  m_colorCode;
-  bool     m_receiving;
   uint8_t  m_n;
 
   void    correlateSync(q15_t sample);

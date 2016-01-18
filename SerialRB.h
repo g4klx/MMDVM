@@ -39,7 +39,7 @@ public:
 
   void reset();
 
-  void put(uint8_t c);
+  bool put(uint8_t c);
 
   uint8_t peek() const;
 

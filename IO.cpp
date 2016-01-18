@@ -32,8 +32,8 @@ const uint16_t GMSK_FILTER_LEN = 12U;
 
 const uint16_t DC_OFFSET = 2048U;
 
-const uint16_t TX_BUFFER_SIZE = 1101U;
-const uint16_t RX_BUFFER_SIZE = 501U;
+const uint16_t TX_BUFFER_SIZE = 1001U;
+const uint16_t RX_BUFFER_SIZE = 601U;
 
 #if defined(__SAM3X8E__)
 // An Arduino Due
@@ -64,6 +64,7 @@ const uint16_t RX_BUFFER_SIZE = 501U;
 #define ADC_CDR_Chan           7
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
 #define DACC_CHER_Chan         DACC_CHER_CH0
+#else
 #error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM, or ARDUINO_DUE_NTH need to be defined"
 #endif
 #elif defined(__MK20DX256__)
