@@ -121,16 +121,16 @@ bool CDMRSlotRX::processSample(q15_t sample)
           case DT_DATA_HEADER:
           case DT_VOICE_LC_HEADER:
           case DT_VOICE_PI_HEADER:
-            DEBUG4("DMRSlotRX: header for slot/color code/data type", m_slot ? 2U : 1U, colorCode, dataType);
+            DEBUG3("DMRSlotRX: header for slot/data type", m_slot ? 2U : 1U, dataType);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_TERMINATOR_WITH_LC:
-            DEBUG3("DMRSlotRX: terminator for slot/color code", m_slot ? 2U : 1U, colorCode);
+            DEBUG2("DMRSlotRX: terminator for slot", m_slot ? 2U : 1U);
             m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           default:
-            DEBUG4("DMRSlotRX: data sync for slot/color code/data type", m_slot ? 2U : 1U, colorCode, dataType);
+            DEBUG3("DMRSlotRX: data sync for slot/data type", m_slot ? 2U : 1U, dataType);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
         }
@@ -223,7 +223,6 @@ void CDMRSlotRX::correlateSync(q15_t sample)
           m_control   = 0x40U;
           m_syncPtr   = m_dataPtr;
           m_endPtr    = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
-          DEBUG3("DMRSlotRX: slot/endPtr", m_slot ? 2U : 1U, m_endPtr);
         }
       } else {  // if (voice)
         uint8_t errs = 0U;
@@ -238,7 +237,6 @@ void CDMRSlotRX::correlateSync(q15_t sample)
           m_control   = 0x20U;
           m_syncPtr   = m_dataPtr;
           m_endPtr    = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
-          DEBUG3("DMRSlotRX: slot/endPtr", m_slot ? 2U : 1U, m_endPtr);
         }
       }
     }
