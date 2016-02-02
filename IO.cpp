@@ -119,7 +119,8 @@ m_ledCount(0U),
 m_ledValue(true),
 m_dcd(false),
 m_overflow(0U),
-m_overcount(0U)
+m_overcount(0U),
+m_watchdog(0U)
 {
   ::memset(m_C4FSKState, 0x00U, 70U * sizeof(q15_t));
   ::memset(m_GMSKState,  0x00U, 40U * sizeof(q15_t));
@@ -208,6 +209,17 @@ void CIO::process()
 {
   m_ledCount++;
   if (m_started) {
+    // Two seconds timeout
+    if (m_watchdog >= 48000U) {
+      if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF) {
+        if (m_modemState == STATE_DMR)
+          dmrTX.setStart(false);
+        m_modemState = STATE_IDLE;
+      }
+
+      m_watchdog = 0U;
+    }
+
     if (m_ledCount >= 24000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
@@ -358,6 +370,8 @@ void CIO::interrupt()
 #endif
 
   m_rxBuffer.put(sample, control);
+
+  m_watchdog++;
 }
 
 void CIO::setDecode(bool dcd)
@@ -409,5 +423,10 @@ bool CIO::hasTXOverflow()
 bool CIO::hasRXOverflow()
 {
   return m_rxBuffer.hasOverflowed();
+}
+
+void CIO::resetWatchdog()
+{
+  m_watchdog = 0U;
 }
 

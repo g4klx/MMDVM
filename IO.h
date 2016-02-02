@@ -46,6 +46,8 @@ public:
   bool hasTXOverflow();
   bool hasRXOverflow();
 
+  void resetWatchdog();
+
 private:
 #if defined(__MBED__)
   DigitalOut           m_pinPTT;
@@ -79,6 +81,8 @@ private:
 
   uint16_t             m_overflow;
   uint16_t             m_overcount;
+
+  volatile uint32_t    m_watchdog;
 };
 
 #endif

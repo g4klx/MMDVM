@@ -98,6 +98,8 @@ void CSerialPort::sendNAK(uint8_t err) const
 
 void CSerialPort::getStatus() const
 {
+  io.resetWatchdog();
+
   uint8_t reply[11U];
 
   // Send all sorts of interesting internal values
