@@ -547,12 +547,12 @@ const unsigned int K = 5U;
 
 bool CYSFRX::rxFICH(uint8_t* data, uint8_t* FICH)
 {
-  ::memset(m_metrics1, 0x00U, NUM_OF_STATES * sizeof(uint32_t));
+  ::memset(m_metrics1, 0x00U, NUM_OF_STATES * sizeof(uint16_t));
+  ::memset(m_metrics2, 0x00U, NUM_OF_STATES * sizeof(uint16_t));
   m_oldMetrics = m_metrics1;
   m_newMetrics = m_metrics2;
   m_dp         = m_decisions;
 
-  uint8_t m = 0U;
   // Deinterleave the FICH and send bits to the Viterbi decoder
   for (uint8_t i = 0U; i < 100U; i++) {
     uint8_t n = INTERLEAVE_TABLE_RX[i];
