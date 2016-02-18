@@ -27,6 +27,7 @@ const uint8_t MMDVM_GET_VERSION  = 0x00U;
 const uint8_t MMDVM_GET_STATUS   = 0x01U;
 const uint8_t MMDVM_SET_CONFIG   = 0x02U;
 const uint8_t MMDVM_SET_MODE     = 0x03U;
+const uint8_t MMDVM_SET_FREQ     = 0x04U;
 
 const uint8_t MMDVM_CAL_DATA     = 0x08U;
 
@@ -349,6 +350,10 @@ void CSerialPort::process()
               sendACK();
             else
               sendNAK(err);
+            break;
+
+          case MMDVM_SET_FREQ:
+            sendAck();
             break;
 
           case MMDVM_CAL_DATA:
