@@ -353,7 +353,7 @@ void CSerialPort::process()
             break;
 
           case MMDVM_SET_FREQ:
-            sendAck();
+            sendACK();
             break;
 
           case MMDVM_CAL_DATA:
