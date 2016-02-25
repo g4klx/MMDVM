@@ -57,7 +57,7 @@ const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 const uint8_t MMDVM_SAMPLES      = 0xF8U;
 
-const uint8_t HARDWARE[]         = "MMDVM 20160223 (D-Star/DMR/System Fusion)";
+const uint8_t HARDWARE[]         = "MMDVM 20160225 (D-Star/DMR/System Fusion)";
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
