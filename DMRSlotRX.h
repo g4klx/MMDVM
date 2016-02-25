@@ -22,12 +22,6 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
-enum DMRSRXS {
-  DMRSRXS_NONE,
-  DMRSRXS_VOICE,
-  DMRSRXS_DATA
-};
-
 class CDMRSlotRX {
 public:
   CDMRSlotRX(bool slot);
@@ -55,7 +49,6 @@ private:
   uint8_t  m_syncCount;
   uint8_t  m_colorCode;
   uint8_t  m_n;
-  DMRSRXS  m_state;
 
   void    correlateSync(q15_t sample);
   void    samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
