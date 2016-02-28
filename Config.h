@@ -19,7 +19,7 @@
 #if !defined(CONFIG_H)
 #define  CONFIG_H
 
-#define  WANT_DEBUG
+// #define  WANT_DEBUG
 
 // For the original Arduino Due pin layout
 #define  ARDUINO_DUE_PAPA

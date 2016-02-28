@@ -170,17 +170,17 @@ uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint8_t length)
 
   ::memset(m_newShortLC, 0x00U, 12U);
   
-  // Set the LCSS bits
-  m_newShortLC[1U]  = 0x08U;
-  m_newShortLC[4U]  = 0x88U;
-  m_newShortLC[7U]  = 0x88U;
-  m_newShortLC[11U] = 0x80U;
-
   for (uint8_t i = 0U; i < 68U; i++) {
     bool b = READ_BIT1(data, i);
     uint8_t n = CACH_INTERLEAVE[i];
     WRITE_BIT1(m_newShortLC, n, b);
   }
+
+  // Set the LCSS bits
+  m_newShortLC[1U]  |= 0x08U;
+  m_newShortLC[4U]  |= 0x88U;
+  m_newShortLC[7U]  |= 0x88U;
+  m_newShortLC[10U] |= 0x80U;
 
   return 0U;
 }
