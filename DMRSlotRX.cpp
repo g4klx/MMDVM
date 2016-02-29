@@ -120,6 +120,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
         switch (dataType) {
           case DT_DATA_HEADER:
             DEBUG3("DMRSlotRX: data header for slot/data type", m_slot ? 2U : 1U, dataType);
+            m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_VOICE_LC_HEADER:
@@ -137,6 +138,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
             break;
           default:
             DEBUG3("DMRSlotRX: data sync for slot/data type", m_slot ? 2U : 1U, dataType);
+            m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
         }
