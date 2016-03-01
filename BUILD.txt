@@ -46,6 +46,13 @@ or maybe:
 
 "{build.variant.path}/libarm_cortexM3l_math.a"
 
+Likely on Linux
+
+"{build.system.path}/CMSIS/CMSIS/Lib/GCC/libarm_cortexM3l_math.a"
+
+As with Arduino 1.6.7 with SAM 1.6.6, see below.
+
+
 For Arduino 1.6.7 with SAM 1.6.6
 --------------------------------
 
@@ -87,7 +94,7 @@ The change is near the end, and is the addition of:
 
 On Linux, the path was found to differ slightly (GCC instead of ARM):
 
-"{build.system.path}/CMSIS/CMSIS/Lib/GCC/arm_cortexM3l_math.lib"
+"{build.system.path}/CMSIS/CMSIS/Lib/GCC/libarm_cortexM3l_math.a"
 
 Which is the CMSIS AMR3 DSP library for little-endian operation.
 
