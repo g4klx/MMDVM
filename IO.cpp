@@ -253,19 +253,6 @@ void CIO::process()
 #endif
   }
 
-  if (m_lockout) {
-    // Drain the receive queue
-    if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
-      for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-        uint16_t sample;
-        uint8_t  control;
-        m_rxBuffer.get(sample, control);
-      }
-    }
-
-    return;
-  }
-
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
     q15_t   samples[RX_BLOCK_SIZE];
     uint8_t control[RX_BLOCK_SIZE];
@@ -283,6 +270,9 @@ void CIO::process()
       q31_t res2 = res1 * m_rxLevel;
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }
+
+    if (m_lockout)
+      return;
 
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable) {
