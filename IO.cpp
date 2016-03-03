@@ -69,11 +69,11 @@ const uint16_t RX_BUFFER_SIZE = 601U;
 #endif
 #elif defined(__MBED__)
 // A generic MBED platform
-#define PIN_COS                PC_1
-#define PIN_PTT                PA_1
-#define PIN_COSLED             PB_0
-#define PIN_ADC                PA_0
-#define PIN_DAC                PA_2
+#define PIN_COS                PB_4  // D5
+#define PIN_PTT                PA_8  // D7
+#define PIN_COSLED             PB_10 // D6
+#define PIN_ADC                PA_0  // A0
+#define PIN_DAC                PA_4  // A2
 #else
 #error "Unknown hardware type"
 #endif
