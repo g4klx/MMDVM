@@ -72,7 +72,7 @@ m_len(0U)
 {
 }
 
-void CSerialPort::sendACK() const
+void CSerialPort::sendACK()
 {
   uint8_t reply[4U];
 
@@ -84,7 +84,7 @@ void CSerialPort::sendACK() const
   write(reply, 4);
 }
 
-void CSerialPort::sendNAK(uint8_t err) const
+void CSerialPort::sendNAK(uint8_t err)
 {
   uint8_t reply[5U];
 
@@ -97,7 +97,7 @@ void CSerialPort::sendNAK(uint8_t err) const
   write(reply, 5);
 }
 
-void CSerialPort::getStatus() const
+void CSerialPort::getStatus()
 {
   io.resetWatchdog();
 
@@ -153,7 +153,7 @@ void CSerialPort::getStatus() const
   write(reply, 10);
 }
 
-void CSerialPort::getVersion() const
+void CSerialPort::getVersion()
 {
   uint8_t reply[100U];
 
@@ -676,7 +676,7 @@ void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
   write(reply, count);
 }
 
-void CSerialPort::write(const uint8_t* data, uint16_t length, bool flush) const
+void CSerialPort::write(const uint8_t* data, uint16_t length, bool flush)
 {
 #if defined(__MBED__)
   for (uint16_t i = 0U; i < length; i++)
