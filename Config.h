@@ -21,6 +21,9 @@
 
 // #define  WANT_DEBUG
 
+// Allow the use of the COS line to lockout the modem
+// #define USE_COS_AS_LOCKOUT
+
 // For the original Arduino Due pin layout
 // #define  ARDUINO_DUE_PAPA
 

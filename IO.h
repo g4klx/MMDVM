@@ -46,6 +46,8 @@ public:
   bool hasTXOverflow();
   bool hasRXOverflow();
 
+  bool hasLockout() const;
+
   void resetWatchdog();
 
 private:
@@ -53,6 +55,7 @@ private:
   DigitalOut           m_pinPTT;
   DigitalOut           m_pinCOSLED;
   DigitalOut           m_pinLED;
+  DigitalIn            m_pinCOS;
 
   AnalogIn             m_pinADC;
   AnalogOut            m_pinDAC;
@@ -83,6 +86,8 @@ private:
   uint16_t             m_overcount;
 
   volatile uint32_t    m_watchdog;
+
+  bool                 m_lockout;
 };
 
 #endif

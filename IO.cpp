@@ -95,6 +95,7 @@ CIO::CIO() :
 m_pinPTT(PIN_PTT),
 m_pinCOSLED(PIN_COSLED),
 m_pinLED(LED1),
+m_pinCOS(PIN_COS),
 m_pinADC(PIN_ADC),
 m_pinDAC(PIN_DAC),
 m_ticker(),
@@ -114,7 +115,8 @@ m_ledValue(true),
 m_dcd(false),
 m_overflow(0U),
 m_overcount(0U),
-m_watchdog(0U)
+m_watchdog(0U),
+m_lockout(false)
 {
   ::memset(m_C4FSKState, 0x00U, 70U * sizeof(q15_t));
   ::memset(m_GMSKState,  0x00U, 40U * sizeof(q15_t));
@@ -132,6 +134,7 @@ m_watchdog(0U)
   pinMode(PIN_PTT,    OUTPUT);
   pinMode(PIN_COSLED, OUTPUT);
   pinMode(PIN_LED,    OUTPUT);
+  pinMode(PIN_COS,    INPUT);
 #endif
 }
 
@@ -232,6 +235,14 @@ void CIO::process()
     return;
   }
 
+#if defined(USE_COS_AS_LOCKOUT)
+#if defined(__MBED__)
+  m_lockout = m_pinCOS.read() == 1;
+#else
+  m_lockout = digitalRead(PIN_COS) == HIGH;
+#endif
+#endif
+
   // Switch off the transmitter if needed
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
@@ -240,6 +251,19 @@ void CIO::process()
 #else
     digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
 #endif
+  }
+
+  if (m_lockout) {
+    // Drain the receive queue
+    if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
+      for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
+        uint16_t sample;
+        uint8_t  control;
+        m_rxBuffer.get(sample, control);
+      }
+    }
+
+    return;
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
@@ -315,6 +339,9 @@ void CIO::process()
 void CIO::write(q15_t* samples, uint16_t length, const uint8_t* control)
 {
   if (!m_started)
+    return;
+
+  if (m_lockout)
     return;
 
   // Switch the transmitter on if needed
@@ -417,5 +444,10 @@ bool CIO::hasRXOverflow()
 void CIO::resetWatchdog()
 {
   m_watchdog = 0U;
+}
+
+bool CIO::hasLockout() const
+{
+  return m_lockout;
 }
 
