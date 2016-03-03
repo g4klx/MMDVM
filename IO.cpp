@@ -67,11 +67,6 @@ const uint16_t RX_BUFFER_SIZE = 601U;
 #else
 #error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM, or ARDUINO_DUE_NTH need to be defined"
 #endif
-#elif defined(__MK20DX256__)
-// A Teensy 3.1/3.2
-#define PIN_COS                14
-#define PIN_PTT                15
-#define PIN_COSLED             13
 #elif defined(__MBED__)
 // A generic MBED platform
 #define PIN_COS                PC_1
@@ -89,7 +84,6 @@ extern "C" {
 #if defined(__SAM3X8E__)
     if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)          // Ensure there was an End-of-Conversion and we read the ISR reg
       io.interrupt();
-#elif defined(__MK20DX256__)
 #elif defined(__MBED__)
     io.interrupt();
 #endif
@@ -187,10 +181,6 @@ void CIO::start()
   DACC->DACC_IDR  = 0xFFFFFFFF;               // No interrupts
   DACC->DACC_CHER = DACC_CHER_Chan;           // Enable channel
 
-  digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
-  digitalWrite(PIN_COSLED, LOW);
-  digitalWrite(PIN_LED, HIGH);
-#elif defined(__MK20DX256__)
   digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
   digitalWrite(PIN_COSLED, LOW);
   digitalWrite(PIN_LED, HIGH);
@@ -363,7 +353,6 @@ void CIO::interrupt()
 #if defined(__SAM3X8E__)
   DACC->DACC_CDR = sample;
   sample = ADC->ADC_CDR[ADC_CDR_Chan];
-#elif defined(__MK20DX256__)
 #elif defined(__MBED__)
   m_pinDAC.write_u16(sample);
   sample = m_pinADC.read_u16();
@@ -379,7 +368,7 @@ void CIO::setDecode(bool dcd)
   if (dcd != m_dcd)
 #if defined(__MBED__)
     m_pinCOSLED.write(dcd ? 1 : 0);
-#elif defined(PIN_COSLED)
+#else
     digitalWrite(PIN_COSLED, dcd ? HIGH : LOW);
 #endif
 
