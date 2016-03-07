@@ -25,10 +25,10 @@
 // #define USE_COS_AS_LOCKOUT
 
 // For the original Arduino Due pin layout
-#define  ARDUINO_DUE_PAPA
+// #define  ARDUINO_DUE_PAPA
 
 // For the new Arduino Due pin layout
-// #define  ARDUINO_DUE_ZUM
+#define  ARDUINO_DUE_ZUM
 
 // For the SP8NTH board
 // #define  ARDUINO_DUE_NTH
