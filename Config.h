@@ -19,16 +19,16 @@
 #if !defined(CONFIG_H)
 #define  CONFIG_H
 
-// #define  WANT_DEBUG
+#define  WANT_DEBUG
 
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT
 
 // For the original Arduino Due pin layout
-// #define  ARDUINO_DUE_PAPA
+#define  ARDUINO_DUE_PAPA
 
 // For the new Arduino Due pin layout
-#define  ARDUINO_DUE_ZUM
+// #define  ARDUINO_DUE_ZUM
 
 // For the SP8NTH board
 // #define  ARDUINO_DUE_NTH

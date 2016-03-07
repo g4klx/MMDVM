@@ -119,25 +119,25 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-            DEBUG3("DMRSlotRX: data header for slot/data type", m_slot ? 2U : 1U, dataType);
+            // DEBUG3("DMRSlotRX: data header for slot/data type", m_slot ? 2U : 1U, dataType);
             m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_VOICE_LC_HEADER:
-            DEBUG3("DMRSlotRX: voice header for slot/data type", m_slot ? 2U : 1U, dataType);
+            // DEBUG3("DMRSlotRX: voice header for slot/data type", m_slot ? 2U : 1U, dataType);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_VOICE_PI_HEADER:
-            DEBUG3("DMRSlotRX: pi header for slot/data type", m_slot ? 2U : 1U, dataType);
+            // DEBUG3("DMRSlotRX: pi header for slot/data type", m_slot ? 2U : 1U, dataType);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_TERMINATOR_WITH_LC:
-            DEBUG2("DMRSlotRX: terminator for slot", m_slot ? 2U : 1U);
+            // DEBUG2("DMRSlotRX: terminator for slot", m_slot ? 2U : 1U);
             m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           default:
-            DEBUG3("DMRSlotRX: data sync for slot/data type", m_slot ? 2U : 1U, dataType);
+            // DEBUG3("DMRSlotRX: data sync for slot/data type", m_slot ? 2U : 1U, dataType);
             m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
@@ -145,14 +145,14 @@ bool CDMRSlotRX::processSample(q15_t sample)
       }
     } else if (m_control == 0x20U) {
       // Voice sync
-      DEBUG2("DMRSlotRX: voice sync for slot", m_slot ? 2U : 1U);
+      // DEBUG2("DMRSlotRX: voice sync for slot", m_slot ? 2U : 1U);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       m_syncCount = 0U;
       m_n         = 0U;
     } else {
       m_syncCount++;
       if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
-        DEBUG2("DMRSlotRX: lost for slot", m_slot ? 2U : 1U);
+        // DEBUG2("DMRSlotRX: lost for slot", m_slot ? 2U : 1U);
         serial.writeDMRLost(m_slot);
         m_syncCount = 0U;
         m_threshold = 0;
@@ -224,7 +224,11 @@ void CDMRSlotRX::correlateSync(q15_t sample)
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-          DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+          // DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+          if (m_endPtr == NOENDPTR)
+            DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+          else
+            DEBUG3("DMRSlotRX: data sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
           m_maxCorr   = corr;
           m_centre    = centre;
           m_threshold = threshold;
@@ -238,7 +242,11 @@ void CDMRSlotRX::correlateSync(q15_t sample)
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-          DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+          // DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+          if (m_endPtr == NOENDPTR)
+            DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+          else
+            DEBUG3("DMRSlotRX: voice sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
           m_maxCorr   = corr;
           m_centre    = centre;
           m_threshold = threshold;
