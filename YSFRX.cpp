@@ -503,7 +503,7 @@ void CYSFRX::processData(q15_t sample)
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
     m_lostCount--;
     if (m_lostCount == 0U) {
-      DEBUG1("YSFRX: sync timed out, lost lock");
+      // DEBUG1("YSFRX: sync timed out, lost lock");
       io.setDecode(false);
 
       serial.writeYSFLost();
@@ -528,7 +528,7 @@ void CYSFRX::processData(q15_t sample)
       serial.writeYSFData(m_outBuffer, YSF_FRAME_LENGTH_BYTES + 1U);
 
       if (ok && (FICH[0U] & 0xC0U) == 0x80U) {
-        DEBUG1("YSFRX: end of transmission");
+        // DEBUG1("YSFRX: end of transmission");
         io.setDecode(false);
         m_state = YSFRXS_NONE;
       } else {

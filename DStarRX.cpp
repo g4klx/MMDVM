@@ -319,7 +319,7 @@ void CDStarRX::processNone(bool bit)
 
   // Exact matching of the frame sync sequence
   if (countBits32((m_patternBuffer & FRAME_SYNC_MASK) ^ FRAME_SYNC_DATA) == 0U) {
-    DEBUG1("DStarRX: found frame sync in None");
+    // DEBUG1("DStarRX: found frame sync in None");
 
     ::memset(m_rxBuffer, 0x00U, DSTAR_FEC_SECTION_LENGTH_BYTES);
     m_rxBufferBits = 0U;
@@ -371,7 +371,7 @@ void CDStarRX::processHeader(bool bit)
     unsigned char header[DSTAR_HEADER_LENGTH_BYTES];
     bool ok = rxHeader(m_rxBuffer, header);
     if (ok) {
-      DEBUG1("DStarRX: header checksum ok");
+      // DEBUG1("DStarRX: header checksum ok");
       io.setDecode(true);
 
       serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES);
@@ -382,7 +382,7 @@ void CDStarRX::processHeader(bool bit)
       m_rxState = DSRXS_DATA;
       m_dataBits = MAX_SYNC_BITS;
     } else {
-      DEBUG1("DStarRX: header checksum failed");
+      // DEBUG1("DStarRX: header checksum failed");
 
       // The checksum failed, return to looking for syncs
       m_rxState = DSRXS_NONE;
@@ -401,7 +401,7 @@ void CDStarRX::processData(bool bit)
 
   // Fuzzy matching of the end frame sequences
   if (countBits32((m_patternBuffer & END_SYNC_MASK) ^ END_SYNC_DATA) <= END_SYNC_ERRS) {
-    DEBUG1("DStarRX: Found end sync in Data");
+    // DEBUG1("DStarRX: Found end sync in Data");
     io.setDecode(false);
 
     serial.writeDStarEOT();
@@ -440,7 +440,7 @@ void CDStarRX::processData(bool bit)
   // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
   m_dataBits--;
   if (m_dataBits == 0U) {
-    DEBUG1("DStarRX: data sync timed out, lost lock");
+    // DEBUG1("DStarRX: data sync timed out, lost lock");
     io.setDecode(false);
 
     serial.writeDStarLost();

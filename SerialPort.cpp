@@ -57,7 +57,7 @@ const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 const uint8_t MMDVM_SAMPLES      = 0xF8U;
 
-const uint8_t HARDWARE[]         = "MMDVM 20160303 (D-Star/DMR/System Fusion)";
+const uint8_t HARDWARE[]         = "MMDVM 20160308 (D-Star/DMR/System Fusion)";
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
@@ -255,31 +255,31 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
 {
   switch (modemState) {
     case STATE_DMR:
-      DEBUG1("Mode set to DMR");
+      // DEBUG1("Mode set to DMR");
       dstarRX.reset();
       ysfRX.reset();
       break;
     case STATE_DSTAR:
-      DEBUG1("Mode set to D-Star");
+      // DEBUG1("Mode set to D-Star");
       dmrIdleRX.reset();
       dmrRX.reset();
       ysfRX.reset();
       break;
     case STATE_YSF:
-      DEBUG1("Mode set to System Fusion");
+      // DEBUG1("Mode set to System Fusion");
       dmrIdleRX.reset();
       dmrRX.reset();
       dstarRX.reset();
       break;
     case STATE_CALIBRATE:
-      DEBUG1("Mode set to Calibrate");
+      // DEBUG1("Mode set to Calibrate");
       dmrIdleRX.reset();
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();
       break;
     default:
-      DEBUG1("Mode set to Idle");
+      // DEBUG1("Mode set to Idle");
       // STATE_IDLE
       break;
   }

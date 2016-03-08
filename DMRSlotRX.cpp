@@ -225,10 +225,12 @@ void CDMRSlotRX::correlateSync(q15_t sample)
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           // DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+#if defined(WANT_DEBUG)
           if (m_endPtr == NOENDPTR)
             DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
           else
             DEBUG3("DMRSlotRX: data sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
+#endif
           m_maxCorr   = corr;
           m_centre    = centre;
           m_threshold = threshold;
@@ -243,10 +245,12 @@ void CDMRSlotRX::correlateSync(q15_t sample)
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           // DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+#if defined(WANT_DEBUG)
           if (m_endPtr == NOENDPTR)
             DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
           else
             DEBUG3("DMRSlotRX: voice sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
+#endif
           m_maxCorr   = corr;
           m_centre    = centre;
           m_threshold = threshold;
