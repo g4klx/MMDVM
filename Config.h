@@ -19,7 +19,7 @@
 #if !defined(CONFIG_H)
 #define  CONFIG_H
 
-#define  WANT_DEBUG
+// #define  WANT_DEBUG
 
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT

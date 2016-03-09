@@ -21,10 +21,8 @@
 #include "IO.h"
 
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t   C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                 11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                 -553, -847, -731, -340, 104, 401, 0};
-const uint16_t C4FSK_FILTER_LEN = 42U;
+static q15_t   C4FSK_FILTER[] = {2667, 6995, 11237, 14331, 15464, 14331, 11237, 6995, 2667, 0};
+const uint16_t C4FSK_FILTER_LEN = 10U;
 
 // Generated using gaussfir(0.5, 4, 5) in MATLAB
 static q15_t   GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
