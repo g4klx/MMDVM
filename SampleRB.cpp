@@ -19,7 +19,6 @@ Boston, MA  02110-1301, USA.
 */
 
 #include "SampleRB.h"
-#include "Debug.h"
 
 CSampleRB::CSampleRB(uint16_t length) :
 m_length(length),

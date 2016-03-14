@@ -16,6 +16,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#define  WANT_DEBUG
+
 #include "Config.h"
 #include "Globals.h"
 #include "DMRSlotRX.h"
@@ -119,25 +121,25 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-            // DEBUG3("DMRSlotRX: data header for slot/data type", m_slot ? 2U : 1U, dataType);
+            DEBUG3("DMRSlotRX: data header for slot/data type", m_slot ? 2U : 1U, dataType);
             m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_VOICE_LC_HEADER:
-            // DEBUG3("DMRSlotRX: voice header for slot/data type", m_slot ? 2U : 1U, dataType);
+            DEBUG3("DMRSlotRX: voice header for slot/data type", m_slot ? 2U : 1U, dataType);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_VOICE_PI_HEADER:
-            // DEBUG3("DMRSlotRX: pi header for slot/data type", m_slot ? 2U : 1U, dataType);
+            DEBUG3("DMRSlotRX: pi header for slot/data type", m_slot ? 2U : 1U, dataType);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           case DT_TERMINATOR_WITH_LC:
-            // DEBUG2("DMRSlotRX: terminator for slot", m_slot ? 2U : 1U);
+            DEBUG2("DMRSlotRX: terminator for slot", m_slot ? 2U : 1U);
             m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
           default:
-            // DEBUG3("DMRSlotRX: data sync for slot/data type", m_slot ? 2U : 1U, dataType);
+            DEBUG3("DMRSlotRX: data sync for slot/data type", m_slot ? 2U : 1U, dataType);
             m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             break;
@@ -145,14 +147,14 @@ bool CDMRSlotRX::processSample(q15_t sample)
       }
     } else if (m_control == 0x20U) {
       // Voice sync
-      // DEBUG2("DMRSlotRX: voice sync for slot", m_slot ? 2U : 1U);
+      DEBUG2("DMRSlotRX: voice sync for slot", m_slot ? 2U : 1U);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       m_syncCount = 0U;
       m_n         = 0U;
     } else {
       m_syncCount++;
       if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
-        // DEBUG2("DMRSlotRX: lost for slot", m_slot ? 2U : 1U);
+        DEBUG2("DMRSlotRX: lost for slot", m_slot ? 2U : 1U);
         serial.writeDMRLost(m_slot);
         m_syncCount = 0U;
         m_threshold = 0;

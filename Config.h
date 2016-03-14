@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
 
 #if !defined(CONFIG_H)
 #define  CONFIG_H
-
-// #define  WANT_DEBUG
 
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT

@@ -16,6 +16,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+// #define  WANT_DEBUG
+
 #include "Config.h"
 #include "Globals.h"
 
@@ -255,31 +257,31 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
 {
   switch (modemState) {
     case STATE_DMR:
-      // DEBUG1("Mode set to DMR");
+      DEBUG1("Mode set to DMR");
       dstarRX.reset();
       ysfRX.reset();
       break;
     case STATE_DSTAR:
-      // DEBUG1("Mode set to D-Star");
+      DEBUG1("Mode set to D-Star");
       dmrIdleRX.reset();
       dmrRX.reset();
       ysfRX.reset();
       break;
     case STATE_YSF:
-      // DEBUG1("Mode set to System Fusion");
+      DEBUG1("Mode set to System Fusion");
       dmrIdleRX.reset();
       dmrRX.reset();
       dstarRX.reset();
       break;
     case STATE_CALIBRATE:
-      // DEBUG1("Mode set to Calibrate");
+      DEBUG1("Mode set to Calibrate");
       dmrIdleRX.reset();
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();
       break;
     default:
-      // DEBUG1("Mode set to Idle");
+      DEBUG1("Mode set to Idle");
       // STATE_IDLE
       break;
   }
@@ -689,8 +691,6 @@ void CSerialPort::write(const uint8_t* data, uint16_t length, bool flush)
 #endif
 }
 
-#if defined(WANT_DEBUG)
-
 void CSerialPort::writeDump(const uint8_t* data, uint8_t length)
 {
   ASSERT(length <= 252U);
@@ -869,6 +869,4 @@ void CSerialPort::writeAssert(bool cond, const char* text, const char* file, lon
 
   write(reply, count, true);
 }
-
-#endif
 

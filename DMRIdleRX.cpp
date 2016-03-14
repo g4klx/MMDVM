@@ -16,6 +16,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+// #define  WANT_DEBUG
+
 #include "Config.h"
 #include "Globals.h"
 #include "DMRIdleRX.h"
