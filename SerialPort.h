@@ -44,10 +44,6 @@ public:
 
   void writeCalData(const uint8_t* data, uint8_t length);
 
-  void writeDump(const uint8_t* data, uint8_t length);
-
-  void writeSamples(const q15_t* data, uint8_t length);
-  
   void writeDebug(const char* text);
   void writeDebug(const char* text, int16_t n1);
   void writeDebug(const char* text, int16_t n1, int16_t n2);

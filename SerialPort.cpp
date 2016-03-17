@@ -51,13 +51,11 @@ const uint8_t MMDVM_YSF_LOST     = 0x21U;
 const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
 
-const uint8_t MMDVM_DUMP         = 0xF0U;
 const uint8_t MMDVM_DEBUG1       = 0xF1U;
 const uint8_t MMDVM_DEBUG2       = 0xF2U;
 const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
-const uint8_t MMDVM_SAMPLES      = 0xF8U;
 
 const uint8_t HARDWARE[]         = "MMDVM 20160317 (D-Star/DMR/System Fusion)";
 
@@ -692,42 +690,6 @@ void CSerialPort::write(const uint8_t* data, uint16_t length, bool flush)
   if (flush)
     Serial.flush();
 #endif
-}
-
-void CSerialPort::writeDump(const uint8_t* data, uint8_t length)
-{
-  ASSERT(length <= 252U);
-
-  uint8_t reply[255U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_DUMP;
-
-  uint8_t count = length * sizeof(uint8_t) + 3U;
-  ::memcpy(reply + 3U, data, length * sizeof(uint8_t));
-
-  reply[1U] = count;
-
-  write(reply, count, true);
-}
-
-void CSerialPort::writeSamples(const q15_t* data, uint8_t length)
-{
-  ASSERT(length <= 126U);
-
-  uint8_t reply[255U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_SAMPLES;
-
-  uint8_t count = length * sizeof(q15_t) + 3U;
-  ::memcpy(reply + 3U, data, length * sizeof(q15_t));
-
-  reply[1U] = count;
-
-  write(reply, count, true);
 }
 
 void CSerialPort::writeDebug(const char* text)
