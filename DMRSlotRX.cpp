@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
+#define  WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -45,28 +45,32 @@ m_bitPtr(0U),
 m_dataPtr(0U),
 m_syncPtr(0U),
 m_endPtr(NOENDPTR),
+m_delayPtr(0U),
 m_maxCorr(0),
 m_centre(0),
 m_threshold(0),
 m_control(0x00U),
 m_syncCount(0U),
 m_colorCode(0U),
+m_delay(0U),
 m_n(0U)
 {
 }
 
 void CDMRSlotRX::start()
 {
-  m_dataPtr = 0U;
-  m_bitPtr  = 0U;
-  m_maxCorr = 0;
-  m_control = 0x00U;
+  m_dataPtr  = 0U;
+  m_delayPtr = 0U;
+  m_bitPtr   = 0U;
+  m_maxCorr  = 0;
+  m_control  = 0x00U;
 }
 
 void CDMRSlotRX::reset()
 {
   m_syncPtr   = 0U;
   m_dataPtr   = 0U;
+  m_delayPtr  = 0U;
   m_bitPtr    = 0U;
   m_maxCorr   = 0;
   m_control   = 0x00U;
@@ -78,6 +82,10 @@ void CDMRSlotRX::reset()
 
 bool CDMRSlotRX::processSample(q15_t sample)
 {
+  m_delayPtr++;
+  if (m_delayPtr < m_delay)
+    return m_endPtr != NOENDPTR;
+
   // Ensure that the buffer doesn't overflow
   if (m_dataPtr > m_endPtr || m_dataPtr >= 900U)
     return m_endPtr != NOENDPTR;
@@ -95,7 +103,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
     if (m_dataPtr >= min && m_dataPtr <= max)
       correlateSync(sample);
   } else {
-    if (m_dataPtr >= 390U && m_dataPtr <= 500U)
+    if (m_dataPtr >= 420U && m_dataPtr <= 500U)
       correlateSync(sample);
   }
 
@@ -226,10 +234,9 @@ void CDMRSlotRX::correlateSync(q15_t sample)
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-          // DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
 #if defined(WANT_DEBUG)
           if (m_endPtr == NOENDPTR)
-            DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+            DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, centre, threshold);
           else
             DEBUG3("DMRSlotRX: data sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
 #endif
@@ -246,10 +253,9 @@ void CDMRSlotRX::correlateSync(q15_t sample)
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-          // DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
 #if defined(WANT_DEBUG)
           if (m_endPtr == NOENDPTR)
-            DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_dataPtr, centre, threshold);
+            DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, centre, threshold);
           else
             DEBUG3("DMRSlotRX: voice sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
 #endif
@@ -297,5 +303,10 @@ void CDMRSlotRX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, u
 void CDMRSlotRX::setColorCode(uint8_t colorCode)
 {
   m_colorCode = colorCode;
+}
+
+void CDMRSlotRX::setDelay(uint8_t delay)
+{
+  m_delay = delay;
 }
 

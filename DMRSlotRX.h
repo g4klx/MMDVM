@@ -31,6 +31,7 @@ public:
   bool processSample(q15_t sample);
 
   void setColorCode(uint8_t colorCode);
+  void setDelay(uint8_t delay);
 
   void reset();
 
@@ -42,16 +43,18 @@ private:
   uint16_t m_dataPtr;
   uint16_t m_syncPtr;
   uint16_t m_endPtr;
+  uint16_t m_delayPtr;
   q31_t    m_maxCorr;
   q15_t    m_centre;
   q15_t    m_threshold;
   uint8_t  m_control;
   uint8_t  m_syncCount;
   uint8_t  m_colorCode;
+  uint16_t m_delay;
   uint8_t  m_n;
 
-  void    correlateSync(q15_t sample);
-  void    samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void correlateSync(q15_t sample);
+  void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
 };
 
 #endif

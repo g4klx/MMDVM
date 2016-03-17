@@ -56,6 +56,12 @@ void CDMRRX::setColorCode(uint8_t colorCode)
   m_slot2RX.setColorCode(colorCode);
 }
 
+void CDMRRX::setDelay(uint8_t delay)
+{
+  m_slot1RX.setDelay(delay);
+  m_slot2RX.setDelay(delay);
+}
+
 void CDMRRX::reset()
 {
   m_slot1RX.reset();

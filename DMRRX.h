@@ -29,6 +29,7 @@ public:
   void samples(const q15_t* samples, const uint8_t* control, uint8_t length);
 
   void setColorCode(uint8_t colorCode);
+  void setDelay(uint8_t delay);
 
   void reset();
 
