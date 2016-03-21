@@ -117,6 +117,7 @@ m_ledValue(true),
 m_dcd(false),
 m_overflow(0U),
 m_overcount(0U),
+m_count(0U),
 m_watchdog(0U),
 m_lockout(false)
 {
@@ -256,10 +257,12 @@ void CIO::process()
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
-    q15_t   samples[RX_BLOCK_SIZE];
-    uint8_t control[RX_BLOCK_SIZE];
+    q15_t   samples[RX_BLOCK_SIZE + 1U];
+    uint8_t control[RX_BLOCK_SIZE + 1U];
 
-    for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
+  uint8_t blockSize = RX_BLOCK_SIZE;
+
+  for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
       uint16_t sample;
       m_rxBuffer.get(sample, control[i]);
 
@@ -273,57 +276,74 @@ void CIO::process()
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }
 
+    // Handle the case of the oscillator not being accurate enough
+    if (m_sampleCount > 0U) {
+      m_count += RX_BLOCK_SIZE;
+
+      if (m_count >= m_sampleCount) {
+        if (m_sampleInsert) {
+          control[RX_BLOCK_SIZE] = control[RX_BLOCK_SIZE - 1U];
+          samples[RX_BLOCK_SIZE] = 0;
+          blockSize = RX_BLOCK_SIZE + 1U;
+        } else {
+          blockSize = RX_BLOCK_SIZE - 1U;
+        }
+
+        m_count -= m_sampleCount;
+      }
+    }
+
     if (m_lockout)
       return;
 
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable) {
-        q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+        q15_t GMSKVals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, blockSize);
 
-        dstarRX.samples(GMSKVals, RX_BLOCK_SIZE);
+        dstarRX.samples(GMSKVals, blockSize);
       }
 
       if (m_dmrEnable || m_ysfEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
         if (m_dmrEnable)
-          dmrIdleRX.samples(C4FSKVals, RX_BLOCK_SIZE);
+          dmrIdleRX.samples(C4FSKVals, blockSize);
 
         if (m_ysfEnable)
-          ysfRX.samples(C4FSKVals, RX_BLOCK_SIZE);
+          ysfRX.samples(C4FSKVals, blockSize);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
-        q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+        q15_t GMSKVals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, blockSize);
 
-        dstarRX.samples(GMSKVals, RX_BLOCK_SIZE);
+        dstarRX.samples(GMSKVals, blockSize);
       }
     } else if (m_modemState == STATE_DMR) {
       if (m_dmrEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
         // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
         if (m_tx)
-          dmrRX.samples(C4FSKVals, control, RX_BLOCK_SIZE);
+          dmrRX.samples(C4FSKVals, control, blockSize);
         else
-          dmrIdleRX.samples(C4FSKVals, RX_BLOCK_SIZE);
+          dmrIdleRX.samples(C4FSKVals, blockSize);
       }
     } else if (m_modemState == STATE_YSF) {
       if (m_ysfEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
-        ysfRX.samples(C4FSKVals, RX_BLOCK_SIZE);
+        ysfRX.samples(C4FSKVals, blockSize);
       }
     } else if (m_modemState == STATE_CALIBRATE) {
-      q15_t GMSKVals[RX_BLOCK_SIZE];
-      ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+      q15_t GMSKVals[RX_BLOCK_SIZE + 1U];
+      ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, blockSize);
 
-      calRX.samples(GMSKVals, RX_BLOCK_SIZE);
+      calRX.samples(GMSKVals, blockSize);
     }
   }
 }

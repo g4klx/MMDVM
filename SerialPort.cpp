@@ -174,7 +174,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-  if (length < 8U)
+  if (length < 9U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -208,6 +208,18 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
     return 4U;
 
   uint8_t dmrDelay = data[7U];
+
+  int8_t oscOffset = int8_t(data[8U]) - 128;
+  if (oscOffset < 0) {
+    m_sampleCount = 1000000U / uint32_t(-oscOffset);
+    m_sampleInsert = true;
+  } else if (oscOffset > 0) {
+    m_sampleCount = 1000000U / uint32_t(oscOffset);
+    m_sampleInsert = false;
+  } else {
+    m_sampleCount = 0U;
+    m_sampleInsert = false;
+  }
 
   m_modemState  = modemState;
 

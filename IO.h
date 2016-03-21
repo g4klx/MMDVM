@@ -85,6 +85,8 @@ private:
   uint16_t             m_overflow;
   uint16_t             m_overcount;
 
+  uint32_t             m_count;
+
   volatile uint32_t    m_watchdog;
 
   bool                 m_lockout;

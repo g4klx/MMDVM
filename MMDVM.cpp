@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,9 @@ bool m_dmrEnable   = true;
 bool m_ysfEnable   = true;
 
 bool m_tx = false;
+
+uint32_t m_sampleCount = 0U;
+bool    m_sampleInsert = false;
 
 CDStarRX   dstarRX;
 CDStarTX   dstarTX;

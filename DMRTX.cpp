@@ -63,7 +63,8 @@ m_newShortLC(),
 m_markBuffer(),
 m_poBuffer(),
 m_poLen(0U),
-m_poPtr(0U)
+m_poPtr(0U),
+m_count(0U)
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -192,8 +193,8 @@ void CDMRTX::setStart(bool start)
 
 void CDMRTX::writeByte(uint8_t c, uint8_t control)
 {
-  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
-  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
 
   const uint8_t MASK = 0xC0U;
 
@@ -215,13 +216,34 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
     }
   }
 
-  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
-  ::memset(controlBuffer, MARK_NONE, DMR_RADIO_SYMBOL_LENGTH * 4U * sizeof(uint8_t));
-  controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;
+  uint8_t blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U;
 
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U);
+  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  ::memset(controlBuffer, MARK_NONE, (DMR_RADIO_SYMBOL_LENGTH * 4U + 1U) * sizeof(uint8_t));
 
-  io.write(outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U, controlBuffer);
+  // Handle the case of the oscillator not being accurate enough
+  if (m_sampleCount > 0U) {
+    m_count += DMR_RADIO_SYMBOL_LENGTH * 4U;
+
+    if (m_count >= m_sampleCount) {
+      if (m_sampleInsert) {
+        inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U - 1U];
+        blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U + 1U;
+        controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U + 1U] = control;  
+      } else {
+        blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U - 1U;
+        controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U - 1U] = control;  
+      }
+
+      m_count -= m_sampleCount;
+    }
+  } else {
+    controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
+  }
+
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
+
+  io.write(outBuffer, blockSize, controlBuffer);
 }
 
 uint16_t CDMRTX::getSpace1() const

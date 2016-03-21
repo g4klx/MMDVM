@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -44,7 +44,8 @@ m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(120U)      // 100ms
+m_txDelay(120U),      // 100ms
+m_count(0U)
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -107,8 +108,8 @@ uint8_t CYSFTX::writeData(const uint8_t* data, uint8_t length)
 
 void CYSFTX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U];
-  q15_t outBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t outBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U + 1U];
 
   const uint8_t MASK = 0xC0U;
 
@@ -130,9 +131,27 @@ void CYSFTX::writeByte(uint8_t c)
     }
   }
 
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, YSF_RADIO_SYMBOL_LENGTH * 4U);
+  uint8_t blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U;
 
-  io.write(outBuffer, YSF_RADIO_SYMBOL_LENGTH * 4U);
+  // Handle the case of the oscillator not being accurate enough
+  if (m_sampleCount > 0U) {
+    m_count += YSF_RADIO_SYMBOL_LENGTH * 4U;
+
+    if (m_count >= m_sampleCount) {
+      if (m_sampleInsert) {
+        inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U - 1U];
+        blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U + 1U;
+      } else {
+        blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U - 1U;
+      }
+
+      m_count -= m_sampleCount;
+    }
+  }
+
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
+
+  io.write(outBuffer, blockSize);
 }
 
 void CYSFTX::setTXDelay(uint8_t delay)

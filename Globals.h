@@ -69,6 +69,9 @@ extern bool m_ysfEnable;
 
 extern bool m_tx;
 
+extern uint32_t m_sampleCount;
+extern bool    m_sampleInsert;
+
 extern CSerialPort serial;
 extern CIO io;
 
