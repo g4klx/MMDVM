@@ -25,9 +25,10 @@
 
 const unsigned int BUFFER_LENGTH = 200U;
 
-const uint32_t PLLMAX = 0x10000U;
-const uint32_t PLLINC = PLLMAX / DSTAR_RADIO_BIT_LENGTH;
-const uint32_t INC    = PLLINC / 32U;
+const uint32_t PLLMAX     = 0x10000U;
+const uint32_t PLLINC     = PLLMAX / DSTAR_RADIO_BIT_LENGTH;
+const uint32_t INC_LOCK   = PLLINC / 64U;
+const uint32_t INC_UNLOCK = PLLINC / 32U;
 
 const unsigned int MAX_SYNC_BITS = 50U * DSTAR_DATA_LENGTH_BITS;
 
@@ -243,6 +244,7 @@ const uint16_t CCITT_TABLE[] = {
 CDStarRX::CDStarRX() :
 m_pll(0U),
 m_prev(false),
+m_inc(INC_UNLOCK),
 m_rxState(DSRXS_NONE),
 m_patternBuffer(0x00U),
 m_rxBuffer(),
@@ -264,6 +266,7 @@ void CDStarRX::reset()
 {
   m_pll           = 0U;
   m_prev          = false;
+  m_inc           = INC_UNLOCK;
   m_rxState       = DSRXS_NONE;
   m_patternBuffer = 0x00U;
   m_rxBufferBits  = 0U;
@@ -280,9 +283,9 @@ void CDStarRX::samples(const q15_t* samples, uint8_t length)
 
     if (bit != m_prev) {
       if (m_pll < (PLLMAX / 2U))
-        m_pll += INC;
+        m_pll += m_inc;
       else
-        m_pll -= INC;
+        m_pll -= m_inc;
     }
 
     m_prev = bit;
@@ -333,7 +336,7 @@ void CDStarRX::processNone(bool bit)
   // Exact matching of the data sync bit sequence
   if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) == 0U) {
     DEBUG1("DStarRX: found data sync in None");
-    io.setDecode(true);
+    locked(true);
 
 #if defined(WANT_DEBUG)
     q15_t min = 16000;
@@ -373,7 +376,7 @@ void CDStarRX::processHeader(bool bit)
     unsigned char header[DSTAR_HEADER_LENGTH_BYTES];
     bool ok = rxHeader(m_rxBuffer, header);
     if (ok) {
-      io.setDecode(true);
+      locked(true);
 
       serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES);
 
@@ -401,7 +404,7 @@ void CDStarRX::processData(bool bit)
   // Fuzzy matching of the end frame sequences
   if (countBits32((m_patternBuffer & END_SYNC_MASK) ^ END_SYNC_DATA) <= END_SYNC_ERRS) {
     DEBUG1("DStarRX: Found end sync in Data");
-    io.setDecode(false);
+    locked(false);
 
     serial.writeDStarEOT();
 
@@ -440,7 +443,7 @@ void CDStarRX::processData(bool bit)
   m_dataBits--;
   if (m_dataBits == 0U) {
     DEBUG1("DStarRX: data sync timed out, lost lock");
-    io.setDecode(false);
+    locked(false);
 
     serial.writeDStarLost();
 
@@ -691,5 +694,12 @@ bool CDStarRX::checksum(const uint8_t* header) const
   crc16 = ~crc16;
 
   return crc8[0U] == header[DSTAR_HEADER_LENGTH_BYTES - 2U] && crc8[1U] == header[DSTAR_HEADER_LENGTH_BYTES - 1U];
+}
+
+void CDStarRX::locked(bool lock)
+{
+  io.setDecode(lock);
+
+  m_inc = lock ? INC_LOCK : INC_UNLOCK;
 }
 
