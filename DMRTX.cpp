@@ -189,6 +189,8 @@ uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint8_t length)
 void CDMRTX::setStart(bool start)
 {
   m_state = start ? DMRTXSTATE_SLOT1 : DMRTXSTATE_IDLE;
+
+  m_count = 0U;
 }
 
 void CDMRTX::writeByte(uint8_t c, uint8_t control)

@@ -61,6 +61,8 @@ void CYSFTX::process()
 
   if (m_poLen == 0U) {
     if (!m_tx) {
+      m_count = 0U;
+
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = YSF_START_SYNC;
     } else {
