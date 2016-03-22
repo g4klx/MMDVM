@@ -198,6 +198,7 @@ void CIO::start()
   m_pinLED.write(1);
 #endif
 
+  m_count   = 0U;
   m_started = true;
 }
 
@@ -260,9 +261,9 @@ void CIO::process()
     q15_t   samples[RX_BLOCK_SIZE + 1U];
     uint8_t control[RX_BLOCK_SIZE + 1U];
 
-  uint8_t blockSize = RX_BLOCK_SIZE;
+    uint8_t blockSize = RX_BLOCK_SIZE;
 
-  for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
+    for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
       uint16_t sample;
       m_rxBuffer.get(sample, control[i]);
 
@@ -282,11 +283,14 @@ void CIO::process()
 
       if (m_count >= m_sampleCount) {
         if (m_sampleInsert) {
-          control[RX_BLOCK_SIZE] = control[RX_BLOCK_SIZE - 1U];
-          samples[RX_BLOCK_SIZE] = 0;
           blockSize = RX_BLOCK_SIZE + 1U;
+          samples[RX_BLOCK_SIZE] = 0;
+          for (int8_t i = RX_BLOCK_SIZE - 1; i >= 0; i--)
+            control[i + 1] = control[i];
         } else {
           blockSize = RX_BLOCK_SIZE - 1U;
+          for (uint8_t i = 0U; i < (RX_BLOCK_SIZE - 1U); i++)
+            control[i] = control[i + 1U];
         }
 
         m_count -= m_sampleCount;
