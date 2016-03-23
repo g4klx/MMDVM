@@ -57,7 +57,7 @@ const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
-const uint8_t HARDWARE[]         = "MMDVM 20160322 (D-Star/DMR/System Fusion)";
+const uint8_t HARDWARE[]         = "MMDVM 20160323 (D-Star/DMR/System Fusion)";
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
@@ -210,12 +210,12 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   uint8_t dmrDelay = data[7U];
 
   int8_t oscOffset = int8_t(data[8U]) - 128;
-  if (oscOffset > 0) {
-    m_sampleCount = 1000000U / uint32_t(oscOffset);
-    m_sampleInsert = true;
-  } else if (oscOffset < 0) {
+  if (oscOffset < 0) {
     m_sampleCount = 1000000U / uint32_t(-oscOffset);
     m_sampleInsert = false;
+  } else if (oscOffset > 0) {
+    m_sampleCount = 1000000U / uint32_t(oscOffset);
+    m_sampleInsert = true;
   } else {
     m_sampleCount = 0U;
     m_sampleInsert = false;
