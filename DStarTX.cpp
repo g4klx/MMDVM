@@ -424,7 +424,7 @@ void CDStarTX::writeByte(uint8_t c)
     mask <<= 1;
   }
 
-  uint8_t blockSize = DSTAR_RADIO_BIT_LENGTH * 8U;
+  uint16_t blockSize = DSTAR_RADIO_BIT_LENGTH * 8U;
 
   // Handle the case of the oscillator not being accurate enough
   if (m_sampleCount > 0U) {
@@ -433,9 +433,9 @@ void CDStarTX::writeByte(uint8_t c)
     if (m_count >= m_sampleCount) {
       if (m_sampleInsert) {
         inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U] = inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U - 1U];
-        blockSize = DSTAR_RADIO_BIT_LENGTH * 8U + 1U;
+        blockSize++;
       } else {
-        blockSize = DSTAR_RADIO_BIT_LENGTH * 8U - 1U;
+        blockSize--;
       }
 
       m_count -= m_sampleCount;

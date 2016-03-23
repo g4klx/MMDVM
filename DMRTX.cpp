@@ -218,10 +218,11 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
     }
   }
 
-  uint8_t blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U;
+  uint16_t blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U;
 
   uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
   ::memset(controlBuffer, MARK_NONE, (DMR_RADIO_SYMBOL_LENGTH * 4U + 1U) * sizeof(uint8_t));
+  controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
 
   // Handle the case of the oscillator not being accurate enough
   if (m_sampleCount > 0U) {
@@ -230,17 +231,18 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
     if (m_count >= m_sampleCount) {
       if (m_sampleInsert) {
         inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U + 1U;
-        controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U + 1U] = control;  
+        for (int8_t i = DMR_RADIO_SYMBOL_LENGTH * 4U - 1; i >= 0; i--)
+          controlBuffer[i + 1] = controlBuffer[i];
+        blockSize++;
       } else {
-        blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U - 1U;
         controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U - 1U] = control;  
+        for (uint8_t i = 0U; i < (DMR_RADIO_SYMBOL_LENGTH * 4U - 1U); i++)
+          controlBuffer[i] = controlBuffer[i + 1U];
+        blockSize--;
       }
 
       m_count -= m_sampleCount;
     }
-  } else {
-    controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
   }
 
   ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);

@@ -133,7 +133,7 @@ void CYSFTX::writeByte(uint8_t c)
     }
   }
 
-  uint8_t blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U;
+  uint16_t blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U;
 
   // Handle the case of the oscillator not being accurate enough
   if (m_sampleCount > 0U) {
@@ -142,9 +142,9 @@ void CYSFTX::writeByte(uint8_t c)
     if (m_count >= m_sampleCount) {
       if (m_sampleInsert) {
         inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U + 1U;
+        blockSize++;
       } else {
-        blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U - 1U;
+        blockSize--;
       }
 
       m_count -= m_sampleCount;
