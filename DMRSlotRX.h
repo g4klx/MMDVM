@@ -22,6 +22,12 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
+enum DMRRX_STATE {
+  DMRRXS_NONE,
+  DMRRXS_VOICE,
+  DMRRXS_DATA
+};
+
 class CDMRSlotRX {
 public:
   CDMRSlotRX(bool slot);
@@ -36,24 +42,26 @@ public:
   void reset();
 
 private:
-  bool     m_slot;
-  uint32_t m_bitBuffer[DMR_RADIO_SYMBOL_LENGTH];
-  q15_t    m_buffer[900U];
-  uint16_t m_bitPtr;
-  uint16_t m_dataPtr;
-  uint16_t m_syncPtr;
-  uint16_t m_endPtr;
-  uint16_t m_delayPtr;
-  q31_t    m_maxCorr;
-  q15_t    m_centre;
-  q15_t    m_threshold;
-  uint8_t  m_control;
-  uint8_t  m_syncCount;
-  uint8_t  m_colorCode;
-  uint16_t m_delay;
-  uint8_t  m_n;
+  bool        m_slot;
+  uint32_t    m_bitBuffer[DMR_RADIO_SYMBOL_LENGTH];
+  q15_t       m_buffer[900U];
+  uint16_t    m_bitPtr;
+  uint16_t    m_dataPtr;
+  uint16_t    m_syncPtr;
+  uint16_t    m_endPtr;
+  uint16_t    m_delayPtr;
+  q31_t       m_maxCorr;
+  q15_t       m_centre;
+  q15_t       m_threshold;
+  uint8_t     m_control;
+  uint8_t     m_syncCount;
+  uint8_t     m_colorCode;
+  uint16_t    m_delay;
+  DMRRX_STATE m_state;
+  uint8_t     m_n;
 
-  void correlateSync(q15_t sample);
+  void correlateSync();
+  void correlateEMB();
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
 };
 

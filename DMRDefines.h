@@ -76,8 +76,10 @@ const uint8_t DT_VOICE_LC_HEADER    = 1U;
 const uint8_t DT_TERMINATOR_WITH_LC = 2U;
 const uint8_t DT_CSBK               = 3U;
 const uint8_t DT_DATA_HEADER        = 6U;
+const uint8_t DT_RATE_12_DATA       = 7U;
+const uint8_t DT_RATE_34_DATA       = 8U;
 const uint8_t DT_IDLE               = 9U;
-// All others are for data transfer
+const uint8_t DT_RATE_1_DATA        = 10U;
 
 #endif
 

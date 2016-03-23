@@ -35,6 +35,24 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 
+const int8_t EMB_SYMBOLS[16U][5U][DMR_EMB_LENGTH_SYMBOLS] = {
+  {{+1, +1, +1, -1, +3, -3, +1, -3}, {+1, +1, +3, -1, -1, +3, +3, -1}, {+1, +1, +3, -1, -1, +3, +3, -1}, {+1, +1, +3, +1, -3, -1, +3, +3}, {+1, +1, +1, +1, +1, +1, +1, +1}},
+  {{+1, +3, +1, -3, -1, +3, +1, +3}, {+1, +3, +3, -3, +3, -3, +3, +1}, {+1, +3, +3, -3, +3, -3, +3, +1}, {+1, +3, +3, +3, +1, +1, +3, -3}, {+1, +3, +1, +3, -3, -1, +1, -1}},
+  {{+1, -1, +1, -3, -3, +1, +3, +1}, {+1, -1, +3, -3, +1, -1, +1, +3}, {+1, -1, +3, -3, +1, -1, +1, +3}, {+1, -1, +3, +3, +3, +3, +1, -1}, {+1, -1, +1, +3, -1, -3, +3, -3}},
+  {{+1, -3, +1, -1, +1, -1, +3, -1}, {+1, -3, +3, -1, -3, +1, +1, -3}, {+1, -3, +3, -1, -3, +1, +1, -3}, {+1, -3, +3, +1, -1, -3, +1, +1}, {+1, -3, +1, +1, +3, +3, +3, +3}},
+  {{+3, +1, +1, -3, +3, -1, -3, +3}, {+3, +1, +3, -3, -1, +1, -1, +1}, {+3, +1, +3, -3, -1, +1, -1, +1}, {+3, +1, +3, +3, -3, -3, -1, -3}, {+3, +1, +1, +3, +1, +3, -3, -1}},
+  {{+3, +3, +1, -1, -1, +1, -3, -3}, {+3, +3, +3, -1, +3, -1, -1, -1}, {+3, +3, +3, -1, +3, -1, -1, -1}, {+3, +3, +3, +1, +1, +3, -1, +3}, {+3, +3, +1, +1, -3, -3, -3, +1}},
+  {{+3, -1, +1, -1, -3, +3, -1, -1}, {+3, -1, +3, -1, +1, -3, -3, -3}, {+3, -1, +3, -1, +1, -3, -3, -3}, {+3, -1, +3, +1, +3, +1, -3, +1}, {+3, -1, +1, +1, -1, -1, -1, +3}},
+  {{+3, -3, +1, -3, +1, -3, -1, +1}, {+3, -3, +3, -3, -3, +3, -3, +3}, {+3, -3, +3, -3, -3, +3, -3, +3}, {+3, -3, +3, +3, -1, -1, -3, -1}, {+3, -3, +1, +3, +3, +1, -1, -3}},
+  {{-1, +1, +1, -1, +1, -3, -3, +1}, {-1, +1, +3, -1, -3, +3, -1, +3}, {-1, +1, +3, -1, -3, +3, -1, +3}, {-1, +1, +3, +1, -1, -1, -1, -1}, {-1, +1, +1, +1, +3, +1, -3, -3}},
+  {{-1, +3, +1, -3, -3, +3, -3, -1}, {-1, +3, +3, -3, +1, -3, -1, -3}, {-1, +3, +3, -3, +1, -3, -1, -3}, {-1, +3, +3, +3, +3, +1, -1, +1}, {-1, +3, +1, +3, -1, -1, -3, +3}},
+  {{-1, -1, +1, -3, -1, +1, -1, -3}, {-1, -1, +3, -3, +3, -1, -3, -1}, {-1, -1, +3, -3, +3, -1, -3, -1}, {-1, -1, +3, +3, +1, +3, -3, +3}, {-1, -1, +1, +3, -3, -3, -1, +1}},
+  {{-1, -3, +1, -1, +3, -1, -1, +3}, {-1, -3, +3, -1, -1, +1, -3, +1}, {-1, -3, +3, -1, -1, +1, -3, +1}, {-1, -3, +3, +1, -3, -3, -3, -3}, {-1, -3, +1, +1, +1, +3, -1, -1}},
+  {{-3, +1, +1, -3, +1, -1, +1, -1}, {-3, +1, +3, -3, -3, +1, +3, -3}, {-3, +1, +3, -3, -3, +1, +3, -3}, {-3, +1, +3, +3, -1, -3, +3, +1}, {-3, +1, +1, +3, +3, +3, +1, +3}},
+  {{-3, +3, +1, -1, -3, +1, +1, +1}, {-3, +3, +3, -1, +1, -1, +3, +3}, {-3, +3, +3, -1, +1, -1, +3, +3}, {-3, +3, +3, +1, +3, +3, +3, -1}, {-3, +3, +1, +1, -1, -3, +1, -3}},
+  {{-3, -1, +1, -1, -1, +3, +3, +3}, {-3, -1, +3, -1, +3, -3, +1, +1}, {-3, -1, +3, -1, +3, -3, +1, +1}, {-3, -1, +3, +1, +1, +1, +1, -3}, {-3, -1, +1, +1, -3, -1, +3, -1}},
+  {{-3, -3, +1, -3, +3, -3, +3, -3}, {-3, -3, +3, -3, -1, +3, +1, -1}, {-3, -3, +3, -3, -1, +3, +1, -1}, {-3, -3, +3, +3, -3, -1, +1, +3}, {-3, -3, +1, +3, +1, +1, +3, +1}}};
+
 const uint16_t NOENDPTR = 9999U;
 
 CDMRSlotRX::CDMRSlotRX(bool slot) :
@@ -53,6 +71,7 @@ m_control(0x00U),
 m_syncCount(0U),
 m_colorCode(0U),
 m_delay(0U),
+m_state(DMRRXS_NONE),
 m_n(0U)
 {
 }
@@ -77,6 +96,7 @@ void CDMRSlotRX::reset()
   m_syncCount = 0U;
   m_threshold = 0;
   m_centre    = 0;
+  m_state     = DMRRXS_NONE;
   m_endPtr    = NOENDPTR;
 }
 
@@ -84,11 +104,11 @@ bool CDMRSlotRX::processSample(q15_t sample)
 {
   m_delayPtr++;
   if (m_delayPtr < m_delay)
-    return m_endPtr != NOENDPTR;
+    return m_state != DMRRXS_NONE;
 
   // Ensure that the buffer doesn't overflow
   if (m_dataPtr > m_endPtr || m_dataPtr >= 900U)
-    return m_endPtr != NOENDPTR;
+    return m_state != DMRRXS_NONE;
 
   m_buffer[m_dataPtr] = sample;
 
@@ -96,15 +116,23 @@ bool CDMRSlotRX::processSample(q15_t sample)
   if (sample < 0)
     m_bitBuffer[m_bitPtr] |= 0x01U;
 
-  // The approximate position of the sync samples
-  if (m_endPtr != NOENDPTR) {
-    uint16_t min = m_syncPtr - 5U;
-    uint16_t max = m_syncPtr + 5U;
+  if (m_state == DMRRXS_VOICE) {
+    uint16_t min = m_syncPtr - 2U;
+    uint16_t max = m_syncPtr + 2U;
+    if (m_dataPtr >= min && m_dataPtr <= max) {
+      if (m_n >= 5U)
+        correlateSync();
+      else
+        correlateEMB();
+    }
+  } else if (m_state == DMRRXS_DATA) {
+    uint16_t min = m_syncPtr - 2U;
+    uint16_t max = m_syncPtr + 2U;
     if (m_dataPtr >= min && m_dataPtr <= max)
-      correlateSync(sample);
+      correlateSync();
   } else {
     if (m_dataPtr >= 420U && m_dataPtr <= 500U)
-      correlateSync(sample);
+      correlateSync();
   }
 
   if (m_dataPtr == m_endPtr) {
@@ -129,27 +157,21 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-            DEBUG3("DMRSlotRX: data header for slot/data type", m_slot ? 2U : 1U, dataType);
-            m_endPtr = NOENDPTR;
+          case DT_RATE_12_DATA:
+          case DT_RATE_34_DATA:
+          case DT_RATE_1_DATA:
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            m_state = DMRRXS_DATA;
             break;
           case DT_VOICE_LC_HEADER:
-            DEBUG3("DMRSlotRX: voice header for slot/data type", m_slot ? 2U : 1U, dataType);
-            serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-            break;
           case DT_VOICE_PI_HEADER:
-            DEBUG3("DMRSlotRX: pi header for slot/data type", m_slot ? 2U : 1U, dataType);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-            break;
-          case DT_TERMINATOR_WITH_LC:
-            DEBUG2("DMRSlotRX: terminator for slot", m_slot ? 2U : 1U);
-            m_endPtr = NOENDPTR;
-            serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            m_state = DMRRXS_VOICE;
             break;
           default:
-            DEBUG3("DMRSlotRX: data sync for slot/data type", m_slot ? 2U : 1U, dataType);
-            m_endPtr = NOENDPTR;
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            m_state = DMRRXS_NONE;
+            m_endPtr = NOENDPTR;
             break;
         }
       }
@@ -157,23 +179,26 @@ bool CDMRSlotRX::processSample(q15_t sample)
       // Voice sync
       DEBUG2("DMRSlotRX: voice sync for slot", m_slot ? 2U : 1U);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+      m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
       m_n         = 0U;
     } else {
       m_syncCount++;
       if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
-        DEBUG2("DMRSlotRX: lost for slot", m_slot ? 2U : 1U);
         serial.writeDMRLost(m_slot);
         m_syncCount = 0U;
         m_threshold = 0;
         m_centre    = 0;
+        m_state     = DMRRXS_NONE;
         m_endPtr    = NOENDPTR;
         return false;
       }
 
       // Voice data
-      frame[0U] |= ++m_n;
-      serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+      if (m_state == DMRRXS_VOICE) {
+        frame[0U] |= ++m_n;
+        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+      }
     }
   }
 
@@ -183,10 +208,10 @@ bool CDMRSlotRX::processSample(q15_t sample)
   if (m_bitPtr >= DMR_RADIO_SYMBOL_LENGTH)
     m_bitPtr = 0U;
 
-  return m_endPtr != NOENDPTR;
+  return m_state != DMRRXS_NONE;
 }
 
-void CDMRSlotRX::correlateSync(q15_t sample)
+void CDMRSlotRX::correlateSync()
 {
   uint8_t errs = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_MS_DATA_SYNC_SYMBOLS);
 
@@ -268,6 +293,34 @@ void CDMRSlotRX::correlateSync(q15_t sample)
         }
       }
     }
+  }
+}
+
+void CDMRSlotRX::correlateEMB()
+{
+  uint8_t n = 0U;
+  q31_t corr = 0;
+
+  // The beginning of the first section of the EMB is at the same place as the beginning of the sync
+  uint16_t ptr = m_dataPtr - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
+  for (uint8_t i = 0U; i < (DMR_EMB_LENGTH_SYMBOLS / 2U); i++, n++) {
+    corr += EMB_SYMBOLS[m_colorCode][m_n][n] * m_buffer[ptr];
+    ptr  += DMR_RADIO_SYMBOL_LENGTH;
+  }
+
+  ptr = m_dataPtr - (DMR_EMB_LENGTH_SAMPLES / 2U) + DMR_RADIO_SYMBOL_LENGTH;
+  for (uint8_t i = 0U; i < (DMR_EMB_LENGTH_SYMBOLS / 2U); i++, n++) {
+    corr += EMB_SYMBOLS[m_colorCode][m_n][n] * m_buffer[ptr];
+    ptr  += DMR_RADIO_SYMBOL_LENGTH;
+  }
+
+  if (corr > m_maxCorr) {
+#if defined(WANT_DEBUG)
+    DEBUG3("DMRSlotRX: emb found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
+#endif
+    m_maxCorr = corr;
+    m_syncPtr = m_dataPtr;
+    m_endPtr  = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
   }
 }
 
