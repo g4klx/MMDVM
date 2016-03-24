@@ -177,7 +177,6 @@ bool CDMRSlotRX::processSample(q15_t sample)
       }
     } else if (m_control == 0x20U) {
       // Voice sync
-      DEBUG2("DMRSlotRX: voice sync for slot", m_slot ? 2U : 1U);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
@@ -196,8 +195,14 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
       // Voice data
       if (m_state == DMRRXS_VOICE) {
-        frame[0U] |= ++m_n;
-        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+        if (m_n >= 5U) {
+          frame[0U] = 0x20U;
+          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+          m_n = 0U;
+        } else {
+          frame[0U] |= ++m_n;
+          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+        }
       }
     }
   }
