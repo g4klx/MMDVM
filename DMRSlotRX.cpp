@@ -320,9 +320,6 @@ void CDMRSlotRX::correlateEMB()
   }
 
   if (corr > m_maxCorr) {
-#if defined(WANT_DEBUG)
-    DEBUG3("DMRSlotRX: emb found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
-#endif
     m_maxCorr = corr;
     m_syncPtr = m_dataPtr;
     m_endPtr  = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
