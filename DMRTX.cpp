@@ -221,7 +221,7 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
   uint16_t blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U;
 
   uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  ::memset(controlBuffer, MARK_NONE, (DMR_RADIO_SYMBOL_LENGTH * 4U + 1U) * sizeof(uint8_t));
+  ::memset(controlBuffer, MARK_NONE, DMR_RADIO_SYMBOL_LENGTH * 4U * sizeof(uint8_t));
   controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
 
   // Handle the case of the oscillator not being accurate enough
