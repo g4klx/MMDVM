@@ -72,7 +72,8 @@ m_syncCount(0U),
 m_colorCode(0U),
 m_delay(0U),
 m_state(DMRRXS_NONE),
-m_n(0U)
+m_n(0U),
+m_type(0U)
 {
 }
 
@@ -116,22 +117,13 @@ bool CDMRSlotRX::processSample(q15_t sample)
   if (sample < 0)
     m_bitBuffer[m_bitPtr] |= 0x01U;
 
-  if (m_state == DMRRXS_VOICE) {
-    uint16_t min = m_syncPtr - 2U;
-    uint16_t max = m_syncPtr + 2U;
-    if (m_dataPtr >= min && m_dataPtr <= max) {
-      if (m_n >= 5U)
-        correlateSync();
-      else
-        correlateEMB();
-    }
-  } else if (m_state == DMRRXS_DATA) {
+  if (m_state == DMRRXS_NONE) {
+    if (m_dataPtr >= 420U && m_dataPtr <= 500U)
+      correlateSync();
+  } else {
     uint16_t min = m_syncPtr - 2U;
     uint16_t max = m_syncPtr + 2U;
     if (m_dataPtr >= min && m_dataPtr <= max)
-      correlateSync();
-  } else {
-    if (m_dataPtr >= 420U && m_dataPtr <= 500U)
       correlateSync();
   }
 
@@ -162,6 +154,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
           case DT_RATE_1_DATA:
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_DATA;
+            m_type  = dataType;
             break;
           case DT_VOICE_LC_HEADER:
           case DT_VOICE_PI_HEADER:
@@ -203,6 +196,9 @@ bool CDMRSlotRX::processSample(q15_t sample)
           frame[0U] |= ++m_n;
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
         }
+      } else if (m_state == DMRRXS_DATA) {
+        frame[0U] = 0x40U | m_type;
+        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       }
     }
   }

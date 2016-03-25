@@ -59,6 +59,7 @@ private:
   uint16_t    m_delay;
   DMRRX_STATE m_state;
   uint8_t     m_n;
+  uint8_t     m_type;
 
   void correlateSync();
   void correlateEMB();
