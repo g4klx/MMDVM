@@ -35,7 +35,9 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 
-const uint16_t NOENDPTR = 9999U;
+const unsigned char CONTROL_NONE  = 0x00U;
+const unsigned char CONTROL_VOICE = 0x20U;
+const unsigned char CONTROL_DATA  = 0x40U;
 
 CDMRSlotRX::CDMRSlotRX(bool slot) :
 m_slot(slot),
@@ -44,12 +46,12 @@ m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
 m_syncPtr(0U),
-m_endPtr(NOENDPTR),
+m_endPtr(0U),
 m_delayPtr(0U),
 m_maxCorr(0),
 m_centre(0),
 m_threshold(0),
-m_control(0x00U),
+m_control(CONTROL_NONE),
 m_syncCount(0U),
 m_colorCode(0U),
 m_delay(0U),
@@ -65,7 +67,7 @@ void CDMRSlotRX::start()
   m_delayPtr = 0U;
   m_bitPtr   = 0U;
   m_maxCorr  = 0;
-  m_control  = 0x00U;
+  m_control  = CONTROL_NONE;
 }
 
 void CDMRSlotRX::reset()
@@ -75,12 +77,11 @@ void CDMRSlotRX::reset()
   m_delayPtr  = 0U;
   m_bitPtr    = 0U;
   m_maxCorr   = 0;
-  m_control   = 0x00U;
+  m_control   = CONTROL_NONE;
   m_syncCount = 0U;
   m_threshold = 0;
   m_centre    = 0;
   m_state     = DMRRXS_NONE;
-  m_endPtr    = NOENDPTR;
 }
 
 bool CDMRSlotRX::processSample(q15_t sample)
@@ -116,7 +117,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
     uint16_t ptr = m_endPtr - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
     samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centre, m_threshold);
 
-    if (m_control == 0x40U) {
+    if (m_control == CONTROL_DATA) {
       // Data sync
       uint8_t colorCode;
       uint8_t dataType;
@@ -124,6 +125,8 @@ bool CDMRSlotRX::processSample(q15_t sample)
       slotType.decode(frame + 1U, colorCode, dataType);
 
       if (colorCode == m_colorCode) {
+        DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, m_centre, m_threshold);
+
         m_syncCount = 0U;
         m_n         = 0U;
 
@@ -146,12 +149,12 @@ bool CDMRSlotRX::processSample(q15_t sample)
           default:
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_NONE;
-            m_endPtr = NOENDPTR;
             break;
         }
       }
-    } else if (m_control == 0x20U) {
+    } else if (m_control == CONTROL_VOICE) {
       // Voice sync
+      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, m_centre, m_threshold);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
@@ -164,22 +167,21 @@ bool CDMRSlotRX::processSample(q15_t sample)
         m_threshold = 0;
         m_centre    = 0;
         m_state     = DMRRXS_NONE;
-        m_endPtr    = NOENDPTR;
         return false;
       }
 
       // Voice data
       if (m_state == DMRRXS_VOICE) {
         if (m_n >= 5U) {
-          frame[0U] = 0x20U;
+          frame[0U] = CONTROL_VOICE;
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
           m_n = 0U;
         } else {
-          frame[0U] |= ++m_n;
+          frame[0U] = ++m_n;
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
         }
       } else if (m_state == DMRRXS_DATA) {
-        frame[0U] = 0x40U | m_type;
+        frame[0U] = CONTROL_DATA | m_type;
         serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       }
     }
@@ -242,16 +244,10 @@ void CDMRSlotRX::correlateSync()
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-#if defined(WANT_DEBUG)
-          if (m_endPtr == NOENDPTR)
-            DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, centre, threshold);
-          else
-            DEBUG3("DMRSlotRX: data sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
-#endif
           m_maxCorr   = corr;
           m_centre    = centre;
           m_threshold = threshold;
-          m_control   = 0x40U;
+          m_control   = CONTROL_DATA;
           m_syncPtr   = m_dataPtr;
           m_endPtr    = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
@@ -261,16 +257,10 @@ void CDMRSlotRX::correlateSync()
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-#if defined(WANT_DEBUG)
-          if (m_endPtr == NOENDPTR)
-            DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, centre, threshold);
-          else
-            DEBUG3("DMRSlotRX: voice sync found slot/rel pos", m_slot ? 2U : 1U, int16_t(m_dataPtr) - int16_t(m_syncPtr));
-#endif
           m_maxCorr   = corr;
           m_centre    = centre;
           m_threshold = threshold;
-          m_control   = 0x20U;
+          m_control   = CONTROL_VOICE;
           m_syncPtr   = m_dataPtr;
           m_endPtr    = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
