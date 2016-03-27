@@ -20,9 +20,13 @@
 #define  CONFIG_H
 
 // Allow for the use of high quality external clock oscillators
-// There is one entry for 12 MHz and another for 14.4 MHz
-// #define EXTERNAL_OSC_12_MHZ
-// #define EXTERNAL_OSC_14_4_MHZ
+// The number is the frequency of the oscillator in Hertz.
+// For 12 MHz
+// #define EXTERNAL_OSC 12000000
+// For 14.4 MHz
+// #define EXTERNAL_OSC 14400000
+// For 19.2 MHz
+// #define EXTERNAL_OSC 19200000
 
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT

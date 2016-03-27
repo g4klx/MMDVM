@@ -162,10 +162,10 @@ void CIO::start()
   ADC->ADC_COR  = 0x00000000;                 // All offsets off
   ADC->ADC_MR   = (ADC->ADC_MR & 0xFFFFFFF0) | (1 << 1) | ADC_MR_TRGEN;  // 1 = trig source TIO from TC0
 
-#if defined(EXTERNAL_OSC_12_MHZ) || defined(EXTERNAL_OSC_14_4_MHZ)
+#if defined(EXTERNAL_OSC)
   // Set up the external clock input on PA4 = AI5
-  REG_PIOA_ODR   = 0x10;                      // Set Pin As Input
-  REG_PIOA_PDR   = 0x10;                      // Disable PIO A Bit 4
+  REG_PIOA_ODR   = 0x10;                      // Set pin as input
+  REG_PIOA_PDR   = 0x10;                      // Disable PIO A bit 4
   REG_PIOA_ABSR &= ~0x10;                     // Select A peripheral = TCLK1 Input
 #endif
 
@@ -175,8 +175,8 @@ void CIO::start()
   t->TC_CCR = TC_CCR_CLKDIS;                  // Disable internal clocking while setup regs
   t->TC_IDR = 0xFFFFFFFF;                     // Disable interrupts
   t->TC_SR;                                   // Read int status reg to clear pending
-#if defined(EXTERNAL_OSC_12_MHZ) || defined(EXTERNAL_OSC_14_4_MHZ)
-  t->TC_CMR = TC_CMR_TCCLKS_XC1 |             // Use XC1 = TCLK1 External clock
+#if defined(EXTERNAL_OSC)
+  t->TC_CMR = TC_CMR_TCCLKS_XC1 |             // Use XC1 = TCLK1 external clock
 #else
   t->TC_CMR = TC_CMR_TCCLKS_TIMER_CLOCK1 |    // Use TCLK1 (prescale by 2, = 42MHz)
 #endif
@@ -185,14 +185,11 @@ void CIO::start()
               TC_CMR_EEVT_XC0 |               // Set external events from XC0 (this setup TIOB as output)
               TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_CLEAR |
               TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_CLEAR;
-#if defined(EXTERNAL_OSC_14_4_MHZ)
-  t->TC_RC  = 600;                            // Counter resets on RC, so sets period in terms of 14.4MHz External clock
-  t->TC_RA  = 300;                            // Roughly square wave
-#elif defined(EXTERNAL_OSC_12_MHZ)
-  t->TC_RC  = 500;                            // Counter resets on RC, so sets period in terms of 12MHz External clock
-  t->TC_RA  = 250;                            // Roughly square wave
+#if defined(EXTERNAL_OSC)
+  t->TC_RC  = EXTERNAL_OSC / 24000;           // Counter resets on RC, so sets period in terms of the external clock
+  t->TC_RA  = EXTERNAL_OSC / 48000;           // Roughly square wave
 #else
-  t->TC_RC  = 1750;                           // Counter resets on RC, so sets period in terms of 42MHz Internal clock
+  t->TC_RC  = 1750;                           // Counter resets on RC, so sets period in terms of 42MHz internal clock
   t->TC_RA  = 880;                            // Roughly square wave
 #endif
   t->TC_CMR = (t->TC_CMR & 0xFFF0FFFF) | TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET;  // Set clear and set from RA and RC compares
