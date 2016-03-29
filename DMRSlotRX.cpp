@@ -35,6 +35,8 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 
+const uint16_t NOENDPTR = 9999U;
+
 const unsigned char CONTROL_NONE  = 0x00U;
 const unsigned char CONTROL_VOICE = 0x20U;
 const unsigned char CONTROL_DATA  = 0x40U;
@@ -46,7 +48,7 @@ m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
 m_syncPtr(0U),
-m_endPtr(0U),
+m_endPtr(NOENDPTR),
 m_delayPtr(0U),
 m_maxCorr(0),
 m_centre(0),
@@ -82,6 +84,7 @@ void CDMRSlotRX::reset()
   m_threshold = 0;
   m_centre    = 0;
   m_state     = DMRRXS_NONE;
+  m_endPtr    = NOENDPTR;
 }
 
 bool CDMRSlotRX::processSample(q15_t sample)
@@ -148,7 +151,8 @@ bool CDMRSlotRX::processSample(q15_t sample)
             break;
           default:
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-            m_state = DMRRXS_NONE;
+            m_state  = DMRRXS_NONE;
+            m_endPtr = NOENDPTR;
             break;
         }
       }
@@ -167,6 +171,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
         m_threshold = 0;
         m_centre    = 0;
         m_state     = DMRRXS_NONE;
+        m_endPtr    = NOENDPTR;
         return false;
       }
 
