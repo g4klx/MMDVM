@@ -158,7 +158,7 @@ void CYSFTX::writeByte(uint8_t c)
 
 void CYSFTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = 120U + uint16_t(delay) * 12U;        // 100ms + tx delay
+  m_txDelay = 240U + uint16_t(delay) * 12U;        // 200ms + tx delay
 }
 
 uint16_t CYSFTX::getSpace() const

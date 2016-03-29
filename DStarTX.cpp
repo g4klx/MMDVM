@@ -449,7 +449,7 @@ void CDStarTX::writeByte(uint8_t c)
 
 void CDStarTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = 60U + uint16_t(delay) * 6U;        // 100ms + tx delay
+  m_txDelay = 120U + uint16_t(delay) * 6U;        // 200ms + tx delay
 }
 
 uint16_t CDStarTX::getSpace() const
