@@ -38,7 +38,6 @@ public:
 private:
   uint32_t    m_pll;
   bool        m_prev;
-  uint32_t    m_inc;
   YSFRX_STATE m_state;
   uint32_t    m_symbolBuffer;
   uint64_t    m_bitBuffer;
@@ -65,7 +64,6 @@ private:
   uint32_t getSyndrome23127(uint32_t pattern) const;
   uint32_t golay24128(const uint8_t* bytes) const;
   bool checksum(const uint8_t* fich) const;
-  void locked(bool lock);
 };
 
 #endif

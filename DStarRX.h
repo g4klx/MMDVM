@@ -39,7 +39,6 @@ public:
 private:
   uint32_t     m_pll;
   bool         m_prev;
-  uint32_t     m_inc;
   DSRX_STATE   m_rxState;
   uint32_t     m_patternBuffer;
   uint8_t      m_rxBuffer[100U];
@@ -63,7 +62,6 @@ private:
   void    viterbiDecode(int* data);
   void    traceBack();
   bool    checksum(const uint8_t* header) const;
-  void    locked(bool lock);
 };
 
 #endif

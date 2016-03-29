@@ -27,10 +27,9 @@ const unsigned int BUFFER_LENGTH = 200U;
 
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
 
-const uint32_t PLLMAX     = 0x10000U;
-const uint32_t PLLINC     = PLLMAX / YSF_RADIO_SYMBOL_LENGTH;
-const uint32_t INC_UNLOCK = PLLINC / 32U;
-const uint32_t INC_LOCK   = PLLINC / 64U;
+const uint32_t PLLMAX = 0x10000U;
+const uint32_t PLLINC = PLLMAX / YSF_RADIO_SYMBOL_LENGTH;
+const uint32_t INC    = PLLINC / 32U;
 
 const uint8_t SYNC_SYMBOL_ERRS = 2U;
 const uint8_t SYNC_BIT_ERRS    = 4U;
@@ -312,7 +311,6 @@ static const unsigned short CCITT_TABLE[] = {
 CYSFRX::CYSFRX() :
 m_pll(0U),
 m_prev(false),
-m_inc(INC_UNLOCK),
 m_state(YSFRXS_NONE),
 m_bitBuffer(0x00U),
 m_symbols(),
@@ -337,7 +335,6 @@ void CYSFRX::reset()
 {
   m_pll       = 0U;
   m_prev      = false;
-  m_inc       = INC_UNLOCK;
   m_state     = YSFRXS_NONE;
   m_bitBuffer = 0x00U;
   m_bufferPtr = 0U;
@@ -354,9 +351,9 @@ void CYSFRX::samples(const q15_t* samples, uint8_t length)
 
     if (bit != m_prev) {
       if (m_pll < (PLLMAX / 2U))
-        m_pll += m_inc;
+        m_pll += INC;
       else
-        m_pll -= m_inc;
+        m_pll -= INC;
     }
 
     m_prev = bit;
@@ -443,7 +440,7 @@ void CYSFRX::processNone(q15_t sample)
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = YSF_SYNC_LENGTH_BITS;
       m_state     = YSFRXS_DATA;
-      locked(true);
+      io.setDecode(true);
     }
   }
 
@@ -509,7 +506,7 @@ void CYSFRX::processData(q15_t sample)
     m_lostCount--;
     if (m_lostCount == 0U) {
       DEBUG1("YSFRX: sync timed out, lost lock");
-      locked(false);
+      io.setDecode(false);
 
       serial.writeYSFLost();
 
@@ -534,7 +531,7 @@ void CYSFRX::processData(q15_t sample)
 
       if (ok && (FICH[0U] & 0xC0U) == 0x80U) {
         DEBUG1("YSFRX: end of transmission");
-        locked(false);
+        io.setDecode(false);
         m_state = YSFRXS_NONE;
       } else {
         // Start the next frame
@@ -697,12 +694,5 @@ bool CYSFRX::checksum(const uint8_t* fich) const
   crc16 = ~crc16;
 
   return crc8[0U] == fich[5U] && crc8[1U] == fich[4U];
-}
-
-void CYSFRX::locked(bool lock)
-{
-  io.setDecode(lock);
-
-  m_inc = lock ? INC_LOCK : INC_UNLOCK;
 }
 
