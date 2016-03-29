@@ -52,7 +52,7 @@ public:
 private:
   CSerialRB            m_fifo[2U];
   arm_fir_instance_q15 m_modFilter;
-  q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+  q15_t                m_modState[130U];    // NoTaps + BlockSize - 1, 82 + 40 - 1 plus some spare
   DMRTXSTATE           m_state;
   uint8_t              m_idle[DMR_FRAME_LENGTH_BYTES];
   uint8_t              m_cachPtr;
