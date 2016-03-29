@@ -137,19 +137,35 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-          case DT_RATE_12_DATA:
-          case DT_RATE_34_DATA:
-          case DT_RATE_1_DATA:
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_DATA;
             m_type  = dataType;
             break;
+          case DT_RATE_12_DATA:
+          case DT_RATE_34_DATA:
+          case DT_RATE_1_DATA:
+            if (m_state == DMRRXS_DATA) {
+               serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+               m_type  = dataType;
+            }
+            break;
           case DT_VOICE_LC_HEADER:
-          case DT_VOICE_PI_HEADER:
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_VOICE;
             break;
-          default:
+          case DT_VOICE_PI_HEADER:
+            if (m_state == DMRRXS_VOICE)
+              serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            m_state = DMRRXS_VOICE;
+            break;
+          case DT_TERMINATOR_WITH_LC:
+            if (m_state == DMRRXS_VOICE) {
+              serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+              m_state  = DMRRXS_NONE;
+              m_endPtr = NOENDPTR;
+            }
+            break;
+          default:    // DT_CSBK
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state  = DMRRXS_NONE;
             m_endPtr = NOENDPTR;
@@ -164,18 +180,18 @@ bool CDMRSlotRX::processSample(q15_t sample)
       m_syncCount = 0U;
       m_n         = 0U;
     } else {
-      m_syncCount++;
-      if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
-        serial.writeDMRLost(m_slot);
-        m_syncCount = 0U;
-        m_threshold = 0;
-        m_centre    = 0;
-        m_state     = DMRRXS_NONE;
-        m_endPtr    = NOENDPTR;
-        return false;
+      if (m_state != DMRRXS_NONE) {
+        m_syncCount++;
+        if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
+          serial.writeDMRLost(m_slot);
+          m_syncCount = 0U;
+          m_threshold = 0;
+          m_centre    = 0;
+          m_state     = DMRRXS_NONE;
+          m_endPtr    = NOENDPTR;
+        }
       }
 
-      // Voice data
       if (m_state == DMRRXS_VOICE) {
         if (m_n >= 5U) {
           frame[0U] = CONTROL_VOICE;
