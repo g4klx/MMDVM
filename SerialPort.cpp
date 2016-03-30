@@ -459,10 +459,10 @@ void CSerialPort::process()
             if (m_dmrEnable) {
               err = 4U;
               if (m_len == 4U) {
-                if (m_buffer[3U] == 0x01U && m_modemState == STATE_DMR) {
+                if (m_buffer[3U] == 0x01U && m_modemState == STATE_DMR && !m_tx) {
                   dmrTX.setStart(true);
                   err = 0U;
-                } else if (m_buffer[3U] == 0x00U && m_modemState == STATE_DMR) {
+                } else if (m_buffer[3U] == 0x00U && m_modemState == STATE_DMR && m_tx) {
                   dmrTX.setStart(false);
                   err = 0U;
                 }
