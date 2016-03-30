@@ -19,6 +19,8 @@
 #if !defined(CONFIG_H)
 #define  CONFIG_H
 
+#define USE_SHORTER_DMR_FILTER
+
 // Allow for the use of high quality external clock oscillators
 // The number is the frequency of the oscillator in Hertz.
 // For 12 MHz
