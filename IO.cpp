@@ -226,9 +226,9 @@ void CIO::process()
   m_ledCount++;
   if (m_started) {
     // Two seconds timeout
-    if (m_watchdog >= 48000U) {
+    if (m_watchdog >= 96000U) {
       if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF) {
-        if (m_modemState == STATE_DMR)
+        if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
         m_modemState = STATE_IDLE;
       }
