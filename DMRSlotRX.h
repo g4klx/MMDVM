@@ -44,7 +44,7 @@ public:
 private:
   bool        m_slot;
   uint32_t    m_bitBuffer[DMR_RADIO_SYMBOL_LENGTH];
-  q15_t       m_buffer[900U];
+  q15_t       m_buffer[1900U];
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
   uint16_t    m_syncPtr;

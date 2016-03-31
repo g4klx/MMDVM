@@ -94,7 +94,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
     return m_state != DMRRXS_NONE;
 
   // Ensure that the buffer doesn't overflow
-  if (m_dataPtr > m_endPtr || m_dataPtr >= 900U)
+  if (m_dataPtr > m_endPtr || m_dataPtr >= 1900U)
     return m_state != DMRRXS_NONE;
 
   m_buffer[m_dataPtr] = sample;
@@ -104,7 +104,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
     m_bitBuffer[m_bitPtr] |= 0x01U;
 
   if (m_state == DMRRXS_NONE) {
-    if (m_dataPtr >= 420U && m_dataPtr <= 500U)
+    if (m_dataPtr >= 840U && m_dataPtr <= 1000U)
       correlateSync();
   } else {
     uint16_t min = m_syncPtr - 2U;
@@ -128,7 +128,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
       slotType.decode(frame + 1U, colorCode, dataType);
 
       if (colorCode == m_colorCode) {
-        DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, m_centre, m_threshold);
+        DEBUG5("DMRSlotRX: data sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
 
         m_syncCount = 0U;
         m_n         = 0U;
@@ -174,7 +174,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
       }
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
-      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 420, m_centre, m_threshold);
+      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
