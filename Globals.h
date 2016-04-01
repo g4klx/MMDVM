@@ -59,7 +59,7 @@ const uint8_t  MARK_SLOT1 = 0x08U;
 const uint8_t  MARK_SLOT2 = 0x04U;
 const uint8_t  MARK_NONE  = 0x00U;
 
-const uint16_t RX_BLOCK_SIZE = 20U;
+const uint16_t RX_BLOCK_SIZE = 4U;
 
 extern MMDVM_STATE m_modemState;
 
