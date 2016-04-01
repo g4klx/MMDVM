@@ -107,8 +107,8 @@ bool CDMRSlotRX::processSample(q15_t sample)
     if (m_dataPtr >= 840U && m_dataPtr <= 910U)
       correlateSync();
   } else {
-    uint16_t min = m_syncPtr - 2U;
-    uint16_t max = m_syncPtr + 2U;
+    uint16_t min = m_syncPtr - 1U;
+    uint16_t max = m_syncPtr + 1U;
     if (m_dataPtr >= min && m_dataPtr <= max)
       correlateSync();
   }
