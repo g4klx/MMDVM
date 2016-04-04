@@ -51,8 +51,9 @@ m_syncPtr(0U),
 m_endPtr(NOENDPTR),
 m_delayPtr(0U),
 m_maxCorr(0),
-m_centre(0),
-m_threshold(0),
+m_centre(),
+m_threshold(),
+m_averagePtr(0U),
 m_control(CONTROL_NONE),
 m_syncCount(0U),
 m_colorCode(0U),
@@ -81,8 +82,6 @@ void CDMRSlotRX::reset()
   m_maxCorr   = 0;
   m_control   = CONTROL_NONE;
   m_syncCount = 0U;
-  m_threshold = 0;
-  m_centre    = 0;
   m_state     = DMRRXS_NONE;
   m_endPtr    = NOENDPTR;
 }
@@ -105,20 +104,24 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
   if (m_state == DMRRXS_NONE) {
     if (m_dataPtr >= 840U && m_dataPtr <= 910U)
-      correlateSync();
+      correlateSync(true);
   } else {
     uint16_t min = m_syncPtr - 1U;
     uint16_t max = m_syncPtr + 1U;
     if (m_dataPtr >= min && m_dataPtr <= max)
-      correlateSync();
+      correlateSync(false);
   }
 
   if (m_dataPtr == m_endPtr) {
+    // Find the average centre and threshold values
+    q15_t centre    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
+    q15_t threshold = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
+
     uint8_t frame[DMR_FRAME_LENGTH_BYTES + 1U];
     frame[0U] = m_control;
 
     uint16_t ptr = m_endPtr - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
-    samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centre, m_threshold);
+    samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
 
     if (m_control == CONTROL_DATA) {
       // Data sync
@@ -135,42 +138,42 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-            DEBUG5("DMRSlotRX: data header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
+            DEBUG5("DMRSlotRX: data header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_DATA;
-            m_type  = dataType;
+            m_type  = 0x00U;
             break;
           case DT_RATE_12_DATA:
           case DT_RATE_34_DATA:
           case DT_RATE_1_DATA:
             if (m_state == DMRRXS_DATA) {
-              DEBUG5("DMRSlotRX: data payload found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
+              DEBUG5("DMRSlotRX: data payload found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
               serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-              m_type  = dataType;
+              m_type = dataType;
             }
             break;
           case DT_VOICE_LC_HEADER:
-            DEBUG5("DMRSlotRX: voice header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
+            DEBUG5("DMRSlotRX: voice header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_VOICE;
             break;
           case DT_VOICE_PI_HEADER:
             if (m_state == DMRRXS_VOICE) {
-              DEBUG5("DMRSlotRX: voice pi header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
+              DEBUG5("DMRSlotRX: voice pi header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
               serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             }
             m_state = DMRRXS_VOICE;
             break;
           case DT_TERMINATOR_WITH_LC:
             if (m_state == DMRRXS_VOICE) {
-              DEBUG5("DMRSlotRX: voice terminator found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
+              DEBUG5("DMRSlotRX: voice terminator found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
               serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
               m_state  = DMRRXS_NONE;
               m_endPtr = NOENDPTR;
             }
             break;
           default:    // DT_CSBK
-            DEBUG5("DMRSlotRX: csbk found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
+            DEBUG5("DMRSlotRX: csbk found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state  = DMRRXS_NONE;
             m_endPtr = NOENDPTR;
@@ -179,7 +182,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
       }
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
-      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, m_centre, m_threshold);
+      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
@@ -189,11 +192,8 @@ bool CDMRSlotRX::processSample(q15_t sample)
         m_syncCount++;
         if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
           serial.writeDMRLost(m_slot);
-          m_syncCount = 0U;
-          m_threshold = 0;
-          m_centre    = 0;
-          m_state     = DMRRXS_NONE;
-          m_endPtr    = NOENDPTR;
+          m_state  = DMRRXS_NONE;
+          m_endPtr = NOENDPTR;
         }
       }
 
@@ -207,8 +207,10 @@ bool CDMRSlotRX::processSample(q15_t sample)
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
         }
       } else if (m_state == DMRRXS_DATA) {
-        frame[0U] = CONTROL_DATA | m_type;
-        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+        if (m_type != 0x00U) {
+          frame[0U] = CONTROL_DATA | m_type;
+          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+        }
       }
     }
   }
@@ -222,7 +224,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
   return m_state != DMRRXS_NONE;
 }
 
-void CDMRSlotRX::correlateSync()
+void CDMRSlotRX::correlateSync(bool first)
 {
   uint8_t errs = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_MS_DATA_SYNC_SYMBOLS);
 
@@ -270,12 +272,23 @@ void CDMRSlotRX::correlateSync()
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-          m_maxCorr   = corr;
-          m_centre    = centre;
-          m_threshold = threshold;
-          m_control   = CONTROL_DATA;
-          m_syncPtr   = m_dataPtr;
-          m_endPtr    = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+          if (first) {
+            m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
+            m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
+            m_averagePtr    = 0U;
+          } else {
+            m_threshold[m_averagePtr] = threshold;
+            m_centre[m_averagePtr]    = centre;
+
+            m_averagePtr++;
+            if (m_averagePtr >= 4U)
+              m_averagePtr = 0U;
+          }
+
+          m_maxCorr = corr;
+          m_control = CONTROL_DATA;
+          m_syncPtr = m_dataPtr;
+          m_endPtr  = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
       } else {  // if (voice)
         uint8_t errs = 0U;
@@ -283,12 +296,23 @@ void CDMRSlotRX::correlateSync()
           errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
-          m_maxCorr   = corr;
-          m_centre    = centre;
-          m_threshold = threshold;
-          m_control   = CONTROL_VOICE;
-          m_syncPtr   = m_dataPtr;
-          m_endPtr    = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+          if (first) {
+            m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
+            m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
+            m_averagePtr    = 0U;
+          } else {
+            m_threshold[m_averagePtr] = threshold;
+            m_centre[m_averagePtr]    = centre;
+
+            m_averagePtr++;
+            if (m_averagePtr >= 4U)
+              m_averagePtr = 0U;
+          }
+
+          m_maxCorr = corr;
+          m_control = CONTROL_VOICE;
+          m_syncPtr = m_dataPtr;
+          m_endPtr  = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
       }
     }

@@ -51,8 +51,9 @@ private:
   uint16_t    m_endPtr;
   uint16_t    m_delayPtr;
   q31_t       m_maxCorr;
-  q15_t       m_centre;
-  q15_t       m_threshold;
+  q15_t       m_centre[4U];
+  q15_t       m_threshold[4U];
+  uint8_t     m_averagePtr;
   uint8_t     m_control;
   uint8_t     m_syncCount;
   uint8_t     m_colorCode;
@@ -61,7 +62,7 @@ private:
   uint8_t     m_n;
   uint8_t     m_type;
 
-  void correlateSync();
+  void correlateSync(bool first);
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
 };
 
