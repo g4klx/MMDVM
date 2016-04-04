@@ -33,15 +33,17 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 
-const unsigned char CONTROL_IDLE = 0x80U;
-const unsigned char CONTROL_DATA = 0x40U;
+const uint16_t NOENDPTR = 9999U;
+
+const uint8_t CONTROL_IDLE = 0x80U;
+const uint8_t CONTROL_DATA = 0x40U;
 
 CDMRIdleRX::CDMRIdleRX() :
 m_bitBuffer(),
 m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
-m_endPtr(999U),
+m_endPtr(NOENDPTR),
 m_maxCorr(0),
 m_centre(0),
 m_threshold(0),
@@ -56,7 +58,7 @@ void CDMRIdleRX::reset()
   m_maxCorr   = 0;
   m_threshold = 0;
   m_centre    = 0;
-  m_endPtr    = 999U;
+  m_endPtr    = NOENDPTR;
 }
 
 void CDMRIdleRX::samples(const q15_t* samples, uint8_t length)
@@ -147,7 +149,7 @@ void CDMRIdleRX::processSample(q15_t sample)
       serial.writeDMRData(false, frame, DMR_FRAME_LENGTH_BYTES + 1U);
     }
 
-    m_endPtr  = 999U;
+    m_endPtr  = NOENDPTR;
     m_maxCorr = 0U;
   }
 
