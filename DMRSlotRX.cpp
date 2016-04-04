@@ -37,9 +37,9 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 const uint16_t NOENDPTR = 9999U;
 
-const unsigned char CONTROL_NONE  = 0x00U;
-const unsigned char CONTROL_VOICE = 0x20U;
-const unsigned char CONTROL_DATA  = 0x40U;
+const uint8_t CONTROL_NONE  = 0x00U;
+const uint8_t CONTROL_VOICE = 0x20U;
+const uint8_t CONTROL_DATA  = 0x40U;
 
 CDMRSlotRX::CDMRSlotRX(bool slot) :
 m_slot(slot),
