@@ -33,6 +33,9 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 
+const unsigned char CONTROL_IDLE = 0x80U;
+const unsigned char CONTROL_DATA = 0x40U;
+
 CDMRIdleRX::CDMRIdleRX() :
 m_bitBuffer(),
 m_buffer(),
@@ -140,12 +143,8 @@ void CDMRIdleRX::processSample(q15_t sample)
     slotType.decode(frame + 1U, colorCode, dataType);
 
     if (colorCode == m_colorCode && dataType == DT_CSBK) {
-      frame[0U] = 0x80U | 0x40U | DT_CSBK;    // Idle RX, Data Sync, CSBK
+      frame[0U] = CONTROL_IDLE | CONTROL_DATA | DT_CSBK;
       serial.writeDMRData(false, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-#if defined(WANT_DEBUG)
-    } else {
-      DEBUG5("DMRIdleRX: invalid color code or data type", colorCode, m_colorCode, dataType, DT_CSBK);
-#endif
     }
 
     m_endPtr  = 999U;
