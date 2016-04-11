@@ -103,7 +103,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
     m_bitBuffer[m_bitPtr] |= 0x01U;
 
   if (m_state == DMRRXS_NONE) {
-    if (m_dataPtr >= 840U && m_dataPtr <= 910U)
+    if (m_dataPtr >= 830U && m_dataPtr <= 910U)
       correlateSync(true);
   } else {
     uint16_t min = m_syncPtr - 1U;
@@ -138,7 +138,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-            DEBUG5("DMRSlotRX: data header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
+            DEBUG5("DMRSlotRX: data header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 830, centre, threshold);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_DATA;
             m_type  = 0x00U;
@@ -147,33 +147,33 @@ bool CDMRSlotRX::processSample(q15_t sample)
           case DT_RATE_34_DATA:
           case DT_RATE_1_DATA:
             if (m_state == DMRRXS_DATA) {
-              DEBUG5("DMRSlotRX: data payload found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
+              DEBUG5("DMRSlotRX: data payload found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 830, centre, threshold);
               serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
               m_type = dataType;
             }
             break;
           case DT_VOICE_LC_HEADER:
-            DEBUG5("DMRSlotRX: voice header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
+            DEBUG5("DMRSlotRX: voice header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 830, centre, threshold);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state = DMRRXS_VOICE;
             break;
           case DT_VOICE_PI_HEADER:
             if (m_state == DMRRXS_VOICE) {
-              DEBUG5("DMRSlotRX: voice pi header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
+              DEBUG5("DMRSlotRX: voice pi header found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 830, centre, threshold);
               serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             }
             m_state = DMRRXS_VOICE;
             break;
           case DT_TERMINATOR_WITH_LC:
             if (m_state == DMRRXS_VOICE) {
-              DEBUG5("DMRSlotRX: voice terminator found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
+              DEBUG5("DMRSlotRX: voice terminator found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 830, centre, threshold);
               serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
               m_state  = DMRRXS_NONE;
               m_endPtr = NOENDPTR;
             }
             break;
           default:    // DT_CSBK
-            DEBUG5("DMRSlotRX: csbk found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
+            DEBUG5("DMRSlotRX: csbk found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 830, centre, threshold);
             serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
             m_state  = DMRRXS_NONE;
             m_endPtr = NOENDPTR;
@@ -182,7 +182,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
       }
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
-      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 840, centre, threshold);
+      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, int16_t(m_dataPtr) - 830, centre, threshold);
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
