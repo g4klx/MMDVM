@@ -216,14 +216,7 @@ void CYSFRX::processData(q15_t sample)
   if (m_bufferPtr >= (YSF_SYNC_LENGTH_BITS - 2U) && m_bufferPtr <= (YSF_SYNC_LENGTH_BITS + 2U)) {
     // Fuzzy matching of the data sync bit sequence
     if (countBits64((m_bitBuffer & YSF_SYNC_BITS_MASK) ^ YSF_SYNC_BITS) <= SYNC_BIT_ERRS) {
-#if defined(WANT_DEBUG)
-      if (m_bufferPtr < YSF_SYNC_LENGTH_BITS)
-        DEBUG2("YSFRX: found sync in Data, early", YSF_SYNC_LENGTH_BITS - m_bufferPtr);
-      else if (m_bufferPtr > YSF_SYNC_LENGTH_BITS)
-        DEBUG2("YSFRX: found sync in Data, late", m_bufferPtr - YSF_SYNC_LENGTH_BITS);
-      else
-        DEBUG1("YSFRX: found sync in Data");
-#endif
+      DEBUG2("YSFRX: found sync in Data, pos", m_bufferPtr - YSF_SYNC_LENGTH_BITS);
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = YSF_SYNC_LENGTH_BITS;
       found       = true;
