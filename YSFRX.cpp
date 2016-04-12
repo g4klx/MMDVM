@@ -230,7 +230,7 @@ void CYSFRX::processData(q15_t sample)
     }
   }
 
-  // Send a data frame to the host if the required number of bits have been received, or if a data sync has been seen
+  // Send a data frame to the host if the required number of bits have been received
   if (m_bufferPtr == YSF_FRAME_LENGTH_BITS) {
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
     m_lostCount--;
@@ -241,7 +241,6 @@ void CYSFRX::processData(q15_t sample)
       serial.writeYSFLost();
 
       m_state = YSFRXS_NONE;
-      return;
     } else {
       m_outBuffer[0U] = found ? 0x01U : 0x00U;
 
