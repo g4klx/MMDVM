@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
+#define  WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -210,8 +210,6 @@ void CYSFRX::processData(q15_t sample)
     m_bufferPtr++;
   }
 
-  bool found = false;
-
   // Only search for a sync in the right place +-1 symbol
   if (m_bufferPtr >= (YSF_SYNC_LENGTH_BITS - 2U) && m_bufferPtr <= (YSF_SYNC_LENGTH_BITS + 2U)) {
     // Fuzzy matching of the data sync bit sequence
@@ -219,7 +217,6 @@ void CYSFRX::processData(q15_t sample)
       DEBUG2("YSFRX: found sync in Data, pos", m_bufferPtr - YSF_SYNC_LENGTH_BITS);
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = YSF_SYNC_LENGTH_BITS;
-      found       = true;
     }
   }
 
@@ -235,7 +232,7 @@ void CYSFRX::processData(q15_t sample)
 
       m_state = YSFRXS_NONE;
     } else {
-      m_outBuffer[0U] = found ? 0x01U : 0x00U;
+      m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
       serial.writeYSFData(m_outBuffer, YSF_FRAME_LENGTH_BYTES + 1U);
 
