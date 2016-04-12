@@ -216,21 +216,14 @@ void CYSFRX::processData(q15_t sample)
   if (m_bufferPtr >= (YSF_SYNC_LENGTH_BITS - 2U) && m_bufferPtr <= (YSF_SYNC_LENGTH_BITS + 2U)) {
     // Fuzzy matching of the data sync bit sequence
     if (countBits64((m_bitBuffer & YSF_SYNC_BITS_MASK) ^ YSF_SYNC_BITS) <= SYNC_BIT_ERRS) {
-#if defined(WANT_DEBUG)
-      if (m_bufferPtr < YSF_SYNC_LENGTH_BITS)
-        DEBUG2("YSFRX: found sync in Data, early", YSF_SYNC_LENGTH_BITS - m_bufferPtr);
-      else if (m_bufferPtr > YSF_SYNC_LENGTH_BITS)
-        DEBUG2("YSFRX: found sync in Data, late", m_bufferPtr - YSF_SYNC_LENGTH_BITS);
-      else
-        DEBUG1("YSFRX: found sync in Data");
-#endif
+      DEBUG2("YSFRX: found sync in Data, pos", m_bufferPtr - YSF_SYNC_LENGTH_BITS);
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = YSF_SYNC_LENGTH_BITS;
       found       = true;
     }
   }
 
-  // Send a data frame to the host if the required number of bits have been received, or if a data sync has been seen
+  // Send a data frame to the host if the required number of bits have been received
   if (m_bufferPtr == YSF_FRAME_LENGTH_BITS) {
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
     m_lostCount--;
@@ -241,7 +234,6 @@ void CYSFRX::processData(q15_t sample)
       serial.writeYSFLost();
 
       m_state = YSFRXS_NONE;
-      return;
     } else {
       m_outBuffer[0U] = found ? 0x01U : 0x00U;
 
