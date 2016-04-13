@@ -96,6 +96,10 @@ void CDMRTX::process()
         createData(1U);
         m_state = DMRTXSTATE_CACH1;
         break;
+
+      case DMRTXSTATE_CAL:
+        createCal();
+        break;
         
       default:
         createCACH(0U, 1U);
@@ -192,6 +196,15 @@ void CDMRTX::setStart(bool start)
   m_count = 0U;
 }
 
+void CDMRTX::setCal(bool start)
+{
+  m_state = start ? DMRTXSTATE_CAL : DMRTXSTATE_IDLE;
+
+  m_count = 0U;
+}
+
+
+
 void CDMRTX::writeByte(uint8_t c, uint8_t control)
 {
   q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
@@ -274,6 +287,17 @@ void CDMRTX::createData(uint8_t slotIndex)
     }
   }
 
+  m_poLen = DMR_FRAME_LENGTH_BYTES;
+  m_poPtr = 0U;
+}
+
+void CDMRTX::createCal()
+{
+    for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
+      m_poBuffer[i]   = 0x5F;             //+3+3-3-3 pattern for deviation cal. 
+      m_markBuffer[i] = MARK_NONE;
+    }
+    
   m_poLen = DMR_FRAME_LENGTH_BYTES;
   m_poPtr = 0U;
 }

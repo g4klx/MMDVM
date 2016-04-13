@@ -57,7 +57,7 @@ const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
-const uint8_t HARDWARE[]         = "MMDVM 20160412 48kHz (D-Star/DMR/System Fusion)";
+const uint8_t HARDWARE[]         = "MMDVM 20160413 48kHz (D-Star/DMR/System Fusion)";
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
@@ -191,7 +191,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   MMDVM_STATE modemState = MMDVM_STATE(data[3U]);
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_CALIBRATE)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_CALIBRATE && modemState != STATE_DMRCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !dstarEnable)
     return 4U;
@@ -252,7 +252,7 @@ uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
   if (modemState == m_modemState)
     return 0U;
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_CALIBRATE)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_CALIBRATE && modemState != STATE_DMRCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !m_dstarEnable)
     return 4U;
@@ -293,6 +293,13 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dstarRX.reset();
       ysfRX.reset();
       break;
+   case STATE_DMRCAL:
+      DEBUG1("Mode set to DMR Calibrate");
+      dmrIdleRX.reset();
+      dmrRX.reset();
+      dstarRX.reset();
+      ysfRX.reset();
+      break;      
     default:
       DEBUG1("Mode set to Idle");
       // STATE_IDLE
@@ -377,6 +384,8 @@ void CSerialPort::process()
           case MMDVM_CAL_DATA:
             if (m_modemState == STATE_CALIBRATE)
               err = calTX.write(m_buffer + 3U, m_len - 3U);
+            if (m_modemState == STATE_DMRCAL)
+              err= calDMR.write(m_buffer +3U,m_len -3U);
             if (err == 0U) {
               sendACK();
             } else {
