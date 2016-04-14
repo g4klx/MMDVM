@@ -319,18 +319,18 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
   bool ls1 = true;
 
   if (m_cachPtr == 0U)          // For 0
-    ls0 = false;
-  else if (m_cachPtr == 9U)     // For 3
     ls1 = false;
+  else if (m_cachPtr == 9U)     // For 3
+    ls0 = false;
 
-  bool h0 = at ^ tc ^ ls0;
-  bool h1 =      tc ^ ls0 ^ ls1;
-  bool h2 = at ^ tc       ^ ls1;
+  bool h0 = at ^ tc ^ ls1;
+  bool h1 =      tc ^ ls1 ^ ls0;
+  bool h2 = at ^ tc       ^ ls0;
 
   m_poBuffer[0U] |= at  ? 0x80U : 0x00U;
   m_poBuffer[0U] |= tc  ? 0x08U : 0x00U;
-  m_poBuffer[1U] |= ls0 ? 0x80U : 0x00U;
-  m_poBuffer[1U] |= ls1 ? 0x08U : 0x00U;
+  m_poBuffer[1U] |= ls1 ? 0x80U : 0x00U;
+  m_poBuffer[1U] |= ls0 ? 0x08U : 0x00U;
   m_poBuffer[1U] |= h0  ? 0x02U : 0x00U;
   m_poBuffer[2U] |= h1  ? 0x20U : 0x00U;
   m_poBuffer[2U] |= h2  ? 0x02U : 0x00U;
