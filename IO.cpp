@@ -361,11 +361,11 @@ void CIO::process()
 
         ysfRX.samples(C4FSKVals, blockSize);
       }
-    } else if (m_modemState == STATE_CALIBRATE) {
+    } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE + 1U];
       ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, blockSize);
 
-      calRX.samples(GMSKVals, blockSize);
+      calDStarRX.samples(GMSKVals, blockSize);
     }
   }
 }

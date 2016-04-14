@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 #include "Config.h"
 #include "Globals.h"
-#include "CalRX.h"
+#include "CalDStarRX.h"
 #include "Utils.h"
 
 const unsigned int BUFFER_LENGTH = 200U;
@@ -33,7 +33,7 @@ const uint32_t DATA_SYNC_DATA2 = 0x00554B97U;
 const uint32_t DATA_SYNC_MASK  = 0x00FFFFFFU;
 const uint8_t  DATA_SYNC_ERRS  = 2U;
 
-CCalRX::CCalRX() :
+CCalDStarRX::CCalDStarRX() :
 m_pll(0U),
 m_prev(false),
 m_patternBuffer(0x00U),
@@ -42,7 +42,7 @@ m_ptr(0U)
 {
 }
 
-void CCalRX::samples(const q15_t* samples, uint8_t length)
+void CCalDStarRX::samples(const q15_t* samples, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
     bool bit = samples[i] < 0;
@@ -65,7 +65,7 @@ void CCalRX::samples(const q15_t* samples, uint8_t length)
   }
 }
 
-void CCalRX::process(q15_t value)
+void CCalDStarRX::process(q15_t value)
 {
   m_patternBuffer <<= 1;
   if (value < 0)

@@ -1,6 +1,7 @@
 /*
  *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
+ *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -44,8 +45,9 @@ CDMRTX     dmrTX;
 CYSFRX     ysfRX;
 CYSFTX     ysfTX;
 
-CCalRX     calRX;
-CCalTX     calTX;
+CCalDStarRX calDStarRX;
+CCalDStarTX calDStarTX;
+CCalDMR     calDMR;
 
 CSerialPort serial;
 CIO io;
@@ -71,8 +73,11 @@ void loop()
   if (m_ysfEnable && m_modemState == STATE_YSF)
     ysfTX.process();
 
-  if (m_modemState == STATE_CALIBRATE)
-    calTX.process();
+  if (m_modemState == STATE_DSTARCAL)
+    calDStarTX.process();
+
+  if (m_modemState == STATE_DMRCAL)
+    calDMR.process();
 }
 
 int main()

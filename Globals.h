@@ -39,7 +39,8 @@ enum MMDVM_STATE {
   STATE_DSTAR     = 1,
   STATE_DMR       = 2,
   STATE_YSF       = 3,
-  STATE_CALIBRATE = 99
+  STATE_DMRCAL    = 98,
+  STATE_DSTARCAL  = 99
 };
 
 #include "SerialPort.h"
@@ -50,8 +51,9 @@ enum MMDVM_STATE {
 #include "DMRTX.h"
 #include "YSFRX.h"
 #include "YSFTX.h"
-#include "CalRX.h"
-#include "CalTX.h"
+#include "CalDStarRX.h"
+#include "CalDStarTX.h"
+#include "CalDMR.h"
 #include "Debug.h"
 #include "IO.h"
 
@@ -70,7 +72,7 @@ extern bool m_ysfEnable;
 extern bool m_tx;
 
 extern uint32_t m_sampleCount;
-extern bool    m_sampleInsert;
+extern bool     m_sampleInsert;
 
 extern CSerialPort serial;
 extern CIO io;
@@ -85,8 +87,9 @@ extern CDMRTX dmrTX;
 extern CYSFRX ysfRX;
 extern CYSFTX ysfTX;
 
-extern CCalRX calRX;
-extern CCalTX calTX;
+extern CCalDStarRX calDStarRX;
+extern CCalDStarTX calDStarTX;
+extern CCalDMR     calDMR;
 
 #endif
 

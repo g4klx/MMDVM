@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2013,2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -57,7 +58,7 @@ const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
-const uint8_t HARDWARE[]         = "MMDVM 20160412 24kHz (D-Star/DMR/System Fusion)";
+const uint8_t HARDWARE[]         = "MMDVM 20160413 24kHz (D-Star/DMR/System Fusion)";
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
@@ -191,7 +192,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   MMDVM_STATE modemState = MMDVM_STATE(data[3U]);
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_CALIBRATE)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !dstarEnable)
     return 4U;
@@ -252,7 +253,7 @@ uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
   if (modemState == m_modemState)
     return 0U;
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_CALIBRATE)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !m_dstarEnable)
     return 4U;
@@ -286,8 +287,15 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dmrRX.reset();
       dstarRX.reset();
       break;
-    case STATE_CALIBRATE:
-      DEBUG1("Mode set to Calibrate");
+    case STATE_DSTARCAL:
+      DEBUG1("Mode set to D-Star Calibrate");
+      dmrIdleRX.reset();
+      dmrRX.reset();
+      dstarRX.reset();
+      ysfRX.reset();
+      break;
+    case STATE_DMRCAL:
+      DEBUG1("Mode set to DMR Calibrate");
       dmrIdleRX.reset();
       dmrRX.reset();
       dstarRX.reset();
@@ -375,8 +383,10 @@ void CSerialPort::process()
             break;
 
           case MMDVM_CAL_DATA:
-            if (m_modemState == STATE_CALIBRATE)
-              err = calTX.write(m_buffer + 3U, m_len - 3U);
+            if (m_modemState == STATE_DSTARCAL)
+              err = calDStarTX.write(m_buffer + 3U, m_len - 3U);
+            if (m_modemState == STATE_DMRCAL)
+              err = calDMR.write(m_buffer + 3U, m_len - 3U);
             if (err == 0U) {
               sendACK();
             } else {
@@ -673,7 +683,7 @@ void CSerialPort::writeYSFLost()
 
 void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
 {
-  if (m_modemState != STATE_CALIBRATE)
+  if (m_modemState != STATE_DSTARCAL)
     return;
 
   uint8_t reply[130U];

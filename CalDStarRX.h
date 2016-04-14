@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,23 +16,26 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(CALTX_H)
-#define  CALTX_H
+#if !defined(CALDSTARRX_H)
+#define  CALDSTARRX_H
 
 #include "Config.h"
 #include "DStarDefines.h"
 
-class CCalTX {
+class CCalDStarRX {
 public:
-  CCalTX();
+  CCalDStarRX();
 
-  uint8_t write(const uint8_t* data, uint8_t length);
-
-  void process();
+  void samples(const q15_t* samples, uint8_t length);
 
 private:
-  bool      m_transmit;
-  uint16_t  m_count;
+  uint32_t m_pll;
+  bool     m_prev;
+  uint32_t m_patternBuffer;
+  q15_t    m_rxBuffer[3U * 8U];
+  uint8_t  m_ptr;
+
+  void    process(q15_t value);
 };
 
 #endif

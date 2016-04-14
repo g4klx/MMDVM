@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 #include "Config.h"
 #include "Globals.h"
-#include "CalTX.h"
+#include "CalDStarTX.h"
 
 const uint8_t HEADER[] = {0x00U, 0x00U, 0x00U, 'D', 'I', 'R', 'E', 'C', 'T', ' ', ' ',
                                                'D', 'I', 'R', 'E', 'C', 'T', ' ', ' ',
@@ -28,13 +28,13 @@ const uint8_t HEADER[] = {0x00U, 0x00U, 0x00U, 'D', 'I', 'R', 'E', 'C', 'T', ' '
 
 const uint8_t SLOW_DATA_TEXT[] = {'M', 'M', 'D', 'V', 'M', ' ', 'M', 'o', 'd', 'e', 'm', ' ', 'T', 'e', 's', 't', ' ', ' ', ' ', ' '};
 
-CCalTX::CCalTX() :
+CCalDStarTX::CCalDStarTX() :
 m_transmit(false),
 m_count(0U)
 {
 }
 
-void CCalTX::process()
+void CCalDStarTX::process()
 {
   dstarTX.process();
 
@@ -162,7 +162,7 @@ void CCalTX::process()
   m_count = (m_count + 1U) % (30U * 21U);
 }
 
-uint8_t CCalTX::write(const uint8_t* data, uint8_t length)
+uint8_t CCalDStarTX::write(const uint8_t* data, uint8_t length)
 {
   if (length != 1U)
     return 4U;
