@@ -45,7 +45,7 @@ const uint8_t CACH_INTERLEAVE[] =
          73U, 74U, 75U, 77U, 78U, 79U, 81U, 82U, 83U, 85U, 87U, 88U, 89U, 91U, 92U, 93U, 95U};
 
 const uint8_t EMPTY_SHORT_LC[] = 
-        {0x00U, 0x08U, 0x44U, 0x00U, 0x88U, 0x18U, 0x63U, 0x89U, 0x18U, 0x64U, 0x80U, 0x00U};
+        {0x00U, 0x00U, 0x44U, 0x00U, 0x00U, 0x18U, 0x63U, 0x01U, 0x18U, 0x64U, 0x00U, 0x00U};
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -182,12 +182,6 @@ uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint8_t length)
     WRITE_BIT1(m_newShortLC, n, b);
   }
 
-  // Set the LCSS bits
-  m_newShortLC[1U]  |= 0x08U;
-  m_newShortLC[4U]  |= 0x88U;
-  m_newShortLC[7U]  |= 0x88U;
-  m_newShortLC[10U] |= 0x80U;
-
   return 0U;
 }
 
@@ -321,23 +315,25 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
 
   bool at = m_fifo[rxSlotIndex].getData() > 0U;
   bool tc = txSlotIndex == 1U;
-  bool lcss0 = true;            // For 1 and 2
-  bool lcss1 = true;
+  bool ls0 = true;            // For 1 and 2
+  bool ls1 = true;
 
   if (m_cachPtr == 0U)          // For 0
-    lcss0 = false;
+    ls0 = false;
   else if (m_cachPtr == 9U)     // For 3
-    lcss1 = false;
+    ls1 = false;
 
-  bool h0 = at ^ tc ^ lcss0;
-  bool h1 =      tc ^ lcss0 ^ lcss1;
-  bool h2 = at ^ tc         ^ lcss1;
+  bool h0 = at ^ tc ^ ls0;
+  bool h1 =      tc ^ ls0 ^ ls1;
+  bool h2 = at ^ tc       ^ ls1;
 
-  m_poBuffer[0U] |= at ? 0x80U : 0x00U;
-  m_poBuffer[0U] |= tc ? 0x08U : 0x00U;
-  m_poBuffer[1U] |= h0 ? 0x02U : 0x00U;
-  m_poBuffer[2U] |= h1 ? 0x20U : 0x00U;
-  m_poBuffer[2U] |= h2 ? 0x02U : 0x00U;
+  m_poBuffer[0U] |= at  ? 0x80U : 0x00U;
+  m_poBuffer[0U] |= tc  ? 0x08U : 0x00U;
+  m_poBuffer[1U] |= ls0 ? 0x80U : 0x00U;
+  m_poBuffer[1U] |= ls1 ? 0x08U : 0x00U;
+  m_poBuffer[1U] |= h0  ? 0x02U : 0x00U;
+  m_poBuffer[2U] |= h1  ? 0x20U : 0x00U;
+  m_poBuffer[2U] |= h2  ? 0x02U : 0x00U;
 
   m_poLen = DMR_CACH_LENGTH_BYTES;
   m_poPtr = 0U;
