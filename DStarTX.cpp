@@ -30,8 +30,8 @@ const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 static q15_t DSTAR_GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
 const uint16_t DSTAR_GMSK_FILTER_LEN = 12U;
 
-q15_t DSTAR_1[] = { 1600,  1600,  1600,  1600,  1600};
-q15_t DSTAR_0[] = {-1600, -1600, -1600, -1600, -1600};
+q15_t DSTAR_1[] = { 800,  800,  800,  800,  800};
+q15_t DSTAR_0[] = {-800, -800, -800, -800, -800};
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
