@@ -25,7 +25,7 @@
 
 const unsigned int BUFFER_LENGTH = 200U;
 
-const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
+const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
 const uint32_t PLLMAX = 0x10000U;
 const uint32_t PLLINC = PLLMAX / YSF_RADIO_SYMBOL_LENGTH;
