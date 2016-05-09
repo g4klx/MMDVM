@@ -34,6 +34,8 @@ const uint8_t MMDVM_SET_FREQ     = 0x04U;
 
 const uint8_t MMDVM_CAL_DATA     = 0x08U;
 
+const uint8_t MMDVM_SEND_CWID    = 0x0AU;
+
 const uint8_t MMDVM_DSTAR_HEADER = 0x10U;
 const uint8_t MMDVM_DSTAR_DATA   = 0x11U;
 const uint8_t MMDVM_DSTAR_LOST   = 0x12U;
@@ -391,6 +393,15 @@ void CSerialPort::process()
               sendACK();
             } else {
               DEBUG2("Received invalid calibration data", err);
+              sendNAK(err);
+            }
+            break;
+
+          case MMDVM_SEND_CWID:
+            if (m_modemState == STATE_IDLE)
+              err = cwIdTX.write(m_buffer + 3U, m_len - 3U);
+            if (err != 0U) {
+              DEBUG2("Invalid CW Id data", err);
               sendNAK(err);
             }
             break;

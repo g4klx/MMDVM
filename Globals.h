@@ -54,6 +54,7 @@ enum MMDVM_STATE {
 #include "CalDStarRX.h"
 #include "CalDStarTX.h"
 #include "CalDMR.h"
+#include "CWIdTX.h"
 #include "Debug.h"
 #include "IO.h"
 
@@ -90,6 +91,8 @@ extern CYSFTX ysfTX;
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
 extern CCalDMR     calDMR;
+
+extern CCWIdTX cwIdTX;
 
 #endif
 

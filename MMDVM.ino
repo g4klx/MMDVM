@@ -46,6 +46,8 @@ CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
 CCalDMR     calDMR;
 
+CCWIdTX cwIdTX;
+
 CSerialPort serial;
 CIO io;
 
@@ -75,5 +77,8 @@ void loop()
 
   if (m_modemState == STATE_DMRCAL)
     calDMR.process();
+
+  if (m_modemState == STATE_IDLE)
+    cwIdTX.process();
 }
 
