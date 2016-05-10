@@ -36,9 +36,6 @@ const uint16_t GMSK_FILTER_LEN = 12U;
 
 const uint16_t DC_OFFSET = 2048U;
 
-const uint16_t TX_BUFFER_SIZE = 501U;
-const uint16_t RX_BUFFER_SIZE = 601U;
-
 #if defined(__SAM3X8E__)
 // An Arduino Due
 #if defined(ARDUINO_DUE_PAPA)
@@ -105,8 +102,8 @@ m_pinDAC(PIN_DAC),
 m_ticker(),
 #endif
 m_started(false),
-m_rxBuffer(RX_BUFFER_SIZE),
-m_txBuffer(TX_BUFFER_SIZE),
+m_rxBuffer(RX_RINGBUFFER_SIZE),
+m_txBuffer(TX_RINGBUFFER_SIZE),
 m_C4FSKFilter(),
 m_GMSKFilter(),
 m_C4FSKState(),

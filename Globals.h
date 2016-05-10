@@ -64,6 +64,9 @@ const uint8_t  MARK_NONE  = 0x00U;
 
 const uint16_t RX_BLOCK_SIZE = 2U;
 
+const uint16_t TX_RINGBUFFER_SIZE = 500U;
+const uint16_t RX_RINGBUFFER_SIZE = 600U;
+
 extern MMDVM_STATE m_modemState;
 
 extern bool m_dstarEnable;
