@@ -276,18 +276,21 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       DEBUG1("Mode set to DMR");
       dstarRX.reset();
       ysfRX.reset();
+      cwIdTX.reset();
       break;
     case STATE_DSTAR:
       DEBUG1("Mode set to D-Star");
       dmrIdleRX.reset();
       dmrRX.reset();
       ysfRX.reset();
+      cwIdTX.reset();
       break;
     case STATE_YSF:
       DEBUG1("Mode set to System Fusion");
       dmrIdleRX.reset();
       dmrRX.reset();
       dstarRX.reset();
+      cwIdTX.reset();
       break;
     case STATE_DSTARCAL:
       DEBUG1("Mode set to D-Star Calibrate");
@@ -295,6 +298,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();
+      cwIdTX.reset();
       break;
     case STATE_DMRCAL:
       DEBUG1("Mode set to DMR Calibrate");
@@ -302,6 +306,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();
+      cwIdTX.reset();
       break;
     default:
       DEBUG1("Mode set to Idle");

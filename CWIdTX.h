@@ -30,6 +30,8 @@ public:
 
   uint8_t write(const uint8_t* data, uint8_t length);
 
+  void reset();
+
 private:
   uint8_t  m_poBuffer[1000U];
   uint16_t m_poLen;

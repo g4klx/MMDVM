@@ -140,7 +140,7 @@ uint8_t CCWIdTX::write(const uint8_t* data, uint8_t length)
           bool b = (SYMBOL_LIST[j].pattern & MASK) == MASK;
           WRITE_BIT1(m_poBuffer, m_poLen, b);
 
-          if (m_poLen >= 1000U) {
+          if (m_poLen >= 995U) {
             m_poLen = 0U;
             return 4U;
           }
@@ -151,13 +151,23 @@ uint8_t CCWIdTX::write(const uint8_t* data, uint8_t length)
     }
   }
 
-  if (m_poLen == 8U)
+  // An empty message
+  if (m_poLen == 8U) {
     m_poLen = 0U;
-  else
-    m_poLen += 5U;
+    return 4U;
+  }
+
+  m_poLen += 5U;
 
   DEBUG2("Message created with length", m_poLen);
 
   return 0U;
+}
+
+void CCWIdTX::reset()
+{
+  m_poLen = 0U;
+  m_poPtr = 0U;
+  m_n     = 0U;
 }
 
