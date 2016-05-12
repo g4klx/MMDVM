@@ -31,7 +31,7 @@ q15_t SILENCE[] = {
 
 const uint8_t CYCLE_LENGTH = 24U;
 
-const uint8_t DOT_LENGTH = 60U;
+const uint8_t DOT_LENGTH = 50U;
 
 const struct {
   uint8_t  c;

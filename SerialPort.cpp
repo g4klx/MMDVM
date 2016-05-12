@@ -403,6 +403,7 @@ void CSerialPort::process()
             break;
 
           case MMDVM_SEND_CWID:
+            err = 5U;
             if (m_modemState == STATE_IDLE)
               err = cwIdTX.write(m_buffer + 3U, m_len - 3U);
             if (err != 0U) {
