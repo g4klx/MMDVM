@@ -51,6 +51,9 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_COS                52
 #define PIN_PTT                23
 #define PIN_COSLED             22
+#define PIN_DSTAR              132
+#define PIN_DMR                133
+#define PIN_YSF                134
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13) (PB20)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -137,6 +140,13 @@ m_lockout(false)
   pinMode(PIN_COSLED, OUTPUT);
   pinMode(PIN_LED,    OUTPUT);
   pinMode(PIN_COS,    INPUT);
+
+#if defined(ARDUINO_MODE_PINS)
+  // Set up the mode output pins
+  pinMode(PIN_DSTAR,  OUTPUT);
+  pinMode(PIN_DMR,    OUTPUT);
+  pinMode(PIN_YSF,    OUTPUT);
+#endif
 #endif
 }
 
@@ -204,7 +214,7 @@ void CIO::start()
 
   digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
   digitalWrite(PIN_COSLED, LOW);
-  digitalWrite(PIN_LED, HIGH);
+  digitalWrite(PIN_LED,    HIGH);
 #elif defined(__MBED__)
   m_ticker.attach(&ADC_Handler, 1.0 / 24000.0);
 
@@ -215,6 +225,8 @@ void CIO::start()
 
   m_count   = 0U;
   m_started = true;
+
+  setMode();
 }
 
 void CIO::process()
@@ -227,6 +239,7 @@ void CIO::process()
         if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
         m_modemState = STATE_IDLE;
+        setMode();
       }
 
       m_watchdog = 0U;
@@ -431,6 +444,36 @@ void CIO::setDecode(bool dcd)
 #endif
 
   m_dcd = dcd;
+}
+
+void CIO::setMode()
+{
+#if !defined(__MBED__)
+#if defined(ARDUINO_MODE_PINS)
+switch (m_modemState) {
+  case STATE_DSTAR:
+    digitalWrite(PIN_DSTAR, HIGH);
+    digitalWrite(PIN_DMR,   LOW);
+    digitalWrite(PIN_YSF,   LOW);
+    break;
+  case STATE_DMR:
+    digitalWrite(PIN_DSTAR, LOW);
+    digitalWrite(PIN_DMR,   HIGH);
+    digitalWrite(PIN_YSF,   LOW);
+    break;
+  case STATE_YSF:
+    digitalWrite(PIN_DSTAR, LOW);
+    digitalWrite(PIN_DMR,   LOW);
+    digitalWrite(PIN_YSF,   HIGH);
+    break;
+  default:
+    digitalWrite(PIN_DSTAR, LOW);
+    digitalWrite(PIN_DMR,   LOW);
+    digitalWrite(PIN_YSF,   LOW);
+    break;
+}
+#endif
+#endif
 }
 
 void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t txLevel)

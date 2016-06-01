@@ -36,7 +36,8 @@ public:
   uint16_t getSpace() const;
 
   void setDecode(bool dcd);
-
+  void setMode();
+  
   void interrupt();
 
   void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t txLevel);

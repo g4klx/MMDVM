@@ -31,6 +31,9 @@
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT
 
+// Use pins to output the current mode
+// #define ARDUINO_MODE_PINS
+
 // For the original Arduino Due pin layout
 // #define  ARDUINO_DUE_PAPA
 

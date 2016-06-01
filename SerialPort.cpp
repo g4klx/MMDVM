@@ -315,6 +315,8 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
   }
 
   m_modemState = modemState;
+
+  io.setMode();
 }
 
 void CSerialPort::start()
