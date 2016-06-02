@@ -31,11 +31,10 @@ const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
 const uint8_t YSF_START_SYNC = 0x77U;
 const uint8_t YSF_END_SYNC   = 0xFFU;
 
-q15_t YSF_A[] = { 704,  704,  704,  704,  704};
-q15_t YSF_B[] = { 235,  235,  235,  235,  235};
-q15_t YSF_C[] = {-235, -235, -235, -235, -235};
-q15_t YSF_D[] = {-704, -704, -704, -704, -704};
-
+q15_t YSF_A[] = { 809,  809,  809,  809,  809};
+q15_t YSF_B[] = { 269,  269,  269,  269,  269};
+q15_t YSF_C[] = {-269, -269, -269, -269, -269};
+q15_t YSF_D[] = {-809, -809, -809, -809, -809};
 
 CYSFTX::CYSFTX() :
 m_buffer(1500U),
