@@ -51,9 +51,9 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_COS                52
 #define PIN_PTT                23
 #define PIN_COSLED             22
-#define PIN_DSTAR              132
-#define PIN_DMR                133
-#define PIN_YSF                134
+#define PIN_DSTAR              9
+#define PIN_DMR                8
+#define PIN_YSF                7
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13) (PB20)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -63,9 +63,9 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_COS                A7
 #define PIN_PTT                A8
 #define PIN_COSLED             A11
-#define PIN_DSTAR              132
-#define PIN_DMR                133
-#define PIN_YSF                134
+#define PIN_DSTAR              9
+#define PIN_DMR                8
+#define PIN_YSF                7
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
