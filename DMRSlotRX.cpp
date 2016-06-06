@@ -299,7 +299,7 @@ void CDMRSlotRX::correlateSync(bool first)
           m_maxCorr  = corr;
           m_control  = CONTROL_DATA;
           m_syncPtr  = m_dataPtr;
-          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U;
+          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
           m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
       } else {  // if (voice)
@@ -324,7 +324,7 @@ void CDMRSlotRX::correlateSync(bool first)
           m_maxCorr  = corr;
           m_control  = CONTROL_VOICE;
           m_syncPtr  = m_dataPtr;
-          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U;
+          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
           m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
       }
