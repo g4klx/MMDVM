@@ -48,6 +48,7 @@ private:
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
   uint16_t    m_syncPtr;
+  uint16_t    m_startPtr;
   uint16_t    m_endPtr;
   uint16_t    m_delayPtr;
   q31_t       m_maxCorr;

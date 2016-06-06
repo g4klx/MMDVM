@@ -48,6 +48,7 @@ m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
 m_syncPtr(0U),
+m_startPtr(0U),
 m_endPtr(NOENDPTR),
 m_delayPtr(0U),
 m_maxCorr(0),
@@ -83,6 +84,7 @@ void CDMRSlotRX::reset()
   m_control   = CONTROL_NONE;
   m_syncCount = 0U;
   m_state     = DMRRXS_NONE;
+  m_startPtr  = 0U;
   m_endPtr    = NOENDPTR;
 }
 
@@ -91,6 +93,15 @@ bool CDMRSlotRX::processSample(q15_t sample)
   m_delayPtr++;
   if (m_delayPtr < m_delay)
     return m_state != DMRRXS_NONE;
+
+  if (m_state != DMRRXS_NONE) {
+    if (m_dataPtr > m_startPtr && m_dataPtr < m_endPtr)
+      io.setADCDetection(true);
+    else
+      io.setADCDetection(false);
+  } else {
+    io.setADCDetection(false);
+  }
 
   // Ensure that the buffer doesn't overflow
   if (m_dataPtr > m_endPtr || m_dataPtr >= 900U)
@@ -285,10 +296,11 @@ void CDMRSlotRX::correlateSync(bool first)
               m_averagePtr = 0U;
           }
 
-          m_maxCorr = corr;
-          m_control = CONTROL_DATA;
-          m_syncPtr = m_dataPtr;
-          m_endPtr  = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+          m_maxCorr  = corr;
+          m_control  = CONTROL_DATA;
+          m_syncPtr  = m_dataPtr;
+          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U;
+          m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
       } else {  // if (voice)
         uint8_t errs = 0U;
@@ -309,10 +321,11 @@ void CDMRSlotRX::correlateSync(bool first)
               m_averagePtr = 0U;
           }
 
-          m_maxCorr = corr;
-          m_control = CONTROL_VOICE;
-          m_syncPtr = m_dataPtr;
-          m_endPtr  = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+          m_maxCorr  = corr;
+          m_control  = CONTROL_VOICE;
+          m_syncPtr  = m_dataPtr;
+          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U;
+          m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
         }
       }
     }

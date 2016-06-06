@@ -36,6 +36,7 @@ public:
   uint16_t getSpace() const;
 
   void setDecode(bool dcd);
+  void setADCDetection(bool detect);
   void setMode();
   
   void interrupt();
@@ -82,6 +83,7 @@ private:
   bool                 m_ledValue;
 
   bool                 m_dcd;
+  bool                 m_detect;
 
   uint16_t             m_overflow;
   uint16_t             m_overcount;

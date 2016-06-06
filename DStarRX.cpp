@@ -333,7 +333,9 @@ void CDStarRX::processNone(bool bit)
   // Exact matching of the data sync bit sequence
   if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) == 0U) {
     DEBUG1("DStarRX: found data sync in None");
+
     io.setDecode(true);
+    io.setADCDetection(true);
 
 #if defined(WANT_DEBUG)
     q15_t min = 16000;
@@ -374,6 +376,7 @@ void CDStarRX::processHeader(bool bit)
     bool ok = rxHeader(m_rxBuffer, header);
     if (ok) {
       io.setDecode(true);
+      io.setADCDetection(true);
 
       serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES);
 
@@ -401,7 +404,9 @@ void CDStarRX::processData(bool bit)
   // Fuzzy matching of the end frame sequences
   if (countBits32((m_patternBuffer & END_SYNC_MASK) ^ END_SYNC_DATA) <= END_SYNC_ERRS) {
     DEBUG1("DStarRX: Found end sync in Data");
+
     io.setDecode(false);
+    io.setADCDetection(false);
 
     serial.writeDStarEOT();
 
@@ -440,7 +445,9 @@ void CDStarRX::processData(bool bit)
   m_dataBits--;
   if (m_dataBits == 0U) {
     DEBUG1("DStarRX: data sync timed out, lost lock");
+
     io.setDecode(false);
+    io.setADCDetection(false);
 
     serial.writeDStarLost();
 

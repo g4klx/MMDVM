@@ -120,6 +120,7 @@ m_txLevel(128 * 128),
 m_ledCount(0U),
 m_ledValue(true),
 m_dcd(false),
+m_detect(false),
 m_overflow(0U),
 m_overcount(0U),
 m_count(0U),
@@ -299,7 +300,7 @@ void CIO::process()
       m_rxBuffer.get(sample, control[i]);
 
       // Detect ADC overflow
-      if (m_dcd && (sample == 0U || sample == 4095U))
+      if (m_detect && (sample == 0U || sample == 4095U))
         m_overflow++;
       m_overcount++;
 
@@ -447,6 +448,11 @@ void CIO::setDecode(bool dcd)
 #endif
 
   m_dcd = dcd;
+}
+
+void CIO::setADCDetection(bool detect)
+{
+  m_detect = detect;
 }
 
 void CIO::setMode()

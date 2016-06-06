@@ -167,7 +167,9 @@ void CYSFRX::processNone(q15_t sample)
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = YSF_SYNC_LENGTH_BITS;
       m_state     = YSFRXS_DATA;
+
       io.setDecode(true);
+      io.setADCDetection(true);
     }
   }
 
@@ -226,7 +228,9 @@ void CYSFRX::processData(q15_t sample)
     m_lostCount--;
     if (m_lostCount == 0U) {
       DEBUG1("YSFRX: sync timed out, lost lock");
+
       io.setDecode(false);
+      io.setADCDetection(false);
 
       serial.writeYSFLost();
 
