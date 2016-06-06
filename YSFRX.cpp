@@ -31,8 +31,10 @@ const uint32_t PLLMAX = 0x10000U;
 const uint32_t PLLINC = PLLMAX / YSF_RADIO_SYMBOL_LENGTH;
 const uint32_t INC    = PLLINC / 32U;
 
-const uint8_t SYNC_SYMBOL_ERRS = 2U;
-const uint8_t SYNC_BIT_ERRS    = 4U;
+const uint8_t SYNC_SYMBOL_ERRS = 0U;
+
+const uint8_t SYNC_BIT_START_ERRS = 2U;
+const uint8_t SYNC_BIT_RUN_ERRS   = 4U;
 
 const unsigned int MAX_SYNC_FRAMES = 4U + 1U;
 
@@ -158,7 +160,7 @@ void CYSFRX::processNone(q15_t sample)
     }
 
     // Fuzzy matching of the data sync bit sequence
-    if (countBits64((m_bitBuffer & YSF_SYNC_BITS_MASK) ^ YSF_SYNC_BITS) <= SYNC_BIT_ERRS) {
+    if (countBits64((m_bitBuffer & YSF_SYNC_BITS_MASK) ^ YSF_SYNC_BITS) <= SYNC_BIT_START_ERRS) {
       DEBUG5("YSFRX: sync found in None min/max/centre/threshold", min, max, centre, threshold);
       for (uint8_t i = 0U; i < YSF_SYNC_LENGTH_BYTES; i++)
         m_buffer[i] = YSF_SYNC_BYTES[i];
@@ -212,10 +214,10 @@ void CYSFRX::processData(q15_t sample)
     m_bufferPtr++;
   }
 
-  // Only search for a sync in the right place +-1 symbol
+  // Only search for a sync in the right place +-2 symbols
   if (m_bufferPtr >= (YSF_SYNC_LENGTH_BITS - 2U) && m_bufferPtr <= (YSF_SYNC_LENGTH_BITS + 2U)) {
     // Fuzzy matching of the data sync bit sequence
-    if (countBits64((m_bitBuffer & YSF_SYNC_BITS_MASK) ^ YSF_SYNC_BITS) <= SYNC_BIT_ERRS) {
+    if (countBits64((m_bitBuffer & YSF_SYNC_BITS_MASK) ^ YSF_SYNC_BITS) <= SYNC_BIT_RUN_ERRS) {
       DEBUG2("YSFRX: found sync in Data, pos", m_bufferPtr - YSF_SYNC_LENGTH_BITS);
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = YSF_SYNC_LENGTH_BITS;
