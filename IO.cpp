@@ -121,8 +121,8 @@ m_ledCount(0U),
 m_ledValue(true),
 m_dcd(false),
 m_detect(false),
-m_overflow(0U),
-m_overcount(0U),
+m_adcOverflow(0U),
+m_dacOverflow(0U),
 m_count(0U),
 m_watchdog(0U),
 m_lockout(false)
@@ -301,8 +301,7 @@ void CIO::process()
 
       // Detect ADC overflow
       if (m_detect && (sample == 0U || sample == 4095U))
-        m_overflow++;
-      m_overcount++;
+        m_adcOverflow++;
 
       q15_t res1 = q15_t(sample) - DC_OFFSET;
       q31_t res2 = res1 * m_rxLevel;
@@ -405,11 +404,16 @@ void CIO::write(q15_t* samples, uint16_t length, const uint8_t* control)
   for (uint16_t i = 0U; i < length; i++) {
     q31_t res1 = samples[i] * m_txLevel;
     q15_t res2 = q15_t(__SSAT((res1 >> 15), 16));
-    
+    uint16_t res3 = uint16_t(res2 + DC_OFFSET);
+
+    // Detect DAC overflow
+    if (res3 == 0U || res3 >= 4095U)
+      m_dacOverflow++;
+
     if (control == NULL)
-      m_txBuffer.put(uint16_t(res2 + DC_OFFSET), MARK_NONE);
+      m_txBuffer.put(res3, MARK_NONE);
     else
-      m_txBuffer.put(uint16_t(res2 + DC_OFFSET), control[i]);
+      m_txBuffer.put(res3, control[i]);
   }
 }
 
@@ -499,19 +503,18 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
     m_txLevel = -m_txLevel;
 }
 
-bool CIO::hasADCOverflow()
+void CIO::getOverflow(bool& adcOverflow, bool& dacOverflow)
 {
-  bool overflow = m_overflow > 0U;
+  adcOverflow = m_adcOverflow > 0U;
+  dacOverflow = m_dacOverflow > 0U;
 
 #if defined(WANT_DEBUG)
-  if (m_overflow > 0U)
-    DEBUG3("IO: Overflow, n/count", m_overflow, m_overcount);
+  if (m_adcOverflow > 0U || m_dacOverflow > 0U)
+    DEBUG3("IO: adc/dac", m_adcOverflow, m_dacOverflow);
 #endif
 
-  m_overflow = 0U;
-  m_overcount = 0U;
-  
-  return overflow;
+  m_adcOverflow = 0U;
+  m_dacOverflow = 0U;
 }
 
 bool CIO::hasTXOverflow()

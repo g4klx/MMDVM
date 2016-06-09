@@ -43,7 +43,7 @@ public:
 
   void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t txLevel);
 
-  bool hasADCOverflow();
+  void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
   bool hasTXOverflow();
   bool hasRXOverflow();
@@ -85,8 +85,8 @@ private:
   bool                 m_dcd;
   bool                 m_detect;
 
-  uint16_t             m_overflow;
-  uint16_t             m_overcount;
+  uint16_t             m_adcOverflow;
+  uint16_t             m_dacOverflow;
 
   uint32_t             m_count;
 

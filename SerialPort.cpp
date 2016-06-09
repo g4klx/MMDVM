@@ -123,7 +123,11 @@ void CSerialPort::getStatus()
 
   reply[5U]  = m_tx ? 0x01U : 0x00U;
 
-  if (io.hasADCOverflow())
+  bool adcOverflow;
+  bool dacOverflow;
+  io.getOverflow(adcOverflow, dacOverflow);
+
+  if (adcOverflow)
     reply[5U] |= 0x02U;
 
   if (io.hasRXOverflow())
@@ -134,6 +138,9 @@ void CSerialPort::getStatus()
 
   if (io.hasLockout())
     reply[5U] |= 0x10U;
+
+  if (dacOverflow)
+    reply[5U] |= 0x20U;
 
   if (m_dstarEnable)
     reply[6U] = dstarTX.getSpace();
