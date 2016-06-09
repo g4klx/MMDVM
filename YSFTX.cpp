@@ -43,7 +43,7 @@ m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(120U),      // 100ms
+m_txDelay(240U),      // 200ms
 m_count(0U)
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
