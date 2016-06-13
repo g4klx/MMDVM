@@ -407,7 +407,7 @@ void CIO::write(q15_t* samples, uint16_t length, const uint8_t* control)
     uint16_t res3 = uint16_t(res2 + DC_OFFSET);
 
     // Detect DAC overflow
-    if (res3 == 0U || res3 >= 4095U)
+    if (res3 > 4095U)
       m_dacOverflow++;
 
     if (control == NULL)
