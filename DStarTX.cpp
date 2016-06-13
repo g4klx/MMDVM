@@ -266,7 +266,7 @@ void CDStarTX::process()
   if (m_poLen > 0U) {
     uint16_t space = io.getSpace();
     
-    while (space > (8U * DSTAR_RADIO_BIT_LENGTH) && space <= TX_RINGBUFFER_SIZE) {
+    while (space > (8U * DSTAR_RADIO_BIT_LENGTH)) {
       uint8_t c = m_poBuffer[m_poPtr++];
       writeByte(c);
 

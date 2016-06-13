@@ -101,7 +101,7 @@ void CCWIdTX::process()
 
   uint16_t space = io.getSpace();
     
-  while (space > CYCLE_LENGTH && space <= TX_RINGBUFFER_SIZE) {
+  while (space > CYCLE_LENGTH) {
     bool b = READ_BIT1(m_poBuffer, m_poPtr);
     if (b)
       io.write(TONE, CYCLE_LENGTH);

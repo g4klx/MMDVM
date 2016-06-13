@@ -39,12 +39,19 @@ void CSerialRB::reset()
 
 uint16_t CSerialRB::getSpace() const
 {
+  uint16_t n = 0U;
+
   if (m_tail == m_head)
-    return m_full ? 0U : m_length;
+    n = m_full ? 0U : m_length;
   else if (m_tail < m_head)
-    return m_length - m_head + m_tail;
+    n = m_length - m_head + m_tail;
   else
-    return m_tail - m_head;
+    n = m_tail - m_head;
+
+  if (n > m_length)
+    n = 0U;
+
+  return n;
 }
 
 uint16_t CSerialRB::getData() const
