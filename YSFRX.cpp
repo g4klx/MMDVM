@@ -110,22 +110,15 @@ void CYSFRX::processNone(q15_t sample)
 
   // Fuzzy matching of the data sync bit sequence
   if (countBits32((m_symbolBuffer & YSF_SYNC_SYMBOLS_MASK) ^ YSF_SYNC_SYMBOLS) <= SYNC_SYMBOL_ERRS) {
-    uint16_t ptr = m_symbolPtr + 1U;
-    if (ptr >= YSF_SYNC_LENGTH_SYMBOLS)
-      ptr = 0U;
-
     q15_t max  = -16000;
     q15_t min  =  16000;
 
     for (uint8_t i = 0U; i < YSF_SYNC_LENGTH_SYMBOLS; i++) {
-      if (m_symbols[ptr] > max)
-        max = m_symbols[ptr];
-      if (m_symbols[ptr] < min)
-        min = m_symbols[ptr];
-
-      ptr++;
-      if (ptr >= YSF_SYNC_LENGTH_SYMBOLS)
-        ptr = 0U;
+      q15_t val = m_symbols[i];
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
     }
 
     q15_t centre = (max + min) >> 1;
@@ -133,7 +126,7 @@ void CYSFRX::processNone(q15_t sample)
     q31_t v1 = (max - centre) * SCALING_FACTOR;
     q15_t threshold = q15_t(v1 >> 15);
 
-    ptr = m_symbolPtr + 1U;
+    uint16_t ptr = m_symbolPtr + 1U;
     if (ptr >= YSF_SYNC_LENGTH_SYMBOLS)
       ptr = 0U;
 
