@@ -185,6 +185,25 @@ uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint8_t length)
   return 0U;
 }
 
+uint8_t CDMRTX::writeAbort(const uint8_t* data, uint8_t length)
+{
+  if (length != 1U)
+    return 4U;
+
+  switch (data[0U]) {
+    case 1U:
+      m_fifo[0U].reset();
+      return 0U;
+
+    case 2U:
+      m_fifo[1U].reset();
+      return 0U;
+
+    default:
+      return 4U;
+  }
+}
+
 void CDMRTX::setStart(bool start)
 {
   m_state = start ? DMRTXSTATE_SLOT1 : DMRTXSTATE_IDLE;

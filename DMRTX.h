@@ -40,7 +40,9 @@ public:
 
   uint8_t writeData1(const uint8_t* data, uint8_t length);
   uint8_t writeData2(const uint8_t* data, uint8_t length);
+
   uint8_t writeShortLC(const uint8_t* data, uint8_t length);
+  uint8_t writeAbort(const uint8_t* data, uint8_t length);
 
   void setStart(bool start);
   void setCal(bool start);

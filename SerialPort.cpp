@@ -47,6 +47,7 @@ const uint8_t MMDVM_DMR_DATA2    = 0x1AU;
 const uint8_t MMDVM_DMR_LOST2    = 0x1BU;
 const uint8_t MMDVM_DMR_SHORTLC  = 0x1CU;
 const uint8_t MMDVM_DMR_START    = 0x1DU;
+const uint8_t MMDVM_DMR_ABORT    = 0x1EU;
 
 const uint8_t MMDVM_YSF_DATA     = 0x20U;
 const uint8_t MMDVM_YSF_LOST     = 0x21U;
@@ -517,6 +518,15 @@ void CSerialPort::process()
               err = dmrTX.writeShortLC(m_buffer + 3U, m_len - 3U);
             if (err != 0U) {
               DEBUG2("Received invalid DMR Short LC", err);
+              sendNAK(err);
+            }
+            break;
+
+          case MMDVM_DMR_ABORT:
+            if (m_dmrEnable)
+              err = dmrTX.writeAbort(m_buffer + 3U, m_len - 3U);
+            if (err != 0U) {
+              DEBUG2("Received invalid DMR Abort", err);
               sendNAK(err);
             }
             break;
