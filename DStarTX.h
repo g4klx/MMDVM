@@ -34,11 +34,14 @@ public:
   void process();
 
   void setTXDelay(uint8_t delay);
+  void setLevels(int8_t level);
 
   uint16_t getSpace() const;
 
 private:
   CSerialRB            m_buffer;
+  q15_t                m_level0[5U];
+  q15_t                m_level1[5U];
   arm_fir_instance_q15 m_modFilter;
   q15_t                m_modState[60U];    // NoTaps + BlockSize - 1, 12 + 40 - 1 plus some spare
   uint8_t              m_poBuffer[400U];

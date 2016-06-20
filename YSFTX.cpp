@@ -16,6 +16,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#define WANT_DEBUG
+
 #include "Config.h"
 #include "Globals.h"
 #include "YSFTX.h"
@@ -31,13 +33,15 @@ const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
 const uint8_t YSF_START_SYNC = 0x77U;
 const uint8_t YSF_END_SYNC   = 0xFFU;
 
-q15_t YSF_A[] = { 809,  809,  809,  809,  809};
-q15_t YSF_B[] = { 269,  269,  269,  269,  269};
-q15_t YSF_C[] = {-269, -269, -269, -269, -269};
-q15_t YSF_D[] = {-809, -809, -809, -809, -809};
+const q15_t YSF_LEVEL3 = 809;
+const q15_t YSF_LEVEL1 = 269;
 
 CYSFTX::CYSFTX() :
 m_buffer(1500U),
+m_levelA(),
+m_levelB(),
+m_levelC(),
+m_levelD(),
 m_modFilter(),
 m_modState(),
 m_poBuffer(),
@@ -51,6 +55,13 @@ m_count(0U)
   m_modFilter.numTaps = YSF_C4FSK_FILTER_LEN;
   m_modFilter.pState  = m_modState;
   m_modFilter.pCoeffs = YSF_C4FSK_FILTER;
+
+  for (uint8_t i = 0U; i < 5U; i++) {
+    m_levelA[i] =  YSF_LEVEL3;
+    m_levelB[i] =  YSF_LEVEL1;
+    m_levelC[i] = -YSF_LEVEL1;
+    m_levelD[i] = -YSF_LEVEL3;
+  }
 }
 
 void CYSFTX::process()
@@ -118,16 +129,16 @@ void CYSFTX::writeByte(uint8_t c)
   for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += YSF_RADIO_SYMBOL_LENGTH) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, YSF_A, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_levelA, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x80U:
-        ::memcpy(p, YSF_B, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_levelB, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x00U:
-        ::memcpy(p, YSF_C, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_levelC, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       default:
-        ::memcpy(p, YSF_D, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_levelD, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
     }
   }
@@ -163,5 +174,39 @@ void CYSFTX::setTXDelay(uint8_t delay)
 uint16_t CYSFTX::getSpace() const
 {
   return m_buffer.getSpace() / YSF_FRAME_LENGTH_BYTES;
+}
+
+void CYSFTX::setLevels(int8_t percent1, int8_t percent3)
+{
+  q31_t res1 = YSF_LEVEL1 * 1000;
+  q31_t res3 = YSF_LEVEL3 * 1000;
+
+  if (percent1 > 0) {
+    for (int8_t i = 0; i < percent1; i++)
+      res1 += YSF_LEVEL1;
+  } else if (percent1 < 0) {
+    for (int8_t i = 0; i < -percent1; i++)
+      res1 -= YSF_LEVEL1;
+  }
+
+  if (percent3 > 0) {
+    for (int8_t i = 0; i < percent3; i++)
+      res3 += YSF_LEVEL3;
+  } else if (percent3 < 0) {
+    for (int8_t i = 0; i < -percent3; i++)
+      res3 -= YSF_LEVEL3;
+  }
+
+  q15_t level1 = res1 / 1000;
+  q15_t level3 = res3 / 1000;
+
+  for (uint8_t i = 0U; i < 5U; i++) {
+    m_levelA[i] =  level3;
+    m_levelB[i] =  level1;
+    m_levelC[i] = -level1;
+    m_levelD[i] = -level3;
+  }
+
+  DEBUG3("YSF, Levels 1/3", level1, level3);
 }
 

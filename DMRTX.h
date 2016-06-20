@@ -53,9 +53,14 @@ public:
   uint16_t getSpace2() const;
 
   void setColorCode(uint8_t colorCode);
+  void setLevels(int8_t level1, int8_t level3);
 
 private:
   CSerialRB            m_fifo[2U];
+  q15_t                m_levelA[5U];
+  q15_t                m_levelB[5U];
+  q15_t                m_levelC[5U];
+  q15_t                m_levelD[5U];
   arm_fir_instance_q15 m_modFilter;
   q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
   DMRTXSTATE           m_state;
