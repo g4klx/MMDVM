@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
+#define  WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -47,7 +47,8 @@ m_endPtr(NOENDPTR),
 m_maxCorr(0),
 m_centre(0),
 m_threshold(0),
-m_colorCode(0U)
+m_colorCode(0U),
+m_scale(SCALING_FACTOR)
 {
 }
 
@@ -103,7 +104,7 @@ void CDMRIdleRX::processSample(q15_t sample)
     if (corr > m_maxCorr) {
       q15_t centre = (max + min) >> 1;
 
-      q31_t v1 = (max - centre) * SCALING_FACTOR;
+      q31_t v1 = (max - centre) * m_scale;
       q15_t threshold = q15_t(v1 >> 15);
 
       uint8_t sync[DMR_SYNC_BYTES_LENGTH];
@@ -198,5 +199,22 @@ void CDMRIdleRX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, u
 void CDMRIdleRX::setColorCode(uint8_t colorCode)
 {
   m_colorCode = colorCode;
+}
+
+void CDMRIdleRX::setThreshold(int8_t percent)
+{
+  q31_t res = SCALING_FACTOR * 1000;
+
+  if (percent > 0) {
+    for (int8_t i = 0; i < percent; i++)
+      res += SCALING_FACTOR;
+  } else if (percent < 0) {
+    for (int8_t i = 0; i < -percent; i++)
+      res -= SCALING_FACTOR;
+  }
+
+  m_scale = res / 1000;
+
+  DEBUG2("DMR, Scale", m_scale);
 }
 

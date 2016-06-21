@@ -61,7 +61,8 @@ m_colorCode(0U),
 m_delay(0U),
 m_state(DMRRXS_NONE),
 m_n(0U),
-m_type(0U)
+m_type(0U),
+m_scale(SCALING_FACTOR)
 {
 }
 
@@ -270,7 +271,7 @@ void CDMRSlotRX::correlateSync(bool first)
     if (corr > m_maxCorr) {
       q15_t centre = (max + min) >> 1;
 
-      q31_t v1 = (max - centre) * SCALING_FACTOR;
+      q31_t v1 = (max - centre) * m_scale;
       q15_t threshold = q15_t(v1 >> 15);
 
       uint8_t sync[DMR_SYNC_BYTES_LENGTH];
@@ -369,5 +370,22 @@ void CDMRSlotRX::setColorCode(uint8_t colorCode)
 void CDMRSlotRX::setDelay(uint8_t delay)
 {
   m_delay = delay;
+}
+
+void CDMRSlotRX::setThreshold(int8_t percent)
+{
+  q31_t res = SCALING_FACTOR * 1000;
+
+  if (percent > 0) {
+    for (int8_t i = 0; i < percent; i++)
+      res += SCALING_FACTOR;
+  } else if (percent < 0) {
+    for (int8_t i = 0; i < -percent; i++)
+      res -= SCALING_FACTOR;
+  }
+
+  m_scale = res / 1000;
+
+  DEBUG2("DMR, Scale", m_scale);
 }
 

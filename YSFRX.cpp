@@ -55,7 +55,8 @@ m_bufferPtr(0U),
 m_symbolPtr(0U),
 m_lostCount(0U),
 m_centre(0),
-m_threshold(0)
+m_threshold(0),
+m_scale(SCALING_FACTOR)
 {
   m_buffer = m_outBuffer + 1U;
 }
@@ -123,7 +124,7 @@ void CYSFRX::processNone(q15_t sample)
 
     q15_t centre = (max + min) >> 1;
 
-    q31_t v1 = (max - centre) * SCALING_FACTOR;
+    q31_t v1 = (max - centre) * m_scale;
     q15_t threshold = q15_t(v1 >> 15);
 
     uint16_t ptr = m_symbolPtr + 1U;
@@ -240,5 +241,22 @@ void CYSFRX::processData(q15_t sample)
       m_bufferPtr = 0U;
     }
   }
+}
+
+void CYSFRX::setThreshold(int8_t percent)
+{
+  q31_t res = SCALING_FACTOR * 1000;
+
+  if (percent > 0) {
+    for (int8_t i = 0; i < percent; i++)
+      res += SCALING_FACTOR;
+  } else if (percent < 0) {
+    for (int8_t i = 0; i < -percent; i++)
+      res -= SCALING_FACTOR;
+  }
+
+  m_scale = res / 1000;
+
+  DEBUG2("YSF, Scale", m_scale);
 }
 

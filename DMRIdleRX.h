@@ -28,6 +28,7 @@ public:
 
   void samples(const q15_t* samples, uint8_t length);
 
+  void setThreshold(int8_t threshold);
   void setColorCode(uint8_t colorCode);
 
   void reset();
@@ -42,6 +43,7 @@ private:
   q15_t    m_centre;
   q15_t    m_threshold;
   uint8_t  m_colorCode;
+  q15_t    m_scale;
 
   void    processSample(q15_t sample);
   void    samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
