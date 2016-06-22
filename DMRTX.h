@@ -57,10 +57,10 @@ public:
 
 private:
   CSerialRB            m_fifo[2U];
-  q15_t                m_levelA[5U];
-  q15_t                m_levelB[5U];
-  q15_t                m_levelC[5U];
-  q15_t                m_levelD[5U];
+  q15_t                m_levelA[DMR_RADIO_SYMBOL_LENGTH];
+  q15_t                m_levelB[DMR_RADIO_SYMBOL_LENGTH];
+  q15_t                m_levelC[DMR_RADIO_SYMBOL_LENGTH];
+  q15_t                m_levelD[DMR_RADIO_SYMBOL_LENGTH];
   arm_fir_instance_q15 m_modFilter;
   q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
   DMRTXSTATE           m_state;

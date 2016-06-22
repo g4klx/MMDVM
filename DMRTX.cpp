@@ -80,7 +80,7 @@ m_count(0U)
   ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
   ::memcpy(m_shortLC,    EMPTY_SHORT_LC, 12U);
 
-  for (uint8_t i = 0U; i < 5U; i++) {
+  for (uint8_t i = 0U; i < DMR_RADIO_SYMBOL_LENGTH; i++) {
     m_levelA[i] =  DMR_LEVEL3;
     m_levelB[i] =  DMR_LEVEL1;
     m_levelC[i] = -DMR_LEVEL1;
@@ -403,7 +403,7 @@ void CDMRTX::setLevels(int8_t percent1, int8_t percent3)
   q15_t level1 = res1 / 1000;
   q15_t level3 = res3 / 1000;
 
-  for (uint8_t i = 0U; i < 5U; i++) {
+  for (uint8_t i = 0U; i < DMR_RADIO_SYMBOL_LENGTH; i++) {
     m_levelA[i] =  level3;
     m_levelB[i] =  level1;
     m_levelC[i] = -level1;

@@ -205,7 +205,7 @@ m_count(0U)
   m_modFilter.pState  = m_modState;
   m_modFilter.pCoeffs = DSTAR_GMSK_FILTER;
 
-  for (uint8_t i = 0U; i < 5U; i++) {
+  for (uint8_t i = 0U; i < DSTAR_RADIO_BIT_LENGTH; i++) {
     m_level0[i] = -DSTAR_LEVEL;
     m_level1[i] =  DSTAR_LEVEL;
   }
@@ -479,7 +479,7 @@ void CDStarTX::setLevels(int8_t percent)
 
   q15_t level = res / 1000;
 
-  for (uint8_t i = 0U; i < 5U; i++) {
+  for (uint8_t i = 0U; i < DSTAR_RADIO_BIT_LENGTH; i++) {
     m_level0[i] = -level;
     m_level1[i] =  level;
   }

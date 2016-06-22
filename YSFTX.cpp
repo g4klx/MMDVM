@@ -56,7 +56,7 @@ m_count(0U)
   m_modFilter.pState  = m_modState;
   m_modFilter.pCoeffs = YSF_C4FSK_FILTER;
 
-  for (uint8_t i = 0U; i < 5U; i++) {
+  for (uint8_t i = 0U; i < YSF_RADIO_SYMBOL_LENGTH; i++) {
     m_levelA[i] =  YSF_LEVEL3;
     m_levelB[i] =  YSF_LEVEL1;
     m_levelC[i] = -YSF_LEVEL1;
@@ -200,7 +200,7 @@ void CYSFTX::setLevels(int8_t percent1, int8_t percent3)
   q15_t level1 = res1 / 1000;
   q15_t level3 = res3 / 1000;
 
-  for (uint8_t i = 0U; i < 5U; i++) {
+  for (uint8_t i = 0U; i < YSF_RADIO_SYMBOL_LENGTH; i++) {
     m_levelA[i] =  level3;
     m_levelB[i] =  level1;
     m_levelC[i] = -level1;
