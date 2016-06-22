@@ -410,6 +410,6 @@ void CDMRTX::setLevels(int8_t percent1, int8_t percent3)
     m_levelD[i] = -level3;
   }
 
-  DEBUG3("DMR, Levels 1/3", level1, level3);
+  DEBUG3("DMRTX: Levels 1/3", level1, level3);
 }
 

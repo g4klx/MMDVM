@@ -257,6 +257,6 @@ void CYSFRX::setThreshold(int8_t percent)
 
   m_scale = res / 1000;
 
-  DEBUG2("YSF, Scale", m_scale);
+  DEBUG2("YSFRX: Scale", m_scale);
 }
 

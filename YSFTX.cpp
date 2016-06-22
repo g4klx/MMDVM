@@ -207,6 +207,6 @@ void CYSFTX::setLevels(int8_t percent1, int8_t percent3)
     m_levelD[i] = -level3;
   }
 
-  DEBUG3("YSF, Levels 1/3", level1, level3);
+  DEBUG3("YSFTX: Levels 1/3", level1, level3);
 }
 

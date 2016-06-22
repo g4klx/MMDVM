@@ -484,6 +484,6 @@ void CDStarTX::setLevels(int8_t percent)
     m_level1[i] =  level;
   }
 
-  DEBUG2("D-Star, Level", level);
+  DEBUG2("DStarTX: Level", level);
 }
 

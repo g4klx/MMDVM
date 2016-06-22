@@ -386,6 +386,6 @@ void CDMRSlotRX::setThreshold(int8_t percent)
 
   m_scale = res / 1000;
 
-  DEBUG2("DMR, Scale", m_scale);
+  DEBUG2("DMRSlotRX: Scale", m_scale);
 }
 
