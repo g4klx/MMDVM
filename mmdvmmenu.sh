@@ -61,21 +61,30 @@ do
     --------------------------------------------------------------
     Please enter your choice:
 
-    (1) Enable 12.0 MHZ Clock (4) Use the COS to lockout the modem
-    (2) Enable 14.4 MHz Clock (5) Use pins to output the current mode
-    (3) Enable 19.2 MHz Clock (6) Return to Default
+    (1) Enable 12.0 MHZ Clock
+    (2) Enable 14.4 MHz Clock
+    (3) Enable 19.2 MHz Clock
+    (4) Use the COS to lockout the modem
+    (5) Use pins to output the current mode
+    (6) Use original Arduino Due layout
+    (7) Use new Arduino Due layout
+    (8) Use layout for SP8NTH board
+    (9) Return to Default
 
                          (Q)uit
     ---------------------------------------------------------------
 EOF
     read -n1 -s
     case "$REPLY" in
-    "1")  sed -e 's/\/\/ #define EXTERNAL_OSC 12000000/#define EXTERNAL_OSC 12000000/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "12.0 MHZ CLock Enabled";;
-    "2")  sed -e 's/\/\/ #define EXTERNAL_OSC 14400000/#define EXTERNAL_OSC 14400000/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "14.4 MHZ CLock Enabled";;
-    "3")  sed -e 's/\/\/ #define EXTERNAL_OSC 19200000/#define EXTERNAL_OSC 19200000/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "19.2 MHZ CLock Enabled";;
-    "4")  sed -e 's/\/\/ #define USE_COS_AS_LOCKOUT /#define USE_COS_AS_LOCKOUT/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS As Lockout Enabled";;
-    "5")  sed -e 's/\/\/ #define ARDUINO_MODE_PINS/#define ARDUINO_MODE_PINS/g'    $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode Pins Enabled";;
-    "6")  mv -f $confbak $conf ;;
+    "1")  sed -e 's/\/\/ #define EXTERNAL_OSC 12000000/#define EXTERNAL_OSC 12000000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "12.0 MHZ CLock Enabled";;
+    "2")  sed -e 's/\/\/ #define EXTERNAL_OSC 14400000/#define EXTERNAL_OSC 14400000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "14.4 MHZ CLock Enabled";;
+    "3")  sed -e 's/\/\/ #define EXTERNAL_OSC 19200000/#define EXTERNAL_OSC 19200000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "19.2 MHZ CLock Enabled";;
+    "4")  sed -e 's/\/\/ #define USE_COS_AS_LOCKOUT /#define USE_COS_AS_LOCKOUT/'      $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS As Lockout Enabled";;
+    "5")  sed -e 's/\/\/ #define ARDUINO_MODE_PINS/#define ARDUINO_MODE_PINS/'         $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode Pins Enabled";;
+    "6")  sed -e 's/\/\/ #define ARDUINO_DUE_PAPA/#define  ARDUINO_DUE_PAPA/'          $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Original Arduino Due layout enabled";;
+    "7")  sed -e 's/\/\/ #define ARDUINO_DUE_ZUM/#define ARDUINO_DUE_ZUM/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "New Arduino Due layout enabled";;
+    "8")  sed -e 's/\/\/ #define ARDUINO_DUE_NTH/#define ARDUINO_DUE_NTH/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for SP8NTH board enabled";;
+    "9")  mv -f $confbak $conf ;;
     "Q")  echo "If any changes are made you need to (re-)upload the firmware to MMDVM" && exit;;
     "q")  echo "If any changes are made you need to (re-)upload the firmware to MMDVM" && exit;;
      * )  echo "invalid option"     ;;
