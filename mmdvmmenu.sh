@@ -76,11 +76,11 @@ do
 EOF
     read -n1 -s
     case "$REPLY" in
-    "1")  sed -e 's/\/\/ #define EXTERNAL_OSC 12000000/#define EXTERNAL_OSC 12000000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "12.0 MHZ CLock Enabled";;
-    "2")  sed -e 's/\/\/ #define EXTERNAL_OSC 14400000/#define EXTERNAL_OSC 14400000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "14.4 MHZ CLock Enabled";;
-    "3")  sed -e 's/\/\/ #define EXTERNAL_OSC 19200000/#define EXTERNAL_OSC 19200000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "19.2 MHZ CLock Enabled";;
-    "4")  sed -e 's/\/\/ #define USE_COS_AS_LOCKOUT /#define USE_COS_AS_LOCKOUT/'      $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS As Lockout Enabled";;
-    "5")  sed -e 's/\/\/ #define ARDUINO_MODE_PINS/#define ARDUINO_MODE_PINS/'         $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode Pins Enabled";;
+    "1")  sed -e 's/\/\/ #define EXTERNAL_OSC 12000000/#define EXTERNAL_OSC 12000000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "12.0 MHz clock enabled";;
+    "2")  sed -e 's/\/\/ #define EXTERNAL_OSC 14400000/#define EXTERNAL_OSC 14400000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "14.4 MHz clock enabled";;
+    "3")  sed -e 's/\/\/ #define EXTERNAL_OSC 19200000/#define EXTERNAL_OSC 19200000/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "19.2 MHz clock enabled";;
+    "4")  sed -e 's/\/\/ #define USE_COS_AS_LOCKOUT /#define USE_COS_AS_LOCKOUT/'      $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS as Lockout enabled";;
+    "5")  sed -e 's/\/\/ #define ARDUINO_MODE_PINS/#define ARDUINO_MODE_PINS/'         $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode pins Enabled";;
     "6")  sed -e 's/\/\/ #define ARDUINO_DUE_PAPA/#define  ARDUINO_DUE_PAPA/'          $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Original Arduino Due layout enabled";;
     "7")  sed -e 's/\/\/ #define ARDUINO_DUE_ZUM/#define ARDUINO_DUE_ZUM/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "New Arduino Due layout enabled";;
     "8")  sed -e 's/\/\/ #define ARDUINO_DUE_NTH/#define ARDUINO_DUE_NTH/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for SP8NTH board enabled";;
