@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 ###############################################################################
 #
@@ -57,25 +57,25 @@ do
     clear
     cat<<EOF
     ==============================================================
-                       MMDVM COnfiguration Options
+                       MMDVM Configuration Options
     --------------------------------------------------------------
     Please enter your choice:
- 
+
     (1) Enable 12.0 MHZ CLock (4) Use the COS to lockout the modem
     (2) Enable 14.4 MHz Clock (5) Use pins to output the current mode
     (3) Enable 19.2 MHz Clock (6) Return to Default
-             
+
                          (Q)uit
     ---------------------------------------------------------------
 EOF
     read -n1 -s
     case "$REPLY" in
-    "1")  sudo sed -e 's/\/\/ #define EXTERNAL_OSC 12/ #define EXTERNAL_OSC 12/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "12.0 MHZ CLock Enabled";;
-    "2")  sudo sed -e 's/\/\/ #define EXTERNAL_OSC 14/ #define EXTERNAL_OSC 14/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "14.4 MHZ CLock Enabled";;
-    "3")  sudo sed -e 's/\/\/ #define EXTERNAL_OSC 19/ #define EXTERNAL_OSC 19/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "19.2 MHZ CLock Enabled";; 
-    "4")  sudo sed -e 's/\/\/ #define USE/             #define USE/g'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS As Lockout Enabled";;
-    "5")  sudo sed -e 's/\/\/ #define ARDUINO_MODE/    #define ARDUINO_MODE/g'    $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode Pins Enabled";;
-    "6")  MV -f $confbak $conf ;;
+    "1")  sed -e 's/\/\/ #define EXTERNAL_OSC 12/ #define EXTERNAL_OSC 12/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "12.0 MHZ CLock Enabled";;
+    "2")  sed -e 's/\/\/ #define EXTERNAL_OSC 14/ #define EXTERNAL_OSC 14/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "14.4 MHZ CLock Enabled";;
+    "3")  sed -e 's/\/\/ #define EXTERNAL_OSC 19/ #define EXTERNAL_OSC 19/g' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "19.2 MHZ CLock Enabled";;
+    "4")  sed -e 's/\/\/ #define USE/             #define USE/g'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS As Lockout Enabled";;
+    "5")  sed -e 's/\/\/ #define ARDUINO_MODE/    #define ARDUINO_MODE/g'    $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode Pins Enabled";;
+    "6")  mv -f $confbak $conf ;;
     "Q")  echo "If any changes are made you need to upload to MMDVM" && exit;;
     "q")  echo "If any changes are made you need to upload to MMDVM" && exit;; 
      * )  echo "invalid option"     ;;
