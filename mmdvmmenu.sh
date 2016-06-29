@@ -61,7 +61,7 @@ do
     --------------------------------------------------------------
     Please enter your choice:
 
-    (1) Enable 12.0 MHZ CLock (4) Use the COS to lockout the modem
+    (1) Enable 12.0 MHZ Clock (4) Use the COS to lockout the modem
     (2) Enable 14.4 MHz Clock (5) Use pins to output the current mode
     (3) Enable 19.2 MHz Clock (6) Return to Default
 
