@@ -24,17 +24,26 @@
 
 #include "YSFDefines.h"
 
+#if defined(ARDUINO_DUE_ZUM_V10) || defined(ARDUINO_DUE_NTH)
+// Generated using rcosdesign(0.2, 6, 5, 'sqrt') plus a custom filter in MATLAB
+static q15_t YSF_C4FSK_FILTER[] = {1, 2, 1, -5, -17, -28, -17, 37, 121, 175, 105, -137, -475, -690, -518, 166, 1197, 2114, 2346, 1516, -309,
+                                   -2550, -4280, -4565, -2827, 885, 5849, 10850, 14549, 15911, 14549, 10850, 5849, 885, -2827, -4565, -4280.
+                                   -2550, -309, 1516, 2346, 2114, 1197, 166, -518, -690, -475, -137, 105, 175, 121, 37, -17, -28, -17, -5, 1,
+                                   2, 1, 0};
+const uint16_t YSF_C4FSK_FILTER_LEN = 60U;
+#else
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
 static q15_t YSF_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
                                    -553, -847, -731, -340, 104, 401, 0};
 const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
-
-const uint8_t YSF_START_SYNC = 0x77U;
-const uint8_t YSF_END_SYNC   = 0xFFU;
+#endif
 
 const q15_t YSF_LEVEL3 = 809;
 const q15_t YSF_LEVEL1 = 269;
+
+const uint8_t YSF_START_SYNC = 0x77U;
+const uint8_t YSF_END_SYNC   = 0xFFU;
 
 CYSFTX::CYSFTX() :
 m_buffer(1500U),

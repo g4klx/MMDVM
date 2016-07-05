@@ -47,7 +47,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define ADC_CDR_Chan           7
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
 #define DACC_CHER_Chan         DACC_CHER_CH0
-#elif defined(ARDUINO_DUE_ZUM)
+#elif defined(ARDUINO_DUE_ZUM_V10)
 #define PIN_COS                52
 #define PIN_PTT                23
 #define PIN_COSLED             22
@@ -72,7 +72,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
 #define DACC_CHER_Chan         DACC_CHER_CH0
 #else
-#error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM, or ARDUINO_DUE_NTH need to be defined"
+#error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM_V10, or ARDUINO_DUE_NTH need to be defined"
 #endif
 #elif defined(__MBED__)
 // A generic MBED platform
