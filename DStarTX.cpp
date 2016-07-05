@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define WANT_DEBUG
+// #define WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -457,7 +457,7 @@ void CDStarTX::writeByte(uint8_t c)
 
 void CDStarTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = 120U + uint16_t(delay) * 6U;        // 200ms + tx delay
+  m_txDelay = 150U + uint16_t(delay) * 6U;        // 250ms + tx delay
 }
 
 uint16_t CDStarTX::getSpace() const

@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define  WANT_DEBUG
+// #define  WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -24,13 +24,8 @@
 #include "DMRSlotType.h"
 #include "Utils.h"
 
-#if defined(ARDUINO_DUE_ZUM_V10) || defined(ARDUINO_DUE_NTH)
-const uint16_t SCAN_START = 420U;
-const uint16_t SCAN_END   = 510U;
-#else
 const uint16_t SCAN_START = 400U;
 const uint16_t SCAN_END   = 490U;
-#endif
 
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
 
