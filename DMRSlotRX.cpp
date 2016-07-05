@@ -24,6 +24,14 @@
 #include "DMRSlotType.h"
 #include "Utils.h"
 
+#if defined(ARDUINO_DUE_ZUM_V10) || defined(ARDUINO_DUE_NTH)
+const uint16_t SCAN_START = 420U;
+const uint16_t SCAN_END   = 510U;
+#else
+const uint16_t SCAN_START = 400U;
+const uint16_t SCAN_END   = 490U;
+#endif
+
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
 
 const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
@@ -115,7 +123,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
     m_bitBuffer[m_bitPtr] |= 0x01U;
 
   if (m_state == DMRRXS_NONE) {
-    if (m_dataPtr >= 400U && m_dataPtr <= 490U)
+    if (m_dataPtr >= SCAN_START && m_dataPtr <= SCAN_END)
       correlateSync(true);
   } else {
     uint16_t min = m_syncPtr - 1U;
