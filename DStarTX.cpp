@@ -32,7 +32,8 @@ const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 static q15_t DSTAR_GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
 const uint16_t DSTAR_GMSK_FILTER_LEN = 12U;
 
-const q15_t DSTAR_LEVEL = 800;
+const q15_t DSTAR_LEVEL0[] = {-800, -800, -800, -800, -800};
+const q15_t DSTAR_LEVEL1[] = { 800,  800,  800,  800,  800};
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -189,8 +190,6 @@ const uint8_t DSTAR_EOT    = 0x02U;
 
 CDStarTX::CDStarTX() :
 m_buffer(),
-m_level0(),
-m_level1(),
 m_modFilter(),
 m_modState(),
 m_poBuffer(),
@@ -204,11 +203,6 @@ m_count(0U)
   m_modFilter.numTaps = DSTAR_GMSK_FILTER_LEN;
   m_modFilter.pState  = m_modState;
   m_modFilter.pCoeffs = DSTAR_GMSK_FILTER;
-
-  for (uint8_t i = 0U; i < DSTAR_RADIO_BIT_LENGTH; i++) {
-    m_level0[i] = -DSTAR_LEVEL;
-    m_level1[i] =  DSTAR_LEVEL;
-  }
 }
 
 void CDStarTX::process()
@@ -425,9 +419,9 @@ void CDStarTX::writeByte(uint8_t c)
   q15_t* p = inBuffer;
   for (uint8_t i = 0U; i < 8U; i++, p += DSTAR_RADIO_BIT_LENGTH) {
     if ((c & mask) == mask)
-      ::memcpy(p, m_level0, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
+      ::memcpy(p, DSTAR_LEVEL0, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
     else
-      ::memcpy(p, m_level1, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
+      ::memcpy(p, DSTAR_LEVEL1, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
 
     mask <<= 1;
   }
@@ -463,27 +457,5 @@ void CDStarTX::setTXDelay(uint8_t delay)
 uint16_t CDStarTX::getSpace() const
 {
   return m_buffer.getSpace() / (DSTAR_DATA_LENGTH_BYTES + 1U);
-}
-
-void CDStarTX::setLevels(int8_t percent)
-{
-  q31_t res = DSTAR_LEVEL * 1000;
-
-  if (percent > 0) {
-    for (int8_t i = 0; i < percent; i++)
-      res += DSTAR_LEVEL;
-  } else if (percent < 0) {
-    for (int8_t i = 0; i < -percent; i++)
-      res -= DSTAR_LEVEL;
-  }
-
-  q15_t level = res / 1000;
-
-  for (uint8_t i = 0U; i < DSTAR_RADIO_BIT_LENGTH; i++) {
-    m_level0[i] = -level;
-    m_level1[i] =  level;
-  }
-
-  DEBUG2("DStarTX: Level", level);
 }
 

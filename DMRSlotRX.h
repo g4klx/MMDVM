@@ -37,7 +37,6 @@ public:
   bool processSample(q15_t sample);
 
   void setColorCode(uint8_t colorCode);
-  void setThreshold(int8_t threshold);
   void setDelay(uint8_t delay);
 
   void reset();
@@ -63,7 +62,6 @@ private:
   DMRRX_STATE m_state;
   uint8_t     m_n;
   uint8_t     m_type;
-  q15_t       m_scale;
 
   void correlateSync(bool first);
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);

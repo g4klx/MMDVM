@@ -29,8 +29,10 @@ static q15_t DMR_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1
                                    -553, -847, -731, -340, 104, 401, 0};
 const uint16_t DMR_C4FSK_FILTER_LEN = 42U;
 
-const q15_t DMR_LEVEL3 = 640;
-const q15_t DMR_LEVEL1 = 213;
+const q15_t DMR_LEVELA[] = { 640,  640 , 640,  640,  640};
+const q15_t DMR_LEVELB[] = { 213,  213,  213,  213,  213};
+const q15_t DMR_LEVELC[] = {-213, -213, -213, -213, -213};
+const q15_t DMR_LEVELD[] = {-640, -640, -640, -640, -640};
 
 // The PR FILL and Data Sync pattern.
 const uint8_t IDLE_DATA[] =
@@ -54,10 +56,6 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 CDMRTX::CDMRTX() :
 m_fifo(),
-m_levelA(),
-m_levelB(),
-m_levelC(),
-m_levelD(),
 m_modFilter(),
 m_modState(),
 m_state(DMRTXSTATE_IDLE),
@@ -79,13 +77,6 @@ m_count(0U)
 
   ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
   ::memcpy(m_shortLC,    EMPTY_SHORT_LC, 12U);
-
-  for (uint8_t i = 0U; i < DMR_RADIO_SYMBOL_LENGTH; i++) {
-    m_levelA[i] =  DMR_LEVEL3;
-    m_levelB[i] =  DMR_LEVEL1;
-    m_levelC[i] = -DMR_LEVEL1;
-    m_levelD[i] = -DMR_LEVEL3;
-  }
 }
 
 void CDMRTX::process()
@@ -240,16 +231,16 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
   for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += DMR_RADIO_SYMBOL_LENGTH) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, m_levelA, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELA, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x80U:
-        ::memcpy(p, m_levelB, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELB, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x00U:
-        ::memcpy(p, m_levelC, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELC, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       default:
-        ::memcpy(p, m_levelD, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELD, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
     }
   }
@@ -377,39 +368,5 @@ void CDMRTX::setColorCode(uint8_t colorCode)
 
   CDMRSlotType slotType;
   slotType.encode(colorCode, DT_IDLE, m_idle);
-}
-
-void CDMRTX::setLevels(int8_t percent1, int8_t percent3)
-{
-  q31_t res1 = DMR_LEVEL1 * 1000;
-  q31_t res3 = DMR_LEVEL3 * 1000;
-
-  if (percent1 > 0) {
-    for (int8_t i = 0; i < percent1; i++)
-      res1 += DMR_LEVEL1;
-  } else if (percent1 < 0) {
-    for (int8_t i = 0; i < -percent1; i++)
-      res1 -= DMR_LEVEL1;
-  }
-
-  if (percent3 > 0) {
-    for (int8_t i = 0; i < percent3; i++)
-      res3 += DMR_LEVEL3;
-  } else if (percent3 < 0) {
-    for (int8_t i = 0; i < -percent3; i++)
-      res3 -= DMR_LEVEL3;
-  }
-
-  q15_t level1 = res1 / 1000;
-  q15_t level3 = res3 / 1000;
-
-  for (uint8_t i = 0U; i < DMR_RADIO_SYMBOL_LENGTH; i++) {
-    m_levelA[i] =  level3;
-    m_levelB[i] =  level1;
-    m_levelC[i] = -level1;
-    m_levelD[i] = -level3;
-  }
-
-  DEBUG3("DMRTX: Levels 1/3", level1, level3);
 }
 

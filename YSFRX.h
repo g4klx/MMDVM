@@ -35,8 +35,6 @@ public:
 
   void reset();
 
-  void setThreshold(int8_t threshold);
-
 private:
   uint32_t    m_pll;
   bool        m_prev;
@@ -51,7 +49,6 @@ private:
   uint16_t    m_lostCount;
   q15_t       m_centre;
   q15_t       m_threshold;
-  q15_t       m_scale;
 
   void processNone(q15_t sample);
   void processData(q15_t sample);

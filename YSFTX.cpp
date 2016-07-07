@@ -30,18 +30,16 @@ static q15_t YSF_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1
                                    -553, -847, -731, -340, 104, 401, 0};
 const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
 
-const q15_t YSF_LEVEL3 = 809;
-const q15_t YSF_LEVEL1 = 269;
+const q15_t YSF_LEVELA[] = { 809,  809,  809,  809,  809};
+const q15_t YSF_LEVELB[] = { 269,  269,  269,  269,  269};
+const q15_t YSF_LEVELC[] = {-269, -269, -269, -269, -269};
+const q15_t YSF_LEVELD[] = {-809, -809, -809, -809, -809};
 
 const uint8_t YSF_START_SYNC = 0x77U;
 const uint8_t YSF_END_SYNC   = 0xFFU;
 
 CYSFTX::CYSFTX() :
 m_buffer(1500U),
-m_levelA(),
-m_levelB(),
-m_levelC(),
-m_levelD(),
 m_modFilter(),
 m_modState(),
 m_poBuffer(),
@@ -55,13 +53,6 @@ m_count(0U)
   m_modFilter.numTaps = YSF_C4FSK_FILTER_LEN;
   m_modFilter.pState  = m_modState;
   m_modFilter.pCoeffs = YSF_C4FSK_FILTER;
-
-  for (uint8_t i = 0U; i < YSF_RADIO_SYMBOL_LENGTH; i++) {
-    m_levelA[i] =  YSF_LEVEL3;
-    m_levelB[i] =  YSF_LEVEL1;
-    m_levelC[i] = -YSF_LEVEL1;
-    m_levelD[i] = -YSF_LEVEL3;
-  }
 }
 
 void CYSFTX::process()
@@ -129,16 +120,16 @@ void CYSFTX::writeByte(uint8_t c)
   for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += YSF_RADIO_SYMBOL_LENGTH) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, m_levelA, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, YSF_LEVELA, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x80U:
-        ::memcpy(p, m_levelB, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, YSF_LEVELB, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x00U:
-        ::memcpy(p, m_levelC, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, YSF_LEVELC, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       default:
-        ::memcpy(p, m_levelD, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, YSF_LEVELD, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
     }
   }
@@ -174,39 +165,5 @@ void CYSFTX::setTXDelay(uint8_t delay)
 uint16_t CYSFTX::getSpace() const
 {
   return m_buffer.getSpace() / YSF_FRAME_LENGTH_BYTES;
-}
-
-void CYSFTX::setLevels(int8_t percent1, int8_t percent3)
-{
-  q31_t res1 = YSF_LEVEL1 * 1000;
-  q31_t res3 = YSF_LEVEL3 * 1000;
-
-  if (percent1 > 0) {
-    for (int8_t i = 0; i < percent1; i++)
-      res1 += YSF_LEVEL1;
-  } else if (percent1 < 0) {
-    for (int8_t i = 0; i < -percent1; i++)
-      res1 -= YSF_LEVEL1;
-  }
-
-  if (percent3 > 0) {
-    for (int8_t i = 0; i < percent3; i++)
-      res3 += YSF_LEVEL3;
-  } else if (percent3 < 0) {
-    for (int8_t i = 0; i < -percent3; i++)
-      res3 -= YSF_LEVEL3;
-  }
-
-  q15_t level1 = res1 / 1000;
-  q15_t level3 = res3 / 1000;
-
-  for (uint8_t i = 0U; i < YSF_RADIO_SYMBOL_LENGTH; i++) {
-    m_levelA[i] =  level3;
-    m_levelB[i] =  level1;
-    m_levelC[i] = -level1;
-    m_levelD[i] = -level3;
-  }
-
-  DEBUG3("YSFTX: Levels 1/3", level1, level3);
 }
 
