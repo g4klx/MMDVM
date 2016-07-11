@@ -27,6 +27,7 @@
 #define USE8
 // #define USE6
 // #define USE4
+// #define USE2
 
 #if defined(USE8)
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
@@ -45,8 +46,12 @@ const uint16_t DMR_C4FSK_FILTER_LEN = 32U;
 static q15_t DMR_C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
                                    11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
 const uint16_t DMR_C4FSK_FILTER_LEN = 22U;
+#elif defined(USE2)
+// Generated using rcosdesign(0.2, 2, 5, 'sqrt') in MATLAB
+static q15_t DMR_C4FSK_FILTER[] = {-792, 2742, 7192, 11553, 14735, 15900, 14735, 11553, 7192, 2742, -792, 0};
+const uint16_t DMR_C4FSK_FILTER_LEN = 12U;
 #else
-#error "Must define one of USE8, USE6, or USE4."
+#error "Must define one of USE8, USE6, USE4, or USE2."
 #endif
 
 const q15_t DMR_LEVELA[] = { 640,  640 , 640,  640,  640};
