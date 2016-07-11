@@ -31,6 +31,10 @@ const uint32_t INC    = PLLINC / 32U;
 
 const unsigned int MAX_SYNC_BITS = 50U * DSTAR_DATA_LENGTH_BITS;
 
+const unsigned int SYNC_POS        = 21U * DSTAR_DATA_LENGTH_BITS;
+const unsigned int SYNC_SCAN_START = SYNC_POS - 3U;
+const unsigned int SYNC_SCAN_END   = SYNC_POS + 3U;
+
 const q15_t THRESHOLD = 0;
 
 // D-Star bit order version of 0x55 0x55 0x6E 0x0A
@@ -337,25 +341,13 @@ void CDStarRX::processNone(bool bit)
     io.setDecode(true);
     io.setADCDetection(true);
 
-#if defined(WANT_DEBUG)
-    q15_t min = 16000;
-    q15_t max = -16000;
-    for (uint8_t i = 0U; i < DSTAR_DATA_SYNC_LENGTH_BITS; i++) {
-      if (m_samples[i] > max)
-        max = m_samples[i];
-      if (m_samples[i] < min)
-        min = m_samples[i];
-    }
-    DEBUG3("DStarRX: data sync found min/max", min, max);
-#endif
-
     serial.writeDStarData(DSTAR_DATA_SYNC_BYTES, DSTAR_DATA_LENGTH_BYTES);
 
     ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES);
     m_rxBufferBits = 0U;
 
-    m_dataBits = MAX_SYNC_BITS;
-    m_rxState = DSRXS_DATA;
+    m_dataBits = 0U;
+    m_rxState  = DSRXS_DATA;
     return;
   }
 }
@@ -383,8 +375,8 @@ void CDStarRX::processHeader(bool bit)
       ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES);
       m_rxBufferBits = 0U;
 
-      m_rxState = DSRXS_DATA;
-      m_dataBits = MAX_SYNC_BITS;
+      m_rxState  = DSRXS_DATA;
+      m_dataBits = SYNC_POS - DSTAR_DATA_LENGTH_BITS + 1U;
     } else {
       // The checksum failed, return to looking for syncs
       m_rxState = DSRXS_NONE;
@@ -416,34 +408,38 @@ void CDStarRX::processData(bool bit)
 
   // Fuzzy matching of the data sync bit sequence
   bool syncSeen = false;
-  if (m_rxBufferBits >= (DSTAR_DATA_LENGTH_BITS - 3U)) {
+  if (m_dataBits >= SYNC_SCAN_START && m_dataBits <= (SYNC_POS + 1U)) {
     if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) <= DATA_SYNC_ERRS) {
 #if defined(WANT_DEBUG)
-      if (m_rxBufferBits < DSTAR_DATA_LENGTH_BITS)
-        DEBUG2("DStarRX: found data sync in Data, early", DSTAR_DATA_LENGTH_BITS - m_rxBufferBits);
+      if (m_dataBits < SYNC_POS)
+        DEBUG2("DStarRX: found data sync in Data, early", SYNC_POS - m_dataBits);
       else
         DEBUG1("DStarRX: found data sync in Data");
-
-      q15_t min = 16000;
-      q15_t max = -16000;
-      for (uint8_t i = 0U; i < DSTAR_DATA_SYNC_LENGTH_BITS; i++) {
-        if (m_samples[i] > max)
-          max = m_samples[i];
-        if (m_samples[i] < min)
-          min = m_samples[i];
-      }
-
-      DEBUG3("DStarRX: data sync found min/max", min, max);
 #endif
       m_rxBufferBits = DSTAR_DATA_LENGTH_BITS;
-      m_dataBits = MAX_SYNC_BITS;
-      syncSeen = true;
+      m_dataBits = 0U;
+      syncSeen   = true;
     }
   }
 
+  // Check to see if the sync is arriving late
+  if (m_dataBits == SYNC_POS) {
+    for (uint8_t i = 1U; i <= 3U; i++) {
+      uint32_t syncMask = DATA_SYNC_MASK >> i;
+      uint32_t syncData = DATA_SYNC_DATA >> i;
+      if (countBits32((m_patternBuffer & syncMask) ^ syncData) <= DATA_SYNC_ERRS) {
+        DEBUG2("DStarRX: found data sync in Data, late", i);
+        m_rxBufferBits -= i;
+        m_dataBits     -= i;
+        break;
+      }
+    }
+  }
+
+  m_dataBits++;
+
   // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
-  m_dataBits--;
-  if (m_dataBits == 0U) {
+  if (m_dataBits >= MAX_SYNC_BITS) {
     DEBUG1("DStarRX: data sync timed out, lost lock");
 
     io.setDecode(false);
@@ -453,19 +449,6 @@ void CDStarRX::processData(bool bit)
 
     m_rxState = DSRXS_NONE;
     return;
-  }
-
-  // Check to see if the sync is arriving late
-  if (m_rxBufferBits == DSTAR_DATA_LENGTH_BITS && !syncSeen) {
-    for (uint8_t i = 1U; i <= 3U; i++) {
-      uint32_t syncMask = DATA_SYNC_MASK >> i;
-      uint32_t syncData = DATA_SYNC_DATA >> i;
-      if (countBits32((m_patternBuffer & syncMask) ^ syncData) <= DATA_SYNC_ERRS) {
-        DEBUG2("DStarRX: found data sync in Data, late", i);
-        m_rxBufferBits -= i;
-        break;
-      }
-    }
   }
 
   // Send a data frame to the host if the required number of bits have been received, or if a data sync has been seen
