@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define WANT_DEBUG
+#define WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -306,8 +306,10 @@ uint8_t CDStarTX::writeData(const uint8_t* data, uint8_t length)
     return 4U;
 
   uint16_t space = m_buffer.getSpace();
-  if (space < (DSTAR_DATA_LENGTH_BYTES + 1U))
+  if (space < (DSTAR_DATA_LENGTH_BYTES + 1U)) {
+    DEBUG2("D-Star, space available", space);
     return 5U;
+  }
 
   m_buffer.put(DSTAR_DATA);
 
