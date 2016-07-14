@@ -37,7 +37,7 @@
 // For the original Arduino Due pin layout
 // #define  ARDUINO_DUE_PAPA
 
-// For the new Arduino Due pin layout
+// For the ZUM Board V1.0 pin layout
 #define  ARDUINO_DUE_ZUM_V10
 
 // For the SP8NTH board

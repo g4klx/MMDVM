@@ -24,36 +24,10 @@
 
 #include "YSFDefines.h"
 
-// Uncomment one of the following to change the filter
-#define USE8
-// #define USE6
-// #define USE4
-// #define USE2
-
-#if defined(USE8)
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t YSF_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                   11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
-const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
-#elif defined(USE6)
-// Generated using rcosdesign(0.2, 6, 5, 'sqrt') in MATLAB
-static q15_t YSF_C4FSK_FILTER[] = {-554, 112, 911, 1474, 1452, 684, -676, -2147, -3045, -2710, -772,  2671, 7005,
-                                   11253, 14352, 15486, 14352, 11253, 7005, 2671, -772, -2710, -3045, -2147, -676,
-                                   684, 1452, 1474, 911, 112, -554, 0};
-const uint16_t YSF_C4FSK_FILTER_LEN = 32U;
-#elif defined(USE4)
 // Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
 static q15_t YSF_C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
                                    11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
 const uint16_t YSF_C4FSK_FILTER_LEN = 22U;
-#elif defined(USE2)
-// Generated using rcosdesign(0.2, 2, 5, 'sqrt') in MATLAB
-static q15_t YSF_C4FSK_FILTER[] = {-792, 2742, 7192, 11553, 14735, 15900, 14735, 11553, 7192, 2742, -792, 0};
-const uint16_t YSF_C4FSK_FILTER_LEN = 12U;
-#else
-#error "Must define one of USE8, USE6, USE4, or USE2."
-#endif
 
 const q15_t YSF_LEVELA[] = { 809,  809,  809,  809,  809};
 const q15_t YSF_LEVELB[] = { 269,  269,  269,  269,  269};
