@@ -43,5 +43,10 @@
 // For the SP8NTH board
 // #define  ARDUINO_DUE_NTH
 
+// To use wider C4FSK filters for DMR and System Fusion on transmit
+// #define WIDE_C4FSK_FILTERS_TX
+// To use wider C4FSK filters for DMR and System Fusion on receive
+// #define WIDE_C4FSK_FILTERS_RX
+
 #endif
 
