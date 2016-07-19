@@ -74,7 +74,8 @@ m_markBuffer(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_count(0U)
+m_count(0U),
+m_abort()
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -84,6 +85,9 @@ m_count(0U)
 
   ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
   ::memcpy(m_shortLC,    EMPTY_SHORT_LC, 12U);
+
+  m_abort[0U] = false;
+  m_abort[1U] = false;
 }
 
 void CDMRTX::process()
@@ -149,6 +153,11 @@ uint8_t CDMRTX::writeData1(const uint8_t* data, uint8_t length)
   if (space < DMR_FRAME_LENGTH_BYTES)
     return 5U;
 
+  if (m_abort[0U]) {
+    m_fifo[0U].reset();
+    m_abort[0U] = false;
+  }
+
   for (uint8_t i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
     m_fifo[0U].put(data[i + 1U]);
 
@@ -167,6 +176,11 @@ uint8_t CDMRTX::writeData2(const uint8_t* data, uint8_t length)
   uint16_t space = m_fifo[1U].getSpace();
   if (space < DMR_FRAME_LENGTH_BYTES)
     return 5U;
+
+  if (m_abort[1U]) {
+    m_fifo[1U].reset();
+    m_abort[1U] = false;
+  }
 
   for (uint8_t i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
     m_fifo[1U].put(data[i + 1U]);
@@ -201,11 +215,11 @@ uint8_t CDMRTX::writeAbort(const uint8_t* data, uint8_t length)
 
   switch (data[0U]) {
     case 1U:
-      m_fifo[0U].reset();
+      m_abort[0U] = true;
       return 0U;
 
     case 2U:
-      m_fifo[1U].reset();
+      m_abort[1U] = true;
       return 0U;
 
     default:
@@ -218,6 +232,9 @@ void CDMRTX::setStart(bool start)
   m_state = start ? DMRTXSTATE_SLOT1 : DMRTXSTATE_IDLE;
 
   m_count = 0U;
+
+  m_abort[0U] = false;
+  m_abort[1U] = false;
 }
 
 void CDMRTX::setCal(bool start)
@@ -302,6 +319,7 @@ void CDMRTX::createData(uint8_t slotIndex)
       m_markBuffer[i] = MARK_NONE;
     }
   } else {
+    m_abort[slotIndex] = false;
     // Transmit an idle message
     for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
       m_poBuffer[i]   = m_idle[i];
