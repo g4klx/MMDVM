@@ -290,7 +290,7 @@ uint8_t CDStarTX::writeHeader(const uint8_t* header, uint8_t length)
 
   uint16_t space = m_buffer.getSpace();
   if (space < (DSTAR_HEADER_LENGTH_BYTES + 1U)) {
-    DEBUG2("D-Star, header space available", space);
+    DEBUG2("DStarTX: header space available", space);
     return 5U;
   }
 
@@ -309,7 +309,7 @@ uint8_t CDStarTX::writeData(const uint8_t* data, uint8_t length)
 
   uint16_t space = m_buffer.getSpace();
   if (space < (DSTAR_DATA_LENGTH_BYTES + 1U)) {
-    DEBUG2("D-Star, data space available", space);
+    DEBUG2("DStarTX: data space available", space);
     return 5U;
   }
 
@@ -325,7 +325,7 @@ uint8_t CDStarTX::writeEOT()
 {
   uint16_t space = m_buffer.getSpace();
   if (space < 1U) {
-    DEBUG2("D-Star, EOT space available", space);
+    DEBUG2("DStarTX: EOT space available", space);
     return 5U;
   }
 
