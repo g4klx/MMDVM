@@ -42,11 +42,12 @@ private:
   uint32_t    m_symbolBuffer;
   uint64_t    m_bitBuffer;
   q15_t       m_symbols[YSF_SYNC_LENGTH_SYMBOLS];
-  uint8_t     m_outBuffer[YSF_FRAME_LENGTH_BYTES + 1U];
+  uint8_t     m_outBuffer[YSF_FRAME_LENGTH_BYTES + 3U];
   uint8_t*    m_buffer;
   uint16_t    m_bufferPtr;
   uint16_t    m_symbolPtr;
   uint16_t    m_lostCount;
+  uint16_t    m_rssiCount;
   q15_t       m_centre;
   q15_t       m_threshold;
 

@@ -62,6 +62,8 @@ private:
   DMRRX_STATE m_state;
   uint8_t     m_n;
   uint8_t     m_type;
+  uint16_t    m_rssiCount;
+  uint16_t    m_rssi;
 
   void correlateSync(bool first);
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);

@@ -64,7 +64,9 @@ m_colorCode(0U),
 m_delay(0U),
 m_state(DMRRXS_NONE),
 m_n(0U),
-m_type(0U)
+m_type(0U),
+m_rssiCount(0U),
+m_rssi(0U)
 {
 }
 
@@ -89,6 +91,7 @@ void CDMRSlotRX::reset()
   m_state     = DMRRXS_NONE;
   m_startPtr  = 0U;
   m_endPtr    = NOENDPTR;
+  m_rssiCount = 0U;
 }
 
 bool CDMRSlotRX::processSample(q15_t sample)
@@ -120,6 +123,11 @@ bool CDMRSlotRX::processSample(q15_t sample)
     if (m_dataPtr >= SCAN_START && m_dataPtr <= SCAN_END)
       correlateSync(true);
   } else {
+#if defined(SEND_RSSI_DATA)
+    // Grab the RSSI data near the centre of the frame
+    if (m_state == DMRRXS_VOICE && m_dataPtr == m_syncPtr && m_rssiCount == 0U)
+      m_rssi = io.getRSSIValue();
+#endif
     uint16_t min = m_syncPtr - 1U;
     uint16_t max = m_syncPtr + 1U;
     if (m_dataPtr >= min && m_dataPtr <= max)
@@ -131,7 +139,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
     q15_t centre    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
     q15_t threshold = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
 
-    uint8_t frame[DMR_FRAME_LENGTH_BYTES + 1U];
+    uint8_t frame[DMR_FRAME_LENGTH_BYTES + 3U];
     frame[0U] = m_control;
 
     uint16_t ptr = m_endPtr - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
@@ -197,7 +205,22 @@ bool CDMRSlotRX::processSample(q15_t sample)
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
       DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
+#if defined(SEND_RSSI_DATA)
+      // Send RSSI data approximately every 0.5 seconds
+      if (m_rssiCount == 0U) {
+        frame[34U] = (m_rssi >> 8) & 0xFFU;
+        frame[35U] = (m_rssi >> 0) & 0xFFU;
+        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
+      } else {
+        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+      }
+
+      m_rssiCount++;
+      if (m_rssiCount >= 8U)
+        m_rssiCount = 0U;
+#else
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+#endif
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
       m_n         = 0U;
@@ -214,12 +237,26 @@ bool CDMRSlotRX::processSample(q15_t sample)
       if (m_state == DMRRXS_VOICE) {
         if (m_n >= 5U) {
           frame[0U] = CONTROL_VOICE;
-          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
           m_n = 0U;
         } else {
           frame[0U] = ++m_n;
+        }
+#if defined(SEND_RSSI_DATA)
+        // Send RSSI data approximately every 0.5 seconds
+        if (m_rssiCount == 0U) {
+          frame[34U] = (m_rssi >> 8) & 0xFFU;
+          frame[35U] = (m_rssi >> 0) & 0xFFU;
+          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
+        } else {
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
         }
+
+        m_rssiCount++;
+        if (m_rssiCount >= 8U)
+          m_rssiCount = 0U;
+#else
+        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+#endif
       } else if (m_state == DMRRXS_DATA) {
         if (m_type != 0x00U) {
           frame[0U] = CONTROL_DATA | m_type;
@@ -290,6 +327,7 @@ void CDMRSlotRX::correlateSync(bool first)
             m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
             m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
+            m_rssiCount     = 0U;
           } else {
             m_threshold[m_averagePtr] = threshold;
             m_centre[m_averagePtr]    = centre;
@@ -315,6 +353,7 @@ void CDMRSlotRX::correlateSync(bool first)
             m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
             m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
+            m_rssiCount     = 0U;
           } else {
             m_threshold[m_averagePtr] = threshold;
             m_centre[m_averagePtr]    = centre;

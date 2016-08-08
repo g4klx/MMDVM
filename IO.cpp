@@ -61,6 +61,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_DSTAR              9
 #define PIN_DMR                8
 #define PIN_YSF                7
+#define PIN_RSSI               88                     // ADC on Due pin A8 - Due AD10
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13) (PB20)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -157,6 +158,11 @@ m_lockout(false)
   pinMode(PIN_DSTAR,  OUTPUT);
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
+#endif
+
+#if defined(SEND_RSSI_DATA)
+  pinMode(PIN_RSSI,   INPUT);
+  analogReadResolution(12);
 #endif
 #endif
 }
@@ -543,4 +549,11 @@ bool CIO::hasLockout() const
 {
   return m_lockout;
 }
+
+#if defined(SEND_RSSI_DATA)
+uint16_t CIO::getRSSIValue()
+{
+  return analogRead(PIN_RSSI);
+}
+#endif
 

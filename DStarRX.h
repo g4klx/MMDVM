@@ -53,6 +53,7 @@ private:
   uint8_t      m_fecOutput[42U];
   q15_t        m_samples[DSTAR_DATA_SYNC_LENGTH_BITS];
   uint8_t      m_samplesPtr;
+  uint16_t     m_rssiCount;
 
   void    processNone(bool bit);
   void    processHeader(bool bit);

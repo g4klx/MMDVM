@@ -48,5 +48,8 @@
 // To use wider C4FSK filters for DMR and System Fusion on receive
 // #define WIDE_C4FSK_FILTERS_RX
 
+// Pass RSSI information to the host
+// #define SEND_RSSI_DATA
+
 #endif
 

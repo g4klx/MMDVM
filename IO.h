@@ -52,6 +52,10 @@ public:
 
   void resetWatchdog();
 
+#if defined(SEND_RSSI_DATA)
+  uint16_t getRSSIValue();
+#endif
+
 private:
 #if defined(__MBED__)
   DigitalOut           m_pinPTT;
