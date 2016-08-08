@@ -237,7 +237,7 @@ void CYSFRX::processData(q15_t sample)
       m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
 #if defined(SEND_RSSI_DATA)
-      // Send RSSI data every 0.5 seconds
+      // Send RSSI data every second
       if (m_rssiCount == 0U) {
         uint16_t rssi = io.getRSSIValue();
         m_outBuffer[121U] = (rssi >> 8) & 0xFFU;
@@ -248,7 +248,7 @@ void CYSFRX::processData(q15_t sample)
       }
 
       m_rssiCount++;
-      if (m_rssiCount >= 5U)
+      if (m_rssiCount >= 10U)
         m_rssiCount = 0U;
 #else
       serial.writeYSFData(m_outBuffer, YSF_FRAME_LENGTH_BYTES + 1U);

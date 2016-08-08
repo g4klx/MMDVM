@@ -464,7 +464,7 @@ void CDStarRX::processData(bool bit)
     }
 
 #if defined(SEND_RSSI_DATA)
-    // Send RSSI data every 0.5 seconds
+    // Send RSSI data every second
     if (m_rssiCount == 0U) {
       uint16_t rssi = io.getRSSIValue();
       m_rxBuffer[12U] = (rssi >> 8) & 0xFFU;
@@ -475,7 +475,7 @@ void CDStarRX::processData(bool bit)
     }
 
     m_rssiCount++;
-    if (m_rssiCount >= 25U)
+    if (m_rssiCount >= 50U)
       m_rssiCount = 0U;
 #else
     serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);

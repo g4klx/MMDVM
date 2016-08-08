@@ -125,7 +125,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
   } else {
 #if defined(SEND_RSSI_DATA)
     // Grab the RSSI data near the centre of the frame
-    if (m_state == DMRRXS_VOICE && m_dataPtr == m_syncPtr && m_rssiCount == 0U)
+    if (m_state == DMRRXS_VOICE && m_dataPtr == m_syncPtr && m_rssiCount == 2U)
       m_rssi = io.getRSSIValue();
 #endif
     uint16_t min = m_syncPtr - 1U;
@@ -206,8 +206,8 @@ bool CDMRSlotRX::processSample(q15_t sample)
       // Voice sync
       DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
 #if defined(SEND_RSSI_DATA)
-      // Send RSSI data approximately every 0.5 seconds
-      if (m_rssiCount == 0U) {
+      // Send RSSI data approximately every second
+      if (m_rssiCount == 2U) {
         frame[34U] = (m_rssi >> 8) & 0xFFU;
         frame[35U] = (m_rssi >> 0) & 0xFFU;
         serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
@@ -216,7 +216,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
       }
 
       m_rssiCount++;
-      if (m_rssiCount >= 8U)
+      if (m_rssiCount >= 16U)
         m_rssiCount = 0U;
 #else
       serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
@@ -242,8 +242,8 @@ bool CDMRSlotRX::processSample(q15_t sample)
           frame[0U] = ++m_n;
         }
 #if defined(SEND_RSSI_DATA)
-        // Send RSSI data approximately every 0.5 seconds
-        if (m_rssiCount == 0U) {
+        // Send RSSI data approximately every second
+        if (m_rssiCount == 2U) {
           frame[34U] = (m_rssi >> 8) & 0xFFU;
           frame[35U] = (m_rssi >> 0) & 0xFFU;
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
@@ -252,7 +252,7 @@ bool CDMRSlotRX::processSample(q15_t sample)
         }
 
         m_rssiCount++;
-        if (m_rssiCount >= 8U)
+        if (m_rssiCount >= 16U)
           m_rssiCount = 0U;
 #else
         serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
