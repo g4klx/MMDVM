@@ -124,7 +124,9 @@ m_C4FSKState(),
 m_GMSKState(),
 m_pttInvert(false),
 m_rxLevel(128 * 128),
-m_txLevel(128 * 128),
+m_dstarTXLevel(128 * 128),
+m_dmrTXLevel(128 * 128),
+m_ysfTXLevel(128 * 128),
 m_ledCount(0U),
 m_ledValue(true),
 m_dcd(false),
@@ -396,7 +398,7 @@ void CIO::process()
   }
 }
 
-void CIO::write(q15_t* samples, uint16_t length, const uint8_t* control)
+void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t* control)
 {
   if (!m_started)
     return;
@@ -414,8 +416,21 @@ void CIO::write(q15_t* samples, uint16_t length, const uint8_t* control)
 #endif
   }
 
+  q15_t txLevel = 0;
+  switch (mode) {
+    case STATE_DMR:
+      txLevel = m_dmrTXLevel;
+      break;
+    case STATE_YSF:
+      txLevel = m_ysfTXLevel;
+      break;
+    default:
+      txLevel = m_dstarTXLevel;
+      break;
+  }
+
   for (uint16_t i = 0U; i < length; i++) {
-    q31_t res1 = samples[i] * m_txLevel;
+    q31_t res1 = samples[i] * txLevel;
     q15_t res2 = q15_t(__SSAT((res1 >> 15), 16));
     uint16_t res3 = uint16_t(res2 + DC_OFFSET);
 
@@ -502,18 +517,23 @@ switch (m_modemState) {
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t txLevel)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel)
 {
   m_pttInvert = pttInvert;
 
-  m_rxLevel = q15_t(rxLevel * 128);
-  m_txLevel = q15_t(txLevel * 128);
+  m_rxLevel      = q15_t(rxLevel * 128);
+  m_dstarTXLevel = q15_t(dstarTXLevel * 128);
+  m_dmrTXLevel   = q15_t(dmrTXLevel * 128);
+  m_ysfTXLevel   = q15_t(ysfTXLevel * 128);
   
   if (rxInvert)
     m_rxLevel = -m_rxLevel;
   
-  if (txInvert)
-    m_txLevel = -m_txLevel;
+  if (txInvert) {
+    m_dstarTXLevel = -m_dstarTXLevel;
+    m_dmrTXLevel   = -m_dmrTXLevel;
+    m_ysfTXLevel   = -m_ysfTXLevel;
+  }
 }
 
 void CIO::getOverflow(bool& adcOverflow, bool& dacOverflow)

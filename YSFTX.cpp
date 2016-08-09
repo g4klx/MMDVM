@@ -161,7 +161,7 @@ void CYSFTX::writeByte(uint8_t c)
 
   ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
 
-  io.write(outBuffer, blockSize);
+  io.write(STATE_YSF, outBuffer, blockSize);
 }
 
 void CYSFTX::setTXDelay(uint8_t delay)

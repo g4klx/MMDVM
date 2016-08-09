@@ -185,7 +185,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-  if (length < 9U)
+  if (length < 12U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -212,7 +212,6 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
     return 4U;
 
   uint8_t rxLevel = data[4U];
-  uint8_t txLevel = data[5U];
 
   uint8_t colorCode = data[6U];
   if (colorCode > 15U)
@@ -232,6 +231,10 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
     m_sampleInsert = false;
   }
 
+  uint8_t dstarTXLevel = data[9U];
+  uint8_t dmrTXLevel   = data[10U];
+  uint8_t ysfTXLevel   = data[11U];
+
   m_modemState  = modemState;
 
   m_dstarEnable = dstarEnable;
@@ -246,7 +249,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   dmrRX.setDelay(dmrDelay);
   dmrIdleRX.setColorCode(colorCode);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, txLevel);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel);
 
   io.start();
 

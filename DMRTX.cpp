@@ -298,7 +298,7 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
 
   ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
 
-  io.write(outBuffer, blockSize, controlBuffer);
+  io.write(STATE_DMR, outBuffer, blockSize, controlBuffer);
 }
 
 uint16_t CDMRTX::getSpace1() const

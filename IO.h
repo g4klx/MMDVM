@@ -31,7 +31,7 @@ public:
 
   void process();
 
-  void write(q15_t* samples, uint16_t length, const uint8_t* control = NULL);
+  void write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t* control = NULL);
 
   uint16_t getSpace() const;
 
@@ -41,7 +41,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t txLevel);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -81,7 +81,9 @@ private:
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;
-  q15_t                m_txLevel;
+  q15_t                m_dstarTXLevel;
+  q15_t                m_dmrTXLevel;
+  q15_t                m_ysfTXLevel;
 
   uint32_t             m_ledCount;
   bool                 m_ledValue;
