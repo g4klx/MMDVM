@@ -61,7 +61,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_DSTAR              9
 #define PIN_DMR                8
 #define PIN_YSF                7
-#define PIN_RSSI               85                     // ADC on Due pin A7 - Due AD0
+#define PIN_RSSI               84                     // ADC on Due pin A6 - Due AD1
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13) (PB20)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
