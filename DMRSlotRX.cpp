@@ -124,8 +124,8 @@ bool CDMRSlotRX::processSample(q15_t sample)
       correlateSync(true);
   } else {
 #if defined(SEND_RSSI_DATA)
-    // Grab the RSSI data near the centre of the frame
-    if (m_state == DMRRXS_VOICE && m_dataPtr == m_syncPtr && m_rssiCount == 2U)
+    // Grab the RSSI data during the frame
+    if (m_state == DMRRXS_VOICE && m_dataPtr == m_startPtr && m_rssiCount == 2U)
       m_rssi = io.getRSSIValue();
 #endif
     uint16_t min = m_syncPtr - 1U;
