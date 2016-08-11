@@ -61,7 +61,6 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_DSTAR              9
 #define PIN_DMR                8
 #define PIN_YSF                7
-#define PIN_RSSI               84                     // ADC on Due pin A6 - Due AD1
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13) (PB20)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -161,11 +160,6 @@ m_lockout(false)
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
 #endif
-
-#if defined(SEND_RSSI_DATA)
-  pinMode(PIN_RSSI,   INPUT);
-  analogReadResolution(12);
-#endif
 #endif
 }
 
@@ -206,11 +200,11 @@ void CIO::start()
 #else
   t->TC_CMR = TC_CMR_TCCLKS_TIMER_CLOCK1 |    // Use TCLK1 (prescale by 2, = 42MHz)
 #endif
-              TC_CMR_WAVE |                   // Waveform mode
-              TC_CMR_WAVSEL_UP_RC |           // Count-up PWM using RC as threshold
-              TC_CMR_EEVT_XC0 |               // Set external events from XC0 (this setup TIOB as output)
-              TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_CLEAR |
-              TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_CLEAR;
+    TC_CMR_WAVE |                             // Waveform mode
+    TC_CMR_WAVSEL_UP_RC |                     // Count-up PWM using RC as threshold
+    TC_CMR_EEVT_XC0 |                         // Set external events from XC0 (this setup TIOB as output)
+    TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_CLEAR |
+    TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_CLEAR;
 #if defined(EXTERNAL_OSC)
   t->TC_RC  = EXTERNAL_OSC / 24000;           // Counter resets on RC, so sets period in terms of the external clock
   t->TC_RA  = EXTERNAL_OSC / 48000;           // Roughly square wave
@@ -219,13 +213,13 @@ void CIO::start()
   t->TC_RA  = 880;                            // Roughly square wave
 #endif
   t->TC_CMR = (t->TC_CMR & 0xFFF0FFFF) | TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET;  // Set clear and set from RA and RC compares
-  t->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG ;  // re-enable local clocking and switch to hardware trigger source.
+  t->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG ;   // re-enable local clocking and switch to hardware trigger source.
 
   // Set up the DAC
   pmc_enable_periph_clk(DACC_INTERFACE_ID);   // Start clocking DAC
   DACC->DACC_CR = DACC_CR_SWRST;              // Reset DAC
   DACC->DACC_MR =
-    DACC_MR_TRGEN_EN | DACC_MR_TRGSEL(1) |    // Trigger 1 = TIO output of TC0
+  DACC_MR_TRGEN_EN | DACC_MR_TRGSEL(1) |      // Trigger 1 = TIO output of TC0
     DACC_MR_USER_SEL_Chan |                   // Select channel
     (24 << DACC_MR_STARTUP_Pos);              // 24 = 1536 cycles which I think is in range 23..45us since DAC clock = 42MHz
   DACC->DACC_IDR  = 0xFFFFFFFF;               // No interrupts
@@ -573,7 +567,7 @@ bool CIO::hasLockout() const
 #if defined(SEND_RSSI_DATA)
 uint16_t CIO::getRSSIValue()
 {
-  return analogRead(PIN_RSSI);
+  return 0U;
 }
 #endif
 
