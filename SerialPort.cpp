@@ -61,7 +61,7 @@ const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
-const uint8_t HARDWARE[]         = "MMDVM 20160624 24kHz (D-Star/DMR/System Fusion/CW Id)";
+const uint8_t HARDWARE[]         = "MMDVM 20160816 24kHz (D-Star/DMR/System Fusion/CW Id)";
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
