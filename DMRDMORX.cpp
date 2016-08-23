@@ -64,19 +64,9 @@ m_rssi(0U)
 {
 }
 
-void CDMRDMORX::start()
-{
-  m_dataPtr  = 0U;
-  m_bitPtr   = 0U;
-  m_maxCorr  = 0;
-  m_control  = CONTROL_NONE;
-}
-
 void CDMRDMORX::reset()
 {
   m_syncPtr   = 0U;
-  m_dataPtr   = 0U;
-  m_bitPtr    = 0U;
   m_maxCorr   = 0;
   m_control   = CONTROL_NONE;
   m_syncCount = 0U;
@@ -204,15 +194,13 @@ bool CDMRDMORX::processSample(q15_t sample)
             if (m_state == DMORXS_VOICE) {
               DEBUG4("DMRDMORX: voice terminator found pos/centre/threshold", m_syncPtr, centre, threshold);
               serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-              m_state  = DMORXS_NONE;
-              m_endPtr = NOENDPTR;
+              reset();
             }
             break;
           default:    // DT_CSBK
             DEBUG4("DMRDMORX: csbk found pos/centre/threshold", m_syncPtr, centre, threshold);
             serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-            m_state  = DMORXS_NONE;
-            m_endPtr = NOENDPTR;
+            reset();
             break;
         }
       }
@@ -243,8 +231,7 @@ bool CDMRDMORX::processSample(q15_t sample)
         m_syncCount++;
         if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
           serial.writeDMRLost(true);
-          m_state  = DMORXS_NONE;
-          m_endPtr = NOENDPTR;
+          reset();
         }
       }
 
@@ -278,6 +265,10 @@ bool CDMRDMORX::processSample(q15_t sample)
         }
       }
     }
+
+    // End of this slot, reset some items for the next slot.
+    m_maxCorr = 0;
+    m_control = CONTROL_NONE;
   }
 
   m_dataPtr++;

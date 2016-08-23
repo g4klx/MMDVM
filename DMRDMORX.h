@@ -34,8 +34,6 @@ class CDMRDMORX {
 public:
   CDMRDMORX();
 
-  void start();
-
   void samples(const q15_t* samples, uint8_t length);
 
   void setColorCode(uint8_t colorCode);
