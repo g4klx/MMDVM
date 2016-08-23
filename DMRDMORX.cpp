@@ -99,10 +99,17 @@ void CDMRDMORX::samples(const q15_t* samples, uint8_t length)
 bool CDMRDMORX::processSample(q15_t sample)
 {
   if (m_state != DMORXS_NONE) {
-    if (m_dataPtr > m_startPtr && m_dataPtr < m_endPtr)
-      io.setADCDetection(true);
-    else
-      io.setADCDetection(false);
+    if (m_startPtr < m_endPtr) {
+      if (m_dataPtr > m_startPtr && m_dataPtr < m_endPtr)
+        io.setADCDetection(true);
+      else
+        io.setADCDetection(false);
+    } else {
+      if (m_dataPtr > m_startPtr || m_dataPtr < m_endPtr)
+        io.setADCDetection(true);
+      else
+        io.setADCDetection(false);
+    }
   } else {
     io.setADCDetection(false);
   }
@@ -121,10 +128,21 @@ bool CDMRDMORX::processSample(q15_t sample)
     if (m_state == DMORXS_VOICE && m_dataPtr == m_syncPtr && m_rssiCount == 2U)
       m_rssi = io.getRSSIValue();
 #endif
-    uint16_t min = m_syncPtr - 1U;
+    uint16_t min = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
     uint16_t max = m_syncPtr + 1U;
-    if (m_dataPtr >= min && m_dataPtr <= max)
-      correlateSync(false);
+
+    if (min >= DMO_BUFFER_LENGTH_SAMPLES)
+      min -= DMO_BUFFER_LENGTH_SAMPLES;
+    if (max >= DMO_BUFFER_LENGTH_SAMPLES)
+      max -= DMO_BUFFER_LENGTH_SAMPLES;
+
+    if (min < max) {
+      if (m_dataPtr >= min && m_dataPtr <= max)
+        correlateSync(false);
+    } else {
+      if (m_dataPtr >= min || m_dataPtr <= max)
+        correlateSync(false);
+    }
   }
 
   if (m_dataPtr == m_endPtr) {
@@ -135,7 +153,10 @@ bool CDMRDMORX::processSample(q15_t sample)
     uint8_t frame[DMR_FRAME_LENGTH_BYTES + 3U];
     frame[0U] = m_control;
 
-    uint16_t ptr = m_endPtr - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
+    uint16_t ptr = m_endPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
+    if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
+      ptr -= DMO_BUFFER_LENGTH_SAMPLES;
+
     samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
 
     if (m_control == CONTROL_DATA) {
@@ -260,7 +281,7 @@ bool CDMRDMORX::processSample(q15_t sample)
   }
 
   m_dataPtr++;
-  if (m_dataPtr >= DMO_BUFFER_SIZE)
+  if (m_dataPtr >= DMO_BUFFER_LENGTH_SAMPLES)
     m_dataPtr = 0U;
 
   m_bitPtr++;
@@ -279,7 +300,9 @@ void CDMRDMORX::correlateSync(bool first)
   bool voice = (errs >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
 
   if (data || voice) {
-    uint16_t ptr = m_dataPtr - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
+    uint16_t ptr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
+    if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
+      ptr -= DMO_BUFFER_LENGTH_SAMPLES;
 
     q31_t corr = 0;
     q15_t min =  16000;
@@ -300,6 +323,8 @@ void CDMRDMORX::correlateSync(bool first)
         corr += b ? m_buffer[ptr] : -m_buffer[ptr];
 
       ptr += DMR_RADIO_SYMBOL_LENGTH;
+      if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
+        ptr -= DMO_BUFFER_LENGTH_SAMPLES;
     }
 
     if (corr > m_maxCorr) {
@@ -309,7 +334,10 @@ void CDMRDMORX::correlateSync(bool first)
       q15_t threshold = q15_t(v1 >> 15);
 
       uint8_t sync[DMR_SYNC_BYTES_LENGTH];
-      uint16_t ptr = m_dataPtr - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
+      uint16_t ptr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
+      if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
+        ptr -= DMO_BUFFER_LENGTH_SAMPLES;
+
       samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
 
       if (data) {
@@ -335,8 +363,14 @@ void CDMRDMORX::correlateSync(bool first)
           m_maxCorr  = corr;
           m_control  = CONTROL_DATA;
           m_syncPtr  = m_dataPtr;
-          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
-          m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+
+          m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
+          if (m_startPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+            m_startPtr -= DMO_BUFFER_LENGTH_SAMPLES;
+
+          m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+          if (m_endPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+            m_endPtr -= DMO_BUFFER_LENGTH_SAMPLES;
         }
       } else {  // if (voice)
         uint8_t errs = 0U;
@@ -361,8 +395,14 @@ void CDMRDMORX::correlateSync(bool first)
           m_maxCorr  = corr;
           m_control  = CONTROL_VOICE;
           m_syncPtr  = m_dataPtr;
-          m_startPtr = m_dataPtr - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
+
+          m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
+          if (m_startPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+            m_startPtr -= DMO_BUFFER_LENGTH_SAMPLES;
+
           m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+          if (m_endPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+            m_endPtr -= DMO_BUFFER_LENGTH_SAMPLES;
         }
       }
     }
@@ -371,7 +411,7 @@ void CDMRDMORX::correlateSync(bool first)
 
 void CDMRDMORX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
 {
-  for (uint8_t i = 0U; i < count; i++, start += DMR_RADIO_SYMBOL_LENGTH) {
+  for (uint8_t i = 0U; i < count; i++) {
     q15_t sample = m_buffer[start] - centre;
 
     if (sample < -threshold) {
@@ -395,6 +435,10 @@ void CDMRDMORX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, ui
       WRITE_BIT1(buffer, offset, true);
       offset++;
     }
+
+    start += DMR_RADIO_SYMBOL_LENGTH;
+    if (start >= DMO_BUFFER_LENGTH_SAMPLES)
+      start -= DMO_BUFFER_LENGTH_SAMPLES;
   }
 }
 

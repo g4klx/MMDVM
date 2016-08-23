@@ -22,7 +22,7 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
-const uint16_t DMO_BUFFER_SIZE = 1440U;   // 60ms at 24 kHz
+const uint16_t DMO_BUFFER_LENGTH_SAMPLES = 1440U;   // 60ms at 24 kHz
 
 enum DMORX_STATE {
   DMORXS_NONE,
@@ -44,7 +44,7 @@ public:
 
 private:
   uint32_t    m_bitBuffer[DMR_RADIO_SYMBOL_LENGTH];
-  q15_t       m_buffer[DMO_BUFFER_SIZE];
+  q15_t       m_buffer[DMO_BUFFER_LENGTH_SAMPLES];
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
   uint16_t    m_syncPtr;
