@@ -153,7 +153,7 @@ void CSerialPort::getStatus()
       reply[7U] = dmrTX.getSpace1();
       reply[8U] = dmrTX.getSpace2();
     } else {
-      reply[7U] = 0U;
+      reply[7U] = 10U;
       reply[8U] = dmrDMOTX.getSpace();
     }
   } else {
@@ -196,7 +196,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
   bool txInvert  = (data[0U] & 0x02U) == 0x02U;
   bool pttInvert = (data[0U] & 0x04U) == 0x04U;
-  bool duplex    = (data[0U] & 0x80U) == 0x80U;
+  bool simplex   = (data[0U] & 0x80U) == 0x80U;
 
   bool dstarEnable = (data[1U] & 0x01U) == 0x01U;
   bool dmrEnable   = (data[1U] & 0x02U) == 0x02U;
@@ -246,10 +246,11 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   m_dstarEnable = dstarEnable;
   m_dmrEnable   = dmrEnable;
   m_ysfEnable   = ysfEnable;
-  m_duplex      = duplex;
+  m_duplex      = !simplex;
 
   dstarTX.setTXDelay(txDelay);
   ysfTX.setTXDelay(txDelay);
+  dmrDMOTX.setTXDelay(txDelay);
 
   dmrTX.setColorCode(colorCode);
   dmrRX.setColorCode(colorCode);
@@ -300,6 +301,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
     case STATE_DSTAR:
       DEBUG1("Mode set to D-Star");
       dmrIdleRX.reset();
+      dmrDMORX.reset();
       dmrRX.reset();
       ysfRX.reset();
       cwIdTX.reset();
@@ -307,6 +309,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
     case STATE_YSF:
       DEBUG1("Mode set to System Fusion");
       dmrIdleRX.reset();
+      dmrDMORX.reset();
       dmrRX.reset();
       dstarRX.reset();
       cwIdTX.reset();
@@ -314,6 +317,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
     case STATE_DSTARCAL:
       DEBUG1("Mode set to D-Star Calibrate");
       dmrIdleRX.reset();
+      dmrDMORX.reset();
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();
@@ -322,6 +326,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
     case STATE_DMRCAL:
       DEBUG1("Mode set to DMR Calibrate");
       dmrIdleRX.reset();
+      dmrDMORX.reset();
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();

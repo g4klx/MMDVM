@@ -387,7 +387,7 @@ void CIO::process()
           else
             dmrIdleRX.samples(C4FSKVals, blockSize);
         } else {
-          dmrDMORX.samples(c4FSKVals, blockSize);
+          dmrDMORX.samples(C4FSKVals, blockSize);
         }
       }
     } else if (m_modemState == STATE_YSF) {

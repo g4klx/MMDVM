@@ -33,6 +33,8 @@ public:
 
   void process();
 
+  void setTXDelay(uint8_t delay);
+
   uint16_t getSpace() const;
 
 private:
@@ -42,6 +44,8 @@ private:
   uint8_t              m_poBuffer[80U];
   uint16_t             m_poLen;
   uint16_t             m_poPtr;
+  uint16_t             m_txDelay;
+  uint32_t             m_count;
 
   void writeByte(uint8_t c);
 };

@@ -48,7 +48,9 @@ m_modFilter(),
 m_modState(),
 m_poBuffer(),
 m_poLen(0U),
-m_poPtr(0U)
+m_poPtr(0U),
+m_txDelay(240U),      // 200ms
+m_count(0U)
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -57,16 +59,20 @@ m_poPtr(0U)
   m_modFilter.pCoeffs = DMR_C4FSK_FILTER;
 }
 
-void CDMRTX::process()
+void CDMRDMOTX::process()
 {
   if (m_poLen == 0U && m_fifo.getData() > 0U) {
-    for (unsigned int i = 0U; i < 72U; i++)
-      m_poBuffer[i] = 0x00U;
+    if (!m_tx) {
+      for (uint16_t i = 0U; i < m_txDelay; i++)
+        m_poBuffer[m_poLen++] = 0x00U;
+    } else {
+      for (unsigned int i = 0U; i < 72U; i++)
+        m_poBuffer[m_poLen++] = 0x00U;
 
-    for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
-      m_poBuffer[i] = m_fifo.get();
+      for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
+        m_poBuffer[i] = m_fifo.get();
+    }
 
-    m_poLen = 72U;
     m_poPtr = 0U;
   }
 
@@ -89,7 +95,7 @@ void CDMRTX::process()
   }
 }
 
-uint8_t CDMRTX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CDMRDMOTX::writeData(const uint8_t* data, uint8_t length)
 {
   if (length != (DMR_FRAME_LENGTH_BYTES + 1U))
     return 4U;
@@ -104,7 +110,7 @@ uint8_t CDMRTX::writeData(const uint8_t* data, uint8_t length)
   return 0U;
 }
 
-void CDMRTX::writeByte(uint8_t c)
+void CDMRDMOTX::writeByte(uint8_t c)
 {
   q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
   q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
@@ -152,8 +158,13 @@ void CDMRTX::writeByte(uint8_t c)
   io.write(STATE_DMR, outBuffer, blockSize);
 }
 
-uint16_t CDMRTX::getSpace() const
+uint16_t CDMRDMOTX::getSpace() const
 {
   return m_fifo.getSpace() / (DMR_FRAME_LENGTH_BYTES + 2U);
+}
+
+void CDMRDMOTX::setTXDelay(uint8_t delay)
+{
+  m_txDelay = 600U + uint16_t(delay) * 12U;        // 500ms + tx delay
 }
 
