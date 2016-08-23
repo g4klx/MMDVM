@@ -44,6 +44,9 @@ CDMRIdleRX dmrIdleRX;
 CDMRRX     dmrRX;
 CDMRTX     dmrTX;
 
+CDMRDMORX  dmrDMORX;
+CDMRDMOTX  dmrDMOTX;
+
 CYSFRX     ysfRX;
 CYSFTX     ysfTX;
 
@@ -71,8 +74,12 @@ void loop()
   if (m_dstarEnable && m_modemState == STATE_DSTAR)
     dstarTX.process();
 
-  if (m_dmrEnable && m_modemState == STATE_DMR)
-    dmrTX.process();
+  if (m_dmrEnable && m_modemState == STATE_DMR) {
+    if (m_duplex)
+      dmrTX.process();
+    else
+      dmrDMOTX.process();
+  }
 
   if (m_ysfEnable && m_modemState == STATE_YSF)
     ysfTX.process();

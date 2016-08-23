@@ -45,6 +45,8 @@ enum MMDVM_STATE {
 
 #include "SerialPort.h"
 #include "DMRIdleRX.h"
+#include "DMRDMORX.h"
+#include "DMRDMOTX.h"
 #include "DStarRX.h"
 #include "DStarTX.h"
 #include "DMRRX.h"
@@ -89,6 +91,9 @@ extern CDStarTX dstarTX;
 extern CDMRIdleRX dmrIdleRX;
 extern CDMRRX dmrRX;
 extern CDMRTX dmrTX;
+
+extern CDMRDMORX dmrDMORX;
+extern CDMRDMOTX dmrDMOTX;
 
 extern CYSFRX ysfRX;
 extern CYSFTX ysfTX;

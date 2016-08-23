@@ -149,8 +149,13 @@ void CSerialPort::getStatus()
     reply[6U] = 0U;
 
   if (m_dmrEnable) {
-    reply[7U] = dmrTX.getSpace1();
-    reply[8U] = dmrTX.getSpace2();
+    if (m_duplex) {
+      reply[7U] = dmrTX.getSpace1();
+      reply[8U] = dmrTX.getSpace2();
+    } else {
+      reply[7U] = 0U;
+      reply[8U] = dmrDMOTX.getSpace();
+    }
   } else {
     reply[7U] = 0U;
     reply[8U] = 0U;
@@ -249,6 +254,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   dmrTX.setColorCode(colorCode);
   dmrRX.setColorCode(colorCode);
   dmrRX.setDelay(dmrDelay);
+  dmrDMORX.setColorCode(colorCode);
   dmrIdleRX.setColorCode(colorCode);
 
   io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel);
@@ -471,8 +477,10 @@ void CSerialPort::process()
 
           case MMDVM_DMR_DATA1:
             if (m_dmrEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR)
-                err = dmrTX.writeData1(m_buffer + 3U, m_len - 3U);
+              if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+                if (m_duplex)
+                  err = dmrTX.writeData1(m_buffer + 3U, m_len - 3U);
+              }
             }
             if (err == 0U) {
               if (m_modemState == STATE_IDLE)
@@ -485,8 +493,12 @@ void CSerialPort::process()
 
           case MMDVM_DMR_DATA2:
             if (m_dmrEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR)
-                err = dmrTX.writeData2(m_buffer + 3U, m_len - 3U);
+              if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+                if (m_duplex)
+                  err = dmrTX.writeData2(m_buffer + 3U, m_len - 3U);
+                else
+                  err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
+              }
             }
             if (err == 0U) {
               if (m_modemState == STATE_IDLE)
