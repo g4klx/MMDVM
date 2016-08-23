@@ -191,6 +191,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
   bool txInvert  = (data[0U] & 0x02U) == 0x02U;
   bool pttInvert = (data[0U] & 0x04U) == 0x04U;
+  bool duplex    = (data[0U] & 0x80U) == 0x80U;
 
   bool dstarEnable = (data[1U] & 0x01U) == 0x01U;
   bool dmrEnable   = (data[1U] & 0x02U) == 0x02U;
@@ -240,6 +241,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   m_dstarEnable = dstarEnable;
   m_dmrEnable   = dmrEnable;
   m_ysfEnable   = ysfEnable;
+  m_duplex      = duplex;
 
   dstarTX.setTXDelay(txDelay);
   ysfTX.setTXDelay(txDelay);

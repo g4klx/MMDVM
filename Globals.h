@@ -73,6 +73,8 @@ extern bool m_dstarEnable;
 extern bool m_dmrEnable;
 extern bool m_ysfEnable;
 
+extern bool m_duplex;
+
 extern bool m_tx;
 
 extern uint32_t m_sampleCount;
