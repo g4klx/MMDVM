@@ -27,6 +27,8 @@ bool m_dstarEnable = true;
 bool m_dmrEnable   = true;
 bool m_ysfEnable   = true;
 
+bool m_duplex = true;
+
 bool m_tx = false;
 
 uint32_t m_sampleCount = 0U;
