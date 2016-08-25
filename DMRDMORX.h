@@ -63,6 +63,7 @@ private:
 
   bool processSample(q15_t sample);
   void correlateSync(bool first);
+  void correlateEMB();
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
 };
 

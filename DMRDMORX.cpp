@@ -118,20 +118,29 @@ bool CDMRDMORX::processSample(q15_t sample)
     if (m_state == DMORXS_VOICE && m_dataPtr == m_syncPtr && m_rssiCount == 2U)
       m_rssi = io.getRSSIValue();
 #endif
-    uint16_t min = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
-    uint16_t max = m_syncPtr + 1U;
+    uint16_t min  = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
+    uint16_t max  = m_syncPtr + 1U;
+    uint16_t max1 = m_syncPtr + 2U;
 
     if (min >= DMO_BUFFER_LENGTH_SAMPLES)
       min -= DMO_BUFFER_LENGTH_SAMPLES;
     if (max >= DMO_BUFFER_LENGTH_SAMPLES)
       max -= DMO_BUFFER_LENGTH_SAMPLES;
+    if (max1 >= DMO_BUFFER_LENGTH_SAMPLES)
+      max1 -= DMO_BUFFER_LENGTH_SAMPLES;
 
     if (min < max) {
       if (m_dataPtr >= min && m_dataPtr <= max)
         correlateSync(false);
+
+      // if (m_dataPtr == max1 && m_control == CONTROL_NONE)
+      //  correlateEMB();
     } else {
       if (m_dataPtr >= min || m_dataPtr <= max)
         correlateSync(false);
+
+      // if (m_dataPtr == max1 && m_control == CONTROL_NONE)
+      //  correlateEMB();
     }
   }
 
@@ -398,6 +407,67 @@ void CDMRDMORX::correlateSync(bool first)
       }
     }
   }
+}
+
+void CDMRDMORX::correlateEMB()
+{
+  uint16_t ptr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH - 3U;
+  if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
+    ptr -= DMO_BUFFER_LENGTH_SAMPLES;
+
+  q15_t centre    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
+  q15_t threshold = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
+
+  bool correct[3U] = {false, false, false};
+  for (uint8_t i = 0U; i < 3U; i++) {
+    uint8_t emb[1U];
+    samplesToBits(ptr, DMR_EMB_LENGTH_SYMBOLS / 2U, emb, 0U, centre, threshold);
+
+    uint8_t cc   = (emb[0U] & 0xF0U) >> 4;
+    uint8_t lcss = (emb[0U] & 0x06U) >> 1;
+
+    if (cc == m_colorCode && ((m_n == 0U && lcss == 1U) ||
+                              (m_n == 1U && lcss == 3U) ||
+                              (m_n == 2U && lcss == 3U) ||
+                              (m_n == 3U && lcss == 2U) ||
+                              (m_n == 4U && lcss == 0U))) {
+      correct[i] = true;
+      int16_t diff = m_syncPtr - ptr;
+      DEBUG4("DMRDMORX: ptr/emb/diff", ptr, cc, diff);
+      uint8_t pi = (emb[0U] & 0x08U) >> 3;
+      DEBUG4("DMRDMORX: pi/lcss/n", pi, lcss, m_n);
+    }
+
+    ptr++;
+    if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
+      ptr -= DMO_BUFFER_LENGTH_SAMPLES;
+  }
+
+  if (correct[1U]) {
+    // Prefer the status quo
+    return;
+  } else if (correct[0U]) {
+    // m_syncPtr--
+    m_syncPtr += DMO_BUFFER_LENGTH_SAMPLES - 1U;
+  } else if (correct[2U]) {
+    m_syncPtr++;
+  } else {
+    // No match, don't change anything
+    return;
+  }
+
+  if (m_syncPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+    m_syncPtr -= DMO_BUFFER_LENGTH_SAMPLES;
+
+  m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
+  if (m_startPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+    m_startPtr -= DMO_BUFFER_LENGTH_SAMPLES;
+
+  m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
+  if (m_endPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+    m_endPtr -= DMO_BUFFER_LENGTH_SAMPLES;
+
+  DEBUG2("DMRDMORX: m_syncPtr", m_syncPtr);
 }
 
 void CDMRDMORX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
