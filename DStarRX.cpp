@@ -325,8 +325,8 @@ void CDStarRX::processNone(bool bit)
   if (bit)
     m_patternBuffer |= 0x01U;
 
-  // Exact matching of the frame sync sequence
-  if (countBits32((m_patternBuffer & FRAME_SYNC_MASK) ^ FRAME_SYNC_DATA) == 0U) {
+  // Fuzzy matching of the frame sync sequence
+  if (countBits32((m_patternBuffer & FRAME_SYNC_MASK) ^ FRAME_SYNC_DATA) <= FRAME_SYNC_ERRS) {
     DEBUG1("DStarRX: found frame sync in None");
 
     ::memset(m_rxBuffer, 0x00U, DSTAR_FEC_SECTION_LENGTH_BYTES);
