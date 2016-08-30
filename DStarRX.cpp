@@ -40,7 +40,7 @@ const q15_t THRESHOLD = 0;
 // D-Star bit order version of 0x55 0x55 0x6E 0x0A
 const uint32_t FRAME_SYNC_DATA = 0x00557650U;
 const uint32_t FRAME_SYNC_MASK = 0x00FFFFFFU;
-const uint8_t  FRAME_SYNC_ERRS = 3U;
+const uint8_t  FRAME_SYNC_ERRS = 2U;
 
 // D-Star bit order version of 0x55 0x2D 0x16
 const uint32_t DATA_SYNC_DATA = 0x00AAB468U;
