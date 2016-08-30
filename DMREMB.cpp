@@ -36,7 +36,7 @@ uint16_t CDMREMB::emb(uint8_t colorCode, bool pi, uint8_t lcss)
 	uint8_t index = 0U;
 	index |= (colorCode << 3) & 0x78U;
 	index |=  pi ? 0x04U : 0x00U;
-	index |= (lcss << 1) & 0x03U;
+	index |= (lcss << 0) & 0x03U;
 
 	return ENCODING_TABLE_1676[index];
 }
