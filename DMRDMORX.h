@@ -30,6 +30,11 @@ enum DMORX_STATE {
   DMORXS_DATA
 };
 
+struct EMBList {
+  uint8_t  part1;
+  uint8_t  part2;
+};
+
 class CDMRDMORX {
 public:
   CDMRDMORX();
@@ -60,6 +65,7 @@ private:
   uint8_t     m_type;
   uint16_t    m_rssiCount;
   uint16_t    m_rssi;
+  EMBList     m_embs[5U];
 
   bool processSample(q15_t sample);
   void correlateSync(bool first);
