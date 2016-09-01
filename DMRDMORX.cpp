@@ -90,22 +90,6 @@ void CDMRDMORX::samples(const q15_t* samples, uint8_t length)
 
 bool CDMRDMORX::processSample(q15_t sample)
 {
-  if (m_state != DMORXS_NONE) {
-    if (m_startPtr < m_endPtr) {
-      if (m_dataPtr > m_startPtr && m_dataPtr < m_endPtr)
-        io.setADCDetection(true);
-      else
-        io.setADCDetection(false);
-    } else {
-      if (m_dataPtr > m_startPtr || m_dataPtr < m_endPtr)
-        io.setADCDetection(true);
-      else
-        io.setADCDetection(false);
-    }
-  } else {
-    io.setADCDetection(false);
-  }
-
   m_buffer[m_dataPtr] = sample;
 
   m_bitBuffer[m_bitPtr] <<= 1;
