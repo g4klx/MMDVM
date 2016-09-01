@@ -104,22 +104,8 @@ uint8_t CDMRDMOTX::writeData(const uint8_t* data, uint8_t length)
   if (space < DMR_FRAME_LENGTH_BYTES)
     return 5U;
 
-  uint8_t buffer[DMR_FRAME_LENGTH_BYTES];
-  ::memcpy(buffer, data + 1U, DMR_FRAME_LENGTH_BYTES);
-
-  // Swap the sync bytes to DMO slot 2
-  if (::memcmp(buffer + 14U, DMR_BS_DATA_SYNC_BYTES + 1U, 5U) == 0) {
-    ::memcpy(buffer + 14U, DMR_S2_DATA_SYNC_BYTES + 1U, 5U);
-    buffer[13U] &= 0xF0U; buffer[13U] |= DMR_S2_DATA_SYNC_BYTES[0U];
-    buffer[19U] &= 0x0FU; buffer[19U] |= DMR_S2_DATA_SYNC_BYTES[6U];
-  } else if (::memcmp(buffer + 14U, DMR_BS_VOICE_SYNC_BYTES + 1U, 5U) == 0) {
-    ::memcpy(buffer + 14U, DMR_S2_VOICE_SYNC_BYTES + 1U, 5U);
-    buffer[13U] &= 0xF0U; buffer[13U] |= DMR_S2_VOICE_SYNC_BYTES[0U];
-    buffer[19U] &= 0x0FU; buffer[19U] |= DMR_S2_VOICE_SYNC_BYTES[6U];
-  }
-
   for (uint8_t i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
-    m_fifo.put(buffer[i]);
+    m_fifo.put(data[i + 1U]);
 
   return 0U;
 }

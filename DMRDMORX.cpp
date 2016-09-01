@@ -22,7 +22,6 @@
 #include "Globals.h"
 #include "DMRDMORX.h"
 #include "DMRSlotType.h"
-#include "DMREMB.h"
 #include "Utils.h"
 
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
@@ -61,8 +60,7 @@ m_state(DMORXS_NONE),
 m_n(0U),
 m_type(0U),
 m_rssiCount(0U),
-m_rssi(0U),
-m_embs()
+m_rssi(0U)
 {
 }
 
@@ -118,15 +116,9 @@ bool CDMRDMORX::processSample(q15_t sample)
     if (min < max) {
       if (m_dataPtr >= min && m_dataPtr <= max)
         correlateSync(false);
-
-      if (m_dataPtr == max1 && m_control == CONTROL_NONE)
-        correlateEMB();
     } else {
       if (m_dataPtr >= min || m_dataPtr <= max)
         correlateSync(false);
-
-      if (m_dataPtr == max1 && m_control == CONTROL_NONE)
-        correlateEMB();
     }
   }
 
@@ -279,13 +271,16 @@ bool CDMRDMORX::processSample(q15_t sample)
 
 void CDMRDMORX::correlateSync(bool first)
 {
-  uint8_t errs = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_S2_DATA_SYNC_SYMBOLS);
+  uint8_t errs1 = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_S2_DATA_SYNC_SYMBOLS);
+  uint8_t errs2 = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_MS_DATA_SYNC_SYMBOLS);
 
   // The voice sync is the complement of the data sync
-  bool data  = (errs <= MAX_SYNC_SYMBOLS_ERRS);
-  bool voice = (errs >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
+  bool data1  = (errs1 <= MAX_SYNC_SYMBOLS_ERRS);
+  bool data2  = (errs2 <= MAX_SYNC_SYMBOLS_ERRS);
+  bool voice1 = (errs1 >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
+  bool voice2 = (errs2 >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
 
-  if (data || voice) {
+  if (data1 || data2 || voice1 || voice2) {
     uint16_t ptr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
     if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
       ptr -= DMO_BUFFER_LENGTH_SAMPLES;
@@ -296,14 +291,18 @@ void CDMRDMORX::correlateSync(bool first)
 
     uint32_t mask = 0x00800000U;
     for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
+      bool b;
+      if (data1 || voice1)
+        b = (DMR_S2_DATA_SYNC_SYMBOLS & mask) == mask;
+      else
+        b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
 
       if (m_buffer[ptr] > max)
         max = m_buffer[ptr];
       if (m_buffer[ptr] < min)
         min = m_buffer[ptr];
 
-      if (data)
+      if (data1 || data2)
         corr += b ? -m_buffer[ptr] : m_buffer[ptr];
       else  // if (voice)
         corr += b ? m_buffer[ptr] : -m_buffer[ptr];
@@ -326,10 +325,14 @@ void CDMRDMORX::correlateSync(bool first)
 
       samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
 
-      if (data) {
+      if (data1 || data2) {
         uint8_t errs = 0U;
-        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
-          errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_DATA_SYNC_BYTES[i]);
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++) {
+          if (data1)
+            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_DATA_SYNC_BYTES[i]);
+          else
+            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
+        }
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
@@ -358,10 +361,14 @@ void CDMRDMORX::correlateSync(bool first)
           if (m_endPtr >= DMO_BUFFER_LENGTH_SAMPLES)
             m_endPtr -= DMO_BUFFER_LENGTH_SAMPLES;
         }
-      } else {  // if (voice)
+      } else {  // if (voice1 || voice2)
         uint8_t errs = 0U;
-        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
-          errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_VOICE_SYNC_BYTES[i]);
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++) {
+          if (voice1)
+            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_VOICE_SYNC_BYTES[i]);
+          else
+            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
+        }
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
@@ -393,113 +400,6 @@ void CDMRDMORX::correlateSync(bool first)
       }
     }
   }
-}
-
-void CDMRDMORX::correlateEMB()
-{
-  uint16_t ptr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH - 3U;
-  if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
-    ptr -= DMO_BUFFER_LENGTH_SAMPLES;
-
-  q15_t centre = (m_centre[0U] + m_centre[1U] + m_centre[2U] + m_centre[3U]) >> 2;
-
-  q31_t corr[3U];
-  for (uint8_t i = 0U; i < 3U; i++) {
-    uint16_t ptr1 = ptr;
-    uint16_t ptr2 = ptr + DMR_EMB_LENGTH_SAMPLES / 2U + DMR_EMBSIG_LENGTH_SAMPLES;
-
-    if (ptr2 >= DMO_BUFFER_LENGTH_SAMPLES)
-      ptr2 -= DMO_BUFFER_LENGTH_SAMPLES;
-
-    corr[i] = 0;
-    uint16_t emb1 = m_embs[m_n].part1;
-    uint16_t emb2 = m_embs[m_n].part2;
-
-    for (uint8_t j = 0U; j < 4U; j++) {
-      q15_t sample1 = m_buffer[ptr1] - centre;
-      q15_t sample2 = m_buffer[ptr2] - centre;
-
-      switch (emb1 & 0xC0U) {
-        case 0xC0U: corr[i] += (sample1 + sample1 + sample1); break;
-        case 0x80U: corr[i] += (sample1);                     break;
-        case 0x40U: corr[i] -= (sample1 + sample1 + sample1); break;
-        default:    corr[i] -= (sample1);                     break;
-      }
-
-      switch (emb2 & 0xC0U) {
-        case 0xC0U: corr[i] += (sample2 + sample2 + sample2); break;
-        case 0x80U: corr[i] += (sample2);                     break;
-        case 0x40U: corr[i] -= (sample2 + sample2 + sample2); break;
-        default:    corr[i] -= (sample2);                     break;
-      }
-
-      // uint8_t emb1[1U];
-      // samplesToBits(ptr1, DMR_EMB_LENGTH_SYMBOLS / 2U, emb1, 0U, centre, threshold);
-
-      // uint8_t emb2[1U];
-      // samplesToBits(ptr2, DMR_EMB_LENGTH_SYMBOLS / 2U, emb2, 0U, centre, threshold);
-
-      // errs[i] = countBits8(emb1[0U] ^ m_embs[m_n].part1) + countBits8(emb2[0U] ^ m_embs[m_n].part2);
-      // if (errs[i] < lowest)
-      //   lowest = errs[i];
-
-      // DEBUG3("DMRDMORX: ptr/errs", ptr1, errs[i]);
-
-      emb1 <<= 2;
-      emb2 <<= 2;
-
-      ptr1 += DMR_RADIO_SYMBOL_LENGTH;
-      if (ptr1 >= DMO_BUFFER_LENGTH_SAMPLES)
-        ptr1 -= DMO_BUFFER_LENGTH_SAMPLES;
-
-      ptr2 += DMR_RADIO_SYMBOL_LENGTH;
-      if (ptr2 >= DMO_BUFFER_LENGTH_SAMPLES)
-        ptr2 -= DMO_BUFFER_LENGTH_SAMPLES;
-    }
-
-    ptr++;
-    if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
-      ptr -= DMO_BUFFER_LENGTH_SAMPLES;
-  }
-
-  DEBUG4("DMRDMORX: -1/0/+1", corr[0U], corr[1], corr[2]);
-
-  // None of them are very good, don't use
-  // if (lowest > MAX_EMB_BITS_ERRS)
-  //   return;
-
-  // if (errs[2U] == lowest) {
-  //   // Prefer the status quo
-  //   return;
-  // } else if (errs[1U] == lowest) {
-  //   // m_syncPtr--
-  //   m_syncPtr += DMO_BUFFER_LENGTH_SAMPLES - 1U;
-  // } else {
-  //   m_syncPtr++;
-  // }
-
-  if (corr[1U] > corr[0U] && corr[1U] > corr[2U]) {
-    // Nothing has changed
-    return;
-  } else if (corr[0U] > corr[1U] && corr[0U] > corr[2U]) {
-    // m_syncPtr--
-    m_syncPtr += DMO_BUFFER_LENGTH_SAMPLES - 1U;
-  } else {
-    m_syncPtr++;
-  }
-
-  if (m_syncPtr >= DMO_BUFFER_LENGTH_SAMPLES)
-    m_syncPtr -= DMO_BUFFER_LENGTH_SAMPLES;
-
-  m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U - DMR_INFO_LENGTH_SAMPLES / 2U - DMR_SYNC_LENGTH_SAMPLES;
-  if (m_startPtr >= DMO_BUFFER_LENGTH_SAMPLES)
-    m_startPtr -= DMO_BUFFER_LENGTH_SAMPLES;
-
-  m_endPtr   = m_dataPtr + DMR_SLOT_TYPE_LENGTH_SAMPLES / 2U + DMR_INFO_LENGTH_SAMPLES / 2U - 1U;
-  if (m_endPtr >= DMO_BUFFER_LENGTH_SAMPLES)
-    m_endPtr -= DMO_BUFFER_LENGTH_SAMPLES;
-
-  DEBUG2("DMRDMORX: m_syncPtr", m_syncPtr);
 }
 
 void CDMRDMORX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
@@ -538,25 +438,5 @@ void CDMRDMORX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, ui
 void CDMRDMORX::setColorCode(uint8_t colorCode)
 {
   m_colorCode = colorCode;
-
-  // Build table of EMB values
-  uint16_t emb = CDMREMB::emb(colorCode, false, 1U);
-  m_embs[0U].part1 = (emb >> 8) & 0xFFU;
-  m_embs[0U].part2 = (emb >> 0) & 0xFFU;
-
-  emb = CDMREMB::emb(colorCode, false, 3U);
-  m_embs[1U].part1 = (emb >> 8) & 0xFFU;
-  m_embs[1U].part2 = (emb >> 0) & 0xFFU;
-
-  m_embs[2U].part1 = m_embs[1U].part1;
-  m_embs[2U].part2 = m_embs[1U].part2;
-
-  emb = CDMREMB::emb(colorCode, false, 2U);
-  m_embs[3U].part1 = (emb >> 8) & 0xFFU;
-  m_embs[3U].part2 = (emb >> 0) & 0xFFU;
-
-  emb = CDMREMB::emb(colorCode, false, 0U);
-  m_embs[4U].part1 = (emb >> 8) & 0xFFU;
-  m_embs[4U].part2 = (emb >> 0) & 0xFFU;
 }
 
