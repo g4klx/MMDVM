@@ -100,15 +100,6 @@ bool CDMRSlotRX::processSample(q15_t sample)
   if (m_delayPtr < m_delay)
     return m_state != DMRRXS_NONE;
 
-  if (m_state != DMRRXS_NONE) {
-    if (m_dataPtr > m_startPtr && m_dataPtr < m_endPtr)
-      io.setADCDetection(true);
-    else
-      io.setADCDetection(false);
-  } else {
-    io.setADCDetection(false);
-  }
-
   // Ensure that the buffer doesn't overflow
   if (m_dataPtr > m_endPtr || m_dataPtr >= 900U)
     return m_state != DMRRXS_NONE;
