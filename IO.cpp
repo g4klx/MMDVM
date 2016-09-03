@@ -352,8 +352,12 @@ void CIO::process()
         q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
         ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
-        if (m_dmrEnable)
-          dmrIdleRX.samples(C4FSKVals, blockSize);
+        if (m_dmrEnable) {
+          if (m_duplex)
+            dmrIdleRX.samples(C4FSKVals, blockSize);
+          else
+            dmrDMORX.samples(C4FSKVals, blockSize);
+        }
 
         if (m_ysfEnable)
           ysfRX.samples(C4FSKVals, blockSize);
@@ -370,11 +374,15 @@ void CIO::process()
         q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
         ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
-        // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
-        if (m_tx)
-          dmrRX.samples(C4FSKVals, control, blockSize);
-        else
-          dmrIdleRX.samples(C4FSKVals, blockSize);
+        if (m_duplex) {
+          // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
+          if (m_tx)
+            dmrRX.samples(C4FSKVals, control, blockSize);
+          else
+            dmrIdleRX.samples(C4FSKVals, blockSize);
+        } else {
+          dmrDMORX.samples(C4FSKVals, blockSize);
+        }
       }
     } else if (m_modemState == STATE_YSF) {
       if (m_ysfEnable) {
