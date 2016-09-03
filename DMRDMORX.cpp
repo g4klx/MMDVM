@@ -104,14 +104,11 @@ bool CDMRDMORX::processSample(q15_t sample)
 #endif
     uint16_t min  = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
     uint16_t max  = m_syncPtr + 1U;
-    uint16_t max1 = m_syncPtr + 2U;
 
     if (min >= DMO_BUFFER_LENGTH_SAMPLES)
       min -= DMO_BUFFER_LENGTH_SAMPLES;
     if (max >= DMO_BUFFER_LENGTH_SAMPLES)
       max -= DMO_BUFFER_LENGTH_SAMPLES;
-    if (max1 >= DMO_BUFFER_LENGTH_SAMPLES)
-      max1 -= DMO_BUFFER_LENGTH_SAMPLES;
 
     if (min < max) {
       if (m_dataPtr >= min && m_dataPtr <= max)
