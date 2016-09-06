@@ -42,6 +42,10 @@ public:
   void writeYSFData(const uint8_t* data, uint8_t length);
   void writeYSFLost();
 
+  void writeP25Hdr(const uint8_t* data, uint8_t length);
+  void writeP25Ldu(const uint8_t* data, uint8_t length);
+  void writeP25Lost();
+
   void writeCalData(const uint8_t* data, uint8_t length);
 
   void writeDebug(const char* text);

@@ -364,6 +364,9 @@ void CIO::process()
 
         if (m_ysfEnable)
           ysfRX.samples(C4FSKVals, blockSize);
+
+        if (m_p25Enable)
+          p25RX.samples(C4FSKVals, blockSize);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -393,6 +396,13 @@ void CIO::process()
         ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
         ysfRX.samples(C4FSKVals, blockSize);
+      }
+    } else if (m_modemState == STATE_P25) {
+      if (m_p25Enable) {
+        q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
+
+        p25RX.samples(C4FSKVals, blockSize);
       }
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE + 1U];

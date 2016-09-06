@@ -26,6 +26,7 @@ MMDVM_STATE m_modemState = STATE_IDLE;
 bool m_dstarEnable = true;
 bool m_dmrEnable   = true;
 bool m_ysfEnable   = true;
+bool m_p25Enable   = true;
 
 bool m_duplex = true;
 
@@ -46,6 +47,8 @@ CDMRDMOTX  dmrDMOTX;
 
 CYSFRX     ysfRX;
 CYSFTX     ysfTX;
+
+CP25RX     p25RX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;

@@ -39,6 +39,7 @@ enum MMDVM_STATE {
   STATE_DSTAR     = 1,
   STATE_DMR       = 2,
   STATE_YSF       = 3,
+  STATE_P25       = 4,
   STATE_DMRCAL    = 98,
   STATE_DSTARCAL  = 99
 };
@@ -53,6 +54,7 @@ enum MMDVM_STATE {
 #include "DMRTX.h"
 #include "YSFRX.h"
 #include "YSFTX.h"
+#include "P25RX.h"
 #include "CalDStarRX.h"
 #include "CalDStarTX.h"
 #include "CalDMR.h"
@@ -74,6 +76,7 @@ extern MMDVM_STATE m_modemState;
 extern bool m_dstarEnable;
 extern bool m_dmrEnable;
 extern bool m_ysfEnable;
+extern bool m_p25Enable;
 
 extern bool m_duplex;
 
@@ -97,6 +100,8 @@ extern CDMRDMOTX dmrDMOTX;
 
 extern CYSFRX ysfRX;
 extern CYSFTX ysfTX;
+
+extern CP25RX p25RX;
 
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
