@@ -216,7 +216,7 @@ void CP25RX::processData(q15_t sample)
     if (countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS) <= SYNC_BIT_RUN_ERRS) {
       DEBUG2("P25RX: found LDU sync in Data, pos", m_bufferPtr - P25_SYNC_LENGTH_BITS);
 
-      m_outBuffer[0U] = 0x00U;
+      m_outBuffer[0U] = 0x01U;
       serial.writeP25Hdr(m_outBuffer, P25_HDR_FRAME_LENGTH_BYTES + 1U);
 
       // Restore the sync that's now in the wrong place
