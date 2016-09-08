@@ -52,6 +52,7 @@ CYSFRX     ysfRX;
 CYSFTX     ysfTX;
 
 CP25RX     p25RX;
+CP25TX     p25TX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
@@ -86,6 +87,9 @@ void loop()
 
   if (m_ysfEnable && m_modemState == STATE_YSF)
     ysfTX.process();
+
+  if (m_p25Enable && m_modemState == STATE_P25)
+    p25TX.process();
 
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();

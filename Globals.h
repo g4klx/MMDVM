@@ -55,6 +55,7 @@ enum MMDVM_STATE {
 #include "YSFRX.h"
 #include "YSFTX.h"
 #include "P25RX.h"
+#include "P25TX.h"
 #include "CalDStarRX.h"
 #include "CalDStarTX.h"
 #include "CalDMR.h"
@@ -102,6 +103,7 @@ extern CYSFRX ysfRX;
 extern CYSFTX ysfTX;
 
 extern CP25RX p25RX;
+extern CP25TX p25TX;
 
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;

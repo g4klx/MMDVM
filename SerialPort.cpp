@@ -176,7 +176,10 @@ void CSerialPort::getStatus()
   else
     reply[9U] = 0U;
 
-  reply[10U] = 0U;  // P25
+  if (m_p25Enable)
+    reply[10U] = p25TX.getSpace();
+  else
+    reply[10U] = 0U;
 
   write(reply, 11);
 }
@@ -202,7 +205,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-  if (length < 12U)
+  if (length < 13U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -255,6 +258,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   uint8_t dstarTXLevel = data[9U];
   uint8_t dmrTXLevel   = data[10U];
   uint8_t ysfTXLevel   = data[11U];
+  uint8_t p25TXLevel   = data[12U];
 
   m_modemState  = modemState;
 
@@ -266,6 +270,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   dstarTX.setTXDelay(txDelay);
   ysfTX.setTXDelay(txDelay);
+  p25TX.setTXDelay(txDelay);
   dmrDMOTX.setTXDelay(txDelay);
 
   dmrTX.setColorCode(colorCode);
@@ -274,7 +279,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   dmrDMORX.setColorCode(colorCode);
   dmrIdleRX.setColorCode(colorCode);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel);
 
   io.start();
 
@@ -314,6 +319,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       DEBUG1("Mode set to DMR");
       dstarRX.reset();
       ysfRX.reset();
+      p25RX.reset();
       cwIdTX.reset();
       break;
     case STATE_DSTAR:
@@ -322,6 +328,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dmrDMORX.reset();
       dmrRX.reset();
       ysfRX.reset();
+      p25RX.reset();
       cwIdTX.reset();
       break;
     case STATE_YSF:
@@ -330,6 +337,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dmrDMORX.reset();
       dmrRX.reset();
       dstarRX.reset();
+      p25RX.reset();
       cwIdTX.reset();
       break;
     case STATE_P25:
@@ -348,6 +356,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();
+      p25RX.reset();
       cwIdTX.reset();
       break;
     case STATE_DMRCAL:
@@ -357,6 +366,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       dmrRX.reset();
       dstarRX.reset();
       ysfRX.reset();
+      p25RX.reset();
       cwIdTX.reset();
       break;
     default:
@@ -403,7 +413,7 @@ void CSerialPort::process()
       if (m_ptr == 2U)
         m_len = m_buffer[1U];
 
-      if (m_ptr == 3U && m_len > 130U) {
+      if (m_ptr == 3U && m_len > 230U) {
         sendNAK(3U);
         m_ptr = 0U;
         m_len = 0U;
@@ -590,6 +600,34 @@ void CSerialPort::process()
                 setMode(STATE_YSF);
             } else {
               DEBUG2("Received invalid System Fusion data", err);
+              sendNAK(err);
+            }
+            break;
+
+          case MMDVM_P25_HDR:
+            if (m_p25Enable) {
+              if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
+                err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+            }
+            if (err == 0U) {
+              if (m_modemState == STATE_IDLE)
+                setMode(STATE_P25);
+            } else {
+              DEBUG2("Received invalid P25 header", err);
+              sendNAK(err);
+            }
+            break;
+
+          case MMDVM_P25_LDU:
+            if (m_p25Enable) {
+              if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
+                err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+            }
+            if (err == 0U) {
+              if (m_modemState == STATE_IDLE)
+                setMode(STATE_P25);
+            } else {
+              DEBUG2("Received invalid P25 LDU", err);
               sendNAK(err);
             }
             break;

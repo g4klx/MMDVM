@@ -41,7 +41,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -84,6 +84,7 @@ private:
   q15_t                m_dstarTXLevel;
   q15_t                m_dmrTXLevel;
   q15_t                m_ysfTXLevel;
+  q15_t                m_p25TXLevel;
 
   uint32_t             m_ledCount;
   bool                 m_ledValue;
