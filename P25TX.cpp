@@ -38,10 +38,10 @@ const uint16_t P25_C4FSK_FILTER_LEN = 42U;
 #endif
 
 // XXX These will need setting correctly
-const q15_t P25_LEVELA[] = { 809,  809,  809,  809,  809};
-const q15_t P25_LEVELB[] = { 269,  269,  269,  269,  269};
-const q15_t P25_LEVELC[] = {-269, -269, -269, -269, -269};
-const q15_t P25_LEVELD[] = {-809, -809, -809, -809, -809};
+const q15_t P25_LEVELA[] = { 539,  539,  539,  539,  539};
+const q15_t P25_LEVELB[] = { 179,  179,  179,  179,  179};
+const q15_t P25_LEVELC[] = {-179, -179, -179, -179, -179};
+const q15_t P25_LEVELD[] = {-539, -539, -539, -539, -539};
 
 const uint8_t P25_START_SYNC = 0x77U;
 
