@@ -49,9 +49,6 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_COS                7
 #define PIN_PTT                8
 #define PIN_COSLED             11
-#define PIN_DSTAR              9
-#define PIN_DMR                8
-#define PIN_YSF                7
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -64,6 +61,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_DSTAR              9
 #define PIN_DMR                8
 #define PIN_YSF                7
+#define PIN_P25                6
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13) (PB20)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -76,6 +74,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define PIN_DSTAR              9
 #define PIN_DMR                8
 #define PIN_YSF                7
+#define PIN_P25                6
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -163,6 +162,7 @@ m_lockout(false)
   pinMode(PIN_DSTAR,  OUTPUT);
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
+  pinMode(PIN_P25,    OUTPUT);
 #endif
 #endif
 }
@@ -515,21 +515,31 @@ switch (m_modemState) {
     digitalWrite(PIN_DSTAR, HIGH);
     digitalWrite(PIN_DMR,   LOW);
     digitalWrite(PIN_YSF,   LOW);
+    digitalWrite(PIN_P25,   LOW);
     break;
   case STATE_DMR:
     digitalWrite(PIN_DSTAR, LOW);
     digitalWrite(PIN_DMR,   HIGH);
     digitalWrite(PIN_YSF,   LOW);
+    digitalWrite(PIN_P25,   LOW);
     break;
   case STATE_YSF:
     digitalWrite(PIN_DSTAR, LOW);
     digitalWrite(PIN_DMR,   LOW);
     digitalWrite(PIN_YSF,   HIGH);
+    digitalWrite(PIN_P25,   LOW);
+    break;
+  case STATE_P25:
+    digitalWrite(PIN_DSTAR, LOW);
+    digitalWrite(PIN_DMR,   LOW);
+    digitalWrite(PIN_YSF,   LOW);
+    digitalWrite(PIN_P25,   HIGH);
     break;
   default:
     digitalWrite(PIN_DSTAR, LOW);
     digitalWrite(PIN_DMR,   LOW);
     digitalWrite(PIN_YSF,   LOW);
+    digitalWrite(PIN_P25,   LOW);
     break;
 }
 #endif
