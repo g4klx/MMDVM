@@ -413,7 +413,7 @@ void CSerialPort::process()
       if (m_ptr == 2U)
         m_len = m_buffer[1U];
 
-      if (m_ptr == 3U && m_len > 230U) {
+      if (m_ptr == 3U && m_len > 250U) {
         sendNAK(3U);
         m_ptr = 0U;
         m_len = 0U;

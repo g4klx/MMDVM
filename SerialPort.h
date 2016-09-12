@@ -60,7 +60,7 @@ private:
 #if defined(__MBED__)
   Serial  m_serial;
 #endif
-  uint8_t m_buffer[130U];
+  uint8_t m_buffer[250U];
   uint8_t m_ptr;
   uint8_t m_len;
 
