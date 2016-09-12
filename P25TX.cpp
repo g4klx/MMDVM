@@ -104,7 +104,7 @@ void CP25TX::process()
 
 uint8_t CP25TX::writeData(const uint8_t* data, uint8_t length)
 {
-  if (length < (P25_HDR_FRAME_LENGTH_BYTES + 1U))
+  if (length < (P25_TERM_FRAME_LENGTH_BYTES + 1U))
     return 4U;
 
   uint16_t space = m_buffer.getSpace();

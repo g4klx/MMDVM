@@ -36,7 +36,7 @@ const uint8_t SYNC_SYMBOL_ERRS = 0U;
 const uint8_t SYNC_BIT_START_ERRS = 2U;
 const uint8_t SYNC_BIT_RUN_ERRS   = 4U;
 
-const unsigned int MAX_SYNC_FRAMES = 4U + 1U;
+const unsigned int MAX_SYNC_FRAMES = 3U + 1U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -211,7 +211,7 @@ void CP25RX::processData(q15_t sample)
   }
 
   // Search for an early sync to indicate an LDU following a header
-  if (m_bufferPtr >= (P25_HDR_FRAME_LENGTH_BITS + P25_SYNC_LENGTH_BITS - 2U) && m_bufferPtr <= (P25_HDR_FRAME_LENGTH_BITS + P25_SYNC_LENGTH_BITS + 2U)) {
+  if (m_bufferPtr >= (P25_HDR_FRAME_LENGTH_BITS + P25_SYNC_LENGTH_BITS - 1U) && m_bufferPtr <= (P25_HDR_FRAME_LENGTH_BITS + P25_SYNC_LENGTH_BITS + 1U)) {
     // Fuzzy matching of the data sync bit sequence
     if (countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS) <= SYNC_BIT_RUN_ERRS) {
       DEBUG2("P25RX: found LDU sync in Data, pos", m_bufferPtr - P25_SYNC_LENGTH_BITS);
