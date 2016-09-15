@@ -37,6 +37,15 @@ static q15_t P25_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1
 const uint16_t P25_C4FSK_FILTER_LEN = 42U;
 #endif
 
+// Generated in MATLAB using the following commands, and then normalised for unity gain
+// shape2 = 'Inverse-sinc Lowpass';
+// d2 = fdesign.interpolator(2, shape2);  
+// h2 = design(d2, 'SystemObject', true);
+static q15_t P25_LP_FILTER[] = {170, 401, 340, -203, -715, -478, 281, 419, -440, -1002, -103, 1114, 528, -1389, -1520, 1108, 2674, -388, -4662,
+                                -2132, 9168, 20241, 20241, 9168, -2132, -4662, -388, 2674, 1108, -1520, -1389, 528, 1114, -103, -1002, -440, 419,
+                                281, -478, -715, -203, 340, 401, 170};
+const uint16_t P25_LP_FILTER_LEN = 44U;
+
 // XXX These will need setting correctly
 const q15_t P25_LEVELA[] = { 539,  539,  539,  539,  539};
 const q15_t P25_LEVELB[] = { 179,  179,  179,  179,  179};
@@ -48,7 +57,9 @@ const uint8_t P25_START_SYNC = 0x77U;
 CP25TX::CP25TX() :
 m_buffer(1500U),
 m_modFilter(),
+m_lpFilter(),
 m_modState(),
+m_lpState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
@@ -56,10 +67,15 @@ m_txDelay(240U),      // 200ms
 m_count(0U)
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
+  ::memset(m_lpState,  0x00U, 70U * sizeof(q15_t));
 
   m_modFilter.numTaps = P25_C4FSK_FILTER_LEN;
   m_modFilter.pState  = m_modState;
   m_modFilter.pCoeffs = P25_C4FSK_FILTER;
+
+  m_lpFilter.numTaps = P25_LP_FILTER_LEN;
+  m_lpFilter.pState  = m_lpState;
+  m_lpFilter.pCoeffs = P25_LP_FILTER;
 }
 
 void CP25TX::process()
@@ -121,6 +137,7 @@ uint8_t CP25TX::writeData(const uint8_t* data, uint8_t length)
 void CP25TX::writeByte(uint8_t c)
 {
   q15_t inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t intBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
   q15_t outBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
 
   const uint8_t MASK = 0xC0U;
@@ -161,9 +178,9 @@ void CP25TX::writeByte(uint8_t c)
     }
   }
 
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, intBuffer, blockSize);
 
-  // Inverse sinc lowpass filter needed here
+  ::arm_fir_fast_q15(&m_lpFilter, intBuffer, outBuffer, blockSize);
 
   io.write(STATE_P25, outBuffer, blockSize);
 }
