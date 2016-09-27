@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define  WANT_DEBUG
+// #define  WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -54,7 +54,6 @@ m_buffer(NULL),
 m_bufferPtr(0U),
 m_symbolPtr(0U),
 m_lostCount(0U),
-m_rssiCount(0U),
 m_centre(0),
 m_threshold(0)
 {
@@ -70,7 +69,6 @@ void CP25RX::reset()
   m_bufferPtr = 0U;
   m_symbolPtr = 0U;
   m_lostCount = 0U;
-  m_rssiCount = 0U;
   m_centre    = 0;
   m_threshold = 0;
 }
@@ -164,7 +162,6 @@ void CP25RX::processNone(q15_t sample)
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = P25_SYNC_LENGTH_BITS;
       m_state     = P25RXS_DATA;
-      m_rssiCount = 0U;
 
       io.setDecode(true);
       io.setADCDetection(true);
@@ -254,23 +251,7 @@ void CP25RX::processData(q15_t sample)
     } else {
       m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
-#if defined(SEND_RSSI_DATA)
-      // Send RSSI data every second
-      if (m_rssiCount == 0U) {
-        uint16_t rssi = io.getRSSIValue();
-        m_outBuffer[121U] = (rssi >> 8) & 0xFFU;
-        m_outBuffer[122U] = (rssi >> 0) & 0xFFU;
-        serial.writeP25Ldu(m_outBuffer, P25_LDU_FRAME_LENGTH_BYTES + 3U);
-      } else {
-        serial.writeP25Ldu(m_outBuffer, P25_LDU_FRAME_LENGTH_BYTES + 1U);
-      }
-
-      m_rssiCount++;
-      if (m_rssiCount >= 10U)
-        m_rssiCount = 0U;
-#else
       serial.writeP25Ldu(m_outBuffer, P25_LDU_FRAME_LENGTH_BYTES + 1U);
-#endif
 
       // Start the next frame
       ::memset(m_outBuffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);

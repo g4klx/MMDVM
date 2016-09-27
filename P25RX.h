@@ -47,7 +47,6 @@ private:
   uint16_t    m_bufferPtr;
   uint16_t    m_symbolPtr;
   uint16_t    m_lostCount;
-  uint16_t    m_rssiCount;
   q15_t       m_centre;
   q15_t       m_threshold;
 

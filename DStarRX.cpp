@@ -260,8 +260,7 @@ m_pathMemory2(),
 m_pathMemory3(),
 m_fecOutput(),
 m_samples(),
-m_samplesPtr(0U),
-m_rssiCount(0U)
+m_samplesPtr(0U)
 {
 }
 
@@ -274,7 +273,6 @@ void CDStarRX::reset()
   m_rxBufferBits  = 0U;
   m_dataBits      = 0U;
   m_samplesPtr    = 0U;
-  m_rssiCount     = 0U;
 }
 
 void CDStarRX::samples(const q15_t* samples, uint8_t length)
@@ -349,7 +347,6 @@ void CDStarRX::processNone(bool bit)
     m_rxBufferBits = 0U;
 
     m_dataBits  = 0U;
-    m_rssiCount = 0U;
     m_rxState   = DSRXS_DATA;
     return;
   }
@@ -379,7 +376,6 @@ void CDStarRX::processHeader(bool bit)
       m_rxBufferBits = 0U;
 
       m_rxState   = DSRXS_DATA;
-      m_rssiCount = 0U;
       m_dataBits  = SYNC_POS - DSTAR_DATA_LENGTH_BITS + 1U;
     } else {
       // The checksum failed, return to looking for syncs
@@ -463,23 +459,7 @@ void CDStarRX::processData(bool bit)
       m_rxBuffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
     }
 
-#if defined(SEND_RSSI_DATA)
-    // Send RSSI data every second
-    if (m_rssiCount == 0U) {
-      uint16_t rssi = io.getRSSIValue();
-      m_rxBuffer[12U] = (rssi >> 8) & 0xFFU;
-      m_rxBuffer[13U] = (rssi >> 0) & 0xFFU;
-      serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES + 2U);
-    } else {
-      serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
-    }
-
-    m_rssiCount++;
-    if (m_rssiCount >= 50U)
-      m_rssiCount = 0U;
-#else
     serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
-#endif
 
     // Start the next frame
     ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
