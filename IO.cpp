@@ -352,7 +352,7 @@ void CIO::process()
         dstarRX.samples(GMSKVals, blockSize);
       }
 
-      if (m_dmrEnable || m_ysfEnable) {
+      if (m_dmrEnable || m_ysfEnable || m_p25Enable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
         ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
