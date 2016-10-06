@@ -192,6 +192,5 @@ void CP25TX::setTXDelay(uint8_t delay)
 
 uint16_t CP25TX::getSpace() const
 {
-  return m_buffer.getSpace() / (P25_LDU_FRAME_LENGTH_BYTES + 1U);
+  return m_buffer.getSpace() / P25_LDU_FRAME_LENGTH_BYTES;
 }
-
