@@ -59,6 +59,8 @@ const uint8_t MMDVM_P25_LOST     = 0x32U;
 const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
 
+const uint8_t MMDVM_SERIAL       = 0x80U;
+
 const uint8_t MMDVM_DEBUG1       = 0xF1U;
 const uint8_t MMDVM_DEBUG2       = 0xF2U;
 const uint8_t MMDVM_DEBUG3       = 0xF3U;
@@ -386,6 +388,10 @@ void CSerialPort::start()
   m_serial.baud(115200);
 #else
   Serial.begin(115200);
+
+#if defined(SERIAL_REPEATER)
+  Serial3.begin(9600);
+#endif
 #endif
 }
 
@@ -632,6 +638,12 @@ void CSerialPort::process()
             }
             break;
 
+#if defined(SERIAL_REPEATER)
+          case MMDVM_SERIAL:
+            Serial3.write(m_buffer + 3U, m_len - 3U);
+            break;
+#endif
+
           default:
             // Handle this, send a NAK back
             sendNAK(1U);
@@ -643,6 +655,12 @@ void CSerialPort::process()
       }
     }
   }
+
+#if defined(SERIAL_REPEATER)
+  // Drain any incoming serial data
+  while (Serial3.available())
+    Serial3.read();
+#endif
 }
 
 void CSerialPort::writeDStarHeader(const uint8_t* header, uint8_t length)

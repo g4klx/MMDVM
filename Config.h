@@ -22,7 +22,7 @@
 // Allow for the use of high quality external clock oscillators
 // The number is the frequency of the oscillator in Hertz.
 // For 12 MHz
-// #define EXTERNAL_OSC 12000000
+#define EXTERNAL_OSC 12000000
 // For 14.4 MHz
 // #define EXTERNAL_OSC 14400000
 // For 19.2 MHz
@@ -50,6 +50,9 @@
 
 // Pass RSSI information to the host
 // #define SEND_RSSI_DATA
+
+// Use the modem as a serial repeater for Nextion displays
+// #define SERIAL_REPEATER
 
 #endif
 
