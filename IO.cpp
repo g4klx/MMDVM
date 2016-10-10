@@ -125,6 +125,7 @@ m_C4FSKState(),
 m_GMSKState(),
 m_pttInvert(false),
 m_rxLevel(128 * 128),
+m_cwIdTXLevel(128 * 128),
 m_dstarTXLevel(128 * 128),
 m_dmrTXLevel(128 * 128),
 m_ysfTXLevel(128 * 128),
@@ -434,6 +435,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
 
   q15_t txLevel = 0;
   switch (mode) {
+    case STATE_DSTAR:
+      txLevel = m_dstarTXLevel;
+      break;
     case STATE_DMR:
       txLevel = m_dmrTXLevel;
       break;
@@ -444,7 +448,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
       txLevel = m_p25TXLevel;
       break;
     default:
-      txLevel = m_dstarTXLevel;
+      txLevel = m_cwIdTXLevel;
       break;
   }
 
@@ -546,11 +550,12 @@ switch (m_modemState) {
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel)
 {
   m_pttInvert = pttInvert;
 
   m_rxLevel      = q15_t(rxLevel * 128);
+  m_cwIdTXLevel  = q15_t(cwIdTXLevel * 128);
   m_dstarTXLevel = q15_t(dstarTXLevel * 128);
   m_dmrTXLevel   = q15_t(dmrTXLevel * 128);
   m_ysfTXLevel   = q15_t(ysfTXLevel * 128);

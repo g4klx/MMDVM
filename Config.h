@@ -52,7 +52,7 @@
 // #define SEND_RSSI_DATA
 
 // Use the modem as a serial repeater for Nextion displays
-// #define SERIAL_REPEATER
+#define SERIAL_REPEATER
 
 #endif
 

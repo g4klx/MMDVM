@@ -257,6 +257,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
     m_sampleInsert = false;
   }
 
+  uint8_t cwIdTXLevel  = data[5U];
   uint8_t dstarTXLevel = data[9U];
   uint8_t dmrTXLevel   = data[10U];
   uint8_t ysfTXLevel   = data[11U];
@@ -281,7 +282,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   dmrDMORX.setColorCode(colorCode);
   dmrIdleRX.setColorCode(colorCode);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel);
 
   io.start();
 

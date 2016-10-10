@@ -40,6 +40,9 @@ enum MMDVM_STATE {
   STATE_DMR       = 2,
   STATE_YSF       = 3,
   STATE_P25       = 4,
+
+  // Dummy states start at 90
+  STATE_CWID      = 97,
   STATE_DMRCAL    = 98,
   STATE_DSTARCAL  = 99
 };
