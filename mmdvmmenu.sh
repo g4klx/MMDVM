@@ -69,7 +69,8 @@ do
     (6) Use layout for the PAPA board
     (7) Use layout for ZUM board V1.0 and V1.2
     (8) Use layout for SP8NTH board
-    (9) Return to Default
+    (9) Use modem as display driver
+    (A) Return to Default
 
                          (Q)uit
     ---------------------------------------------------------------
@@ -84,7 +85,9 @@ EOF
     "6")  sed -e 's/\/\/ #define ARDUINO_DUE_PAPA/#define  ARDUINO_DUE_PAPA/'          $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for the PAPA board enabled";;
     "7")  sed -e 's/\/\/ #define ARDUINO_DUE_ZUM_V10/#define ARDUINO_DUE_ZUM_V10/'     $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for ZUM board V1.0 and V1.2 enabled";;
     "8")  sed -e 's/\/\/ #define ARDUINO_DUE_NTH/#define ARDUINO_DUE_NTH/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for SP8NTH board enabled";;
-    "9")  mv -f $confbak $conf ;;
+    "9")  sed -e 's/\/\/ #define SERIAL_REPEATER/#define SERIAL_REPEATER/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Modem display driver enabled";;
+    "A")  mv -f $confbak $conf ;;
+    "a")  mv -f $confbak $conf ;;
     "Q")  echo "If any changes are made you need to (re-)upload the firmware to MMDVM" && exit;;
     "q")  echo "If any changes are made you need to (re-)upload the firmware to MMDVM" && exit;;
      * )  echo "invalid option"     ;;
