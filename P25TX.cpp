@@ -46,11 +46,10 @@ static q15_t P25_LP_FILTER[] = {170, 401, 340, -203, -715, -478, 281, 419, -440,
                                 281, -478, -715, -203, 340, 401, 170};
 const uint16_t P25_LP_FILTER_LEN = 44U;
 
-// XXX These will need setting correctly
-const q15_t P25_LEVELA[] = { 539,  539,  539,  539,  539};
-const q15_t P25_LEVELB[] = { 179,  179,  179,  179,  179};
-const q15_t P25_LEVELC[] = {-179, -179, -179, -179, -179};
-const q15_t P25_LEVELD[] = {-539, -539, -539, -539, -539};
+const q15_t P25_LEVELA[] = { 594,  594,  594,  594,  594};
+const q15_t P25_LEVELB[] = { 198,  198,  198,  198,  198};
+const q15_t P25_LEVELC[] = {-198, -198, -198, -198, -198};
+const q15_t P25_LEVELD[] = {-594, -594, -594, -594, -594};
 
 const uint8_t P25_START_SYNC = 0x77U;
 
