@@ -40,6 +40,9 @@
 // For the ZUM Board V1.0 pin layout
 #define  ARDUINO_DUE_ZUM_V10
 
+// For the ZUM Board V1.2 pin layout
+// #define  ARDUINO_DUE_ZUM_V12
+
 // For the SP8NTH board
 // #define  ARDUINO_DUE_NTH
 
