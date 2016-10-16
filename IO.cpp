@@ -54,7 +54,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define ADC_CDR_Chan           7
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
 #define DACC_CHER_Chan         DACC_CHER_CH0
-#elif defined(ARDUINO_DUE_ZUM_V10)
+#elif defined(ARDUINO_DUE_ZUM_V10_V12)
 #define PIN_COS                52
 #define PIN_PTT                23
 #define PIN_COSLED             22
@@ -65,19 +65,6 @@ const uint16_t DC_OFFSET = 2048U;
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
-#define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL1 // DAC on Due DAC1
-#define DACC_CHER_Chan         DACC_CHER_CH1
-#elif defined(ARDUINO_DUE_ZUM_V12)
-#define PIN_COS                52
-#define PIN_PTT                23
-#define PIN_COSLED             22
-#define PIN_DSTAR              9
-#define PIN_DMR                8
-#define PIN_YSF                7
-#define PIN_P25                6
-#define ADC_CHER_Chan          (1<<10)                // ADC on Due pin A8 - Due AD10 - (1 << 10)
-#define ADC_ISR_EOC_Chan       ADC_ISR_EOC10
-#define ADC_CDR_Chan           10
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL1 // DAC on Due DAC1
 #define DACC_CHER_Chan         DACC_CHER_CH1
 #elif defined(ARDUINO_DUE_NTH)
@@ -94,7 +81,7 @@ const uint16_t DC_OFFSET = 2048U;
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
 #define DACC_CHER_Chan         DACC_CHER_CH0
 #else
-#error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM_V10, ARDUINO_DUE_ZUM_V12, or ARDUINO_DUE_NTH need to be defined"
+#error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM_V10_V12, or ARDUINO_DUE_NTH need to be defined"
 #endif
 #elif defined(__MBED__)
 // A generic MBED platform
