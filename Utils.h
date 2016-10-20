@@ -19,11 +19,7 @@
 #if !defined(UTILS_H)
 #define  UTILS_H
 
-#if defined(__MBED__)
-#include "mbed.h"
-#else
 #include <Arduino.h>
-#endif
 
 uint8_t countBits8(uint8_t bits);
 

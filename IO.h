@@ -57,18 +57,6 @@ public:
 #endif
 
 private:
-#if defined(__MBED__)
-  DigitalOut           m_pinPTT;
-  DigitalOut           m_pinCOSLED;
-  DigitalOut           m_pinLED;
-  DigitalIn            m_pinCOS;
-
-  AnalogIn             m_pinADC;
-  AnalogOut            m_pinDAC;
-
-  Ticker               m_ticker;
-#endif
-
   bool                 m_started;
 
   CSampleRB            m_rxBuffer;

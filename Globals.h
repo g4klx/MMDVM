@@ -19,11 +19,7 @@
 #if !defined(GLOBALS_H)
 #define  GLOBALS_H
 
-#if defined(__MBED__)
-#include "mbed.h"
-#else
 #include <Arduino.h>
-#endif
 
 #if defined(__SAM3X8E__) || defined(__STM32F1__) || defined(__STM32F2__)
 #define  ARM_MATH_CM3

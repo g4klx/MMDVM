@@ -83,13 +83,6 @@ const uint16_t DC_OFFSET = 2048U;
 #else
 #error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM_V10_V12, or ARDUINO_DUE_NTH need to be defined"
 #endif
-#elif defined(__MBED__)
-// A generic MBED platform
-#define PIN_COS                PB_4  // D5
-#define PIN_PTT                PA_8  // D7
-#define PIN_COSLED             PB_10 // D6
-#define PIN_ADC                PA_0  // A0
-#define PIN_DAC                PA_4  // A2
 #else
 #error "Unknown hardware type"
 #endif
@@ -100,22 +93,11 @@ extern "C" {
 #if defined(__SAM3X8E__)
     if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)          // Ensure there was an End-of-Conversion and we read the ISR reg
       io.interrupt();
-#elif defined(__MBED__)
-    io.interrupt();
 #endif
   }
 }
 
 CIO::CIO() :
-#if defined(__MBED__)
-m_pinPTT(PIN_PTT),
-m_pinCOSLED(PIN_COSLED),
-m_pinLED(LED1),
-m_pinCOS(PIN_COS),
-m_pinADC(PIN_ADC),
-m_pinDAC(PIN_DAC),
-m_ticker(),
-#endif
 m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
@@ -151,7 +133,6 @@ m_lockout(false)
   m_GMSKFilter.pState  = m_GMSKState;
   m_GMSKFilter.pCoeffs = GMSK_FILTER;
 
-#if !defined(__MBED__)
   // Set up the TX, COS and LED pins
   pinMode(PIN_PTT,    OUTPUT);
   pinMode(PIN_COSLED, OUTPUT);
@@ -164,7 +145,6 @@ m_lockout(false)
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
-#endif
 #endif
 }
 
@@ -233,12 +213,6 @@ void CIO::start()
   digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
   digitalWrite(PIN_COSLED, LOW);
   digitalWrite(PIN_LED,    HIGH);
-#elif defined(__MBED__)
-  m_ticker.attach(&ADC_Handler, 1.0 / 24000.0);
-
-  m_pinPTT.write(m_pttInvert ? 1 : 0);
-  m_pinCOSLED.write(0);
-  m_pinLED.write(1);
 #endif
 
   m_count   = 0U;
@@ -266,41 +240,25 @@ void CIO::process()
     if (m_ledCount >= 24000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
-#if defined(__MBED__)
-      m_pinLED.write(m_ledValue ? 1 : 0);
-#else
       digitalWrite(PIN_LED, m_ledValue ? HIGH : LOW);
-#endif
     }
   } else {
     if (m_ledCount >= 240000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
-#if defined(__MBED__)
-      m_pinLED.write(m_ledValue ? 1 : 0);
-#else
       digitalWrite(PIN_LED, m_ledValue ? HIGH : LOW);
-#endif
     }
     return;
   }
 
 #if defined(USE_COS_AS_LOCKOUT)
-#if defined(__MBED__)
-  m_lockout = m_pinCOS.read() == 1;
-#else
   m_lockout = digitalRead(PIN_COS) == HIGH;
-#endif
 #endif
 
   // Switch off the transmitter if needed
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
-#if defined(__MBED__)
-    m_pinPTT.write(m_pttInvert ? 1 : 0);
-#else
     digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
-#endif
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
@@ -426,11 +384,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   // Switch the transmitter on if needed
   if (!m_tx) {
     m_tx = true;
-#if defined(__MBED__)
-    m_pinPTT.write(m_pttInvert ? 0 : 1);
-#else
     digitalWrite(PIN_PTT, m_pttInvert ? LOW : HIGH);
-#endif
   }
 
   q15_t txLevel = 0;
@@ -483,9 +437,6 @@ void CIO::interrupt()
 #if defined(__SAM3X8E__)
   DACC->DACC_CDR = sample;
   sample = ADC->ADC_CDR[ADC_CDR_Chan];
-#elif defined(__MBED__)
-  m_pinDAC.write_u16(sample);
-  sample = m_pinADC.read_u16();
 #endif
 
   m_rxBuffer.put(sample, control);
@@ -496,11 +447,7 @@ void CIO::interrupt()
 void CIO::setDecode(bool dcd)
 {
   if (dcd != m_dcd)
-#if defined(__MBED__)
-    m_pinCOSLED.write(dcd ? 1 : 0);
-#else
     digitalWrite(PIN_COSLED, dcd ? HIGH : LOW);
-#endif
 
   m_dcd = dcd;
 }
@@ -512,41 +459,39 @@ void CIO::setADCDetection(bool detect)
 
 void CIO::setMode()
 {
-#if !defined(__MBED__)
 #if defined(ARDUINO_MODE_PINS)
-switch (m_modemState) {
-  case STATE_DSTAR:
-    digitalWrite(PIN_DSTAR, HIGH);
-    digitalWrite(PIN_DMR,   LOW);
-    digitalWrite(PIN_YSF,   LOW);
-    digitalWrite(PIN_P25,   LOW);
-    break;
-  case STATE_DMR:
-    digitalWrite(PIN_DSTAR, LOW);
-    digitalWrite(PIN_DMR,   HIGH);
-    digitalWrite(PIN_YSF,   LOW);
-    digitalWrite(PIN_P25,   LOW);
-    break;
-  case STATE_YSF:
-    digitalWrite(PIN_DSTAR, LOW);
-    digitalWrite(PIN_DMR,   LOW);
-    digitalWrite(PIN_YSF,   HIGH);
-    digitalWrite(PIN_P25,   LOW);
-    break;
-  case STATE_P25:
-    digitalWrite(PIN_DSTAR, LOW);
-    digitalWrite(PIN_DMR,   LOW);
-    digitalWrite(PIN_YSF,   LOW);
-    digitalWrite(PIN_P25,   HIGH);
-    break;
-  default:
-    digitalWrite(PIN_DSTAR, LOW);
-    digitalWrite(PIN_DMR,   LOW);
-    digitalWrite(PIN_YSF,   LOW);
-    digitalWrite(PIN_P25,   LOW);
-    break;
-}
-#endif
+  switch (m_modemState) {
+    case STATE_DSTAR:
+      digitalWrite(PIN_DSTAR, HIGH);
+      digitalWrite(PIN_DMR,   LOW);
+      digitalWrite(PIN_YSF,   LOW);
+      digitalWrite(PIN_P25,   LOW);
+      break;
+    case STATE_DMR:
+      digitalWrite(PIN_DSTAR, LOW);
+      digitalWrite(PIN_DMR,   HIGH);
+      digitalWrite(PIN_YSF,   LOW);
+      digitalWrite(PIN_P25,   LOW);
+      break;
+    case STATE_YSF:
+      digitalWrite(PIN_DSTAR, LOW);
+      digitalWrite(PIN_DMR,   LOW);
+      digitalWrite(PIN_YSF,   HIGH);
+      digitalWrite(PIN_P25,   LOW);
+      break;
+    case STATE_P25:
+      digitalWrite(PIN_DSTAR, LOW);
+      digitalWrite(PIN_DMR,   LOW);
+      digitalWrite(PIN_YSF,   LOW);
+      digitalWrite(PIN_P25,   HIGH);
+      break;
+    default:
+      digitalWrite(PIN_DSTAR, LOW);
+      digitalWrite(PIN_DMR,   LOW);
+      digitalWrite(PIN_YSF,   LOW);
+      digitalWrite(PIN_P25,   LOW);
+      break;
+  }
 #endif
 }
 

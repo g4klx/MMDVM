@@ -18,7 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if defined(__MBED__)
+#if defined(notdef)
 
 #include "Config.h"
 #include "Globals.h"

@@ -21,11 +21,7 @@ Boston, MA  02110-1301, USA.
 #if !defined(SERIALRB_H)
 #define  SERIALRB_H
 
-#if defined(__MBED__)
-#include "mbed.h"
-#else
 #include <Arduino.h>
-#endif
 
 const uint16_t SERIAL_RINGBUFFER_SIZE = 370U;
 

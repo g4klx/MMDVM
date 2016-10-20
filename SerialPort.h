@@ -57,9 +57,6 @@ public:
   void writeAssert(bool cond, const char* text, const char* file, long line);
 
 private:
-#if defined(__MBED__)
-  Serial  m_serial;
-#endif
   uint8_t m_buffer[250U];
   uint8_t m_ptr;
   uint8_t m_len;

@@ -77,9 +77,6 @@ const uint8_t PROTOCOL_VERSION   = 1U;
 
 
 CSerialPort::CSerialPort() :
-#if defined(__MBED__)
-m_serial(SERIAL_TX, SERIAL_RX),
-#endif
 m_buffer(),
 m_ptr(0U),
 m_len(0U)
@@ -385,26 +382,17 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
 
 void CSerialPort::start()
 {
-#if defined(__MBED__)
-  m_serial.baud(115200);
-#else
   Serial.begin(115200);
 
 #if defined(SERIAL_REPEATER)
   Serial3.begin(9600);
 #endif
-#endif
 }
 
 void CSerialPort::process()
 {
-#if defined(__MBED__)
-  while (m_serial.readable()) {
-    uint8_t c = m_serial.getc();
-#else
   while (Serial.available()) {
     uint8_t c = Serial.read();
-#endif
 
     if (m_ptr == 0U && c == MMDVM_FRAME_START) {
       // Handle the frame start correctly
@@ -908,15 +896,10 @@ void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
 
 void CSerialPort::write(const uint8_t* data, uint16_t length, bool flush)
 {
-#if defined(__MBED__)
-  for (uint16_t i = 0U; i < length; i++)
-    m_serial.putc(data[i]);
-  // No explicit flush function
-#else
   Serial.write(data, length);
+
   if (flush)
     Serial.flush();
-#endif
 }
 
 void CSerialPort::writeDebug(const char* text)
