@@ -21,6 +21,11 @@
 
 // Allow for the use of high quality external clock oscillators
 // The number is the frequency of the oscillator in Hertz.
+//
+// The frequency of the TCXO must be an integer multiple of 24000.
+// Frequencies such as 12.0 Mhz (24000 * 500) and 14.4 Mhz ( 24000 *600) are suitable.
+// Frequencies such as 10.0 Mhz (24000 * 416.666) or 20 Mhz (24000 * 833.333) are not suitable.
+//
 // For 12 MHz
 // #define EXTERNAL_OSC 12000000
 // For 14.4 MHz
