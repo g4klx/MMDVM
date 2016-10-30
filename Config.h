@@ -40,13 +40,13 @@
 // #define ARDUINO_MODE_PINS
 
 // For the original Arduino Due pin layout
-// #define  ARDUINO_DUE_PAPA
+// #define ARDUINO_DUE_PAPA
 
 // For the ZUM V1.0 and V1.2 boards pin layout
-#define  ARDUINO_DUE_ZUM_V10_V12
+#define ARDUINO_DUE_ZUM_V10_V12
 
 // For the SP8NTH board
-// #define  ARDUINO_DUE_NTH
+// #define ARDUINO_DUE_NTH
 
 // To use wider C4FSK filters for DMR, System Fusion and P25 on transmit
 // #define WIDE_C4FSK_FILTERS_TX
