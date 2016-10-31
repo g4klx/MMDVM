@@ -67,7 +67,7 @@ do
     (4) Use the COS to lockout the modem
     (5) Use pins to output the current mode
     (6) Use layout for the PAPA board
-    (7) Use layout for ZUM V1.0 and V1.2 boards
+    (7) Use layout for ZUM V1.0 and V1.0.1 boards
     (8) Use layout for SP8NTH board
     (9) Use modem as display driver
     (A) Return to Default
@@ -83,7 +83,7 @@ EOF
     "4")  sed -e 's/\/\/ #define USE_COS_AS_LOCKOUT /#define USE_COS_AS_LOCKOUT/'          $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS as Lockout enabled";;
     "5")  sed -e 's/\/\/ #define ARDUINO_MODE_PINS/#define ARDUINO_MODE_PINS/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode pins Enabled";;
     "6")  sed -e 's/\/\/ #define ARDUINO_DUE_PAPA/#define ARDUINO_DUE_PAPA/'               $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for the PAPA board enabled";;
-    "7")  sed -e 's/\/\/ #define ARDUINO_DUE_ZUM_V10_V12/#define ARDUINO_DUE_ZUM_V10_V12/' $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for ZUM V1.0 and V1.2 boards enabled";;
+    "7")  sed -e 's/\/\/ #define ARDUINO_DUE_ZUM_V10/#define ARDUINO_DUE_ZUM_V10/'         $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for ZUM V1.0 and V1.0.1 boards enabled";;
     "8")  sed -e 's/\/\/ #define ARDUINO_DUE_NTH/#define ARDUINO_DUE_NTH/'                 $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for SP8NTH board enabled";;
     "9")  sed -e 's/\/\/ #define SERIAL_REPEATER/#define SERIAL_REPEATER/'                 $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Modem display driver enabled";;
     "A")  mv -f $confbak $conf ;;
