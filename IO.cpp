@@ -43,60 +43,6 @@ const uint16_t GMSK_FILTER_LEN = 12U;
 
 const uint16_t DC_OFFSET = 2048U;
 
-#if defined(__SAM3X8E__)
-// An Arduino Due
-#if defined(ARDUINO_DUE_PAPA)
-#define PIN_COS                7
-#define PIN_PTT                8
-#define PIN_COSLED             11
-#define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
-#define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
-#define ADC_CDR_Chan           7
-#define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
-#define DACC_CHER_Chan         DACC_CHER_CH0
-#elif defined(ARDUINO_DUE_ZUM_V10)
-#define PIN_COS                52
-#define PIN_PTT                23
-#define PIN_COSLED             22
-#define PIN_DSTAR              9
-#define PIN_DMR                8
-#define PIN_YSF                7
-#define PIN_P25                6
-#define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13)
-#define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
-#define ADC_CDR_Chan           13
-#define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL1 // DAC on Due DAC1
-#define DACC_CHER_Chan         DACC_CHER_CH1
-#elif defined(ARDUINO_DUE_NTH)
-#define PIN_COS                A7
-#define PIN_PTT                A8
-#define PIN_COSLED             A11
-#define PIN_DSTAR              9
-#define PIN_DMR                8
-#define PIN_YSF                7
-#define PIN_P25                6
-#define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
-#define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
-#define ADC_CDR_Chan           7
-#define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
-#define DACC_CHER_Chan         DACC_CHER_CH0
-#else
-#error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM_V10, or ARDUINO_DUE_NTH need to be defined"
-#endif
-#else
-#error "Unknown hardware type"
-#endif
-
-extern "C" {
-  void ADC_Handler()
-  {
-#if defined(__SAM3X8E__)
-    if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)          // Ensure there was an End-of-Conversion and we read the ISR reg
-      io.interrupt();
-#endif
-  }
-}
-
 CIO::CIO() :
 m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
@@ -134,19 +80,7 @@ m_lockout(false)
   m_GMSKFilter.pState  = m_GMSKState;
   m_GMSKFilter.pCoeffs = GMSK_FILTER;
 
-  // Set up the TX, COS and LED pins
-  pinMode(PIN_PTT,    OUTPUT);
-  pinMode(PIN_COSLED, OUTPUT);
-  pinMode(PIN_LED,    OUTPUT);
-  pinMode(PIN_COS,    INPUT);
-
-#if defined(ARDUINO_MODE_PINS)
-  // Set up the mode output pins
-  pinMode(PIN_DSTAR,  OUTPUT);
-  pinMode(PIN_DMR,    OUTPUT);
-  pinMode(PIN_YSF,    OUTPUT);
-  pinMode(PIN_P25,    OUTPUT);
-#endif
+  initInt();
 }
 
 void CIO::start()
@@ -154,67 +88,7 @@ void CIO::start()
   if (m_started)
     return;
 
-#if defined(__SAM3X8E__)
-  if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)        // Ensure there was an End-of-Conversion and we read the ISR reg
-    io.interrupt();
-
-  // Set up the ADC
-  NVIC_EnableIRQ(ADC_IRQn);                   // Enable ADC interrupt vector
-  ADC->ADC_IDR  = 0xFFFFFFFF;                 // Disable interrupts
-  ADC->ADC_IER  = ADC_CHER_Chan;              // Enable End-Of-Conv interrupt
-  ADC->ADC_CHDR = 0xFFFF;                     // Disable all channels
-  ADC->ADC_CHER = ADC_CHER_Chan;              // Enable just one channel
-  ADC->ADC_CGR  = 0x15555555;                 // All gains set to x1
-  ADC->ADC_COR  = 0x00000000;                 // All offsets off
-  ADC->ADC_MR   = (ADC->ADC_MR & 0xFFFFFFF0) | (1 << 1) | ADC_MR_TRGEN;  // 1 = trig source TIO from TC0
-
-#if defined(EXTERNAL_OSC)
-  // Set up the external clock input on PA4 = AI5
-  REG_PIOA_ODR   = 0x10;                      // Set pin as input
-  REG_PIOA_PDR   = 0x10;                      // Disable PIO A bit 4
-  REG_PIOA_ABSR &= ~0x10;                     // Select A peripheral = TCLK1 Input
-#endif
-
-  // Set up the timer
-  pmc_enable_periph_clk(TC_INTERFACE_ID + 0*3+0) ;  // Clock the TC0 channel 0
-  TcChannel* t = &(TC0->TC_CHANNEL)[0];       // Pointer to TC0 registers for its channel 0
-  t->TC_CCR = TC_CCR_CLKDIS;                  // Disable internal clocking while setup regs
-  t->TC_IDR = 0xFFFFFFFF;                     // Disable interrupts
-  t->TC_SR;                                   // Read int status reg to clear pending
-#if defined(EXTERNAL_OSC)
-  t->TC_CMR = TC_CMR_TCCLKS_XC1 |             // Use XC1 = TCLK1 external clock
-#else
-  t->TC_CMR = TC_CMR_TCCLKS_TIMER_CLOCK1 |    // Use TCLK1 (prescale by 2, = 42MHz)
-#endif
-    TC_CMR_WAVE |                             // Waveform mode
-    TC_CMR_WAVSEL_UP_RC |                     // Count-up PWM using RC as threshold
-    TC_CMR_EEVT_XC0 |                         // Set external events from XC0 (this setup TIOB as output)
-    TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_CLEAR |
-    TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_CLEAR;
-#if defined(EXTERNAL_OSC)
-  t->TC_RC  = EXTERNAL_OSC / 24000;           // Counter resets on RC, so sets period in terms of the external clock
-  t->TC_RA  = EXTERNAL_OSC / 48000;           // Roughly square wave
-#else
-  t->TC_RC  = 1750;                           // Counter resets on RC, so sets period in terms of 42MHz internal clock
-  t->TC_RA  = 880;                            // Roughly square wave
-#endif
-  t->TC_CMR = (t->TC_CMR & 0xFFF0FFFF) | TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET;  // Set clear and set from RA and RC compares
-  t->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;    // re-enable local clocking and switch to hardware trigger source.
-
-  // Set up the DAC
-  pmc_enable_periph_clk(DACC_INTERFACE_ID);   // Start clocking DAC
-  DACC->DACC_CR = DACC_CR_SWRST;              // Reset DAC
-  DACC->DACC_MR =
-  DACC_MR_TRGEN_EN | DACC_MR_TRGSEL(1) |      // Trigger 1 = TIO output of TC0
-    DACC_MR_USER_SEL_Chan |                   // Select channel
-    (24 << DACC_MR_STARTUP_Pos);              // 24 = 1536 cycles which I think is in range 23..45us since DAC clock = 42MHz
-  DACC->DACC_IDR  = 0xFFFFFFFF;               // No interrupts
-  DACC->DACC_CHER = DACC_CHER_Chan;           // Enable channel
-
-  digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
-  digitalWrite(PIN_COSLED, LOW);
-  digitalWrite(PIN_LED,    HIGH);
-#endif
+  startInt();
 
   m_count   = 0U;
   m_started = true;
@@ -253,13 +127,13 @@ void CIO::process()
   }
 
 #if defined(USE_COS_AS_LOCKOUT)
-  m_lockout = digitalRead(PIN_COS) == HIGH;
+  m_lockout = getCOSInt();
 #endif
 
   // Switch off the transmitter if needed
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
-    digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
+    setPTTInt(m_pttInvert ? true : false);
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
@@ -387,7 +261,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   // Switch the transmitter on if needed
   if (!m_tx) {
     m_tx = true;
-    digitalWrite(PIN_PTT, m_pttInvert ? LOW : HIGH);
+    setPTTInt(m_pttInvert ? false : true);
   }
 
   q15_t txLevel = 0;
@@ -430,28 +304,10 @@ uint16_t CIO::getSpace() const
   return m_txBuffer.getSpace();
 }
 
-void CIO::interrupt()
-{
-  uint8_t control = MARK_NONE;
-  uint16_t sample = DC_OFFSET;
-
-  m_txBuffer.get(sample, control);
-
-#if defined(__SAM3X8E__)
-  DACC->DACC_CDR = sample;
-  sample = ADC->ADC_CDR[ADC_CDR_Chan];
-#endif
-
-  m_rxBuffer.put(sample, control);
-  m_rssiBuffer.put(0U);
-
-  m_watchdog++;
-}
-
 void CIO::setDecode(bool dcd)
 {
   if (dcd != m_dcd)
-    digitalWrite(PIN_COSLED, dcd ? HIGH : LOW);
+    setCOSInt(dcd ? true : false);
 
   m_dcd = dcd;
 }
@@ -466,34 +322,34 @@ void CIO::setMode()
 #if defined(ARDUINO_MODE_PINS)
   switch (m_modemState) {
     case STATE_DSTAR:
-      digitalWrite(PIN_DSTAR, HIGH);
-      digitalWrite(PIN_DMR,   LOW);
-      digitalWrite(PIN_YSF,   LOW);
-      digitalWrite(PIN_P25,   LOW);
+      setDStarInt(true);
+      setDMRInt(false);
+      setYSFInt(false);
+      setP25Int(false);
       break;
     case STATE_DMR:
-      digitalWrite(PIN_DSTAR, LOW);
-      digitalWrite(PIN_DMR,   HIGH);
-      digitalWrite(PIN_YSF,   LOW);
-      digitalWrite(PIN_P25,   LOW);
+      setDStarInt(false);
+      setDMRInt(true);
+      setYSFInt(false);
+      setP25Int(false);
       break;
     case STATE_YSF:
-      digitalWrite(PIN_DSTAR, LOW);
-      digitalWrite(PIN_DMR,   LOW);
-      digitalWrite(PIN_YSF,   HIGH);
-      digitalWrite(PIN_P25,   LOW);
+      setDStarInt(false);
+      setDMRInt(false);
+      setYSFInt(true);
+      setP25Int(false);
       break;
     case STATE_P25:
-      digitalWrite(PIN_DSTAR, LOW);
-      digitalWrite(PIN_DMR,   LOW);
-      digitalWrite(PIN_YSF,   LOW);
-      digitalWrite(PIN_P25,   HIGH);
+      setDStarInt(false);
+      setDMRInt(false);
+      setYSFInt(false);
+      setP25Int(true);
       break;
     default:
-      digitalWrite(PIN_DSTAR, LOW);
-      digitalWrite(PIN_DMR,   LOW);
-      digitalWrite(PIN_YSF,   LOW);
-      digitalWrite(PIN_P25,   LOW);
+      setDStarInt(false);
+      setDMRInt(false);
+      setYSFInt(false);
+      setP25Int(false);
       break;
   }
 #endif

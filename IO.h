@@ -87,6 +87,21 @@ private:
   volatile uint32_t    m_watchdog;
 
   bool                 m_lockout;
+
+  // Hardware specific routines
+  void initInt();
+  void startInt();
+
+  bool getCOSInt();
+
+  void setLEDInt(bool on);
+  void setPTTInt(bool on);
+  void setCOSInt(bool on);
+
+  void setDStarInt(bool on);
+  void setDMRInt(bool on);
+  void setYSFInt(bool on);
+  void setP25Int(bool on);
 };
 
 #endif
