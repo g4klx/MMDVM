@@ -22,6 +22,7 @@
 #include "Globals.h"
 
 #include "SampleRB.h"
+#include "RSSIRB.h"
 
 class CIO {
 public:
@@ -52,15 +53,12 @@ public:
 
   void resetWatchdog();
 
-#if defined(SEND_RSSI_DATA)
-  uint16_t getRSSIValue();
-#endif
-
 private:
   bool                 m_started;
 
   CSampleRB            m_rxBuffer;
   CSampleRB            m_txBuffer;
+  CRSSIRB              m_rssiBuffer;
 
   arm_fir_instance_q15 m_C4FSKFilter;
   arm_fir_instance_q15 m_GMSKFilter;

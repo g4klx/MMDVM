@@ -101,6 +101,7 @@ CIO::CIO() :
 m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
+m_rssiBuffer(RX_RINGBUFFER_SIZE),
 m_C4FSKFilter(),
 m_GMSKFilter(),
 m_C4FSKState(),
@@ -262,14 +263,16 @@ void CIO::process()
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
-    q15_t   samples[RX_BLOCK_SIZE + 1U];
-    uint8_t control[RX_BLOCK_SIZE + 1U];
+    q15_t    samples[RX_BLOCK_SIZE + 1U];
+    uint8_t  control[RX_BLOCK_SIZE + 1U];
+    uint16_t rssi[RX_BLOCK_SIZE + 1U];
 
     uint8_t blockSize = RX_BLOCK_SIZE;
 
     for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
       uint16_t sample;
       m_rxBuffer.get(sample, control[i]);
+      m_rssiBuffer.get(rssi[i]);
 
       // Detect ADC overflow
       if (m_detect && (sample == 0U || sample == 4095U))
@@ -319,7 +322,7 @@ void CIO::process()
           if (m_duplex)
             dmrIdleRX.samples(C4FSKVals, blockSize);
           else
-            dmrDMORX.samples(C4FSKVals, blockSize);
+            dmrDMORX.samples(C4FSKVals, rssi, blockSize);
         }
 
         if (m_ysfEnable)
@@ -343,11 +346,11 @@ void CIO::process()
         if (m_duplex) {
           // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
           if (m_tx)
-            dmrRX.samples(C4FSKVals, control, blockSize);
+            dmrRX.samples(C4FSKVals, rssi, control, blockSize);
           else
             dmrIdleRX.samples(C4FSKVals, blockSize);
         } else {
-          dmrDMORX.samples(C4FSKVals, blockSize);
+          dmrDMORX.samples(C4FSKVals, rssi, blockSize);
         }
       }
     } else if (m_modemState == STATE_YSF) {
@@ -440,6 +443,7 @@ void CIO::interrupt()
 #endif
 
   m_rxBuffer.put(sample, control);
+  m_rssiBuffer.put(0U);
 
   m_watchdog++;
 }
@@ -551,9 +555,3 @@ bool CIO::hasLockout() const
   return m_lockout;
 }
 
-#if defined(SEND_RSSI_DATA)
-uint16_t CIO::getRSSIValue()
-{
-  return 0U;
-}
-#endif

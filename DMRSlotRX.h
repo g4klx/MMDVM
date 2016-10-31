@@ -34,7 +34,7 @@ public:
 
   void start();
 
-  bool processSample(q15_t sample);
+  bool processSample(q15_t sample, uint16_t rssi);
 
   void setColorCode(uint8_t colorCode);
   void setDelay(uint8_t delay);
