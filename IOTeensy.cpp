@@ -20,7 +20,7 @@
 #include "Globals.h"
 #include "IO.h"
 
-#if defined(__MK20DX256__) || defined(__MK66DX1024__)
+#if defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 
 // A Teensy 3.1/3.2
 #if defined(__MK20DX256__)
@@ -37,8 +37,8 @@
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL1 // DAC on Due DAC1
 #define DACC_CHER_Chan         DACC_CHER_CH1
 
-// A Teensy 3.6??
-#elif defined(__MK66DX1024__)
+// A Teensy 3.5
+#elif defined(__MK64FX512__)
 #define PIN_COS                52
 #define PIN_PTT                23
 #define PIN_COSLED             22
@@ -52,8 +52,20 @@
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL1 // DAC on Due DAC1
 #define DACC_CHER_Chan         DACC_CHER_CH1
 
-#else
-#error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM_V10, or ARDUINO_DUE_NTH need to be defined"
+// A Teensy 3.6
+#elif defined(__MK66FX1M0__)
+#define PIN_COS                52
+#define PIN_PTT                23
+#define PIN_COSLED             22
+#define PIN_DSTAR              9
+#define PIN_DMR                8
+#define PIN_YSF                7
+#define PIN_P25                6
+#define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13)
+#define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
+#define ADC_CDR_Chan           13
+#define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL1 // DAC on Due DAC1
+#define DACC_CHER_Chan         DACC_CHER_CH1
 #endif
 
 const uint16_t DC_OFFSET = 2048U;
@@ -132,6 +144,11 @@ void CIO::startInt()
   t->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;    // re-enable local clocking and switch to hardware trigger source.
 
   // Set up the DAC
+  SIM_SCGC2 |= SIM_SCGC2_DAC0;
+  DAC0_C0    = DAC_C0_DACEN;                   // 1.2V VDDA is DACREF_2
+
+  
+  
   pmc_enable_periph_clk(DACC_INTERFACE_ID);   // Start clocking DAC
   DACC->DACC_CR = DACC_CR_SWRST;              // Reset DAC
   DACC->DACC_MR =
@@ -153,8 +170,8 @@ void CIO::interrupt()
 
   m_txBuffer.get(sample, control);
 
-  DACC->DACC_CDR = sample;
-  sample = ADC->ADC_CDR[ADC_CDR_Chan];
+  *(int16_t *)&(DAC0_DAT0L) = sample;
+  // sample = ADC->ADC_CDR[ADC_CDR_Chan];
 
   m_rxBuffer.put(sample, control);
   m_rssiBuffer.put(0U);
@@ -174,7 +191,7 @@ void CIO::setLEDInt(bool on)
 
 void CIO::setPTTInt(bool on)
 {
-  digitalWrite(PIN_PTT, on ? LOW : HIGH);
+  digitalWrite(PIN_PTT, on ? HIGH : LOW);
 }
 
 void CIO::setCOSInt(bool on)

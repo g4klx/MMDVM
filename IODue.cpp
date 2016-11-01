@@ -143,7 +143,7 @@ void CIO::startInt()
   pmc_enable_periph_clk(DACC_INTERFACE_ID);   // Start clocking DAC
   DACC->DACC_CR = DACC_CR_SWRST;              // Reset DAC
   DACC->DACC_MR =
-  DACC_MR_TRGEN_EN | DACC_MR_TRGSEL(1) |      // Trigger 1 = TIO output of TC0
+    DACC_MR_TRGEN_EN | DACC_MR_TRGSEL(1) |    // Trigger 1 = TIO output of TC0
     DACC_MR_USER_SEL_Chan |                   // Select channel
     (24 << DACC_MR_STARTUP_Pos);              // 24 = 1536 cycles which I think is in range 23..45us since DAC clock = 42MHz
   DACC->DACC_IDR  = 0xFFFFFFFF;               // No interrupts
@@ -182,7 +182,7 @@ void CIO::setLEDInt(bool on)
 
 void CIO::setPTTInt(bool on)
 {
-  digitalWrite(PIN_PTT, on ? LOW : HIGH);
+  digitalWrite(PIN_PTT, on ? HIGH : LOW);
 }
 
 void CIO::setCOSInt(bool on)
