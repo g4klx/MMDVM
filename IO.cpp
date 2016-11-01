@@ -115,13 +115,13 @@ void CIO::process()
     if (m_ledCount >= 24000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
-      digitalWrite(PIN_LED, m_ledValue ? HIGH : LOW);
+      setLEDInt(m_ledValue);
     }
   } else {
     if (m_ledCount >= 240000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
-      digitalWrite(PIN_LED, m_ledValue ? HIGH : LOW);
+      setLEDInt(m_ledValue);
     }
     return;
   }

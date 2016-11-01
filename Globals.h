@@ -23,7 +23,7 @@
 
 #if defined(__SAM3X8E__) || defined(__STM32F1__) || defined(__STM32F2__)
 #define  ARM_MATH_CM3
-#elif defined(__STM32F3__) || defined(__STM32F4__)
+#elif defined(__STM32F3__) || defined(__STM32F4__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define  ARM_MATH_CM4
 #else
 #error "Unknown processor type"
