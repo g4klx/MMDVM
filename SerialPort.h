@@ -67,8 +67,13 @@ private:
   void    getVersion();
   uint8_t setConfig(const uint8_t* data, uint8_t length);
   uint8_t setMode(const uint8_t* data, uint8_t length);
-  void    write(const uint8_t* data, uint16_t length, bool flush = false);
   void    setMode(MMDVM_STATE modemState);
+
+  // Hardware versions
+  void    beginInt(uint8_t n, int speed);
+  int     availableInt(uint8_t n);
+  uint8_t readInt(uint8_t n);
+  void    writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool flush = false);
 };
 
 #endif
