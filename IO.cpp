@@ -320,38 +320,10 @@ void CIO::setADCDetection(bool detect)
 void CIO::setMode()
 {
 #if defined(ARDUINO_MODE_PINS)
-  switch (m_modemState) {
-    case STATE_DSTAR:
-      setDStarInt(true);
-      setDMRInt(false);
-      setYSFInt(false);
-      setP25Int(false);
-      break;
-    case STATE_DMR:
-      setDStarInt(false);
-      setDMRInt(true);
-      setYSFInt(false);
-      setP25Int(false);
-      break;
-    case STATE_YSF:
-      setDStarInt(false);
-      setDMRInt(false);
-      setYSFInt(true);
-      setP25Int(false);
-      break;
-    case STATE_P25:
-      setDStarInt(false);
-      setDMRInt(false);
-      setYSFInt(false);
-      setP25Int(true);
-      break;
-    default:
-      setDStarInt(false);
-      setDMRInt(false);
-      setYSFInt(false);
-      setP25Int(false);
-      break;
-  }
+  setDStarInt(m_modemState == STATE_DSTAR);
+  setDMRInt(m_modemState   == STATE_DMR);
+  setYSFInt(m_modemState   == STATE_YSF);
+  setP25Int(m_modemState   == STATE_P25);
 #endif
 }
 
