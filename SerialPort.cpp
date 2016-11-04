@@ -394,25 +394,21 @@ void CSerialPort::process()
   while (availableInt(1U)) {
     uint8_t c = readInt(1U);
 
-    if (m_ptr == 0U && c == MMDVM_FRAME_START) {
-      // Handle the frame start correctly
-      m_buffer[0U] = c;
-      m_ptr = 1U;
-      m_len = 0U;
-    } else if (m_ptr > 0U) {
+    if (m_ptr == 0U) {
+      if (c == MMDVM_FRAME_START) {
+        // Handle the frame start correctly
+        m_buffer[0U] = c;
+        m_ptr = 1U;
+        m_len = 0U;
+      }
+    } else if (m_ptr == 1U) {
+      // Handle the frame length
+      m_len = m_buffer[m_ptr] = c;
+      m_ptr = 2U;
+    } else {
       // Any other bytes are added to the buffer
       m_buffer[m_ptr] = c;
       m_ptr++;
-
-      // Once we have enough bytes, calculate the expected length
-      if (m_ptr == 2U)
-        m_len = m_buffer[1U];
-
-      if (m_ptr == 3U && m_len > 250U) {
-        sendNAK(3U);
-        m_ptr = 0U;
-        m_len = 0U;
-      }
 
       // The full packet has been received, process it
       if (m_ptr == m_len) {

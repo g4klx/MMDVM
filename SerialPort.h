@@ -57,7 +57,7 @@ public:
   void writeAssert(bool cond, const char* text, const char* file, long line);
 
 private:
-  uint8_t m_buffer[250U];
+  uint8_t m_buffer[256U];
   uint8_t m_ptr;
   uint8_t m_len;
 
