@@ -79,7 +79,6 @@ void CIO::startInt()
 
   // Setup PDB for ADC1 at 24 kHz
 
-
 #if defined(SEND_RSSI_DATA)
   // Initialise ADC2 conversion to be triggered by the PDB
 
@@ -90,7 +89,7 @@ void CIO::startInt()
 
   // Initialise the DAC
   SIM_SCGC2 |= SIM_SCGC2_DAC0;
-  DAC0_C0 = DAC_C0_DACEN;                   // 1.2V VDDA is DACREF_2
+  DAC0_C0    = DAC_C0_DACEN;                   // 1.2V VDDA is DACREF_2
 
   digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
   digitalWrite(PIN_COSLED, LOW);
@@ -99,20 +98,29 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  uint8_t control = MARK_NONE;
-  uint16_t sample = DC_OFFSET;
+  if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
+    uint8_t control = MARK_NONE;
+    uint16_t sample = DC_OFFSET;
 
-  m_txBuffer.get(sample, control);
+    m_txBuffer.get(sample, control);
+    *(int16_t *)&(DAC0_DAT0L) = sample;
 
-  DAC0_DAT0L = (sample >> 0) & 0xFFU;
-  DAC0_DATH  = (sample >> 8) & 0xFFU;
+    sample = ADC0_RA;
+    m_rxBuffer.put(sample, control);
 
-  // sample = 
+#if !defined(SEND_RSSI_DATA)
+    m_rssiBuffer.put(0U);
+#endif
 
-  m_rxBuffer.put(sample, control);
-  m_rssiBuffer.put(0U);
+    m_watchdog++;
+  }
 
-  m_watchdog++;
+#if defined(SEND_RSSI_DATA)
+  if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
+    uint16_t rssi = ADC1_RA;
+    m_rssiBuffer.put(rssi);
+  }
+#endif
 }
 
 bool CIO::getCOSInt()
