@@ -117,6 +117,7 @@ void CIO::initInt()
   GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
   GPIO_Init(PORT_COS, &GPIO_InitStruct);
 
+#if defined(ARDUINO_MODE_PINS)
   // DSTAR pin
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
   GPIO_StructInit(&GPIO_InitStruct);
@@ -156,6 +157,7 @@ void CIO::initInt()
   GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
   GPIO_Init(PORT_P25, &GPIO_InitStruct);
+#endif
 }
 
 void CIO::startInt()
