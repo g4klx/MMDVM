@@ -159,7 +159,7 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  if (ADC->ADC_ISR & ADC_ISR_EOC_Chan) {          // Ensure there was an End-of-Conversion and we read the ISR reg
+  if ((ADC->ADC_ISR & ADC_ISR_EOC_Chan) == ADC_ISR_EOC_Chan) {    // Ensure there was an End-of-Conversion and we read the ISR reg
     uint8_t control = MARK_NONE;
     uint16_t sample = DC_OFFSET;
 
