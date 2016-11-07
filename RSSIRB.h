@@ -21,7 +21,12 @@ Boston, MA  02110-1301, USA.
 #if !defined(RSSIRB_H)
 #define  RSSIRB_H
 
+#if defined(STM32F4XX) || defined(STM32F4)
+#include "stm32f4xx.h"
+#include <cstddef>
+#else
 #include <Arduino.h>
+#endif
 
 class CRSSIRB {
 public:

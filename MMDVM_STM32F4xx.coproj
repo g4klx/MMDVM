@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Project version="2G - 1.7.8" name="MMDVM_STM32F4xx">
+  <Target name="MMDVM_STM32F4xx" isCurrent="1">
+    <Device manufacturerId="9" manufacturerName="ST" chipId="344" chipName="STM32F407VG" boardId="" boardName=""/>
+    <BuildOption>
+      <Compile>
+        <Option name="OptimizationLevel" value="1"/>
+        <Option name="UseFPU" value="0"/>
+        <Option name="UserEditCompiler" value=""/>
+        <Option name="SupportCPlusplus" value="1"/>
+        <Option name="FPU" value="2"/>
+        <Includepaths>
+          <Includepath path="."/>
+        </Includepaths>
+        <DefinedSymbols>
+          <Define name="STM32F407VG"/>
+          <Define name="STM32F4XX"/>
+          <Define name="USE_STDPERIPH_DRIVER"/>
+          <Define name="__ASSEMBLY__"/>
+          <Define name="__FPU_USED"/>
+          <Define name="SUPPORT_CPLUSPLUS"/>
+          <Define name="HSE_VALUE=8000000"/>
+        </DefinedSymbols>
+      </Compile>
+      <Link useDefault="0">
+        <Option name="DiscardUnusedSection" value="0"/>
+        <Option name="UserEditLinkder" value=""/>
+        <Option name="UseMemoryLayout" value="1"/>
+        <Option name="nostartfiles" value="0"/>
+        <Option name="LTO" value="0"/>
+        <Option name="IsNewStartupCode" value="1"/>
+        <Option name="Library" value="Use base C Library"/>
+        <Option name="UserEditLinker" value="-lstdc++; "/>
+        <LinkedLibraries>
+          <Libset dir="" libs="supc++"/>
+          <Libset dir="" libs="stdc++"/>
+          <Libset dir="" libs="nosys"/>
+          <Libset dir="" libs="arm_cortexm4lf_math"/>
+        </LinkedLibraries>
+        <MemoryAreas debugInFlashNotRAM="1">
+          <Memory name="IROM1" type="ReadOnly" size="0x00100000" startValue="0x08000000"/>
+          <Memory name="IRAM1" type="ReadWrite" size="0x00020000" startValue="0x20000000"/>
+          <Memory name="IROM2" type="ReadOnly" size="" startValue=""/>
+          <Memory name="IRAM2" type="ReadWrite" size="0x00010000" startValue="0x10000000"/>
+        </MemoryAreas>
+        <LocateLinkFile path="../../../coocox/coide/configuration/programdata/mmdvm_stm32f4xx/arm-gcc-link.ld" type="0"/>
+      </Link>
+      <Output>
+        <Option name="OutputFileType" value="0"/>
+        <Option name="Path" value="./"/>
+        <Option name="Name" value="MMDVM_STM32F4xx"/>
+        <Option name="HEX" value="1"/>
+        <Option name="BIN" value="1"/>
+      </Output>
+      <User>
+        <UserRun name="Run#1" type="Before" checked="0" value=""/>
+        <UserRun name="Run#1" type="After" checked="0" value=""/>
+      </User>
+    </BuildOption>
+    <DebugOption>
+      <Option name="org.coocox.codebugger.gdbjtag.core.adapter" value="ST-Link"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.debugMode" value="SWD"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.clockDiv" value="1M"/>
+      <Option name="org.coocox.codebugger.gdbjtag.corerunToMain" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.jlinkgdbserver" value=""/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.userDefineGDBScript" value=""/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.targetEndianess" value="0"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.jlinkResetMode" value="Type 0: Normal"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.resetMode" value="SYSRESETREQ"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ifSemihost" value="0"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ifCacheRom" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ipAddress" value="127.0.0.1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.portNumber" value="2009"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.autoDownload" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.verify" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.downloadFuction" value="Erase Effected"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="STM32F4xx_1024.elf"/>
+    </DebugOption>
+    <ExcludeFile/>
+  </Target>
+  <Components path="./">
+    <Component id="30" name="C Library" path="" type="2"/>
+    <Component id="54" name="M4 CMSIS Core" path="" type="2"/>
+    <Component id="500" name="CMSIS BOOT" path="" type="2"/>
+    <Component id="501" name="RCC" path="" type="2"/>
+    <Component id="504" name="GPIO" path="" type="2"/>
+    <Component id="513" name="TIM" path="" type="2"/>
+    <Component id="514" name="ADC" path="" type="2"/>
+    <Component id="515" name="DAC" path="" type="2"/>
+    <Component id="517" name="USART" path="" type="2"/>
+    <Component id="524" name="MISC" path="" type="2"/>
+  </Components>
+  <Files>
+    <File name="SerialRB.h" path="SerialRB.h" type="1"/>
+    <File name="cmsis_lib/source/stm32f4xx_gpio.c" path="cmsis_lib/source/stm32f4xx_gpio.c" type="1"/>
+    <File name="DMRIdleRX.h" path="DMRIdleRX.h" type="1"/>
+    <File name="cmsis_lib/source/stm32f4xx_usart.c" path="cmsis_lib/source/stm32f4xx_usart.c" type="1"/>
+    <File name="cmsis.h" path="cmsis.h" type="1"/>
+    <File name="DMRDefines.h" path="DMRDefines.h" type="1"/>
+    <File name="DMRDMOTX.cpp" path="DMRDMOTX.cpp" type="1"/>
+    <File name="CalDMR.cpp" path="CalDMR.cpp" type="1"/>
+    <File name="DMRRX.cpp" path="DMRRX.cpp" type="1"/>
+    <File name="SerialSTM.cpp" path="SerialSTM.cpp" type="1"/>
+    <File name="cmsis_lib/include/stm32f4xx_dac.h" path="cmsis_lib/include/stm32f4xx_dac.h" type="1"/>
+    <File name="cmsis_boot" path="" type="2"/>
+    <File name="cmsis_lib/include/stm32f4xx_usart.h" path="cmsis_lib/include/stm32f4xx_usart.h" type="1"/>
+    <File name="DStarDefines.h" path="DStarDefines.h" type="1"/>
+    <File name="DStarRX.h" path="DStarRX.h" type="1"/>
+    <File name="YSFRX.cpp" path="YSFRX.cpp" type="1"/>
+    <File name="cmsis_boot/startup" path="" type="2"/>
+    <File name="cmsis/core_cm4_simd.h" path="cmsis/core_cm4_simd.h" type="1"/>
+    <File name="cmsis_boot/stm32f4xx.h" path="cmsis_boot/stm32f4xx.h" type="1"/>
+    <File name="cmsis/core_cmFunc.h" path="cmsis/core_cmFunc.h" type="1"/>
+    <File name="SampleRB.cpp" path="SampleRB.cpp" type="1"/>
+    <File name="CalDStarTX.h" path="CalDStarTX.h" type="1"/>
+    <File name="cmsis/core_cm4.h" path="cmsis/core_cm4.h" type="1"/>
+    <File name="Config.h" path="Config.h" type="1"/>
+    <File name="cmsis_lib/source/misc.c" path="cmsis_lib/source/misc.c" type="1"/>
+    <File name="YSFRX.h" path="YSFRX.h" type="1"/>
+    <File name="DMRSlotType.cpp" path="DMRSlotType.cpp" type="1"/>
+    <File name="DMRSlotRX.h" path="DMRSlotRX.h" type="1"/>
+    <File name="cmsis_lib/source/stm32f4xx_adc.c" path="cmsis_lib/source/stm32f4xx_adc.c" type="1"/>
+    <File name="cmsis_lib/include/stm32f4xx_tim.h" path="cmsis_lib/include/stm32f4xx_tim.h" type="1"/>
+    <File name="syscalls/syscalls.c" path="syscalls/syscalls.c" type="1"/>
+    <File name="IO.cpp" path="IO.cpp" type="1"/>
+    <File name="Globals.h" path="Globals.h" type="1"/>
+    <File name="DMRDMORX.cpp" path="DMRDMORX.cpp" type="1"/>
+    <File name="cmsis_lib/source" path="" type="2"/>
+    <File name="P25RX.h" path="P25RX.h" type="1"/>
+    <File name="CalDStarRX.cpp" path="CalDStarRX.cpp" type="1"/>
+    <File name="CalDStarRX.h" path="CalDStarRX.h" type="1"/>
+    <File name="IO.h" path="IO.h" type="1"/>
+    <File name="cmsis_boot/stm32f4xx_conf.h" path="cmsis_boot/stm32f4xx_conf.h" type="1"/>
+    <File name="Utils.cpp" path="Utils.cpp" type="1"/>
+    <File name="cmsis_boot/system_stm32f4xx.h" path="cmsis_boot/system_stm32f4xx.h" type="1"/>
+    <File name="cmsis_lib/source/stm32f4xx_dac.c" path="cmsis_lib/source/stm32f4xx_dac.c" type="1"/>
+    <File name="SerialArduino.cpp" path="SerialArduino.cpp" type="1"/>
+    <File name="Utils.h" path="Utils.h" type="1"/>
+    <File name="SerialPort.cpp" path="SerialPort.cpp" type="1"/>
+    <File name="cmsis_lib/include/stm32f4xx_rcc.h" path="cmsis_lib/include/stm32f4xx_rcc.h" type="1"/>
+    <File name="DStarTX.cpp" path="DStarTX.cpp" type="1"/>
+    <File name="cmsis_boot/startup/startup_stm32f4xx.c" path="cmsis_boot/startup/startup_stm32f4xx.c" type="1"/>
+    <File name="YSFDefines.h" path="YSFDefines.h" type="1"/>
+    <File name="cmsis_lib/source/stm32f4xx_rcc.c" path="cmsis_lib/source/stm32f4xx_rcc.c" type="1"/>
+    <File name="cmsis/core_cmInstr.h" path="cmsis/core_cmInstr.h" type="1"/>
+    <File name="DStarTX.h" path="DStarTX.h" type="1"/>
+    <File name="SampleRB.h" path="SampleRB.h" type="1"/>
+    <File name="YSFTX.h" path="YSFTX.h" type="1"/>
+    <File name="DMRRX.h" path="DMRRX.h" type="1"/>
+    <File name="MMDVM.cpp" path="MMDVM.cpp" type="1"/>
+    <File name="IOTeensy.cpp" path="IOTeensy.cpp" type="1"/>
+    <File name="DMRDMORX.h" path="DMRDMORX.h" type="1"/>
+    <File name="cmsis_lib/include/stm32f4xx_adc.h" path="cmsis_lib/include/stm32f4xx_adc.h" type="1"/>
+    <File name="SerialPort.h" path="SerialPort.h" type="1"/>
+    <File name="P25Defines.h" path="P25Defines.h" type="1"/>
+    <File name="cmsis_boot/system_stm32f4xx.c" path="cmsis_boot/system_stm32f4xx.c" type="1"/>
+    <File name="CWIdTX.h" path="CWIdTX.h" type="1"/>
+    <File name="CalDStarTX.cpp" path="CalDStarTX.cpp" type="1"/>
+    <File name="DMRSlotType.h" path="DMRSlotType.h" type="1"/>
+    <File name="Debug.h" path="Debug.h" type="1"/>
+    <File name="RSSIRB.cpp" path="RSSIRB.cpp" type="1"/>
+    <File name="P25TX.h" path="P25TX.h" type="1"/>
+    <File name="IODue.cpp" path="IODue.cpp" type="1"/>
+    <File name="CalDMR.h" path="CalDMR.h" type="1"/>
+    <File name="DMRDMOTX.h" path="DMRDMOTX.h" type="1"/>
+    <File name="cmsis" path="" type="2"/>
+    <File name="cmsis_lib" path="" type="2"/>
+    <File name="DMRTX.cpp" path="DMRTX.cpp" type="1"/>
+    <File name="P25RX.cpp" path="P25RX.cpp" type="1"/>
+    <File name="cmsis_lib/source/stm32f4xx_tim.c" path="cmsis_lib/source/stm32f4xx_tim.c" type="1"/>
+    <File name="cmsis_lib/include/stm32f4xx_gpio.h" path="cmsis_lib/include/stm32f4xx_gpio.h" type="1"/>
+    <File name="DStarRX.cpp" path="DStarRX.cpp" type="1"/>
+    <File name="syscalls" path="" type="2"/>
+    <File name="cmsis_lib/include/misc.h" path="cmsis_lib/include/misc.h" type="1"/>
+    <File name="DMRSlotRX.cpp" path="DMRSlotRX.cpp" type="1"/>
+    <File name="IOSTM.cpp" path="IOSTM.cpp" type="1"/>
+    <File name="P25TX.cpp" path="P25TX.cpp" type="1"/>
+    <File name="DMRTX.h" path="DMRTX.h" type="1"/>
+    <File name="SerialRB.cpp" path="SerialRB.cpp" type="1"/>
+    <File name="cmsis_lib/include" path="" type="2"/>
+    <File name="CWIdTX.cpp" path="CWIdTX.cpp" type="1"/>
+    <File name="DMRIdleRX.cpp" path="DMRIdleRX.cpp" type="1"/>
+    <File name="RSSIRB.h" path="RSSIRB.h" type="1"/>
+    <File name="YSFTX.cpp" path="YSFTX.cpp" type="1"/>
+  </Files>
+</Project>

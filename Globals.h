@@ -19,16 +19,34 @@
 #if !defined(GLOBALS_H)
 #define  GLOBALS_H
 
+#if defined(STM32F4XX) || defined(STM32F4)
+#include "stm32f4xx.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+#include "stm32f4xx_dac.h"
+#include "stm32f4xx_adc.h"
+#include "stm32f4xx_tim.h"
+#include "stm32f4xx_usart.h"
+#include "misc.h"
+#include <string.h>
+#include <stddef.h>
+#else
 #include <Arduino.h>
+#endif
 
-#if defined(__SAM3X8E__) || defined(__STM32F1__) || defined(__STM32F2__)
+#if defined(__SAM3X8E__)
 #define  ARM_MATH_CM3
-#elif defined(__STM32F3__) || defined(__STM32F4__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
+#elif defined(STM32F4XX) || defined(STM32F4) || defined(__MK20DX256__) || defined(__MK66FX1M0__)
 #define  ARM_MATH_CM4
 #else
 #error "Unknown processor type"
 #endif
+
+#if defined(STM32F4XX) || defined(STM32F4)
+#include "cmsis.h"
+#else
 #include <arm_math.h>
+#endif
 
 enum MMDVM_STATE {
   STATE_IDLE      = 0,

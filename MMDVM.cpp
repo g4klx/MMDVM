@@ -18,7 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if defined(notdef)
+#if defined(STM32F4XX) || defined(STM32F4)
 
 #include "Config.h"
 #include "Globals.h"
