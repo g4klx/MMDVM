@@ -20,21 +20,10 @@
 #include "Globals.h"
 #include "IO.h"
 
-#if defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
+#if defined(__MK20DX256__) || defined(__MK66FX1M0__)
 
 // A Teensy 3.1/3.2
 #if defined(__MK20DX256__)
-#define PIN_LED                13
-#define PIN_COS                52
-#define PIN_PTT                23
-#define PIN_COSLED             22
-#define PIN_DSTAR              9
-#define PIN_DMR                8
-#define PIN_YSF                7
-#define PIN_P25                6
-
-// A Teensy 3.5
-#elif defined(__MK64FX512__)
 #define PIN_LED                13
 #define PIN_COS                52
 #define PIN_PTT                23
@@ -84,6 +73,25 @@ void CIO::initInt()
 
 void CIO::startInt()
 {
+  // Initialise ADC1 conversion to be triggered by the PDB
+
+  // Setup interrupt on ADC1 conversion finished
+
+  // Setup PDB for ADC1 at 24 kHz
+
+
+#if defined(SEND_RSSI_DATA)
+  // Initialise ADC2 conversion to be triggered by the PDB
+
+  // Setup interrupt on ADC2 conversion finished
+
+  // Setup PDB for ADC2 at 24 kHz
+#endif
+
+  // Initialise the DAC
+  SIM_SCGC2 |= SIM_SCGC2_DAC0;
+  DAC0_C0 = DAC_C0_DACEN;                   // 1.2V VDDA is DACREF_2
+
   digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
   digitalWrite(PIN_COSLED, LOW);
   digitalWrite(PIN_LED,    HIGH);
@@ -96,6 +104,10 @@ void CIO::interrupt()
 
   m_txBuffer.get(sample, control);
 
+  DAC0_DAT0L = (sample >> 0) & 0xFFU;
+  DAC0_DATH  = (sample >> 8) & 0xFFU;
+
+  // sample = 
 
   m_rxBuffer.put(sample, control);
   m_rssiBuffer.put(0U);
