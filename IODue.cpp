@@ -73,8 +73,7 @@ const uint16_t DC_OFFSET = 2048U;
 extern "C" {
   void ADC_Handler()
   {
-    if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)          // Ensure there was an End-of-Conversion and we read the ISR reg
-      io.interrupt();
+    io.interrupt();
   }
 }
 
@@ -160,18 +159,20 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  uint8_t control = MARK_NONE;
-  uint16_t sample = DC_OFFSET;
+  if (ADC->ADC_ISR & ADC_ISR_EOC_Chan) {          // Ensure there was an End-of-Conversion and we read the ISR reg
+    uint8_t control = MARK_NONE;
+    uint16_t sample = DC_OFFSET;
 
-  m_txBuffer.get(sample, control);
+    m_txBuffer.get(sample, control);
+    DACC->DACC_CDR = sample;
 
-  DACC->DACC_CDR = sample;
-  sample = ADC->ADC_CDR[ADC_CDR_Chan];
+    sample = ADC->ADC_CDR[ADC_CDR_Chan];
+    m_rxBuffer.put(sample, control);
 
-  m_rxBuffer.put(sample, control);
-  m_rssiBuffer.put(0U);
+    m_rssiBuffer.put(0U);
 
-  m_watchdog++;
+    m_watchdog++;
+  }
 }
 
 bool CIO::getCOSInt()
