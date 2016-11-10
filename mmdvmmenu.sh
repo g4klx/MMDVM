@@ -23,9 +23,9 @@
 ###############################################################################
 #
 # On a Linux based system, such as a Raspberry Pi, this script will perform
-# Modafacation to the Config.c file for most options. It makes a Back up when
-# you staet the script if none is present. You must recompile and load firmwhare
-# on Due if changes are made.
+# Modification of the Config.h file for most options. It makes a Back up when
+# you start the script if none is present. You must recompile and load firmware
+# onto the Arduino Due if changes are made.
 #
 ###############################################################################
 #
