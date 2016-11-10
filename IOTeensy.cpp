@@ -32,6 +32,8 @@
 #define PIN_DMR                8
 #define PIN_YSF                7
 #define PIN_P25                6
+#define PIN_ADC                5        // A0
+#define PIN_RSSI               8        // A2
 
 // A Teensy 3.6
 #elif defined(__MK66FX1M0__)
@@ -43,12 +45,19 @@
 #define PIN_DMR                8
 #define PIN_YSF                7
 #define PIN_P25                6
+#define PIN_ADC                5        // A0
+#define PIN_RSSI               8        // A2
 #endif
 
 const uint16_t DC_OFFSET = 2048U;
 
 extern "C" {
   void adc0_isr()
+  {
+    io.interrupt();
+  }
+
+  void adc1_isr()
   {
     io.interrupt();
   }
@@ -82,17 +91,26 @@ void CIO::startInt()
   ADC0_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
   ADC0_SC2  = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                      // Voltage ref internal, hardware trigger
   ADC0_SC3  = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                         // Enable averaging, 4 samples
-  ADC0_SC1A = ADC_SC1_AIEN | 5;                                       // Enable ADC interrupt, use A0
+
+  ADC0_SC3  = ADC_SC3_CAL;                                            // Begin calibration
+  while ((ADC0_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
+    ;
+
+  uint16_t sum0 = ADC0_CLPS + ADC0_CLP4 + ADC0_CLP3 + ADC0_CLP2 + ADC0_CLP1 + ADC0_CLP0;   // Plus side gain
+  sum0 = (sum0 / 2U) | 0x8000U;
+  ADC0_PG   = sum0;
+
+  ADC0_SC1A = ADC_SC1_AIEN | PIN_ADC;                                 // Enable ADC interrupt, use A0
   NVIC_ENABLE_IRQ(IRQ_ADC0);
 
   // Setup PDB for ADC0 at 24 kHz
   SIM_SCGC6 |= SIM_SCGC6_PDB;                                         // Enable PDB clock
 #if F_BUS == 60000000
   // 60 MHz for the Teensy 3.5/3.6
-  PDB0_MOD   = 2500;                                                  // Timer period for 60 MHz bus
+  PDB0_MOD   = 2500 - 1;                                              // Timer period for 60 MHz bus
 #else
   // 48 MHz for the Teensy 3.1/3.2
-  PDB0_MOD   = 2000;                                                  // Timer period for 48 MHz bus
+  PDB0_MOD   = 2000 - 1;                                              // Timer period for 48 MHz bus
 #endif
   PDB0_IDLY  = 0;                                                     // Interrupt delay
   PDB0_CH0C1 = PDB_CH0C1_TOS | PDB_CH0C1_EN;                          // Enable pre-trigger
@@ -103,10 +121,22 @@ void CIO::startInt()
 
 #if defined(SEND_RSSI_DATA)
   // Initialise ADC1 conversion to be triggered by the PDB
+  ADC1_CFG1 = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
+              ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
+  ADC1_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
+  ADC1_SC2  = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                      // Voltage ref internal, hardware trigger
+  ADC1_SC3  = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                         // Enable averaging, 4 samples
 
-  // Setup interrupt on ADC1 conversion finished
+  ADC1_SC3  = ADC_SC3_CAL;                                            // Begin calibration
+  while ((ADC1_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
+    ;
 
-  // Setup PDB for ADC1 at 24 kHz
+  uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 + ADC1_CLP2 + ADC1_CLP1 + ADC1_CLP0;   // Plus side gain
+  sum1 = (sum1 / 2U) | 0x8000U;
+  ADC1_PG   = sum1;
+
+  ADC1_SC1A = ADC_SC1_AIEN | PIN_RSSI;                                // Enable ADC interrupt, use A0
+  NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
   // Initialise the DAC
