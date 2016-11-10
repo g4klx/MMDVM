@@ -49,15 +49,13 @@
 #define PIN_RSSI               8        // A2
 #endif
 
+#define PDB_CH0C1_TOS 0x0100
+#define PDB_CH0C1_EN  0x01
+
 const uint16_t DC_OFFSET = 2048U;
 
 extern "C" {
-  void adc0_isr()
-  {
-    io.interrupt();
-  }
-
-  void adc1_isr()
+  void pdb_isr()
   {
     io.interrupt();
   }
@@ -80,12 +78,9 @@ void CIO::initInt()
 #endif
 }
 
-#define PDB_CH0C1_TOS 0x0100
-#define PDB_CH0C1_EN  0x01
-
 void CIO::startInt()
 {
-  // Initialise ADC0 conversion to be triggered by the PDB
+  // Initialise ADC0
   ADC0_CFG1 = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
               ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
   ADC0_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
@@ -100,27 +95,8 @@ void CIO::startInt()
   sum0 = (sum0 / 2U) | 0x8000U;
   ADC0_PG   = sum0;
 
-  ADC0_SC1A = ADC_SC1_AIEN | PIN_ADC;                                 // Enable ADC interrupt, use A0
-  NVIC_ENABLE_IRQ(IRQ_ADC0);
-
-  // Setup PDB for ADC0 at 24 kHz
-  SIM_SCGC6 |= SIM_SCGC6_PDB;                                         // Enable PDB clock
-#if F_BUS == 60000000
-  // 60 MHz for the Teensy 3.5/3.6
-  PDB0_MOD   = 2500 - 1;                                              // Timer period for 60 MHz bus
-#else
-  // 48 MHz for the Teensy 3.1/3.2
-  PDB0_MOD   = 2000 - 1;                                              // Timer period for 48 MHz bus
-#endif
-  PDB0_IDLY  = 0;                                                     // Interrupt delay
-  PDB0_CH0C1 = PDB_CH0C1_TOS | PDB_CH0C1_EN;                          // Enable pre-trigger
-  PDB0_SC    = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_PDBIE |
-               PDB_SC_CONT | PDB_SC_PRESCALER(7) | PDB_SC_MULT(1) |
-               PDB_SC_LDOK;
-  PDB0_SC   |= PDB_SC_SWTRIG;                                         // Software trigger (reset and restart counter)
-
 #if defined(SEND_RSSI_DATA)
-  // Initialise ADC1 conversion to be triggered by the PDB
+  // Initialise ADC1
   ADC1_CFG1 = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
               ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
   ADC1_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
@@ -134,10 +110,24 @@ void CIO::startInt()
   uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 + ADC1_CLP2 + ADC1_CLP1 + ADC1_CLP0;   // Plus side gain
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG   = sum1;
-
-  ADC1_SC1A = ADC_SC1_AIEN | PIN_RSSI;                                // Enable ADC interrupt, use A0
-  NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
+
+  // Setup PDB for ADC0 at 24 kHz
+  SIM_SCGC6   |= SIM_SCGC6_PDB;                                       // Enable PDB clock
+#if F_BUS == 60000000
+  // 60 MHz for the Teensy 3.5/3.6
+  PDB0_MOD     = 2500 - 1;                                            // Timer period for 60 MHz bus
+#else
+  // 48 MHz for the Teensy 3.1/3.2
+  PDB0_MOD     = 2000 - 1;                                            // Timer period for 48 MHz bus
+#endif
+  PDB0_IDLY    = 0;                                                   // Interrupt delay
+  PDB0_CH0C1   = PDB_CH0C1_TOS | PDB_CH0C1_EN;                        // Enable pre-trigger
+  PDB0_SC      = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_PDBIE |
+                 PDB_SC_CONT | PDB_SC_PRESCALER(7) | PDB_SC_MULT(1) |
+                 PDB_SC_LDOK;
+  PDB0_SC     |= PDB_SC_SWTRIG;                                       // Software trigger (reset and restart counter)
+  NVIC_ENABLE_IRQ(IRQ_PDB);
 
   // Initialise the DAC
   SIM_SCGC2 |= SIM_SCGC2_DAC0;
@@ -150,29 +140,39 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
-    uint8_t control = MARK_NONE;
-    uint16_t sample = DC_OFFSET;
+  uint8_t control = MARK_NONE;
+  uint16_t sample = DC_OFFSET;
 
-    m_txBuffer.get(sample, control);
-    *(int16_t *)&(DAC0_DAT0L) = sample;
+  m_txBuffer.get(sample, control);
+  *(int16_t *)&(DAC0_DAT0L) = sample;
 
-    sample = ADC0_RA;
-    m_rxBuffer.put(sample, control);
+  ADC0_SC1A = PIN_ADC;                // Start read on A0
+
+  // Wait for the read to complete
+  while ((ADC0_SC1A & ADC_SC1_COCO) != ADC_SC1_COCO)
+    ;
+
+  sample = ADC0_RA;
+  m_rxBuffer.put(sample, control);
 
 #if !defined(SEND_RSSI_DATA)
-    m_rssiBuffer.put(0U);
+  m_rssiBuffer.put(0U);
 #endif
-
-    m_watchdog++;
-  }
 
 #if defined(SEND_RSSI_DATA)
-  if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
-    uint16_t rssi = ADC1_RA;
-    m_rssiBuffer.put(rssi);
-  }
+  ADC1_SC1A = PIN_RSSI;               // Start read on A2
+
+  // Wait for the read to complete
+  while ((ADC1_SC1A & ADC_SC1_COCO) != ADC_SC1_COCO)
+    ;
+
+  uint16_t rssi = ADC1_RA;
+  m_rssiBuffer.put(rssi);
 #endif
+
+  PDB0_SC &= ~PDB_SC_PDBIF;           // Clear interrupt flag
+
+  m_watchdog++;
 }
 
 bool CIO::getCOSInt()
