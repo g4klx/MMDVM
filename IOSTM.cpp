@@ -26,7 +26,7 @@
 /*
 Pin definitions:
 
-PTT      PD8   output
+PTT      PA6   output
 COSLED   PA7   output
 LED      PD15  output
 COS      PA5   input
@@ -42,8 +42,8 @@ P25		 PD11   output
 
 #define PIN_COS                GPIO_Pin_5
 #define PORT_COS               GPIOA
-#define PIN_PTT                GPIO_Pin_8
-#define PORT_PTT               GPIOD
+#define PIN_PTT                GPIO_Pin_6
+#define PORT_PTT               GPIOA
 #define PIN_COSLED             GPIO_Pin_7
 #define PORT_COSLED            GPIOA
 #define PIN_LED                GPIO_Pin_15
@@ -78,7 +78,7 @@ void CIO::initInt()
   GPIO_InitTypeDef GPIO_InitStruct;
 
   // PTT pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
   GPIO_StructInit(&GPIO_InitStruct);
   GPIO_InitStruct.GPIO_Pin   = PIN_PTT;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
@@ -196,8 +196,12 @@ void CIO::startInt()
   GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;
   GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  // Init ADCs in dual mode, div clock by two
+  // Init ADCs in dual mode (RSSI), div clock by two
+#if defined(SEND_RSSI_DATA)
   ADC_CommonInitStructure.ADC_Mode             = ADC_DualMode_RegSimult;
+#else
+  ADC_CommonInitStructure.ADC_Mode             = ADC_Mode_Independent;
+#endif
   ADC_CommonInitStructure.ADC_Prescaler        = ADC_Prescaler_Div2;
   ADC_CommonInitStructure.ADC_DMAAccessMode    = ADC_DMAAccessMode_Disabled;
   ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
