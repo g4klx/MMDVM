@@ -27,7 +27,7 @@
 // Frequencies such as 10.0 Mhz (48000 * 208.333) or 20 Mhz (48000 * 416.666) are not suitable.
 //
 // For 12 MHz
-// #define EXTERNAL_OSC 12000000
+#define EXTERNAL_OSC 12000000
 // For 12.288 MHz
 // #define EXTERNAL_OSC 12288000
 // For 14.4 MHz
