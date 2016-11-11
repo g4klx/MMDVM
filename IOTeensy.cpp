@@ -55,10 +55,17 @@
 const uint16_t DC_OFFSET = 2048U;
 
 extern "C" {
-  void pdb_isr()
+  void adc0_isr()
   {
-    io.interrupt();
+    io.interrupt(0U);
   }
+
+#if defined(SEND_RSSI_DATA)
+  void adc1_isr()
+  {
+    io.interrupt(1U);
+  }
+#endif
 }
 
 void CIO::initInt()
@@ -80,6 +87,14 @@ void CIO::initInt()
 
 void CIO::startInt()
 {
+  if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO)
+    io.interrupt(0U);
+
+#if defined(SEND_RSSI_DATA)
+  if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO)
+    io.interrupt(1U);
+#endif
+
   // Initialise ADC0
   ADC0_CFG1 = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
               ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
@@ -94,6 +109,9 @@ void CIO::startInt()
   uint16_t sum0 = ADC0_CLPS + ADC0_CLP4 + ADC0_CLP3 + ADC0_CLP2 + ADC0_CLP1 + ADC0_CLP0;   // Plus side gain
   sum0 = (sum0 / 2U) | 0x8000U;
   ADC0_PG   = sum0;
+
+  ADC0_SC1A = ADC_SC1_AIEN | PIN_ADC;                                 // Enable ADC interrupt, use A0
+  NVIC_ENABLE_IRQ(IRQ_ADC0);
 
 #if defined(SEND_RSSI_DATA)
   // Initialise ADC1
@@ -110,6 +128,9 @@ void CIO::startInt()
   uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 + ADC1_CLP2 + ADC1_CLP1 + ADC1_CLP0;   // Plus side gain
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG   = sum1;
+
+  ADC1_SC1A = ADC_SC1_AIEN | PIN_RSSI;                                // Enable ADC interrupt, use A2
+  NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
   // Setup PDB for ADC0 at 24 kHz
@@ -138,41 +159,35 @@ void CIO::startInt()
   digitalWrite(PIN_LED,    HIGH);
 }
 
-void CIO::interrupt()
+void CIO::interrupt(uint8_t source)
 {
-  uint8_t control = MARK_NONE;
-  uint16_t sample = DC_OFFSET;
+  if (source == 0U) {  // ADC0
+    uint8_t control = MARK_NONE;
+    uint16_t sample = DC_OFFSET;
 
-  m_txBuffer.get(sample, control);
-  *(int16_t *)&(DAC0_DAT0L) = sample;
+    m_txBuffer.get(sample, control);
+    *(int16_t *)&(DAC0_DAT0L) = sample;
 
-  ADC0_SC1A = PIN_ADC;                // Start read on A0
-
-  // Wait for the read to complete
-  while ((ADC0_SC1A & ADC_SC1_COCO) != ADC_SC1_COCO)
-    ;
-
-  sample = ADC0_RA;
-  m_rxBuffer.put(sample, control);
+    if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
+      sample = ADC0_RA;
+      m_rxBuffer.put(sample, control);
 
 #if !defined(SEND_RSSI_DATA)
-  m_rssiBuffer.put(0U);
+      m_rssiBuffer.put(0U);
 #endif
+    }
+
+    m_watchdog++;
+  }
 
 #if defined(SEND_RSSI_DATA)
-  ADC1_SC1A = PIN_RSSI;               // Start read on A2
-
-  // Wait for the read to complete
-  while ((ADC1_SC1A & ADC_SC1_COCO) != ADC_SC1_COCO)
-    ;
-
-  uint16_t rssi = ADC1_RA;
-  m_rssiBuffer.put(rssi);
+  if (source == 1U) {  // ADC1
+    if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
+      uint16_t rssi = ADC1_RA;
+      m_rssiBuffer.put(rssi);
+    }
+  }
 #endif
-
-  PDB0_SC &= ~PDB_SC_PDBIF;           // Clear interrupt flag
-
-  m_watchdog++;
 }
 
 bool CIO::getCOSInt()

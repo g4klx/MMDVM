@@ -68,7 +68,7 @@ extern "C" {
   void TIM2_IRQHandler() {
      if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-	      io.interrupt();
+	      io.interrupt(0U);
      }
   }
 }
@@ -163,7 +163,7 @@ void CIO::initInt()
 void CIO::startInt()
 {
   if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) != RESET))
-    io.interrupt();
+    io.interrupt(0U);
 
   // ADC1   PA0   analog input
   // ADC2   PA1   analog input
@@ -283,7 +283,7 @@ void CIO::startInt()
   GPIO_SetBits(PORT_LED, PIN_LED);
 }
 
-void CIO::interrupt()
+void CIO::interrupt(uint8_t source)
 {
   uint8_t control  = MARK_NONE;
   uint16_t sample  = DC_OFFSET;
