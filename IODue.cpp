@@ -73,7 +73,7 @@ const uint16_t DC_OFFSET = 2048U;
 extern "C" {
   void ADC_Handler()
   {
-    io.interrupt();
+    io.interrupt(0U);
   }
 }
 
@@ -97,7 +97,7 @@ void CIO::initInt()
 void CIO::startInt()
 {
   if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)        // Ensure there was an End-of-Conversion and we read the ISR reg
-    io.interrupt();
+    io.interrupt(0U);
 
   // Set up the ADC
   NVIC_EnableIRQ(ADC_IRQn);                   // Enable ADC interrupt vector
@@ -157,7 +157,7 @@ void CIO::startInt()
   digitalWrite(PIN_LED,    HIGH);
 }
 
-void CIO::interrupt()
+void CIO::interrupt(uint8_t source)
 {
   if ((ADC->ADC_ISR & ADC_ISR_EOC_Chan) == ADC_ISR_EOC_Chan) {    // Ensure there was an End-of-Conversion and we read the ISR reg
     uint8_t control = MARK_NONE;
