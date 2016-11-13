@@ -43,7 +43,7 @@ DEFS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F407VG
 CFLAGS=-c $(MCFLAGS) $(DEFS) $(INCLUDES)
 CXXFLAGS=-c $(MCFLAGS) $(DEFS) $(INCLUDES)
 # LINKER FLAGS
-LDSCRIPT=stm32_flash.ld
+LDSCRIPT=stm32f4xx_link.ld
 LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) --specs=nosys.specs $(INCLUDES_LIBS) $(LINK_LIBS)
 
 ###
@@ -53,9 +53,9 @@ LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) --specs=nosys.specs $(INCLUDES_LIBS) $(LINK_L
 all: release-memopt
 
 release-memopt: DEFS+=-DCUSTOM_NEW -DNO_EXCEPTIONS
-release-memopt: CFLAGS+=-Os -ffunction-sections -fdata-sections -fno-builtin # -flto
-release-memopt: CXXFLAGS+=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti # -flto
-release-memopt: LDFLAGS+=-Os --specs=nano.specs # -flto
+release-memopt: CFLAGS+=-Os -ffunction-sections -fdata-sections -fno-builtin
+release-memopt: CXXFLAGS+=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti
+release-memopt: LDFLAGS+=-Os --specs=nano.specs
 release-memopt: release
 
 debug: CFLAGS+=-g
