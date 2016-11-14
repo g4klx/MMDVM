@@ -80,38 +80,40 @@ void CIO::startInt()
 #endif
 
   // Initialise ADC0
-  ADC0_CFG1 = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
-              ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
-  ADC0_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
-  ADC0_SC2  = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                      // Voltage ref internal, hardware trigger
-  ADC0_SC3  = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);           // Enable averaging, 4 samples
+  SIM_SCGC6 |= SIM_SCGC6_ADC0;
+  ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
+               ADC_CFG1_ADLSMP;                                       // Single-ended 12 bits, long sample time
+  ADC0_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
+  ADC0_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
+  ADC0_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
 
   while ((ADC0_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
     ;
 
   uint16_t sum0 = ADC0_CLPS + ADC0_CLP4 + ADC0_CLP3 + ADC0_CLP2 + ADC0_CLP1 + ADC0_CLP0;   // Plus side gain
   sum0 = (sum0 / 2U) | 0x8000U;
-  ADC0_PG   = sum0;
+  ADC0_PG    = sum0;
 
   ADC0_SC1A = ADC_SC1_AIEN | PIN_ADC;                                 // Enable ADC interrupt, use A0
   NVIC_ENABLE_IRQ(IRQ_ADC0);
 
 #if defined(SEND_RSSI_DATA)
   // Initialise ADC1
-  ADC1_CFG1 = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
-              ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
-  ADC1_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
-  ADC1_SC2  = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                      // Voltage ref internal, hardware trigger
-  ADC1_SC3  = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);           // Enable averaging, 4 samples
+  SIM_SCGC3 |= SIM_SCGC3_ADC1;
+  ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
+               ADC_CFG1_ADLSMP;                                       // Single-ended 12 bits, long sample time
+  ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
+  ADC1_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
+  ADC1_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
 
   while ((ADC1_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
     ;
 
   uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 + ADC1_CLP2 + ADC1_CLP1 + ADC1_CLP0;   // Plus side gain
   sum1 = (sum1 / 2U) | 0x8000U;
-  ADC1_PG   = sum1;
+  ADC1_PG    = sum1;
 
-  ADC1_SC1A = ADC_SC1_AIEN | PIN_RSSI;                                // Enable ADC interrupt, use A2
+  ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;                                // Enable ADC interrupt, use A2
   NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
