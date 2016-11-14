@@ -33,8 +33,8 @@
 #define PIN_ADC                5        // A0
 #define PIN_RSSI               8        // A2
 
-#define PDB_CH0C1_TOS 0x0100
-#define PDB_CH0C1_EN  0x01
+#define PDB_CHnC1_TOS 0x0100
+#define PDB_CHnC1_EN  0x0001
 
 const uint16_t DC_OFFSET = 2048U;
 
@@ -84,9 +84,8 @@ void CIO::startInt()
               ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
   ADC0_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
   ADC0_SC2  = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                      // Voltage ref internal, hardware trigger
-  ADC0_SC3  = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                         // Enable averaging, 4 samples
+  ADC0_SC3  = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);           // Enable averaging, 4 samples
 
-  ADC0_SC3  = ADC_SC3_CAL;                                            // Begin calibration
   while ((ADC0_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
     ;
 
@@ -103,9 +102,8 @@ void CIO::startInt()
               ADC_CFG1_ADLSMP;                                        // Single-ended 12 bits, long sample time
   ADC1_CFG2 = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                   // Select channels ADxxxb
   ADC1_SC2  = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                      // Voltage ref internal, hardware trigger
-  ADC1_SC3  = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                         // Enable averaging, 4 samples
+  ADC1_SC3  = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);           // Enable averaging, 4 samples
 
-  ADC1_SC3  = ADC_SC3_CAL;                                            // Begin calibration
   while ((ADC1_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
     ;
 
@@ -117,20 +115,16 @@ void CIO::startInt()
   NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
-  // Setup PDB for ADC0 at 24 kHz
+  // Setup PDB for ADC0 (and ADC1) at 24 kHz
   SIM_SCGC6   |= SIM_SCGC6_PDB;                                       // Enable PDB clock
-#if F_BUS == 60000000
-  // 60 MHz for the Teensy 3.5/3.6
-  PDB0_MOD     = 2500 - 1;                                            // Timer period for 60 MHz bus
-#else
-  // 48 MHz for the Teensy 3.1/3.2
-  PDB0_MOD     = 2000 - 1;                                            // Timer period for 48 MHz bus
-#endif
+  PDB0_MOD     = F_BUS / 24000;                                       // Timer period
   PDB0_IDLY    = 0;                                                   // Interrupt delay
-  PDB0_CH0C1   = PDB_CH0C1_TOS | PDB_CH0C1_EN;                        // Enable pre-trigger
-  PDB0_SC      = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_PDBIE |
-                 PDB_SC_CONT | PDB_SC_PRESCALER(7) | PDB_SC_MULT(1) |
-                 PDB_SC_LDOK;
+  PDB0_CH0C1   = PDB_CHnC1_TOS | PDB_CHnC1_EN;                        // Enable pre-trigger for ADC0
+#if defined(SEND_RSSI_DATA)
+  PDB0_CH1C1   = PDB_CHnC1_TOS | PDB_CHnC1_EN;                        // Enable pre-t9rigger for ADC1
+#endif
+  PDB0_SC      = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                   // SW trigger, enable interrupts, continuous mode
+                 PDB_SC_PDBIE | PDB_SC_CONT | PDB_SC_LDOK;            // No prescaling
   PDB0_SC     |= PDB_SC_SWTRIG;                                       // Software trigger (reset and restart counter)
   NVIC_ENABLE_IRQ(IRQ_PDB);
 
