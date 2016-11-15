@@ -23,13 +23,13 @@
 #if defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 
 #define PIN_LED                13
-#define PIN_COS                52
-#define PIN_PTT                23
-#define PIN_COSLED             22
+#define PIN_COS                4
+#define PIN_PTT                5
+#define PIN_COSLED             6
 #define PIN_DSTAR              9
-#define PIN_DMR                8
-#define PIN_YSF                7
-#define PIN_P25                6
+#define PIN_DMR                10
+#define PIN_YSF                11
+#define PIN_P25                12
 #define PIN_ADC                5        // A0
 #define PIN_RSSI               8        // A2
 
@@ -166,6 +166,7 @@ void CIO::startInt()
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode
                 PDB_SC_PDBIE | PDB_SC_CONT | PDB_SC_LDOK;             // No prescaling
   PDB0_SC    |= PDB_SC_SWTRIG;                                        // Software trigger (reset and restart counter)
+  NVIC_ENABLE_IRQ(IRQ_PDB);
 #endif
 
   // Initialise the DAC
