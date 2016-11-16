@@ -24,7 +24,7 @@ CXXSOURCES=$(shell find . -name '*.cpp')
 INC=$(shell find . -name '*.h' -exec dirname {} \; | uniq)
 INCLUDES=$(INC:%=-I%)
 # Find libraries
-INCLUDES_LIBS=libarm_cortexM4lf_math.a
+INCLUDES_LIBS=STM32F4XX_Lib/CMSIS/Lib/GCC/libarm_cortexM4lf_math.a
 LINK_LIBS=
 # Create object list
 OBJECTS=$(ASOURCES:%.s=%.o)
@@ -70,6 +70,7 @@ $(BINDIR)/$(BINHEX): $(BINDIR)/$(BINELF)
 	@echo "Objcopy from ELF to IHEX complete!\n"
 
 $(BINDIR)/$(BINELF): $(OBJECTS)
+	@mkdir -p $(@D)
 	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
 	@echo "Linking complete!\n"
 	$(SIZE) $(BINDIR)/$(BINELF)

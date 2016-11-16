@@ -12,17 +12,23 @@
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
 <part id="0"/>
 <part id="1"/>
+<part id="2"/>
 </presentation>
 </folder>
 </info>
 </editorArea>
-<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="SerialPort.cpp" partName="SerialPort.cpp" path="C:/Users/Andy/MMDVM/SerialPort.cpp" title="SerialPort.cpp" tooltip="C:/Users/Andy/MMDVM/SerialPort.cpp" workbook="DefaultEditorWorkbook">
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="SerialPort.cpp" partName="SerialPort.cpp" path="C:/Users/Andy/MMDVM/SerialPort.cpp" title="SerialPort.cpp" tooltip="C:/Users/Andy/MMDVM/SerialPort.cpp" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/MMDVM_STM32F4xx/SerialPort.cpp"/>
 <editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="11765" selectionTopPixel="15054"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="MMDVM.cpp" partName="MMDVM.cpp" path="C:/Users/x/Documents/Cloud/G4KLX/MMDVM_STM32F4xx/MMDVM.cpp" title="MMDVM.cpp" tooltip="C:/Users/x/Documents/Cloud/G4KLX/MMDVM_STM32F4xx/MMDVM.cpp" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/MMDVM_STM32F4xx/MMDVM.cpp"/>
 <editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1723" selectionTopPixel="0"/>
+</editor>
+<editor activePart="true" focus="true" id="org.coocox.builder.ui.editors.ConfigEditor" name="" partName="Configuration" title="Configuration" tooltip="" workbook="DefaultEditorWorkbook">
+<input factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory">
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="2" verticalPosition="260"/>
+</input>
 </editor>
 </editors>
 <views>
@@ -67,11 +73,8 @@
 <view id="org.eclipse.debug.ui.VariableView" partName="Variables">
 <viewState/>
 </view>
-<view id="org.coocox.component.ui.Help" partName="Help">
-<viewState/>
-</view>
 </views>
-<perspectives activePart="org.coocox.builder.ui.views.ProjectView" activePerspective="org.coocox.builder.perspective.CoBuilder">
+<perspectives activePart="org.coocox.builder.ui.editors.ConfigEditor" activePerspective="org.coocox.builder.perspective.CoBuilder">
 <perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.coocox.builder.ui.PerspectiveCoBuilder" id="org.coocox.builder.perspective.CoBuilder" label="CooCox CoBuilder"/>
 <alwaysOnActionSet id="org.coocox.component.ui.actionSet"/>
@@ -103,7 +106,6 @@
 <hide_toolbar_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <view id="org.coocox.component.ui.ComponentView"/>
 <view id="org.coocox.builder.ui.views.ProjectView"/>
-<view id="org.coocox.component.ui.Help"/>
 <view id="org.eclipse.ui.console.ConsoleView"/>
 <fastViewBars/>
 <layout>
@@ -137,15 +139,13 @@
 </folder>
 </info>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@1394448" ratio="0.71983916" ratioLeft="1074" ratioRight="418" relationship="2" relative="org.eclipse.ui.internal.ViewStack@460179">
-<folder activePageID="org.coocox.component.ui.Help" appearance="2" expanded="2">
-<page content="org.coocox.component.ui.Help" label="Help"/>
+<folder appearance="2" expanded="2">
+<page content="org.coocox.component.ui.Help" label="LabelNotFound"/>
 <page content="org.eclipse.debug.ui.BreakpointView" label="LabelNotFound"/>
 <page content="org.eclipse.ui.views.ContentOutline" label="LabelNotFound"/>
 <page content="org.coocox.coassistant.view.CoAssistantView" label="LabelNotFound"/>
 <page content="org.coocox.builder.ui.MoreExampleView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
-<part id="0"/>
-</presentation>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
 <info part="org.eclipse.ui.editorss" ratio="0.44900104" ratioLeft="427" ratioRight="524" relationship="4" relative="org.eclipse.ui.internal.ViewStack@460179"/>
@@ -266,7 +266,6 @@
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/MMDVM_STM32F4xx/MMDVM.cpp"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/MMDVM_STM32F4xx/IO.cpp"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/MMDVM_STM32F4xx/cmsis_lib/source/stm32f4xx_gpio.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/MMDVM_STM32F4xx/cmsis_boot/stm32f4xx.h"/>
 <editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
 <org.coocox.builder.ui.editors.ConfigEditor/>
 </editor>
@@ -287,39 +286,29 @@
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/MMDVM_STM32F4xx/SampleRB.cpp"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/MMDVM_STM32F4xx/SerialPort.cpp"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/MMDVM_STM32F4xx/SerialPort.cpp"/>
+<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="2" verticalPosition="260"/>
+</editor>
+<editor factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" uri="file:/C:/Users/Andy/MMDVM/stm32f4xx_link.ld"/>
+<editor factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" uri="file:/C:/Users/Andy/MMDVM/arm-gcc-link.ld"/>
 </editors>
-<item historyLabel="stm32f4xx_gpio.c" index="2">
-<position info="not_deleted" x="15500" y="8"/>
-</item>
-<item historyLabel="startup_stm32f4xx.c" index="5">
+<item historyLabel="startup_stm32f4xx.c" index="4">
 <position/>
 </item>
 <item historyLabel="stm32f4xx_gpio.c" index="2">
 <position info="not_deleted" x="3167" y="3"/>
 </item>
-<item historyLabel="startup_stm32f4xx.c" index="5">
-<position/>
-</item>
-<item historyLabel="stm32f4xx.h" index="3">
-<position info="not_deleted" x="3575" y="0"/>
-</item>
-<item historyLabel="startup_stm32f4xx.c" index="5">
-<position/>
-</item>
-<item historyLabel="stm32f4xx_gpio.c" index="2">
-<position info="not_deleted" x="3167" y="3"/>
-</item>
-<item historyLabel="Configuration" index="4"/>
+<item historyLabel="Configuration" index="3"/>
 <item historyLabel="IO.cpp" index="1">
 <position info="not_deleted" x="18872" y="0"/>
 </item>
-<item historyLabel="SampleRB.cpp" index="6">
+<item historyLabel="SampleRB.cpp" index="5">
 <position info="not_deleted" x="1740" y="6"/>
 </item>
 <item historyLabel="IO.cpp" index="1">
 <position info="not_deleted" x="18872" y="0"/>
 </item>
-<item historyLabel="Config.h" index="7">
+<item historyLabel="Config.h" index="6">
 <position info="not_deleted" x="0" y="0"/>
 </item>
 <item historyLabel="IO.cpp" index="1">
@@ -331,44 +320,44 @@
 <item historyLabel="IO.cpp" index="1">
 <position info="not_deleted" x="18872" y="0"/>
 </item>
-<item historyLabel="welcome" index="8"/>
-<item historyLabel="SerialPort.cpp" index="9">
+<item historyLabel="welcome" index="7"/>
+<item historyLabel="SerialPort.cpp" index="8">
 <position info="not_deleted" x="7996" y="13"/>
 </item>
-<item historyLabel="welcome" index="8"/>
-<item historyLabel="Repository" index="10"/>
-<item historyLabel="welcome" index="8"/>
+<item historyLabel="welcome" index="7"/>
+<item historyLabel="Repository" index="9"/>
+<item historyLabel="welcome" index="7"/>
 <item historyLabel="IO.cpp" index="1">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="SampleRB.cpp" index="6">
+<item historyLabel="SampleRB.cpp" index="5">
 <position info="not_deleted" x="21" y="25"/>
 </item>
 <item historyLabel="IO.cpp" index="1">
 <position info="not_deleted" x="57" y="42"/>
 </item>
-<item historyLabel="SerialPort.cpp" index="9">
+<item historyLabel="SerialPort.cpp" index="8">
 <position info="not_deleted" x="63" y="0"/>
 </item>
-<item historyLabel="SampleRB.cpp" index="6">
+<item historyLabel="SampleRB.cpp" index="5">
 <position info="not_deleted" x="21" y="25"/>
 </item>
 <item historyLabel="IO.cpp" index="1">
 <position info="not_deleted" x="98" y="0"/>
 </item>
-<item historyLabel="SerialPort.cpp" index="9">
+<item historyLabel="SerialPort.cpp" index="8">
 <position info="not_deleted" x="63" y="0"/>
 </item>
-<item historyLabel="SampleRB.cpp" index="6">
+<item historyLabel="SampleRB.cpp" index="5">
 <position info="not_deleted" x="21" y="25"/>
 </item>
-<item historyLabel="SerialPort.cpp" index="9">
+<item historyLabel="SerialPort.cpp" index="8">
 <position info="not_deleted" x="63" y="0"/>
 </item>
-<item historyLabel="SampleRB.cpp" index="6">
+<item historyLabel="SampleRB.cpp" index="5">
 <position info="not_deleted" x="21" y="25"/>
 </item>
-<item historyLabel="SerialPort.cpp" index="9">
+<item historyLabel="SerialPort.cpp" index="8">
 <position info="not_deleted" x="11765" y="0"/>
 </item>
 <item historyLabel="IO.cpp" index="1">
@@ -380,54 +369,63 @@
 <item historyLabel="IO.cpp" index="1">
 <position info="not_deleted" x="18744" y="0"/>
 </item>
-<item historyLabel="startup_stm32f4xx.c" index="5">
+<item historyLabel="startup_stm32f4xx.c" index="4">
 <position info="not_deleted" x="0" y="0"/>
 </item>
 <item historyLabel="MMDVM.cpp" index="0">
 <position info="not_deleted" x="1723" y="0"/>
 </item>
-<item historyLabel="IO.cpp" index="11">
+<item historyLabel="IO.cpp" index="10">
 <position info="not_deleted" x="24195" y="0"/>
 </item>
-<item historyLabel="stm32f4xx_tim.c" index="12">
+<item historyLabel="stm32f4xx_tim.c" index="11">
 <position info="not_deleted" x="96682" y="0"/>
 </item>
-<item historyLabel="IO.cpp" index="11">
+<item historyLabel="IO.cpp" index="10">
 <position info="not_deleted" x="13933" y="0"/>
 </item>
-<item historyLabel="misc.h" index="13">
+<item historyLabel="misc.h" index="12">
 <position info="not_deleted" x="1609" y="0"/>
 </item>
-<item historyLabel="IO.cpp" index="11">
+<item historyLabel="IO.cpp" index="10">
 <position info="not_deleted" x="14419" y="12"/>
 </item>
-<item historyLabel="stm32f4xx_gpio.c" index="14">
+<item historyLabel="stm32f4xx_gpio.c" index="13">
 <position info="not_deleted" x="16650" y="0"/>
 </item>
-<item historyLabel="IO.cpp" index="11">
+<item historyLabel="IO.cpp" index="10">
 <position info="not_deleted" x="14419" y="12"/>
 </item>
-<item historyLabel="stm32f4xx_tim.c" index="12">
+<item historyLabel="stm32f4xx_tim.c" index="11">
 <position info="not_deleted" x="96682" y="0"/>
 </item>
-<item historyLabel="IO.cpp" index="11">
+<item historyLabel="IO.cpp" index="10">
 <position info="not_deleted" x="14419" y="12"/>
 </item>
-<item historyLabel="SampleRB.cpp" index="15">
+<item historyLabel="SampleRB.cpp" index="14">
 <position info="not_deleted" x="21" y="25"/>
 </item>
-<item historyLabel="IO.cpp" index="11">
+<item historyLabel="IO.cpp" index="10">
 <position info="not_deleted" x="14419" y="12"/>
+</item>
+<item historyLabel="SerialPort.cpp" index="15">
+<position info="not_deleted" x="11765" y="0"/>
+</item>
+<item historyLabel="IO.cpp" index="10">
+<position info="not_deleted" x="10073" y="0"/>
 </item>
 <item historyLabel="SerialPort.cpp" index="16">
 <position info="not_deleted" x="11765" y="0"/>
 </item>
-<item historyLabel="IO.cpp" index="11">
-<position info="not_deleted" x="10073" y="0"/>
+<item historyLabel="Configuration" index="17"/>
+<item historyLabel="stm32f4xx_link.ld" index="18">
+<position info="not_deleted" x="0" y="0"/>
 </item>
-<item active="true" historyLabel="SerialPort.cpp" index="17">
-<position info="not_deleted" x="11765" y="0"/>
+<item historyLabel="Configuration" index="17"/>
+<item historyLabel="arm-gcc-link.ld" index="19">
+<position info="not_deleted" x="0" y="0"/>
 </item>
+<item active="true" historyLabel="Configuration" index="17"/>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
 </page>
@@ -435,6 +433,17 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
+<file factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" name="arm-gcc-link.ld" tooltip="C:\Users\Andy\MMDVM\arm-gcc-link.ld">
+<persistable uri="file:/C:/Users/Andy/MMDVM/arm-gcc-link.ld"/>
+</file>
+<file factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" name="stm32f4xx_link.ld" tooltip="C:\Users\Andy\MMDVM\stm32f4xx_link.ld">
+<persistable uri="file:/C:/Users/Andy/MMDVM/stm32f4xx_link.ld"/>
+</file>
+<file factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor" name="" tooltip="">
+<persistable>
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="2" verticalPosition="260"/>
+</persistable>
+</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="Globals.h" tooltip="MMDVM_STM32F4xx/Globals.h">
 <persistable path="/MMDVM_STM32F4xx/Globals.h"/>
 </file>
@@ -471,15 +480,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="MMDVM.cpp" tooltip="MMDVM_STM32F4xx/MMDVM.cpp">
 <persistable path="/MMDVM_STM32F4xx/MMDVM.cpp"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="SerialPort.cpp" tooltip="MMDVM_STM32F4xx/SerialPort.cpp">
-<persistable path="/MMDVM_STM32F4xx/SerialPort.cpp"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="SampleRB.cpp" tooltip="MMDVM_STM32F4xx/SampleRB.cpp">
-<persistable path="/MMDVM_STM32F4xx/SampleRB.cpp"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="Config.h" tooltip="MMDVM_STM32F4xx/Config.h">
-<persistable path="/MMDVM_STM32F4xx/Config.h"/>
 </file>
 </mruList>
 </workbench>
