@@ -22,7 +22,11 @@
 
 #if defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 
+#if defined(EXTERNAL_OSC)
+#define PIN_LED                3
+#else
 #define PIN_LED                13
+#endif
 #define PIN_COS                4
 #define PIN_PTT                5
 #define PIN_COSLED             6
@@ -48,21 +52,6 @@ extern "C" {
   void adc1_isr()
   {
     io.interrupt(1U);
-  }
-#endif
-
-#if defined(EXTERNAL_OSC)
-  void ftm0_isr()
-  {
-    FTM0_CNT = 0;                               // Reset count value
-    if ((FTM0_SC & FTM_SC_TOF) == FTM_SC_TOF)   // Read the timer overflow flag (TOF in FTM0_SC)
-      FTM0_SC &= ~FTM_SC_TOF;                   // If set, clear overflow flag
-
-    // Kick off the ADCs with interrupt at the end of conversion
-    ADC0_SC1A = ADC_SC1_AIEN | PIN_ADC;
-#if defined(SEND_RSSI_DATA)
-    ADC1_SC1A = ADC_SC1_AIEN | PIN_RSSI;
-#endif
   }
 #endif
 }
@@ -99,11 +88,7 @@ void CIO::startInt()
   ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
                ADC_CFG1_ADLSMP;                                       // Single-ended 12 bits, long sample time
   ADC0_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-#if defined(EXTERNAL_OSC)
-  ADC0_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
-#else
   ADC0_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
-#endif
   ADC0_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
 
   while ((ADC0_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
@@ -113,10 +98,7 @@ void CIO::startInt()
   sum0 = (sum0 / 2U) | 0x8000U;
   ADC0_PG    = sum0;
 
-#if !defined(EXTERNAL_OSC)
   ADC0_SC1A  = ADC_SC1_AIEN | PIN_ADC;                                // Enable ADC interrupt, use A0
-#endif
-
   NVIC_ENABLE_IRQ(IRQ_ADC0);
 
 #if defined(SEND_RSSI_DATA)
@@ -125,11 +107,7 @@ void CIO::startInt()
   ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) | ADC_CFG1_MODE(1) |
                ADC_CFG1_ADLSMP;                                       // Single-ended 12 bits, long sample time
   ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-#if defined(EXTERNAL_OSC)
-  ADC1_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
-#else
   ADC1_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
-#endif
   ADC1_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
 
   while ((ADC1_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
@@ -139,21 +117,27 @@ void CIO::startInt()
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
 
-#if !defined(EXTERNAL_OSC)
   ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;                               // Enable ADC interrupt, use A2
-#endif
-
   NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
 #if defined(EXTERNAL_OSC)
-  // Set up for an external oscillator input
-  SIM_SCGC6  |= SIM_SCGC6_FTM0;
-  FTM0_MODE   = FTM_MODE_WPDIS | FTM_MODE_FTMEN;
-  FTM0_MOD    = EXTERNAL_OSC / 24000;
-  FTM0_CNTIN  = 0;
-  FTM0_SC     = FTM_SC_TOIE | FTM_SC_CLKS(3);                         // External clock, overflow interrupts, no prescaling
-  NVIC_ENABLE_IRQ(IRQ_FTM0);
+  SIM_SCGC5  |= SIM_SCGC5_LPTIMER;
+  LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
+  LPTMR0_CMR  = EXTERNAL_OSC / 24000;
+  LPTMR0_CSR  = LPTMR_CSR_TIE | LPTMR_CSR_TPS(2) |                    // Interrupt, counter, input=Alt2, free running mode, enable
+                LPTMR_CSR_TFC | LPTMR_CSR_TMS |
+                LPTMR_CSR_TEN;
+
+  CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
+
+  // Set ADC0 to trigger from the LPTMR
+  SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN | SIM_SOPT7_ADC0TRGSEL(14);
+#if defined(SEND_RSSI_DATA)
+  // Set ADC1 to trigger from the LPTMR
+  SIM_SOPT7  |= SIM_SOPT7_ADC1ALTTRGEN | SIM_SOPT7_ADC1TRGSEL(14);
+#endif
+  NVIC_ENABLE_IRQ(IRQ_LPTMR);
 #else
   // Setup PDB for ADC0 (and ADC1) at 24 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
@@ -161,7 +145,7 @@ void CIO::startInt()
   PDB0_IDLY   = 0;                                                    // Interrupt delay
   PDB0_CH0C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-trigger for ADC0
 #if defined(SEND_RSSI_DATA)
-  PDB0_CH1C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-t9rigger for ADC1
+  PDB0_CH1C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-trigger for ADC1
 #endif
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode
                 PDB_SC_PDBIE | PDB_SC_CONT | PDB_SC_LDOK;             // No prescaling
