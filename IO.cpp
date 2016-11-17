@@ -312,6 +312,11 @@ void CIO::setDecode(bool dcd)
   m_dcd = dcd;
 }
 
+bool CIO::getDecode()
+{
+  return m_dcd;
+}
+
 void CIO::setADCDetection(bool detect)
 {
   m_detect = detect;

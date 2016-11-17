@@ -51,6 +51,8 @@ public:
 
   bool hasLockout() const;
 
+  bool getDecode();
+
   void resetWatchdog();
 
 private:

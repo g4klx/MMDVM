@@ -116,7 +116,7 @@ void CSerialPort::getStatus()
 
   // Send all sorts of interesting internal values
   reply[0U]  = MMDVM_FRAME_START;
-  reply[1U]  = 11U;
+  reply[1U]  = 12U;
   reply[2U]  = MMDVM_GET_STATUS;
 
   reply[3U]  = 0x00U;
@@ -180,7 +180,12 @@ void CSerialPort::getStatus()
   else
     reply[10U] = 0U;
 
-  writeInt(1U, reply, 11);
+  if (io.getDecode())
+    reply[11U] = 1U;
+  else
+    reply[11U] = 0U;
+
+  writeInt(1U, reply, 12);
 }
 
 void CSerialPort::getVersion()
