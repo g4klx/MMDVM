@@ -76,7 +76,6 @@ private:
   uint32_t             m_ledCount;
   bool                 m_ledValue;
 
-  bool                 m_dcd;
   bool                 m_detect;
 
   uint16_t             m_adcOverflow;
