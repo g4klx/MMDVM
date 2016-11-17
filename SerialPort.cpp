@@ -116,7 +116,7 @@ void CSerialPort::getStatus()
 
   // Send all sorts of interesting internal values
   reply[0U]  = MMDVM_FRAME_START;
-  reply[1U]  = 12U;
+  reply[1U]  = 11U;
   reply[2U]  = MMDVM_GET_STATUS;
 
   reply[3U]  = 0x00U;
@@ -131,7 +131,8 @@ void CSerialPort::getStatus()
 
   reply[4U]  = uint8_t(m_modemState);
 
-  reply[5U]  = m_tx ? 0x01U : 0x00U;
+  reply[5U]  = m_tx  ? 0x01U : 0x00U;
+  reply[5U] |= m_dcd ? 0x02U : 0x00U;
 
   bool adcOverflow;
   bool dacOverflow;
@@ -180,12 +181,7 @@ void CSerialPort::getStatus()
   else
     reply[10U] = 0U;
 
-  if (m_dcd)
-    reply[11U] = 1U;
-  else
-    reply[11U] = 0U;
-
-  writeInt(1U, reply, 12);
+  writeInt(1U, reply, 11);
 }
 
 void CSerialPort::getVersion()
