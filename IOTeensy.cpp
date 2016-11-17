@@ -108,7 +108,7 @@ void CIO::startInt()
   ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-  ADC1_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
+  ADC1_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
   ADC1_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
 
   while ((ADC1_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
@@ -119,7 +119,6 @@ void CIO::startInt()
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
 
-  ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;                               // Enable ADC interrupt, use A2
   NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
@@ -137,12 +136,7 @@ void CIO::startInt()
   SIM_SOPT7  |= SIM_SOPT7_ADC0ALTTRGEN |
                !SIM_SOPT7_ADC0PRETRGSEL |
                 SIM_SOPT7_ADC0TRGSEL(14);
-#if defined(SEND_RSSI_DATA)
-  // Set ADC1 to trigger from the LPTMR
-  SIM_SOPT7  |= SIM_SOPT7_ADC1ALTTRGEN |
-               !SIM_SOPT7_ADC1PRETRGSEL |
-                SIM_SOPT7_ADC1TRGSEL(14);
-#endif
+
   NVIC_ENABLE_IRQ(IRQ_LPTMR);
 #else
   // Setup PDB for ADC0 (and ADC1) at 24 kHz
@@ -150,9 +144,6 @@ void CIO::startInt()
   PDB0_MOD    = F_BUS / 24000;                                        // Timer period
   PDB0_IDLY   = 0;                                                    // Interrupt delay
   PDB0_CH0C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-trigger for ADC0
-#if defined(SEND_RSSI_DATA)
-  PDB0_CH1C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-trigger for ADC1
-#endif
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode
                 PDB_SC_PDBIE | PDB_SC_CONT | PDB_SC_LDOK;             // No prescaling
   PDB0_SC    |= PDB_SC_SWTRIG;                                        // Software trigger (reset and restart counter)
@@ -181,7 +172,9 @@ void CIO::interrupt(uint8_t source)
       sample = ADC0_RA;
       m_rxBuffer.put(sample, control);
 
-#if !defined(SEND_RSSI_DATA)
+#if defined(SEND_RSSI_DATA)
+      ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;
+#else
       m_rssiBuffer.put(0U);
 #endif
     }
