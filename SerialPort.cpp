@@ -116,7 +116,7 @@ void CSerialPort::getStatus()
 
   // Send all sorts of interesting internal values
   reply[0U]  = MMDVM_FRAME_START;
-  reply[1U]  = 10U;
+  reply[1U]  = 11U;
   reply[2U]  = MMDVM_GET_STATUS;
 
   reply[3U]  = 0x00U;
