@@ -180,7 +180,7 @@ void CSerialPort::getStatus()
   else
     reply[10U] = 0U;
 
-  if (io.getDecode())
+  if (m_dcd)
     reply[11U] = 1U;
   else
     reply[11U] = 0U;
