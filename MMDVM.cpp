@@ -33,7 +33,8 @@ bool m_p25Enable   = true;
 
 bool m_duplex = true;
 
-bool m_tx = false;
+bool m_tx  = false;
+bool m_dcd = false;
 
 uint32_t m_sampleCount = 0U;
 bool    m_sampleInsert = false;

@@ -86,6 +86,7 @@ extern bool m_p25Enable;
 extern bool m_duplex;
 
 extern bool m_tx;
+extern bool m_dcd;
 
 extern uint32_t m_sampleCount;
 extern bool     m_sampleInsert;
