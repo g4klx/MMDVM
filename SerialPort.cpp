@@ -132,7 +132,6 @@ void CSerialPort::getStatus()
   reply[4U]  = uint8_t(m_modemState);
 
   reply[5U]  = m_tx  ? 0x01U : 0x00U;
-  reply[5U] |= m_dcd ? 0x02U : 0x00U;
 
   bool adcOverflow;
   bool dacOverflow;
@@ -152,6 +151,8 @@ void CSerialPort::getStatus()
 
   if (dacOverflow)
     reply[5U] |= 0x20U;
+    
+  reply[5U] |= m_dcd ? 0x40U : 0x00U;
 
   if (m_dstarEnable)
     reply[6U] = dstarTX.getSpace();
