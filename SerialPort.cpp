@@ -132,7 +132,7 @@ void CSerialPort::getStatus()
   reply[4U]  = uint8_t(m_modemState);
 
   reply[5U]  = m_tx  ? 0x01U : 0x00U;
-  reply[5U] |= m_dcd ? 0x02U : 0x00U;
+  reply[5U] |= m_dcd ? 0x40U : 0x00U;
 
   bool adcOverflow;
   bool dacOverflow;
