@@ -1,4 +1,20 @@
-###
+#  Copyright (C) 2016 by Andy Uribe CA6JAU
+#  Copyright (C) 2016 by Jim McLaughlin KI6ZUM
+
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
 # GNU ARM Embedded Toolchain
 CC=arm-none-eabi-gcc
 CXX=arm-none-eabi-g++
@@ -11,69 +27,111 @@ NM=arm-none-eabi-nm
 SIZE=arm-none-eabi-size
 A2L=arm-none-eabi-addr2line
 
-###
 # Directory Structure
 BINDIR=bin
 
-###
 # Find source files
-ASOURCES=$(shell find . -name '*.s')
-CSOURCES=$(shell find . -name '*.c')
-CXXSOURCES=$(shell find . -name '*.cpp')
+# "SystemRoot" is only defined in Windows
+ifdef SYSTEMROOT
+	ASOURCES=$(shell dir /S /B *.s)
+	CSOURCES=$(shell dir /S /B *.c)
+	CXXSOURCES=$(shell dir /S /B *.cpp)
+	CLEANCMD=del /S *.o *.hex *.bin *.elf
+	MDBIN=md $@
+else ifdef SystemRoot
+	ASOURCES=$(shell dir /S /B *.s)
+	CSOURCES=$(shell dir /S /B *.c)
+	CXXSOURCES=$(shell dir /S /B *.cpp)
+	CLEANCMD=del /S *.o *.hex *.bin *.elf
+	MDBIN=md $@
+else
+	ASOURCES=$(shell find . -name '*.s')
+	CSOURCES=$(shell find . -name '*.c')
+	CXXSOURCES=$(shell find . -name '*.cpp')
+	CLEANCMD=rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/$(BINBIN)
+	MDBIN=mkdir $@
+endif
+
+# Default reference oscillator frequencies
+ifndef $(OSC)
+	ifeq ($(MAKECMDGOALS),pi)
+		OSC=12000000
+	else
+		OSC=8000000
+	endif
+endif
+
 # Find header directories
-INC=$(shell find . -name '*.h' -exec dirname {} \; | uniq)
+INC= . STM32F4XX_Lib/CMSIS/Include/ STM32F4XX_Lib/Device/ STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/
 INCLUDES=$(INC:%=-I%)
+
 # Find libraries
 INCLUDES_LIBS=STM32F4XX_Lib/CMSIS/Lib/GCC/libarm_cortexM4lf_math.a
 LINK_LIBS=
+
 # Create object list
 OBJECTS=$(ASOURCES:%.s=%.o)
 OBJECTS+=$(CSOURCES:%.c=%.o)
 OBJECTS+=$(CXXSOURCES:%.cpp=%.o)
+
 # Define output files ELF & IHEX
 BINELF=outp.elf
 BINHEX=outp.hex
+BINBIN=outp.bin
 
-###
 # MCU FLAGS
 MCFLAGS=-mcpu=cortex-m4 -mthumb -mlittle-endian \
 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork
+
 # COMPILE FLAGS
-# Discovery board:
-DEFS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=8000000
+# STM32F4 Discovery board:
+DEFS_DIS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=$(OSC)
 # Pi board:
-#DEFS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DHSE_VALUE=12000000
-CFLAGS=-c $(MCFLAGS) $(DEFS) $(INCLUDES)
-CXXFLAGS=-c $(MCFLAGS) $(DEFS) $(INCLUDES)
+DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DHSE_VALUE=$(OSC)
+CFLAGS=-c $(MCFLAGS) $(INCLUDES)
+CXXFLAGS=-c $(MCFLAGS) $(INCLUDES)
+
 # LINKER FLAGS
 LDSCRIPT=stm32f4xx_link.ld
 LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) --specs=nosys.specs $(INCLUDES_LIBS) $(LINK_LIBS)
 
-###
 # Build Rules
-.PHONY: all release release-memopt debug clean
+.PHONY: all release dis pi debug clean
 
-all: release-memopt
+# Default target: STM32F4 Discovery board
+all: dis
 
-release-memopt: DEFS+=-DCUSTOM_NEW -DNO_EXCEPTIONS
-release-memopt: CFLAGS+=-Os -ffunction-sections -fdata-sections -fno-builtin
-release-memopt: CXXFLAGS+=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti
-release-memopt: LDFLAGS+=-Os --specs=nano.specs
-release-memopt: release
+pi: CFLAGS+=$(DEFS_PI) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
+pi: CXXFLAGS+=$(DEFS_PI) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
+pi: LDFLAGS+=-Os --specs=nano.specs
+pi: release
+
+dis: CFLAGS+=$(DEFS_DIS) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
+dis: CXXFLAGS+=$(DEFS_DIS) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
+dis: LDFLAGS+=-Os --specs=nano.specs
+dis: release
 
 debug: CFLAGS+=-g
 debug: CXXFLAGS+=-g
 debug: LDFLAGS+=-g
 debug: release
 
+release: $(BINDIR)
 release: $(BINDIR)/$(BINHEX)
+release: $(BINDIR)/$(BINBIN)
+
+$(BINDIR):
+	$(MDBIN)
 
 $(BINDIR)/$(BINHEX): $(BINDIR)/$(BINELF)
 	$(CP) -O ihex $< $@
 	@echo "Objcopy from ELF to IHEX complete!\n"
+	
+$(BINDIR)/$(BINBIN): $(BINDIR)/$(BINELF)
+	$(CP) -O binary $< $@
+	@echo "Objcopy from ELF to BINARY complete!\n"
 
 $(BINDIR)/$(BINELF): $(OBJECTS)
-	@mkdir -p $(@D)
 	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
 	@echo "Linking complete!\n"
 	$(SIZE) $(BINDIR)/$(BINELF)
@@ -91,8 +149,8 @@ $(BINDIR)/$(BINELF): $(OBJECTS)
 	@echo "Assambled "$<"!\n"
 
 clean:
-	rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/output.map
-
+	$(CLEANCMD)
+	
 deploy:
 ifneq ($(wildcard /usr/bin/openocd),)
 	/usr/bin/openocd -f /usr/share/openocd/scripts/board/stm32f4discovery.cfg -c "program bin/$(BINELF) verify reset exit"
@@ -105,4 +163,3 @@ endif
 ifneq ($(wildcard /opt/openocd/bin/openocd),)
 	/opt/openocd/bin/openocd -f /opt/openocd/share/openocd/scripts/board/stm32f4discovery.cfg -c "program bin/$(BINELF) verify reset exit"
 endif
-
