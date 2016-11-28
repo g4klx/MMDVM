@@ -76,7 +76,7 @@ void CIO::initInt()
 void CIO::startInt()
 {
   // Initialise ADC0
-  SIM_SCGC6 |= SIM_SCGC6_ADC0;
+  // SIM_SCGC6 |= SIM_SCGC6_ADC0;
   ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC0_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
@@ -97,7 +97,7 @@ void CIO::startInt()
 
 #if defined(SEND_RSSI_DATA)
   // Initialise ADC1
-  SIM_SCGC3 |= SIM_SCGC3_ADC1;
+  // SIM_SCGC3 |= SIM_SCGC3_ADC1;
   ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
