@@ -91,7 +91,7 @@ void CIO::startInt()
   ADC0_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
   ADC0_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
 
-  while ((ADC0_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
+  while ((ADC0_SC3 & ADC_SC3_CAL) != ADC_SC3_CAL)                     // Wait for calibration
     ;
 
   uint16_t sum0 = ADC0_CLPS + ADC0_CLP4 + ADC0_CLP3 +                 // Plus side gain
@@ -111,7 +111,7 @@ void CIO::startInt()
   ADC1_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
   ADC1_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
 
-  while ((ADC1_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
+  while ((ADC1_SC3 & ADC_SC3_CAL) != ADC_SC3_CAL)                     // Wait for calibration
     ;
 
   uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 +                 // Plus side gain
