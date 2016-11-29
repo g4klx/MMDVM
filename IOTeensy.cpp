@@ -75,23 +75,16 @@ void CIO::initInt()
 
 void CIO::startInt()
 {
-  if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO)
-    io.interrupt(0U);
-
-#if defined(SEND_RSSI_DATA)
-  if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO)
-    io.interrupt(1U);
-#endif
-
   // Initialise ADC0
-  SIM_SCGC6 |= SIM_SCGC6_ADC0;
+  // SIM_SCGC6 |= SIM_SCGC6_ADC0;
   ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC0_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
   ADC0_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
-  ADC0_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
+  ADC0_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
-  while ((ADC0_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
+  ADC0_SC3   = ADC_SC3_CAL;
+  while ((ADC0_SC3 & ADC_SC3_CAL) != ADC_SC3_CAL)                     // Wait for calibration
     ;
 
   uint16_t sum0 = ADC0_CLPS + ADC0_CLP4 + ADC0_CLP3 +                 // Plus side gain
@@ -104,14 +97,15 @@ void CIO::startInt()
 
 #if defined(SEND_RSSI_DATA)
   // Initialise ADC1
-  SIM_SCGC3 |= SIM_SCGC3_ADC1;
+  // SIM_SCGC3 |= SIM_SCGC3_ADC1;
   ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
   ADC1_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
-  ADC1_SC3   = ADC_SC3_CAL | ADC_SC3_AVGE | ADC_SC3_AVGS(0);          // Enable averaging, 4 samples
+  ADC1_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
-  while ((ADC1_SC3 & ADC_SC3_CAL) == ADC_SC3_CAL)                     // Wait for calibration
+  ADC1_SC3   = ADC_SC3_CAL;
+  while ((ADC1_SC3 & ADC_SC3_CAL) != ADC_SC3_CAL)                     // Wait for calibration
     ;
 
   uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 +                 // Plus side gain
