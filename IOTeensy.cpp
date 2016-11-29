@@ -128,7 +128,7 @@ void CIO::startInt()
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
 
   // Set ADC0 to trigger from the LPTMR
-  SIM_SOPT7  |= SIM_SOPT7_ADC0ALTTRGEN |
+  SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |
                 SIM_SOPT7_ADC0TRGSEL(14);
 #else
   // Setup PDB for ADC0 at 24 kHz
