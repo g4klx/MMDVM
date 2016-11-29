@@ -129,12 +129,9 @@ void CIO::startInt()
 
   // Set ADC0 to trigger from the LPTMR
   SIM_SOPT7  |= SIM_SOPT7_ADC0ALTTRGEN |
-               !SIM_SOPT7_ADC0PRETRGSEL |
                 SIM_SOPT7_ADC0TRGSEL(14);
-
-  // NVIC_ENABLE_IRQ(IRQ_LPTMR);
 #else
-  // Setup PDB for ADC0 (and ADC1) at 24 kHz
+  // Setup PDB for ADC0 at 24 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
   PDB0_MOD    = F_BUS / 24000;                                        // Timer period
   PDB0_IDLY   = 0;                                                    // Interrupt delay
@@ -142,7 +139,6 @@ void CIO::startInt()
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode
                 PDB_SC_PDBIE | PDB_SC_CONT | PDB_SC_LDOK;             // No prescaling
   PDB0_SC    |= PDB_SC_SWTRIG;                                        // Software trigger (reset and restart counter)
-  // NVIC_ENABLE_IRQ(IRQ_PDB);
 #endif
 
   // Initialise the DAC
