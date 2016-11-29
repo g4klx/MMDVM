@@ -27,7 +27,7 @@
 /*
 Pin definitions for STM32F4 Discovery Board:
 
-PTT      PA6   output
+PTT      PB13   output
 COSLED   PA7   output
 LED      PD15  output
 COS      PA5   input
@@ -46,9 +46,9 @@ TX       PA4   analog output
 #define PORT_COS			GPIOA
 #define RCC_Per_COS			RCC_AHB1Periph_GPIOA
 
-#define PIN_PTT				GPIO_Pin_6
-#define PORT_PTT			GPIOA
-#define RCC_Per_PTT			RCC_AHB1Periph_GPIOA
+#define PIN_PTT				GPIO_Pin_13
+#define PORT_PTT			GPIOB
+#define RCC_Per_PTT			RCC_AHB1Periph_GPIOB
 
 #define PIN_COSLED			GPIO_Pin_7
 #define PORT_COSLED			GPIOA

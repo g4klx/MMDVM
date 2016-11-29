@@ -39,22 +39,16 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode
-#define ARDUINO_MODE_PINS
+// #define ARDUINO_MODE_PINS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
 
 // For the ZUM V1.0 and V1.0.1 boards pin layout
-// #define ARDUINO_DUE_ZUM_V10
+#define ARDUINO_DUE_ZUM_V10
 
 // For the SP8NTH board
 // #define ARDUINO_DUE_NTH
-
-// For the STM32F4 Discovery Board
-#define STM32F4_DISCOVERY
-
-// For the STM32F4 Pi Board
-// #define STM32F4_PI
 
 // To use wider C4FSK filters for DMR, System Fusion and P25 on transmit
 // #define WIDE_C4FSK_FILTERS_TX
@@ -62,7 +56,7 @@
 // #define WIDE_C4FSK_FILTERS_RX
 
 // Pass RSSI information to the host
-#define SEND_RSSI_DATA
+// #define SEND_RSSI_DATA
 
 // Use the modem as a serial repeater for Nextion displays
 // #define SERIAL_REPEATER

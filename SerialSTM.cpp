@@ -24,7 +24,7 @@
 
 #if defined(STM32F4XX) || defined(STM32F4)
 
-volatile uint32_t intcount1, intcount3;
+volatile uint32_t intcount1, intcount3, intcount5;
 
 #define TX_SERIAL_FIFO_SIZE 256U
 #define RX_SERIAL_FIFO_SIZE 256U
@@ -39,9 +39,15 @@ volatile uint8_t  RXSerialfifo3[RX_SERIAL_FIFO_SIZE];
 volatile uint16_t TXSerialfifohead3, TXSerialfifotail3;
 volatile uint16_t RXSerialfifohead3, RXSerialfifotail3;
 
+volatile uint8_t  TXSerialfifo5[TX_SERIAL_FIFO_SIZE];
+volatile uint8_t  RXSerialfifo5[RX_SERIAL_FIFO_SIZE];
+volatile uint16_t TXSerialfifohead5, TXSerialfifotail5;
+volatile uint16_t RXSerialfifohead5, RXSerialfifotail5;
+
 extern "C" {
   void USART1_IRQHandler();
   void USART3_IRQHandler();
+  void UART5_IRQHandler();
 }
 
 /* ************* USART1 ***************** */
@@ -330,15 +336,15 @@ void USART3_IRQHandler()
 
 void InitUSART3(int speed)
 {
-	// USART3 - TXD PB10 - RXD PB11 - pins when jumpered from FTDI board to F4Discovery board
+	// USART3 - TXD PC10 - RXD PC11
 	GPIO_InitTypeDef GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_USART3);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_USART3);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART3);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_USART3);
 
 	// USART IRQ init
 	NVIC_InitStructure.NVIC_IRQChannel    = USART3_IRQn;
@@ -354,7 +360,7 @@ void InitUSART3(int speed)
 	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_10 | GPIO_Pin_11; //  Tx | Rx
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
 	// Configure USART baud rate
 	USART_StructInit(&USART_InitStructure);
@@ -402,16 +408,203 @@ void WriteUSART3(const uint8_t* data, uint16_t length)
 	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
 }
 
+/* ************* UART5 ***************** */
+
+// Init queues
+void TXSerialfifoinit5()
+{
+	TXSerialfifohead5 = 0U;
+	TXSerialfifotail5 = 0U;
+}
+
+void RXSerialfifoinit5()
+{
+	RXSerialfifohead5 = 0U;
+	RXSerialfifotail5 = 0U;
+}
+
+// How full is queue
+// TODO decide if how full or how empty is preferred info to return
+uint16_t TXSerialfifolevel5()
+{
+  uint32_t tail = TXSerialfifotail5;
+  uint32_t head = TXSerialfifohead5;
+
+  if (tail > head)
+    return TX_SERIAL_FIFO_SIZE + head - tail;
+  else
+    return head - tail;
+}
+
+uint16_t RXSerialfifolevel5()
+{
+  uint32_t tail = RXSerialfifotail5;
+  uint32_t head = RXSerialfifohead5;
+
+  if (tail > head)
+    return RX_SERIAL_FIFO_SIZE + head - tail;
+  else
+    return head - tail;
+}
+
+// Flushes the transmit shift register
+// warning: this call is blocking
+void TXSerialFlush5()
+{
+  // wait until the TXE shows the shift register is empty
+  while (USART_GetITStatus(UART5, USART_FLAG_TXE))
+    ;
+}
+
+uint8_t TXSerialfifoput5(uint8_t next)
+{
+  if (TXSerialfifolevel5() < TX_SERIAL_FIFO_SIZE) {
+    TXSerialfifo5[TXSerialfifohead5] = next;
+
+    TXSerialfifohead5++;
+    if (TXSerialfifohead5 >= TX_SERIAL_FIFO_SIZE)
+      TXSerialfifohead5 = 0U;
+
+    // make sure transmit interrupts are enabled as long as there is data to send
+    USART_ITConfig(UART5, USART_IT_TXE, ENABLE);
+    return 1U;
+  } else {
+    return 0U; // signal an overflow occurred by returning a zero count
+  }
+}
+
+void UART5_IRQHandler()
+{
+  uint8_t c;
+
+  if (USART_GetITStatus(UART5, USART_IT_RXNE)) {
+    c = (uint8_t) USART_ReceiveData(UART5);
+
+    if (RXSerialfifolevel5() < RX_SERIAL_FIFO_SIZE) {
+      RXSerialfifo5[RXSerialfifohead5] = c;
+
+      RXSerialfifohead5++;
+      if (RXSerialfifohead5 >= RX_SERIAL_FIFO_SIZE)
+        RXSerialfifohead5 = 0U;
+    } else {
+      // TODO - do something if rx fifo is full?
+    }
+
+    USART_ClearITPendingBit(UART5, USART_IT_RXNE);
+    intcount5++;
+  }
+
+  if (USART_GetITStatus(UART5, USART_IT_TXE)) {
+    c = 0U;
+
+    if (TXSerialfifohead5 != TXSerialfifotail5) { // if the fifo is not empty
+      c = TXSerialfifo5[TXSerialfifotail5];
+
+      TXSerialfifotail5++;
+      if (TXSerialfifotail5 >= TX_SERIAL_FIFO_SIZE)
+        TXSerialfifotail5 = 0U;
+
+      USART_SendData(UART5, c);
+    } else { // if there's no more data to transmit then turn off TX interrupts
+      USART_ITConfig(UART5, USART_IT_TXE, DISABLE);
+    }
+
+    USART_ClearITPendingBit(UART5, USART_IT_TXE);
+  }
+}
+
+void InitUART5(int speed)
+{
+	// USART5 - TXD PC12 - RXD PD2
+	GPIO_InitTypeDef GPIO_InitStructure;
+	USART_InitTypeDef USART_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_UART5);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_UART5);
+
+	// USART IRQ init
+	NVIC_InitStructure.NVIC_IRQChannel    = UART5_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 1;
+	NVIC_Init(&NVIC_InitStructure);
+
+	// Configure USART as alternate function
+	GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_12; //  Tx
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_2; //  Rx
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+	// Configure USART baud rate
+	USART_StructInit(&USART_InitStructure);
+	USART_InitStructure.USART_BaudRate   = speed;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits   = USART_StopBits_1;
+	USART_InitStructure.USART_Parity     = USART_Parity_No;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode       = USART_Mode_Rx | USART_Mode_Tx;
+	USART_Init(UART5, &USART_InitStructure);
+
+	USART_Cmd(UART5, ENABLE);
+
+	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);
+
+	// initialize the fifos
+	TXSerialfifoinit5();
+	RXSerialfifoinit5();
+}
+
+uint8_t AvailUART5(void)
+{
+	if (RXSerialfifolevel5() > 0U)
+		return 1U;
+	else
+		return 0U;
+}
+
+uint8_t ReadUART5(void)
+{
+	uint8_t data_c = RXSerialfifo5[RXSerialfifotail5];
+
+  RXSerialfifotail5++;
+  if (RXSerialfifotail5 >= RX_SERIAL_FIFO_SIZE)
+    RXSerialfifotail5 = 0U;
+
+	return data_c;
+}
+
+void WriteUART5(const uint8_t* data, uint16_t length)
+{
+	for (uint16_t i = 0U; i < length; i++)
+		TXSerialfifoput5(data[i]);
+		
+	USART_ITConfig(UART5, USART_IT_TXE, ENABLE);
+}
+
 /////////////////////////////////////////////////////////////////
 
 void CSerialPort::beginInt(uint8_t n, int speed)
 {
   switch (n) {
     case 1U:
-		  InitUSART3(speed);
+		#if defined(STM32F4_DISCOVERY)
+			InitUSART3(speed);
+		#elif defined(STM32F4_PI)
+			InitUSART1(speed);
+		#endif
       break;
     case 3U:
-		  InitUSART1(speed);
+		  InitUART5(speed);
       break;
     default:
       break;
@@ -421,10 +614,14 @@ void CSerialPort::beginInt(uint8_t n, int speed)
 int CSerialPort::availableInt(uint8_t n)
 { 
     switch (n) {
-      case 1U: 
-    	  return AvailUSART3();
+      case 1U:
+		#if defined(STM32F4_DISCOVERY)
+    		return AvailUSART3();
+		#elif defined(STM32F4_PI)
+    		return AvailUSART1();
+		#endif
       case 3U: 
-        return AvailUSART1();
+        return AvailUART5();
       default:
         return false;
   	}
@@ -434,9 +631,13 @@ uint8_t CSerialPort::readInt(uint8_t n)
 {   
 	switch (n) {
   	case 1U:
-	  	return ReadUSART3();
+		#if defined(STM32F4_DISCOVERY)
+	  		return ReadUSART3();
+		#elif defined(STM32F4_PI)
+	  		return ReadUSART1();
+		#endif	  	
 	  case 3U:
-		  return ReadUSART1();
+		  return ReadUART5();
 	  default:
       return 0U;
 	}
@@ -446,14 +647,20 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
 {
   switch (n) {
     case 1U:
-    	WriteUSART3(data, length);
-      if (flush)
-        TXSerialFlush3();
-      break;
+		#if defined(STM32F4_DISCOVERY)
+			WriteUSART3(data, length);
+		  if (flush)
+			TXSerialFlush3();
+		#elif defined(STM32F4_PI)
+			WriteUSART1(data, length);
+		  if (flush)
+			TXSerialFlush1();
+		#endif		
+		break;
     case 3U:
-      WriteUSART1(data, length);
+      WriteUART5(data, length);
       if (flush)
-        TXSerialFlush1();
+        TXSerialFlush5();
        break;
     default:
        break;
