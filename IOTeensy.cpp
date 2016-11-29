@@ -76,7 +76,7 @@ void CIO::initInt()
 void CIO::startInt()
 {
   // Initialise ADC0
-  // SIM_SCGC6 |= SIM_SCGC6_ADC0;
+  SIM_SCGC6 |= SIM_SCGC6_ADC0;
   ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC0_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
@@ -84,7 +84,7 @@ void CIO::startInt()
   ADC0_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
   ADC0_SC3   = ADC_SC3_CAL;
-  while ((ADC0_SC3 & ADC_SC3_CAL) != ADC_SC3_CAL)                     // Wait for calibration
+  while (ADC0_SC3 & ADC_SC3_CAL)                                      // Wait for calibration
     ;
 
   uint16_t sum0 = ADC0_CLPS + ADC0_CLP4 + ADC0_CLP3 +                 // Plus side gain
@@ -97,7 +97,7 @@ void CIO::startInt()
 
 #if defined(SEND_RSSI_DATA)
   // Initialise ADC1
-  // SIM_SCGC3 |= SIM_SCGC3_ADC1;
+  SIM_SCGC3 |= SIM_SCGC3_ADC1;
   ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
@@ -105,7 +105,7 @@ void CIO::startInt()
   ADC1_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
   ADC1_SC3   = ADC_SC3_CAL;
-  while ((ADC1_SC3 & ADC_SC3_CAL) != ADC_SC3_CAL)                     // Wait for calibration
+  while (ADC1_SC3 & ADC_SC3_CAL)                                      // Wait for calibration
     ;
 
   uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 +                 // Plus side gain
@@ -113,6 +113,7 @@ void CIO::startInt()
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
 
+  ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;                               // Enable ADC interrupt, use A2
   NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
@@ -127,13 +128,10 @@ void CIO::startInt()
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
 
   // Set ADC0 to trigger from the LPTMR
-  SIM_SOPT7  |= SIM_SOPT7_ADC0ALTTRGEN |
-               !SIM_SOPT7_ADC0PRETRGSEL |
+  SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |
                 SIM_SOPT7_ADC0TRGSEL(14);
-
-  NVIC_ENABLE_IRQ(IRQ_LPTMR);
 #else
-  // Setup PDB for ADC0 (and ADC1) at 24 kHz
+  // Setup PDB for ADC0 at 24 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
   PDB0_MOD    = F_BUS / 24000;                                        // Timer period
   PDB0_IDLY   = 0;                                                    // Interrupt delay
@@ -141,7 +139,6 @@ void CIO::startInt()
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode
                 PDB_SC_PDBIE | PDB_SC_CONT | PDB_SC_LDOK;             // No prescaling
   PDB0_SC    |= PDB_SC_SWTRIG;                                        // Software trigger (reset and restart counter)
-  NVIC_ENABLE_IRQ(IRQ_PDB);
 #endif
 
   // Initialise the DAC
