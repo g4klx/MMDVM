@@ -34,8 +34,8 @@
 #define PIN_DMR                10
 #define PIN_YSF                11
 #define PIN_P25                12
-#define PIN_ADC                5        // A0
-#define PIN_RSSI               8        // A2
+#define PIN_ADC                5        // A0, Pin 14
+#define PIN_RSSI               8        // A2, Pin 16
 
 #define PDB_CHnC1_TOS 0x0100
 #define PDB_CHnC1_EN  0x0001
@@ -77,7 +77,7 @@ void CIO::startInt()
 {
   // Initialise the DAC
   SIM_SCGC2 |= SIM_SCGC2_DAC0;
-  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;           // 1.2V VDDA is DACREF_2
+  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;                          // 1.2V VDDA is DACREF_2
 
   // Initialise ADC0
   SIM_SCGC6 |= SIM_SCGC6_ADC0;
@@ -123,16 +123,18 @@ void CIO::startInt()
 
 #if defined(EXTERNAL_OSC)
   // Set ADC0 to trigger from the LPTMR at 24 kHz
-  SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |
-                SIM_SOPT7_ADC0TRGSEL(14);
+  SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |                              // Enable ADC0 alternate trigger
+                SIM_SOPT7_ADC0TRGSEL(14);                             // Trigger ADC0 by LPTMR0
 
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
 
-  SIM_SCGC5  |= SIM_SCGC5_LPTIMER;
+  SIM_SCGC5  |= SIM_SCGC5_LPTIMER;                                    // Enable Low Power Timer Access
   LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
   LPTMR0_CMR  = EXTERNAL_OSC / 24000;
-  LPTMR0_CSR  = LPTMR_CSR_TIE | LPTMR_CSR_TPS(2) |                    // Interrupt, counter, input=Alt2, free running mode
-                LPTMR_CSR_TFC | LPTMR_CSR_TMS;
+  LPTMR0_CSR  = LPTMR_CSR_TIE |                                       // Interrupt Enable
+                LPTMR_CSR_TPS(2) |                                    // Pin: 0=CMP0, 1=xtal, 2=pin13
+                LPTMR_CSR_TFC |                                       // Free-Running Counter
+                LPTMR_CSR_TMS;                                        // Mode Select, 0=timer, 1=counter
   LPTMR0_CSR |= LPTMR_CSR_TEN;                                        // Enable
 #else
   // Setup PDB for ADC0 at 24 kHz
