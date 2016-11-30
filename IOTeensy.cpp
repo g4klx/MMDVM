@@ -75,6 +75,10 @@ void CIO::initInt()
 
 void CIO::startInt()
 {
+  // Initialise the DAC
+  SIM_SCGC2 |= SIM_SCGC2_DAC0;
+  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;           // 1.2V VDDA is DACREF_2
+
   // Initialise ADC0
   SIM_SCGC6 |= SIM_SCGC6_ADC0;
   ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
@@ -118,18 +122,18 @@ void CIO::startInt()
 #endif
 
 #if defined(EXTERNAL_OSC)
+  // Set ADC0 to trigger from the LPTMR at 24 kHz
+  SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |
+                SIM_SOPT7_ADC0TRGSEL(14);
+
+  CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
+
   SIM_SCGC5  |= SIM_SCGC5_LPTIMER;
   LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
   LPTMR0_CMR  = EXTERNAL_OSC / 24000;
   LPTMR0_CSR  = LPTMR_CSR_TIE | LPTMR_CSR_TPS(2) |                    // Interrupt, counter, input=Alt2, free running mode, enable
                 LPTMR_CSR_TFC | LPTMR_CSR_TMS |
                 LPTMR_CSR_TEN;
-
-  CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
-
-  // Set ADC0 to trigger from the LPTMR
-  SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |
-                SIM_SOPT7_ADC0TRGSEL(14);
 #else
   // Setup PDB for ADC0 at 24 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
@@ -140,10 +144,6 @@ void CIO::startInt()
                 PDB_SC_PDBIE | PDB_SC_CONT | PDB_SC_LDOK;             // No prescaling
   PDB0_SC    |= PDB_SC_SWTRIG;                                        // Software trigger (reset and restart counter)
 #endif
-
-  // Initialise the DAC
-  SIM_SCGC2 |= SIM_SCGC2_DAC0;
-  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;           // 1.2V VDDA is DACREF_2
 
   digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
   digitalWrite(PIN_COSLED, LOW);
