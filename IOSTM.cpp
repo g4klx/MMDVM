@@ -23,44 +23,124 @@
 
 #if defined(STM32F4XX) || defined(STM32F4)
 
+#if defined(STM32F4_DISCOVERY)
 /*
-Pin definitions:
+Pin definitions for STM32F4 Discovery Board:
 
-PTT      PA6   output
+PTT      PB13   output
 COSLED   PA7   output
 LED      PD15  output
 COS      PA5   input
-ADC1     PA0   analog input
-ADC2     PA1   analog input
-DAC1     PA4   analog output
 
 DSTAR	 PD12   output
 DMR		 PD13   output
 YSF		 PD14   output
 P25		 PD11   output
+
+RX		 PA0   analog input
+RSSI     PA1   analog input
+TX       PA4   analog output
 */
 
-#define PIN_COS                GPIO_Pin_5
-#define PORT_COS               GPIOA
-#define PIN_PTT                GPIO_Pin_6
-#define PORT_PTT               GPIOA
-#define PIN_COSLED             GPIO_Pin_7
-#define PORT_COSLED            GPIOA
-#define PIN_LED                GPIO_Pin_15
-#define PORT_LED               GPIOD
-#define PIN_ADC                GPIO_Pin_0
-#define PORT_ADC               GPIOA
-#define PIN_DAC                GPIO_Pin_4
-#define PORT_DAC               GPIOA
+#define PIN_COS				GPIO_Pin_5
+#define PORT_COS			GPIOA
+#define RCC_Per_COS			RCC_AHB1Periph_GPIOA
 
-#define PIN_P25                GPIO_Pin_11
-#define PORT_P25               GPIOD
-#define PIN_DSTAR              GPIO_Pin_12
-#define PORT_DSTAR             GPIOD
-#define PIN_DMR                GPIO_Pin_13
-#define PORT_DMR               GPIOD
-#define PIN_YSF                GPIO_Pin_14
-#define PORT_YSF               GPIOD
+#define PIN_PTT				GPIO_Pin_13
+#define PORT_PTT			GPIOB
+#define RCC_Per_PTT			RCC_AHB1Periph_GPIOB
+
+#define PIN_COSLED			GPIO_Pin_7
+#define PORT_COSLED			GPIOA
+#define RCC_Per_COSLED		RCC_AHB1Periph_GPIOA
+
+#define PIN_LED				GPIO_Pin_15
+#define PORT_LED			GPIOD
+#define RCC_Per_LED			RCC_AHB1Periph_GPIOD
+
+#define PIN_P25				GPIO_Pin_11
+#define PORT_P25			GPIOD
+#define RCC_Per_P25			RCC_AHB1Periph_GPIOD
+
+#define PIN_DSTAR			GPIO_Pin_12
+#define PORT_DSTAR			GPIOD
+#define RCC_Per_DSTAR		RCC_AHB1Periph_GPIOD
+
+#define PIN_DMR				GPIO_Pin_13
+#define PORT_DMR			GPIOD
+#define RCC_Per_DMR			RCC_AHB1Periph_GPIOD
+
+#define PIN_YSF				GPIO_Pin_14
+#define PORT_YSF			GPIOD
+#define RCC_Per_YSF			RCC_AHB1Periph_GPIOD
+
+#define PIN_RX				GPIO_Pin_0
+#define PIN_RX_CH			ADC_Channel_0
+
+#define PIN_RSSI			GPIO_Pin_1
+#define PIN_RSSI_CH			ADC_Channel_1
+
+#elif defined(STM32F4_PI)
+/*
+Pin definitions for STM32F4 Pi Board:
+
+PTT      PB13   output
+COSLED   PB14   output
+LED      PB15  output
+COS      PC0   input
+
+DSTAR	 PC7   output
+DMR		 PC8   output
+YSF		 PA8   output
+P25		 PC9   output
+
+RX		 PA0   analog input
+RSSI     PA7   analog input
+TX       PA4   analog output
+*/
+
+#define PIN_COS				GPIO_Pin_0
+#define PORT_COS			GPIOC
+#define RCC_Per_COS			RCC_AHB1Periph_GPIOC
+
+#define PIN_PTT				GPIO_Pin_13
+#define PORT_PTT			GPIOB
+#define RCC_Per_PTT			RCC_AHB1Periph_GPIOB
+
+#define PIN_COSLED			GPIO_Pin_14
+#define PORT_COSLED			GPIOB
+#define RCC_Per_COSLED		RCC_AHB1Periph_GPIOB
+
+#define PIN_LED				GPIO_Pin_15
+#define PORT_LED			GPIOB
+#define RCC_Per_LED			RCC_AHB1Periph_GPIOB
+
+#define PIN_P25				GPIO_Pin_9
+#define PORT_P25			GPIOC
+#define RCC_Per_P25			RCC_AHB1Periph_GPIOC
+
+#define PIN_DSTAR			GPIO_Pin_7
+#define PORT_DSTAR			GPIOC
+#define RCC_Per_DSTAR		RCC_AHB1Periph_GPIOC
+
+#define PIN_DMR				GPIO_Pin_8
+#define PORT_DMR			GPIOC
+#define RCC_Per_DMR			RCC_AHB1Periph_GPIOC
+
+#define PIN_YSF				GPIO_Pin_8
+#define PORT_YSF			GPIOA
+#define RCC_Per_YSF			RCC_AHB1Periph_GPIOA
+
+#define PIN_RX				GPIO_Pin_0
+#define PIN_RX_CH			ADC_Channel_0
+
+#define PIN_RSSI			GPIO_Pin_7
+#define PIN_RSSI_CH			ADC_Channel_7
+
+#else
+#error "Either STM32F4_DISCOVERY or STM32F4_PI need to be defined"
+#endif
+
 
 const uint16_t DC_OFFSET = 2048U;
 
@@ -76,86 +156,58 @@ extern "C" {
 void CIO::initInt()
 {  
   GPIO_InitTypeDef GPIO_InitStruct;
-
-  // PTT pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
   GPIO_StructInit(&GPIO_InitStruct);
-  GPIO_InitStruct.GPIO_Pin   = PIN_PTT;
-  GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
   GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
+  
+  // PTT pin
+  RCC_AHB1PeriphClockCmd(RCC_Per_PTT, ENABLE);
+  GPIO_InitStruct.GPIO_Pin   = PIN_PTT;
+  GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
   GPIO_Init(PORT_PTT, &GPIO_InitStruct);
 
   // COSLED pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-  GPIO_StructInit(&GPIO_InitStruct);
+  RCC_AHB1PeriphClockCmd(RCC_Per_COSLED, ENABLE);
   GPIO_InitStruct.GPIO_Pin   = PIN_COSLED;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
   GPIO_Init(PORT_COSLED, &GPIO_InitStruct);
 
   // LED pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-  GPIO_StructInit(&GPIO_InitStruct);
+  RCC_AHB1PeriphClockCmd(RCC_Per_LED, ENABLE);
   GPIO_InitStruct.GPIO_Pin   = PIN_LED;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
   GPIO_Init(PORT_LED, &GPIO_InitStruct);
 
   // Init the input pins PIN_COS
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-  GPIO_StructInit(&GPIO_InitStruct);
+  RCC_AHB1PeriphClockCmd(RCC_Per_COS, ENABLE);
   GPIO_InitStruct.GPIO_Pin   = PIN_COS;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_IN;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
   GPIO_Init(PORT_COS, &GPIO_InitStruct);
 
 #if defined(ARDUINO_MODE_PINS)
   // DSTAR pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-  GPIO_StructInit(&GPIO_InitStruct);
+  RCC_AHB1PeriphClockCmd(RCC_Per_DSTAR, ENABLE);
   GPIO_InitStruct.GPIO_Pin   = PIN_DSTAR;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
   GPIO_Init(PORT_DSTAR, &GPIO_InitStruct);
 
   // DMR pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-  GPIO_StructInit(&GPIO_InitStruct);
+  RCC_AHB1PeriphClockCmd(RCC_Per_DMR, ENABLE);
   GPIO_InitStruct.GPIO_Pin   = PIN_DMR;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
   GPIO_Init(PORT_DMR, &GPIO_InitStruct);
 
   // YSF pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-  GPIO_StructInit(&GPIO_InitStruct);
+  RCC_AHB1PeriphClockCmd(RCC_Per_YSF, ENABLE);
   GPIO_InitStruct.GPIO_Pin   = PIN_YSF;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
   GPIO_Init(PORT_YSF, &GPIO_InitStruct);
 
   // P25 pin
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-  GPIO_StructInit(&GPIO_InitStruct);
+  RCC_AHB1PeriphClockCmd(RCC_Per_P25, ENABLE);
   GPIO_InitStruct.GPIO_Pin   = PIN_P25;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
   GPIO_Init(PORT_P25, &GPIO_InitStruct);
 #endif
 }
@@ -164,10 +216,6 @@ void CIO::startInt()
 {
   if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) != RESET))
     io.interrupt(0U);
-
-  // ADC1   PA0   analog input
-  // ADC2   PA1   analog input
-  // DAC1   PA4   analog output
   
   // Init the ADC
   GPIO_InitTypeDef        GPIO_InitStruct;
@@ -186,11 +234,10 @@ void CIO::startInt()
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 #endif
   
-  // For ADC1 on PA0, ADC2 on PA1
 #if defined(SEND_RSSI_DATA)
-  GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_0 | GPIO_Pin_1;
+  GPIO_InitStruct.GPIO_Pin  = PIN_RX | PIN_RSSI;
 #else
-  GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_0;
+  GPIO_InitStruct.GPIO_Pin  = PIN_RX;
 #endif
   GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;
   GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;
@@ -219,7 +266,7 @@ void CIO::startInt()
   ADC_Init(ADC1, &ADC_InitStructure);
 
   ADC_EOCOnEachRegularChannelCmd(ADC1, ENABLE);
-  ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_3Cycles);
+  ADC_RegularChannelConfig(ADC1, PIN_RX_CH, 1, ADC_SampleTime_3Cycles);
 
   // Enable ADC1
   ADC_Cmd(ADC1, ENABLE);
@@ -228,7 +275,7 @@ void CIO::startInt()
   ADC_Init(ADC2, &ADC_InitStructure);
 
   ADC_EOCOnEachRegularChannelCmd(ADC2, ENABLE);
-  ADC_RegularChannelConfig(ADC2, ADC_Channel_1, 1, ADC_SampleTime_3Cycles);
+  ADC_RegularChannelConfig(ADC2, PIN_RSSI_CH, 1, ADC_SampleTime_3Cycles);
 
   // Enable ADC2
   ADC_Cmd(ADC2, ENABLE);
@@ -240,13 +287,13 @@ void CIO::startInt()
   GPIO_StructInit(&GPIO_InitStruct);
   DAC_StructInit(&DAC_InitStructure);
 
-  // GPIOA & D clock enable
+  // GPIOA clock enable
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
   // DAC Periph clock enable
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
 
-  // GPIO CONFIGURATION of DAC Pins
+  // GPIO CONFIGURATION of DAC Pins (PA4)
   GPIO_InitStruct.GPIO_Pin   = GPIO_Pin_4;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_AN;
   GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
@@ -263,7 +310,10 @@ void CIO::startInt()
 
   TIM_TimeBaseInitTypeDef timerInitStructure;
   TIM_TimeBaseStructInit (&timerInitStructure);
-  timerInitStructure.TIM_Prescaler         = 1749;  // 24 kHz
+  
+  // TIM2 at 24 kHz 
+  timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(4*24000)) - 1);
+
   timerInitStructure.TIM_CounterMode       = TIM_CounterMode_Up;
   timerInitStructure.TIM_Period            = 1;
   timerInitStructure.TIM_ClockDivision     = TIM_CKD_DIV1;
