@@ -131,9 +131,9 @@ void CIO::startInt()
   SIM_SCGC5  |= SIM_SCGC5_LPTIMER;
   LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
   LPTMR0_CMR  = EXTERNAL_OSC / 24000;
-  LPTMR0_CSR  = LPTMR_CSR_TIE | LPTMR_CSR_TPS(2) |                    // Interrupt, counter, input=Alt2, free running mode, enable
-                LPTMR_CSR_TFC | LPTMR_CSR_TMS |
-                LPTMR_CSR_TEN;
+  LPTMR0_CSR  = LPTMR_CSR_TIE | LPTMR_CSR_TPS(2) |                    // Interrupt, counter, input=Alt2, free running mode
+                LPTMR_CSR_TFC | LPTMR_CSR_TMS;
+  LPTMR0_CSR |= LPTMR_CSR_TEN;                                        // Enable
 #else
   // Setup PDB for ADC0 at 24 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
