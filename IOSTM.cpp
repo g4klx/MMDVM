@@ -316,9 +316,9 @@ void CIO::startInt()
 #if defined(EXTERNAL_OSC)
   // Configure GPIO PA15 as external TIM2 clock source
   GPIO_PinAFConfig(GPIOA, GPIO_PinSource15, GPIO_AF_TIM2);
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
+  GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_Init(GPIOA, &GPIO_InitStruct);
 #endif
   
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
