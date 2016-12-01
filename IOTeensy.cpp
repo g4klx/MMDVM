@@ -129,12 +129,13 @@ void CIO::startInt()
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
 
   SIM_SCGC5  |= SIM_SCGC5_LPTIMER;                                    // Enable Low Power Timer Access
+  LPTMR0_CSR  = 0;                                                    // Disable
+  LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
+  LPTMR0_CMR  = EXTERNAL_OSC / 24000;
   LPTMR0_CSR  = LPTMR_CSR_TIE |                                       // Interrupt Enable
                 LPTMR_CSR_TPS(2) |                                    // Pin: 0=CMP0, 1=xtal, 2=pin13
                 LPTMR_CSR_TFC |                                       // Free-Running Counter
                 LPTMR_CSR_TMS;                                        // Mode Select, 0=timer, 1=counter
-  LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
-  LPTMR0_CMR  = EXTERNAL_OSC / 24000;
   LPTMR0_CSR |= LPTMR_CSR_TEN;                                        // Enable
 #else
   // Setup PDB for ADC0 at 24 kHz
