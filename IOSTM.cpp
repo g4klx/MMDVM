@@ -40,6 +40,8 @@ P25		 PD11   output
 RX		 PA0   analog input
 RSSI     PA1   analog input
 TX       PA4   analog output
+
+EXT_CLK  PA15   input
 */
 
 #define PIN_COS				GPIO_Pin_5
@@ -97,6 +99,8 @@ P25		 PC9   output
 RX		 PA0   analog input
 RSSI     PA7   analog input
 TX       PA4   analog output
+
+EXT_CLK  PA15   input
 */
 
 #define PIN_COS				GPIO_Pin_0
@@ -143,6 +147,8 @@ TX       PA4   analog output
 
 
 const uint16_t DC_OFFSET = 2048U;
+
+#define SAMP_FREQ	24000
 
 extern "C" {
   void TIM2_IRQHandler() {
@@ -306,19 +312,38 @@ void CIO::startInt()
   DAC_Cmd(DAC_Channel_1, ENABLE);
 
   // Init the timer
+  
+#if defined(EXTERNAL_OSC)
+  // Configure GPIO PA15 as external TIM2 clock source
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource15, GPIO_AF_TIM2);
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+#endif
+  
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
   TIM_TimeBaseInitTypeDef timerInitStructure;
   TIM_TimeBaseStructInit (&timerInitStructure);
   
-  // TIM2 at 24 kHz 
-  timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(4*24000)) - 1);
+  // TIM2 frequency
+#if defined(EXTERNAL_OSC)
+  timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/SAMP_FREQ) - 1);
+#else 
+  timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(4*SAMP_FREQ)) - 1);
+#endif
 
   timerInitStructure.TIM_CounterMode       = TIM_CounterMode_Up;
   timerInitStructure.TIM_Period            = 1;
   timerInitStructure.TIM_ClockDivision     = TIM_CKD_DIV1;
   timerInitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM2, &timerInitStructure);
+
+  // Enable external clock
+#if defined(EXTERNAL_OSC)
+  TIM_ETRClockMode2Config(TIM2, TIM_ExtTRGPSC_OFF, TIM_ExtTRGPolarity_NonInverted, 0x00);
+#endif
+
   TIM_Cmd(TIM2, ENABLE);
   TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
 
