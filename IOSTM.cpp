@@ -141,13 +141,72 @@ EXT_CLK  PA15   input
 #define PIN_RSSI			GPIO_Pin_7
 #define PIN_RSSI_CH			ADC_Channel_7
 
-#else
-#error "Either STM32F4_DISCOVERY or STM32F4_PI need to be defined"
-#endif
+#elif defined(STM32F4_NUCLEO)
+/*
+Pin definitions for STM32F4 Nucleo boards:
 
+PTT      PB13  output
+COSLED   PB14  output
+LED      PA5   output
+COS      PB15  input
+
+DSTAR	 PB10  output
+DMR		 PB4   output
+YSF		 PB5   output
+P25		 PB3   output
+
+RX		 PA0   analog input
+RSSI     PA1   analog input
+TX       PA4   analog output
+
+EXT_CLK  PA15  input
+*/
+
+#define PIN_COS				GPIO_Pin_15
+#define PORT_COS			GPIOB
+#define RCC_Per_COS			RCC_AHB1Periph_GPIOB
+
+#define PIN_PTT				GPIO_Pin_13
+#define PORT_PTT			GPIOB
+#define RCC_Per_PTT			RCC_AHB1Periph_GPIOB
+
+#define PIN_COSLED			GPIO_Pin_14
+#define PORT_COSLED			GPIOB
+#define RCC_Per_COSLED		RCC_AHB1Periph_GPIOB
+
+#define PIN_LED				GPIO_Pin_5
+#define PORT_LED			GPIOA
+#define RCC_Per_LED			RCC_AHB1Periph_GPIOA
+
+#define PIN_P25				GPIO_Pin_3
+#define PORT_P25			GPIOB
+#define RCC_Per_P25			RCC_AHB1Periph_GPIOB
+
+#define PIN_DSTAR			GPIO_Pin_10
+#define PORT_DSTAR			GPIOB
+#define RCC_Per_DSTAR		RCC_AHB1Periph_GPIOB
+
+#define PIN_DMR				GPIO_Pin_4
+#define PORT_DMR			GPIOB
+#define RCC_Per_DMR			RCC_AHB1Periph_GPIOB
+
+#define PIN_YSF				GPIO_Pin_5
+#define PORT_YSF			GPIOB
+#define RCC_Per_YSF			RCC_AHB1Periph_GPIOB
+
+#define PIN_RX				GPIO_Pin_0
+#define PIN_RX_CH			ADC_Channel_0
+
+#define PIN_RSSI			GPIO_Pin_1
+#define PIN_RSSI_CH			ADC_Channel_1
+
+#else
+#error "Either STM32F4_DISCOVERY, STM32F4_PI or STM32F4_NUCLEO need to be defined"
+#endif
 
 const uint16_t DC_OFFSET = 2048U;
 
+// Sampling frequency 
 #define SAMP_FREQ	24000
 
 extern "C" {
@@ -312,6 +371,7 @@ void CIO::startInt()
   DAC_Cmd(DAC_Channel_1, ENABLE);
 
   // Init the timer
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
   
 #if defined(EXTERNAL_OSC)
   // Configure GPIO PA15 as external TIM2 clock source
@@ -321,14 +381,12 @@ void CIO::startInt()
   GPIO_Init(GPIOA, &GPIO_InitStruct);
 #endif
   
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-
   TIM_TimeBaseInitTypeDef timerInitStructure;
   TIM_TimeBaseStructInit (&timerInitStructure);
   
-  // TIM2 frequency
+  // TIM2 output frequency
 #if defined(EXTERNAL_OSC)
-  timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/SAMP_FREQ) - 1);
+  timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/(2*SAMP_FREQ)) - 1);
 #else 
   timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(4*SAMP_FREQ)) - 1);
 #endif
@@ -339,12 +397,17 @@ void CIO::startInt()
   timerInitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM2, &timerInitStructure);
 
-  // Enable external clock
 #if defined(EXTERNAL_OSC)
+  // Enable external clock (PA15)
   TIM_ETRClockMode2Config(TIM2, TIM_ExtTRGPSC_OFF, TIM_ExtTRGPolarity_NonInverted, 0x00);
+#else
+  // Enable internal clock
+  TIM_InternalClockConfig(TIM2);
 #endif
 
+  // Enable TIM2
   TIM_Cmd(TIM2, ENABLE);
+  // Enable TIM2 interrupt
   TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
 
   NVIC_InitTypeDef nvicStructure;
