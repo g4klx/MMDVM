@@ -87,7 +87,10 @@ MCFLAGS=-mcpu=cortex-m4 -mthumb -mlittle-endian \
 # STM32F4 Discovery board:
 DEFS_DIS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_DISCOVERY -DHSE_VALUE=$(OSC)
 # Pi board:
-DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DHSE_VALUE=$(OSC)
+DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DARDUINO_MODE_PINS -DSEND_RSSI_DATA -DSERIAL_REPEATER -DHSE_VALUE=$(OSC)
+# STM32F4 Nucleo 446 board:
+DEFS_NUCLEO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_NUCLEO -DHSE_VALUE=$(OSC)
+
 CFLAGS=-c $(MCFLAGS) $(INCLUDES)
 CXXFLAGS=-c $(MCFLAGS) $(INCLUDES)
 
@@ -96,7 +99,7 @@ LDSCRIPT=stm32f4xx_link.ld
 LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) --specs=nosys.specs $(INCLUDES_LIBS) $(LINK_LIBS)
 
 # Build Rules
-.PHONY: all release dis pi debug clean
+.PHONY: all release dis pi nucleo debug clean
 
 # Default target: STM32F4 Discovery board
 all: dis
@@ -105,6 +108,11 @@ pi: CFLAGS+=$(DEFS_PI) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno
 pi: CXXFLAGS+=$(DEFS_PI) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
 pi: LDFLAGS+=-Os --specs=nano.specs
 pi: release
+
+nucleo: CFLAGS+=$(DEFS_NUCLEO) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
+nucleo: CXXFLAGS+=$(DEFS_NUCLEO) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
+nucleo: LDFLAGS+=-Os --specs=nano.specs
+nucleo: release
 
 dis: CFLAGS+=$(DEFS_DIS) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 dis: CXXFLAGS+=$(DEFS_DIS) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
