@@ -129,6 +129,7 @@ void CIO::startInt()
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
 
   SIM_SCGC5  |= SIM_SCGC5_LPTIMER;                                    // Enable Low Power Timer Access
+  LPTMR0_CSR  = 0;                                                    // Disable
   LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
   LPTMR0_CMR  = EXTERNAL_OSC / 24000;
   LPTMR0_CSR  = LPTMR_CSR_TIE |                                       // Interrupt Enable
