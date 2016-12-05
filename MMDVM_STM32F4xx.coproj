@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Project version="2G - 1.7.8" name="MMDVM_STM32F4xx">
-  <Target name="MMDVM_STM32F4xx" isCurrent="1">
+  <Target name="MMDVM_Discovery_407" isCurrent="1">
     <Device manufacturerId="9" manufacturerName="ST" chipId="344" chipName="STM32F407VG" boardId="" boardName=""/>
     <BuildOption>
       <Compile>
@@ -76,17 +76,162 @@
     </DebugOption>
     <ExcludeFile/>
   </Target>
+  <Target name="MMDVM_Pi_446" isCurrent="0">
+    <Device manufacturerId="9" manufacturerName="ST" chipId="344" chipName="STM32F407VG" boardId="" boardName=""/>
+    <BuildOption>
+      <Compile>
+        <Option name="OptimizationLevel" value="4"/>
+        <Option name="UseFPU" value="0"/>
+        <Option name="UserEditCompiler" value=""/>
+        <Option name="SupportCPlusplus" value="1"/>
+        <Option name="FPU" value="2"/>
+        <Includepaths>
+          <Includepath path="."/>
+        </Includepaths>
+        <DefinedSymbols>
+          <Define name="STM32F4XX"/>
+          <Define name="USE_STDPERIPH_DRIVER"/>
+          <Define name="__ASSEMBLY__"/>
+          <Define name="SUPPORT_CPLUSPLUS"/>
+          <Define name="__FPU_USED"/>
+          <Define name="STM32F446xx"/>
+          <Define name="HSE_VALUE=12000000"/>
+          <Define name="STM32F4_PI"/>
+          <Define name="ARDUINO_MODE_PINS"/>
+          <Define name="SEND_RSSI_DATA"/>
+          <Define name="SERIAL_REPEATER"/>
+        </DefinedSymbols>
+      </Compile>
+      <Link useDefault="0">
+        <Option name="DiscardUnusedSection" value="0"/>
+        <Option name="UserEditLinkder" value=""/>
+        <Option name="UseMemoryLayout" value="0"/>
+        <Option name="nostartfiles" value="1"/>
+        <Option name="LTO" value="0"/>
+        <Option name="IsNewStartupCode" value="1"/>
+        <Option name="Library" value="Semihosting"/>
+        <Option name="UserEditLinker" value="-lstdc++; --specs=nano.specs;"/>
+        <LinkedLibraries>
+          <Libset dir="stm32f4xx_lib\cmsis\lib\gcc\" libs="arm_cortexm4lf_math"/>
+        </LinkedLibraries>
+        <MemoryAreas debugInFlashNotRAM="1">
+          <Memory name="IROM1" type="ReadOnly" size="0x00100000" startValue="0x08000000"/>
+          <Memory name="IRAM1" type="ReadWrite" size="0x00020000" startValue="0x20000000"/>
+          <Memory name="IROM2" type="ReadOnly" size="" startValue=""/>
+          <Memory name="IRAM2" type="ReadWrite" size="0x00010000" startValue="0x10000000"/>
+        </MemoryAreas>
+        <LocateLinkFile path="./stm32f4xx_link.ld" type="0"/>
+      </Link>
+      <Output>
+        <Option name="OutputFileType" value="0"/>
+        <Option name="Path" value="./"/>
+        <Option name="Name" value="MMDVM_PI"/>
+        <Option name="HEX" value="1"/>
+        <Option name="BIN" value="1"/>
+      </Output>
+      <User>
+        <UserRun name="Run#1" type="Before" checked="0" value=""/>
+        <UserRun name="Run#1" type="After" checked="0" value=""/>
+      </User>
+    </BuildOption>
+    <DebugOption>
+      <Option name="org.coocox.codebugger.gdbjtag.core.adapter" value="ST-Link"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.debugMode" value="SWD"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.clockDiv" value="1M"/>
+      <Option name="org.coocox.codebugger.gdbjtag.corerunToMain" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.jlinkgdbserver" value=""/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.userDefineGDBScript" value=""/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.targetEndianess" value="0"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.jlinkResetMode" value="Type 0: Normal"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.resetMode" value="SYSRESETREQ"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ifSemihost" value="0"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ifCacheRom" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ipAddress" value="127.0.0.1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.portNumber" value="2009"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.autoDownload" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.verify" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.downloadFuction" value="Erase Effected"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="STM32F4xx_1024.elf"/>
+    </DebugOption>
+    <ExcludeFile/>
+  </Target>
+  <Target name="MMDVM_Nucleo_446" isCurrent="0">
+    <Device manufacturerId="9" manufacturerName="ST" chipId="344" chipName="STM32F407VG" boardId="" boardName=""/>
+    <BuildOption>
+      <Compile>
+        <Option name="OptimizationLevel" value="4"/>
+        <Option name="UseFPU" value="0"/>
+        <Option name="UserEditCompiler" value=""/>
+        <Option name="SupportCPlusplus" value="1"/>
+        <Option name="FPU" value="2"/>
+        <Includepaths>
+          <Includepath path="."/>
+        </Includepaths>
+        <DefinedSymbols>
+          <Define name="STM32F4XX"/>
+          <Define name="USE_STDPERIPH_DRIVER"/>
+          <Define name="__ASSEMBLY__"/>
+          <Define name="SUPPORT_CPLUSPLUS"/>
+          <Define name="HSE_VALUE=8000000"/>
+          <Define name="__FPU_USED"/>
+          <Define name="STM32F4_NUCLEO"/>
+          <Define name="STM32F446xx"/>
+        </DefinedSymbols>
+      </Compile>
+      <Link useDefault="0">
+        <Option name="DiscardUnusedSection" value="0"/>
+        <Option name="UserEditLinkder" value=""/>
+        <Option name="UseMemoryLayout" value="0"/>
+        <Option name="nostartfiles" value="1"/>
+        <Option name="LTO" value="0"/>
+        <Option name="IsNewStartupCode" value="1"/>
+        <Option name="Library" value="Semihosting"/>
+        <Option name="UserEditLinker" value="-lstdc++; --specs=nano.specs;"/>
+        <LinkedLibraries>
+          <Libset dir="stm32f4xx_lib\cmsis\lib\gcc\" libs="arm_cortexm4lf_math"/>
+        </LinkedLibraries>
+        <MemoryAreas debugInFlashNotRAM="1">
+          <Memory name="IROM1" type="ReadOnly" size="0x00100000" startValue="0x08000000"/>
+          <Memory name="IRAM1" type="ReadWrite" size="0x00020000" startValue="0x20000000"/>
+          <Memory name="IROM2" type="ReadOnly" size="" startValue=""/>
+          <Memory name="IRAM2" type="ReadWrite" size="0x00010000" startValue="0x10000000"/>
+        </MemoryAreas>
+        <LocateLinkFile path="./stm32f4xx_link.ld" type="0"/>
+      </Link>
+      <Output>
+        <Option name="OutputFileType" value="0"/>
+        <Option name="Path" value="./"/>
+        <Option name="Name" value="MMDVM_NUCLEO"/>
+        <Option name="HEX" value="1"/>
+        <Option name="BIN" value="1"/>
+      </Output>
+      <User>
+        <UserRun name="Run#1" type="Before" checked="0" value=""/>
+        <UserRun name="Run#1" type="After" checked="0" value=""/>
+      </User>
+    </BuildOption>
+    <DebugOption>
+      <Option name="org.coocox.codebugger.gdbjtag.core.adapter" value="ST-Link"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.debugMode" value="SWD"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.clockDiv" value="1M"/>
+      <Option name="org.coocox.codebugger.gdbjtag.corerunToMain" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.jlinkgdbserver" value=""/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.userDefineGDBScript" value=""/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.targetEndianess" value="0"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.jlinkResetMode" value="Type 0: Normal"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.resetMode" value="SYSRESETREQ"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ifSemihost" value="0"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ifCacheRom" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.ipAddress" value="127.0.0.1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.portNumber" value="2009"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.autoDownload" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.verify" value="1"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.downloadFuction" value="Erase Effected"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="STM32F4xx_1024.elf"/>
+    </DebugOption>
+    <ExcludeFile/>
+  </Target>
   <Components path="./">
-    <Component id="30" name="C Library" path="" type="2"/>
-    <Component id="54" name="M4 CMSIS Core" path="" type="2"/>
-    <Component id="500" name="CMSIS BOOT" path="" type="2"/>
-    <Component id="501" name="RCC" path="" type="2"/>
-    <Component id="504" name="GPIO" path="" type="2"/>
-    <Component id="513" name="TIM" path="" type="2"/>
-    <Component id="514" name="ADC" path="" type="2"/>
-    <Component id="515" name="DAC" path="" type="2"/>
-    <Component id="517" name="USART" path="" type="2"/>
-    <Component id="524" name="MISC" path="" type="2"/>
   </Components>
   <Files>
     <File name="DMRIdleRX.h" path="DMRIdleRX.h" type="1"/>
@@ -98,9 +243,9 @@
     <File name="SampleRB.cpp" path="SampleRB.cpp" type="1"/>
     <File name="CalDStarTX.h" path="CalDStarTX.h" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cm4.h" path="STM32F4XX_Lib/CMSIS/Include/core_cm4.h" type="1"/>
-    <File name="YSFRX.h" path="YSFRX.h" type="1"/>
     <File name="DMRSlotRX.h" path="DMRSlotRX.h" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" type="1"/>
+    <File name="YSFRX.h" path="YSFRX.h" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include" path="" type="2"/>
     <File name="IO.cpp" path="IO.cpp" type="1"/>
     <File name="DMRDMORX.cpp" path="DMRDMORX.cpp" type="1"/>
@@ -122,14 +267,14 @@
     <File name="DMRDMORX.h" path="DMRDMORX.h" type="1"/>
     <File name="SerialPort.h" path="SerialPort.h" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_dac.h" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_dac.h" type="1"/>
-    <File name="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" type="1"/>
     <File name="CWIdTX.h" path="CWIdTX.h" type="1"/>
     <File name="STM32F4XX_Lib/Device/system_stm32f4xx.h" path="STM32F4XX_Lib/Device/system_stm32f4xx.h" type="1"/>
+    <File name="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" type="1"/>
     <File name="CalDStarTX.cpp" path="CalDStarTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source" path="" type="2"/>
-    <File name="IODue.cpp" path="IODue.cpp" type="1"/>
     <File name="CalDMR.h" path="CalDMR.h" type="1"/>
     <File name="DMRDMOTX.h" path="DMRDMOTX.h" type="1"/>
+    <File name="IODue.cpp" path="IODue.cpp" type="1"/>
     <File name="DMRTX.cpp" path="DMRTX.cpp" type="1"/>
     <File name="P25RX.cpp" path="P25RX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Lib/GCC" path="" type="2"/>
