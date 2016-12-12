@@ -117,7 +117,6 @@ void CIO::startInt()
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
 
-  ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;                               // Enable ADC interrupt, use A2
   NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
