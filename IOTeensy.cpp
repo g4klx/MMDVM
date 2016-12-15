@@ -138,7 +138,7 @@ void CIO::startInt()
 #else
   // Setup PDB for ADC0 at 24 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
-  PDB0_MOD    = F_BUS / 24000;                                        // Timer period
+  PDB0_MOD    = (F_BUS / 24000) - 1;                                  // Timer period - 1
   PDB0_IDLY   = 0;                                                    // Interrupt delay
   PDB0_CH0C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-trigger for ADC0
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode
