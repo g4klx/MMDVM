@@ -19,7 +19,7 @@
 #if !defined(DMRDEFINES_H)
 #define  DMRDEFINES_H
 
-const unsigned int DMR_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
+const unsigned int DMR_RADIO_SYMBOL_LENGTH = 10U;      // At 48 kHz sample rate
 
 const unsigned int DMR_FRAME_LENGTH_BYTES   = 33U;
 const unsigned int DMR_FRAME_LENGTH_BITS    = DMR_FRAME_LENGTH_BYTES * 8U;

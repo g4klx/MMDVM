@@ -68,9 +68,9 @@ const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
 #if defined(EXTERNAL_OSC)
-const uint8_t HARDWARE[]         = "MMDVM 20161124 TCXO (D-Star/DMR/System Fusion/P25/CW Id)";
+const uint8_t HARDWARE[]         = "MMDVM 20161124 TCXO 48kHz (D-Star/DMR/System Fusion/P25/CW Id)";
 #else
-const uint8_t HARDWARE[]         = "MMDVM 20161124 (D-Star/DMR/System Fusion/P25/CW Id)";
+const uint8_t HARDWARE[]         = "MMDVM 20161124 48kHz (D-Star/DMR/System Fusion/P25/CW Id)";
 #endif
 
 const uint8_t PROTOCOL_VERSION   = 1U;

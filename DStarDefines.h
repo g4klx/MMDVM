@@ -19,7 +19,7 @@
 #if !defined(DSTARDEFINES_H)
 #define  DSTARDEFINES_H
 
-const unsigned int DSTAR_RADIO_BIT_LENGTH = 5U;      // At 24 kHz sample rate
+const unsigned int DSTAR_RADIO_BIT_LENGTH = 10U;      // At 48 kHz sample rate
 
 const unsigned int DSTAR_HEADER_LENGTH_BYTES = 41U;
 const unsigned int DSTAR_HEADER_LENGTH_BITS  = DSTAR_HEADER_LENGTH_BYTES * 8U;

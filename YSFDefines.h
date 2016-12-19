@@ -19,7 +19,7 @@
 #if !defined(YSFDEFINES_H)
 #define  YSFDEFINES_H
 
-const unsigned int YSF_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
+const unsigned int YSF_RADIO_SYMBOL_LENGTH = 10U;      // At 48 kHz sample rate
 
 const unsigned int YSF_FRAME_LENGTH_BYTES   = 120U;
 const unsigned int YSF_FRAME_LENGTH_BITS    = YSF_FRAME_LENGTH_BYTES * 8U;

@@ -24,23 +24,15 @@
 
 #include "YSFDefines.h"
 
-#if defined(WIDE_C4FSK_FILTERS_TX)
-// Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t YSF_C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
-const uint16_t YSF_C4FSK_FILTER_LEN = 22U;
-#else
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t YSF_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                   11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
+// Generated using rcosdesign(0.2, 4, 10, 'sqrt') in MATLAB
+static q15_t   YSF_C4FSK_FILTER[] = {486, 39, -480, -1022, -1526, -1928, -2164, -2178, -1927, -1384, -548, 561, 1898, 3399, 4980, 6546, 7999, 9246, 10202, 10803, 11008, 10803, 10202, 9246,
+                                 7999, 6546, 4980, 3399, 1898, 561, -548, -1384, -1927, -2178, -2164, -1928, -1526, -1022, -480, 39, 486, 0};
 const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
-#endif
 
-const q15_t YSF_LEVELA[] = { 809,  809,  809,  809,  809};
-const q15_t YSF_LEVELB[] = { 269,  269,  269,  269,  269};
-const q15_t YSF_LEVELC[] = {-269, -269, -269, -269, -269};
-const q15_t YSF_LEVELD[] = {-809, -809, -809, -809, -809};
+const q15_t YSF_LEVELA[] = { 499,  499,  499,  499,  499,  499,  499,  499,  499,  499};
+const q15_t YSF_LEVELB[] = { 166,  166,  166,  166,  166,  166,  166,  166,  166,  166};
+const q15_t YSF_LEVELC[] = {-166, -166, -166, -166, -166, -166, -166, -166, -166, -166};
+const q15_t YSF_LEVELD[] = {-499, -499, -499, -499, -499, -499, -499, -499, -499, -499};
 
 const uint8_t YSF_START_SYNC = 0x77U;
 const uint8_t YSF_END_SYNC   = 0xFFU;
@@ -55,7 +47,7 @@ m_poPtr(0U),
 m_txDelay(240U),      // 200ms
 m_count(0U)
 {
-  ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 90U * sizeof(q15_t));
 
   m_modFilter.numTaps = YSF_C4FSK_FILTER_LEN;
   m_modFilter.pState  = m_modState;

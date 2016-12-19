@@ -207,7 +207,7 @@ EXT_CLK  PA15  input
 const uint16_t DC_OFFSET = 2048U;
 
 // Sampling frequency 
-#define SAMP_FREQ	24000
+#define SAMP_FREQ	48000
 
 extern "C" {
   void TIM2_IRQHandler() {

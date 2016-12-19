@@ -28,12 +28,12 @@ const uint8_t BIT_SYNC = 0xAAU;
 
 const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 
-// Generated using gaussfir(0.5, 4, 5) in MATLAB
-static q15_t DSTAR_GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
-const uint16_t DSTAR_GMSK_FILTER_LEN = 12U;
+// Generated using gaussfir(0.5, 4, 10) in MATLAB
+static q15_t   DSTAR_GMSK_FILTER[] = {1, 4, 15, 52, 151, 380, 832, 1579, 2599, 3710, 4594, 4933, 4594, 3710, 2599, 1579, 832, 380, 151, 52, 15, 4, 1, 0};
+const uint16_t DSTAR_GMSK_FILTER_LEN = 24U;
 
-const q15_t DSTAR_LEVEL0[] = {-800, -800, -800, -800, -800};
-const q15_t DSTAR_LEVEL1[] = { 800,  800,  800,  800,  800};
+const q15_t DSTAR_LEVEL0[] = {-808, -808, -808, -808, -808, -808, -808, -808, -808, -808};
+const q15_t DSTAR_LEVEL1[] = { 808,  808,  808,  808,  808,  808,  808,  808,  808,  808};
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -198,7 +198,7 @@ m_poPtr(0U),
 m_txDelay(60U),      // 100ms
 m_count(0U)
 {
-  ::memset(m_modState, 0x00U, 60U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 80U * sizeof(q15_t));
 
   m_modFilter.numTaps = DSTAR_GMSK_FILTER_LEN;
   m_modFilter.pState  = m_modState;

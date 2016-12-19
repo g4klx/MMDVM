@@ -24,22 +24,14 @@
 #include "Globals.h"
 #include "IO.h"
 
-#if defined(WIDE_C4FSK_FILTERS_RX)
-// Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
-const uint16_t C4FSK_FILTER_LEN = 22U;
-#else
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                   11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
+// Generated using rcosdesign(0.2, 4, 10, 'sqrt') in MATLAB
+static q15_t   C4FSK_FILTER[] = {486, 39, -480, -1022, -1526, -1928, -2164, -2178, -1927, -1384, -548, 561, 1898, 3399, 4980, 6546, 7999, 9246, 10202, 10803, 11008, 10803, 10202, 9246,
+                                 7999, 6546, 4980, 3399, 1898, 561, -548, -1384, -1927, -2178, -2164, -1928, -1526, -1022, -480, 39, 486, 0};
 const uint16_t C4FSK_FILTER_LEN = 42U;
-#endif
 
-// Generated using gaussfir(0.5, 4, 5) in MATLAB
-static q15_t   GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
-const uint16_t GMSK_FILTER_LEN = 12U;
+// Generated using gaussfir(0.5, 4, 10) in MATLAB
+static q15_t   GMSK_FILTER[] = {1, 4, 15, 52, 151, 380, 832, 1579, 2599, 3710, 4594, 4933, 4594, 3710, 2599, 1579, 832, 380, 151, 52, 15, 4, 1, 0};
+const uint16_t GMSK_FILTER_LEN = 24U;
 
 const uint16_t DC_OFFSET = 2048U;
 
@@ -100,7 +92,7 @@ void CIO::process()
   m_ledCount++;
   if (m_started) {
     // Two seconds timeout
-    if (m_watchdog >= 48000U) {
+    if (m_watchdog >= 96000U) {
       if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF) {
         if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
@@ -111,13 +103,13 @@ void CIO::process()
       m_watchdog = 0U;
     }
 
-    if (m_ledCount >= 24000U) {
+    if (m_ledCount >= 48000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
       setLEDInt(m_ledValue);
     }
   } else {
-    if (m_ledCount >= 240000U) {
+    if (m_ledCount >= 480000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
       setLEDInt(m_ledValue);

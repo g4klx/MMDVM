@@ -63,7 +63,7 @@ private:
   arm_fir_instance_q15 m_C4FSKFilter;
   arm_fir_instance_q15 m_GMSKFilter;
   q15_t                m_C4FSKState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  q15_t                m_GMSKState[40U];     // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
+  q15_t                m_GMSKState[80U];     // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;
