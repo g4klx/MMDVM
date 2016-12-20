@@ -34,8 +34,8 @@
 #define PIN_DMR                10
 #define PIN_YSF                11
 #define PIN_P25                12
-#define PIN_ADC                5        // A0, Pin 14
-#define PIN_RSSI               8        // A2, Pin 16
+#define PIN_ADC                5        // A0,  Pin 14
+#define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
 
 #define PDB_CHnC1_TOS 0x0100
 #define PDB_CHnC1_EN  0x0001
