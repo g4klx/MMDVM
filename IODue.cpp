@@ -64,6 +64,8 @@
 #define ADC_CDR_Chan           7
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL0 // DAC on Due DAC0
 #define DACC_CHER_Chan         DACC_CHER_CH0
+#define RSSI_CHER_Chan         (1<<1)                 // ADC on Due pin A6  - Due AD1 - (1 << 1)
+#define RSSI_CDR_Chan          1
 #else
 #error "Either ARDUINO_DUE_PAPA, ARDUINO_DUE_ZUM_V10, or ARDUINO_DUE_NTH need to be defined"
 #endif
@@ -104,7 +106,8 @@ void CIO::startInt()
   ADC->ADC_IDR  = 0xFFFFFFFF;                 // Disable interrupts
   ADC->ADC_IER  = ADC_CHER_Chan;              // Enable End-Of-Conv interrupt
   ADC->ADC_CHDR = 0xFFFF;                     // Disable all channels
-  ADC->ADC_CHER = ADC_CHER_Chan;              // Enable just one channel
+  ADC->ADC_CHER = ADC_CHER_Chan |             // Enable rx input channel
+                  RSSI_CHER_Chan;             // and RSSI input
   ADC->ADC_CGR  = 0x15555555;                 // All gains set to x1
   ADC->ADC_COR  = 0x00000000;                 // All offsets off
   ADC->ADC_MR   = (ADC->ADC_MR & 0xFFFFFFF0) | (1 << 1) | ADC_MR_TRGEN;  // 1 = trig source TIO from TC0
@@ -169,7 +172,7 @@ void CIO::interrupt(uint8_t source)
     sample = ADC->ADC_CDR[ADC_CDR_Chan];
     m_rxBuffer.put(sample, control);
 
-    m_rssiBuffer.put(0U);
+    m_rssiBuffer.put(ADC->ADC_CDR[RSSI_CDR_Chan]);
 
     m_watchdog++;
   }
