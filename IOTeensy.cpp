@@ -34,8 +34,8 @@
 #define PIN_DMR                10
 #define PIN_YSF                11
 #define PIN_P25                12
-#define PIN_ADC                5        // A0, Pin 14
-#define PIN_RSSI               8        // A2, Pin 16
+#define PIN_ADC                5        // A0,  Pin 14
+#define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
 
 #define PDB_CHnC1_TOS 0x0100
 #define PDB_CHnC1_EN  0x0001
@@ -87,7 +87,7 @@ void CIO::startInt()
   ADC0_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
   ADC0_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
-  ADC0_SC3   = ADC_SC3_CAL;
+  ADC0_SC3  |= ADC_SC3_CAL;
   while (ADC0_SC3 & ADC_SC3_CAL)                                      // Wait for calibration
     ;
 
@@ -108,7 +108,7 @@ void CIO::startInt()
   ADC1_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
   ADC1_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
-  ADC1_SC3   = ADC_SC3_CAL;
+  ADC1_SC3  |= ADC_SC3_CAL;
   while (ADC1_SC3 & ADC_SC3_CAL)                                      // Wait for calibration
     ;
 
@@ -117,13 +117,13 @@ void CIO::startInt()
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
 
-  ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;                               // Enable ADC interrupt, use A2
   NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
 #if defined(EXTERNAL_OSC)
   // Set ADC0 to trigger from the LPTMR at 24 kHz
   SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |                              // Enable ADC0 alternate trigger
+                SIM_SOPT7_ADC0PRETRGSEL |                             // Enable ADC0 pre-trigger
                 SIM_SOPT7_ADC0TRGSEL(14);                             // Trigger ADC0 by LPTMR0
 
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
@@ -131,16 +131,14 @@ void CIO::startInt()
   SIM_SCGC5  |= SIM_SCGC5_LPTIMER;                                    // Enable Low Power Timer Access
   LPTMR0_CSR  = 0;                                                    // Disable
   LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
-  LPTMR0_CMR  = EXTERNAL_OSC / 24000;
-  LPTMR0_CSR  = LPTMR_CSR_TIE |                                       // Interrupt Enable
-                LPTMR_CSR_TPS(2) |                                    // Pin: 0=CMP0, 1=xtal, 2=pin13
-                LPTMR_CSR_TFC |                                       // Free-Running Counter
+  LPTMR0_CMR  = (EXTERNAL_OSC / 24000) - 1;                           // Frequency divided by CMR + 1
+  LPTMR0_CSR  = LPTMR_CSR_TPS(2) |                                    // Pin: 0=CMP0, 1=xtal, 2=pin13
                 LPTMR_CSR_TMS;                                        // Mode Select, 0=timer, 1=counter
   LPTMR0_CSR |= LPTMR_CSR_TEN;                                        // Enable
 #else
   // Setup PDB for ADC0 at 24 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
-  PDB0_MOD    = F_BUS / 24000;                                        // Timer period
+  PDB0_MOD    = (F_BUS / 24000) - 1;                                  // Timer period - 1
   PDB0_IDLY   = 0;                                                    // Interrupt delay
   PDB0_CH0C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-trigger for ADC0
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode
