@@ -174,7 +174,7 @@ void CIO::interrupt(uint8_t source)
     sample = ADC->ADC_CDR[ADC_CDR_Chan];
     m_rxBuffer.put(sample, control);
 
-#if defined(RSSI_CHER_Chan) && defined(SEND_RSSI_DATA)
+#if defined(RSSI_CDR_Chan) && defined(SEND_RSSI_DATA)
     m_rssiBuffer.put(ADC->ADC_CDR[RSSI_CDR_Chan]);
 #else
     m_rssiBuffer.put(0U);
