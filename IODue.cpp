@@ -51,6 +51,8 @@
 #define ADC_CDR_Chan           13
 #define DACC_MR_USER_SEL_Chan  DACC_MR_USER_SEL_CHANNEL1 // DAC on Due DAC1
 #define DACC_CHER_Chan         DACC_CHER_CH1
+#define RSSI_CHER_Chan         (1<<1)                 // ADC on Due pin A6  - Due AD1 - (1 << 1)
+#define RSSI_CDR_Chan          1
 #elif defined(ARDUINO_DUE_NTH)
 #define PIN_COS                A7
 #define PIN_PTT                A8
@@ -107,7 +109,7 @@ void CIO::startInt()
   ADC->ADC_IER  = ADC_CHER_Chan;              // Enable End-Of-Conv interrupt
   ADC->ADC_CHDR = 0xFFFF;                     // Disable all channels
   ADC->ADC_CHER = ADC_CHER_Chan;              // Enable rx input channel
-#if defined(RSSI_CHER_Chan)
+#if defined(SEND_RSSI_DATA)
   ADC->ADC_CHER |= RSSI_CHER_Chan;            // and RSSI input
 #endif
   ADC->ADC_CGR  = 0x15555555;                 // All gains set to x1
@@ -174,7 +176,7 @@ void CIO::interrupt(uint8_t source)
     sample = ADC->ADC_CDR[ADC_CDR_Chan];
     m_rxBuffer.put(sample, control);
 
-#if defined(RSSI_CDR_Chan) && defined(SEND_RSSI_DATA)
+#if defined(SEND_RSSI_DATA)
     m_rssiBuffer.put(ADC->ADC_CDR[RSSI_CDR_Chan]);
 #else
     m_rssiBuffer.put(0U);
