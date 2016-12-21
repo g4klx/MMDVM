@@ -84,7 +84,7 @@ void CIO::startInt()
   ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC0_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-  ADC0_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
+  ADC0_SC2   = ADC_SC2_REFSEL(0) | ADC_SC2_ADTRG;                     // Voltage ref external, hardware trigger
   ADC0_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
   ADC0_SC3  |= ADC_SC3_CAL;
@@ -105,7 +105,7 @@ void CIO::startInt()
   ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-  ADC1_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
+  ADC1_SC2   = ADC_SC2_REFSEL(0);                                     // Voltage ref external, software trigger
   ADC1_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
   ADC1_SC3  |= ADC_SC3_CAL;
