@@ -77,7 +77,7 @@ void CIO::startInt()
 {
   // Initialise the DAC
   SIM_SCGC2 |= SIM_SCGC2_DAC0;
-  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;                          // 1.2V VDDA is DACREF_2
+  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;                          // 3.3V VDDA is DACREF_2
 
   // Initialise ADC0
   SIM_SCGC6 |= SIM_SCGC6_ADC0;
