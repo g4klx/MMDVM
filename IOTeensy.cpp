@@ -123,7 +123,6 @@ void CIO::startInt()
 #if defined(EXTERNAL_OSC)
   // Set ADC0 to trigger from the LPTMR at 48 kHz
   SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |                              // Enable ADC0 alternate trigger
-                SIM_SOPT7_ADC0PRETRGSEL |                             // Enable ADC0 pre-trigger
                 SIM_SOPT7_ADC0TRGSEL(14);                             // Trigger ADC0 by LPTMR0
 
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
