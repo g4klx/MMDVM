@@ -34,7 +34,7 @@
 #define PIN_DMR                10
 #define PIN_YSF                11
 #define PIN_P25                12
-#define PIN_ADC                5        // A0, Pin 14
+#define PIN_ADC                5        // A0,  Pin 14
 #define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
 
 #define PDB_CHnC1_TOS 0x0100
@@ -117,7 +117,6 @@ void CIO::startInt()
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
 
-  NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
 #if defined(EXTERNAL_OSC)
@@ -162,25 +161,30 @@ void CIO::interrupt(uint8_t source)
     if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
       sample = ADC0_RA;
       m_rxBuffer.put(sample, control);
-
-#if defined(SEND_RSSI_DATA)
-      ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;
-#else
-      m_rssiBuffer.put(0U);
-#endif
     }
-
-    m_watchdog++;
-  }
-
+    
 #if defined(SEND_RSSI_DATA)
-  if (source == 1U) {  // ADC1
+ 
     if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
       uint16_t rssi = ADC1_RA;
       m_rssiBuffer.put(rssi);
     }
-  }
+    else {
+      m_rssiBuffer.put(0U);
+    }
+    ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;             //start the next RSSI conversion
+
+#else
+      m_rssiBuffer.put(0U);
 #endif
+  
+
+    m_watchdog++;
+  }
+
+
+
+
 }
 
 bool CIO::getCOSInt()
