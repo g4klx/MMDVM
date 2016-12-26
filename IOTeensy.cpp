@@ -77,14 +77,14 @@ void CIO::startInt()
 {
   // Initialise the DAC
   SIM_SCGC2 |= SIM_SCGC2_DAC0;
-  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;                          // 1.2V VDDA is DACREF_2
+  DAC0_C0    = DAC_C0_DACEN | DAC_C0_DACRFS;                          // 3.3V VDDA is DACREF_2
 
   // Initialise ADC0
   SIM_SCGC6 |= SIM_SCGC6_ADC0;
   ADC0_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC0_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-  ADC0_SC2   = ADC_SC2_REFSEL(1) | ADC_SC2_ADTRG;                     // Voltage ref internal, hardware trigger
+  ADC0_SC2   = ADC_SC2_REFSEL(0) | ADC_SC2_ADTRG;                     // Voltage ref external, hardware trigger
   ADC0_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
   ADC0_SC3  |= ADC_SC3_CAL;
@@ -105,7 +105,7 @@ void CIO::startInt()
   ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
                ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
   ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-  ADC1_SC2   = ADC_SC2_REFSEL(1);                                     // Voltage ref internal, software trigger
+  ADC1_SC2   = ADC_SC2_REFSEL(0);                                     // Voltage ref external, software trigger
   ADC1_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
 
   ADC1_SC3  |= ADC_SC3_CAL;
@@ -117,13 +117,11 @@ void CIO::startInt()
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
 
-  NVIC_ENABLE_IRQ(IRQ_ADC1);
 #endif
 
 #if defined(EXTERNAL_OSC)
   // Set ADC0 to trigger from the LPTMR at 24 kHz
   SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |                              // Enable ADC0 alternate trigger
-                SIM_SOPT7_ADC0PRETRGSEL |                             // Enable ADC0 pre-trigger
                 SIM_SOPT7_ADC0TRGSEL(14);                             // Trigger ADC0 by LPTMR0
 
   CORE_PIN13_CONFIG = PORT_PCR_MUX(3);
@@ -163,25 +161,30 @@ void CIO::interrupt(uint8_t source)
     if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
       sample = ADC0_RA;
       m_rxBuffer.put(sample, control);
-
-#if defined(SEND_RSSI_DATA)
-      ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;
-#else
-      m_rssiBuffer.put(0U);
-#endif
     }
-
-    m_watchdog++;
-  }
-
+    
 #if defined(SEND_RSSI_DATA)
-  if (source == 1U) {  // ADC1
+ 
     if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
       uint16_t rssi = ADC1_RA;
       m_rssiBuffer.put(rssi);
     }
-  }
+    else {
+      m_rssiBuffer.put(0U);
+    }
+    ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;             //start the next RSSI conversion
+
+#else
+      m_rssiBuffer.put(0U);
 #endif
+  
+
+    m_watchdog++;
+  }
+
+
+
+
 }
 
 bool CIO::getCOSInt()
