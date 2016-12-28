@@ -245,6 +245,8 @@ void CIO::process()
       ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, blockSize);
 
       calDStarRX.samples(GMSKVals, blockSize);
+    } else if (m_modemState == STATE_RSSICAL) {
+      calRSSI.samples(rssi, blockSize);
     }
   }
 }
