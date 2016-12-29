@@ -33,6 +33,7 @@ const uint8_t MMDVM_SET_MODE     = 0x03U;
 const uint8_t MMDVM_SET_FREQ     = 0x04U;
 
 const uint8_t MMDVM_CAL_DATA     = 0x08U;
+const uint8_t MMDVM_RSSI_DATA    = 0x09U;
 
 const uint8_t MMDVM_SEND_CWID    = 0x0AU;
 
@@ -68,9 +69,9 @@ const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
 #if defined(EXTERNAL_OSC)
-const uint8_t HARDWARE[]         = "MMDVM 20161124 TCXO (D-Star/DMR/System Fusion/P25/CW Id)";
+const uint8_t HARDWARE[]         = "MMDVM 20161124 TCXO (D-Star/DMR/System Fusion/P25/RSSI/CW Id)";
 #else
-const uint8_t HARDWARE[]         = "MMDVM 20161124 (D-Star/DMR/System Fusion/P25/CW Id)";
+const uint8_t HARDWARE[]         = "MMDVM 20161124 (D-Star/DMR/System Fusion/P25/RSSI/CW Id)";
 #endif
 
 const uint8_t PROTOCOL_VERSION   = 1U;
@@ -225,7 +226,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   MMDVM_STATE modemState = MMDVM_STATE(data[3U]);
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL)
     return 4U;
   if (modemState == STATE_DSTAR && !dstarEnable)
     return 4U;
@@ -298,7 +299,7 @@ uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
   if (modemState == m_modemState)
     return 0U;
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL)
     return 4U;
   if (modemState == STATE_DSTAR && !m_dstarEnable)
     return 4U;
@@ -363,6 +364,16 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       break;
     case STATE_DMRCAL:
       DEBUG1("Mode set to DMR Calibrate");
+      dmrIdleRX.reset();
+      dmrDMORX.reset();
+      dmrRX.reset();
+      dstarRX.reset();
+      ysfRX.reset();
+      p25RX.reset();
+      cwIdTX.reset();
+      break;
+    case STATE_RSSICAL:
+      DEBUG1("Mode set to RSSI Calibrate");
       dmrIdleRX.reset();
       dmrDMORX.reset();
       dmrRX.reset();
@@ -882,6 +893,26 @@ void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
   reply[2U] = MMDVM_CAL_DATA;
+
+  uint8_t count = 3U;
+  for (uint8_t i = 0U; i < length; i++, count++)
+    reply[count] = data[i];
+
+  reply[1U] = count;
+
+  writeInt(1U, reply, count);
+}
+
+void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
+{
+  if (m_modemState != STATE_RSSICAL)
+    return;
+
+  uint8_t reply[30U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_RSSI_DATA;
 
   uint8_t count = 3U;
   for (uint8_t i = 0U; i < length; i++, count++)

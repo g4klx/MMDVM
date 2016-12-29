@@ -47,6 +47,7 @@ public:
   void writeP25Lost();
 
   void writeCalData(const uint8_t* data, uint8_t length);
+  void writeRSSIData(const uint8_t* data, uint8_t length);
 
   void writeDebug(const char* text);
   void writeDebug(const char* text, int16_t n1);

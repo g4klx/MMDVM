@@ -55,6 +55,7 @@ CP25TX     p25TX;
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
 CCalDMR     calDMR;
+CCalRSSI    calRSSI;
 
 CCWIdTX cwIdTX;
 
