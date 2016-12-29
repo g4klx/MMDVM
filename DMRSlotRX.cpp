@@ -66,7 +66,7 @@ m_state(DMRRXS_NONE),
 m_n(0U),
 m_type(0U),
 m_rssiCount(0U),
-m_rssi(0U)
+m_rssi()
 {
 }
 
@@ -96,6 +96,8 @@ void CDMRSlotRX::reset()
 
 bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
 {
+  uint16_t rssi_avg;
+    
   m_delayPtr++;
   if (m_delayPtr < m_delay)
     return m_state != DMRRXS_NONE;
@@ -105,7 +107,8 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     return m_state != DMRRXS_NONE;
 
   m_buffer[m_dataPtr] = sample;
-
+  m_rssi[m_dataPtr] = rssi;
+  
   m_bitBuffer[m_bitPtr] <<= 1;
   if (sample < 0)
     m_bitBuffer[m_bitPtr] |= 0x01U;
@@ -114,9 +117,6 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     if (m_dataPtr >= SCAN_START && m_dataPtr <= SCAN_END)
       correlateSync(true);
   } else {
-    // Grab the RSSI data during the frame
-    if (m_state == DMRRXS_VOICE && m_dataPtr == m_syncPtr)
-      m_rssi = rssi;
 
     uint16_t min = m_syncPtr - 1U;
     uint16_t max = m_syncPtr + 1U;
@@ -134,7 +134,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
 
     uint16_t ptr = m_endPtr - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
     samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
-
+    
     if (m_control == CONTROL_DATA) {
       // Data sync
       uint8_t colorCode;
@@ -198,8 +198,10 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
 #if defined(SEND_RSSI_DATA)
       // Send RSSI data approximately every second
       if (m_rssiCount == 2U) {
-        frame[34U] = (m_rssi >> 8) & 0xFFU;
-        frame[35U] = (m_rssi >> 0) & 0xFFU;
+        // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
+        rssi_avg = avgRSSI(m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U, DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
+        frame[34U] = (rssi_avg >> 8) & 0xFFU;
+        frame[35U] = (rssi_avg >> 0) & 0xFFU;
         serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
       } else {
         serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
@@ -234,8 +236,10 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
 #if defined(SEND_RSSI_DATA)
         // Send RSSI data approximately every second
         if (m_rssiCount == 2U) {
-          frame[34U] = (m_rssi >> 8) & 0xFFU;
-          frame[35U] = (m_rssi >> 0) & 0xFFU;
+          // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
+          rssi_avg = avgRSSI(m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U, DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
+          frame[34U] = (rssi_avg >> 8) & 0xFFU;
+          frame[35U] = (rssi_avg >> 0) & 0xFFU;
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
         } else {
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
@@ -362,6 +366,21 @@ void CDMRSlotRX::correlateSync(bool first)
       }
     }
   }
+}
+
+uint16_t CDMRSlotRX::avgRSSI(uint16_t start, uint16_t count)
+{
+  float rssi_tmp = 0;
+  
+  for (uint16_t i = 0U; i < count; i++) {
+    rssi_tmp += (float) m_rssi[start];
+
+    start++;
+    if (start >= 900U)
+      start -= 900U;
+  }
+
+  return (uint16_t) (rssi_tmp / count);
 }
 
 void CDMRSlotRX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
