@@ -376,8 +376,8 @@ uint16_t CDMRSlotRX::avgRSSI(uint16_t start, uint16_t count)
     rssi_tmp += (float) m_rssi[start];
 
     start++;
-    if (start >= DMO_BUFFER_LENGTH_SAMPLES)
-      start -= DMO_BUFFER_LENGTH_SAMPLES;
+    if (start >= 900U)
+      start -= 900U;
   }
 
   return (uint16_t) (rssi_tmp / count);
