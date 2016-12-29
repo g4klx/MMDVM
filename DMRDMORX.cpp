@@ -133,7 +133,8 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
     samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
 
 #if defined(SEND_RSSI_DATA)
-    rssi_avg = avgRSSI(m_startPtr+120, 420);
+    // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
+    rssi_avg = avgRSSI(m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U, DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
 #endif
 
     if (m_control == CONTROL_DATA) {
