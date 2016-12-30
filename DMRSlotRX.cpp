@@ -235,7 +235,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
         // Send RSSI data approximately every second
         if (m_rssiCount == 2U) {
           // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
-          rssi_avg = avgRSSI(m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U, DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
+          uint16_t rssi_avg = avgRSSI(m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U, DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
           frame[34U] = (rssi_avg >> 8) & 0xFFU;
           frame[35U] = (rssi_avg >> 0) & 0xFFU;
           serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
@@ -368,17 +368,17 @@ void CDMRSlotRX::correlateSync(bool first)
 
 uint16_t CDMRSlotRX::avgRSSI(uint16_t start, uint16_t count)
 {
-  float rssi_tmp = 0;
-  
+  float rssi_tmp = 0.0F;
+
   for (uint16_t i = 0U; i < count; i++) {
-    rssi_tmp += (float) m_rssi[start];
+    rssi_tmp += float(m_rssi[start]);
 
     start++;
     if (start >= 900U)
       start -= 900U;
   }
 
-  return (uint16_t) (rssi_tmp / count);
+  return uint16_t(rssi_tmp / count);
 }
 
 void CDMRSlotRX::samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
