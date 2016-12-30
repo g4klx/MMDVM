@@ -24,8 +24,8 @@
 CCalRSSI::CCalRSSI() :
 m_count(0U),
 m_accum(0U),
-m_min(0xFFFFFFU),
-m_max(0x000000U)
+m_min(0xFFFFU),
+m_max(0x0000U)
 {
 }
 
@@ -57,8 +57,8 @@ void CCalRSSI::samples(const uint16_t* rssi, uint8_t length)
 
       m_count = 0U;
       m_accum = 0U;
-      m_min   = 0xFFFFFFU;
-      m_max   = 0x000000U;
+      m_min   = 0xFFFFU;
+      m_max   = 0x0000U;
     }
   }
 }

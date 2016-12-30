@@ -88,8 +88,6 @@ void CDMRDMORX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t leng
 
 bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
 {
-  uint16_t rssi_avg;
-  
   m_buffer[m_dataPtr] = sample;
   m_rssi[m_dataPtr] = rssi;
 
@@ -194,7 +192,7 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
       // Send RSSI data approximately every second
       if (m_rssiCount == 2U) {
         // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
-        rssi_avg = avgRSSI(m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U, DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
+        uint16_t rssi_avg = avgRSSI(m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U, DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
         frame[34U] = (rssi_avg >> 8) & 0xFFU;
         frame[35U] = (rssi_avg >> 0) & 0xFFU;
         serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 3U);
