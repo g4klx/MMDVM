@@ -239,6 +239,7 @@
     <File name="DMRDMOTX.cpp" path="DMRDMOTX.cpp" type="1"/>
     <File name="DMRRX.cpp" path="DMRRX.cpp" type="1"/>
     <File name="YSFRX.cpp" path="YSFRX.cpp" type="1"/>
+    <File name="CalRSSI.cpp" path="CalRSSI.cpp" type="1"/>
     <File name="STM32F4XX_Lib/Device/stm32f4xx.h" path="STM32F4XX_Lib/Device/stm32f4xx.h" type="1"/>
     <File name="SampleRB.cpp" path="SampleRB.cpp" type="1"/>
     <File name="CalDStarTX.h" path="CalDStarTX.h" type="1"/>
@@ -261,6 +262,7 @@
     <File name="SampleRB.h" path="SampleRB.h" type="1"/>
     <File name="YSFTX.h" path="YSFTX.h" type="1"/>
     <File name="DMRRX.h" path="DMRRX.h" type="1"/>
+    <File name="CalRSSI.h" path="CalRSSI.h" type="1"/>
     <File name="IOTeensy.cpp" path="IOTeensy.cpp" type="1"/>
     <File name="MMDVM.cpp" path="MMDVM.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cmSimd.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmSimd.h" type="1"/>
