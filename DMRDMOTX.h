@@ -41,7 +41,7 @@ private:
   CSerialRB            m_fifo;
   arm_fir_instance_q15 m_modFilter;
   q15_t                m_modState[90U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  uint8_t              m_poBuffer[80U];
+  uint8_t              m_poBuffer[1200U];
   uint16_t             m_poLen;
   uint16_t             m_poPtr;
   uint16_t             m_txDelay;
