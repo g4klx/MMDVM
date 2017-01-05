@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ void CP25RX::reset()
   m_threshold = 0;
 }
 
-void CP25RX::samples(const q15_t* samples, uint8_t length)
+void CP25RX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
     bool bit = samples[i] < 0;
@@ -95,7 +95,7 @@ void CP25RX::samples(const q15_t* samples, uint8_t length)
       if (m_state == P25RXS_NONE)
         processNone(samples[i]);
       else
-        processData(samples[i]);
+        processData(samples[i], rssi[i]);
     }
   }
 }
@@ -173,7 +173,7 @@ void CP25RX::processNone(q15_t sample)
     m_symbolPtr = 0U;
 }
 
-void CP25RX::processData(q15_t sample)
+void CP25RX::processData(q15_t sample, uint16_t rssi)
 {
   sample -= m_centre;
 
@@ -251,7 +251,7 @@ void CP25RX::processData(q15_t sample)
     } else {
       m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
-      serial.writeP25Ldu(m_outBuffer, P25_LDU_FRAME_LENGTH_BYTES + 1U);
+      writeRSSILdu(m_outBuffer, rssi);
 
       // Start the next frame
       ::memset(m_outBuffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
@@ -260,3 +260,14 @@ void CP25RX::processData(q15_t sample)
   }
 }
 
+void CP25RX::writeRSSILdu(uint8_t* ldu, uint16_t rssi)
+{
+#if defined(SEND_RSSI_DATA)
+  ldu[216U] = (rssi >> 8) & 0xFFU;
+  ldu[217U] = (rssi >> 0) & 0xFFU;
+
+  serial.writeP25Ldu(ldu, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+#else
+  serial.writeP25Ldu(ldu, P25_LDU_FRAME_LENGTH_BYTES + 1U);
+#endif
+}

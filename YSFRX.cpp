@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ void CYSFRX::reset()
   m_threshold = 0;
 }
 
-void CYSFRX::samples(const q15_t* samples, uint8_t length)
+void CYSFRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
     bool bit = samples[i] < 0;
@@ -95,7 +95,7 @@ void CYSFRX::samples(const q15_t* samples, uint8_t length)
       if (m_state == YSFRXS_NONE)
         processNone(samples[i]);
       else
-        processData(samples[i]);
+        processData(samples[i], rssi[i]);
     }
   }
 }
@@ -173,7 +173,7 @@ void CYSFRX::processNone(q15_t sample)
     m_symbolPtr = 0U;
 }
 
-void CYSFRX::processData(q15_t sample)
+void CYSFRX::processData(q15_t sample, uint16_t rssi)
 {
   sample -= m_centre;
 
@@ -233,7 +233,7 @@ void CYSFRX::processData(q15_t sample)
     } else {
       m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
-      serial.writeYSFData(m_outBuffer, YSF_FRAME_LENGTH_BYTES + 1U);
+      writeRSSIData(m_outBuffer, rssi);
 
       // Start the next frame
       ::memset(m_outBuffer, 0x00U, YSF_FRAME_LENGTH_BYTES + 3U);
@@ -242,3 +242,14 @@ void CYSFRX::processData(q15_t sample)
   }
 }
 
+void CYSFRX::writeRSSIData(uint8_t* data, uint16_t rssi)
+{
+#if defined(SEND_RSSI_DATA)
+  data[120U] = (rssi >> 8) & 0xFFU;
+  data[121U] = (rssi >> 0) & 0xFFU;
+
+  serial.writeYSFData(data, YSF_FRAME_LENGTH_BYTES + 3U);
+#else
+  serial.writeYSFData(data, YSF_FRAME_LENGTH_BYTES + 1U);
+#endif
+}

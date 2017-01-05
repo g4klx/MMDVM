@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -77,7 +77,7 @@ const uint16_t DC_OFFSET = 2048U;
 extern "C" {
   void ADC_Handler()
   {
-    io.interrupt(0U);
+    io.interrupt();
   }
 }
 
@@ -101,7 +101,7 @@ void CIO::initInt()
 void CIO::startInt()
 {
   if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)        // Ensure there was an End-of-Conversion and we read the ISR reg
-    io.interrupt(0U);
+    io.interrupt();
 
   // Set up the ADC
   NVIC_EnableIRQ(ADC_IRQn);                   // Enable ADC interrupt vector
@@ -164,7 +164,7 @@ void CIO::startInt()
   digitalWrite(PIN_LED,    HIGH);
 }
 
-void CIO::interrupt(uint8_t source)
+void CIO::interrupt()
 {
   if ((ADC->ADC_ISR & ADC_ISR_EOC_Chan) == ADC_ISR_EOC_Chan) {    // Ensure there was an End-of-Conversion and we read the ISR reg
     uint8_t control = MARK_NONE;

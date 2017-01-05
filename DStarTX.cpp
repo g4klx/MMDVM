@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -457,7 +457,7 @@ void CDStarTX::writeByte(uint8_t c)
 
 void CDStarTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = 150U + uint16_t(delay) * 6U;        // 250ms + tx delay
+  m_txDelay = 300U + uint16_t(delay) * 6U;        // 250ms + tx delay
 }
 
 uint16_t CDStarTX::getSpace() const

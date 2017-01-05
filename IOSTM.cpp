@@ -1,6 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016 by Andy Uribe CA6JAU
+ *   Copyright (C) 2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -213,7 +214,7 @@ extern "C" {
   void TIM2_IRQHandler() {
      if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-	      io.interrupt(0U);
+	      io.interrupt();
      }
   }
 }
@@ -280,7 +281,7 @@ void CIO::initInt()
 void CIO::startInt()
 {
   if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) != RESET))
-    io.interrupt(0U);
+    io.interrupt();
   
   // Init the ADC
   GPIO_InitTypeDef        GPIO_InitStruct;
@@ -421,7 +422,7 @@ void CIO::startInt()
   GPIO_SetBits(PORT_LED, PIN_LED);
 }
 
-void CIO::interrupt(uint8_t source)
+void CIO::interrupt()
 {
   uint8_t control  = MARK_NONE;
   uint16_t sample  = DC_OFFSET;

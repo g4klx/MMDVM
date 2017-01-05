@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class CYSFRX {
 public:
   CYSFRX();
 
-  void samples(const q15_t* samples, uint8_t length);
+  void samples(const q15_t* samples, const uint16_t* rssi, uint8_t length);
 
   void reset();
 
@@ -51,7 +51,8 @@ private:
   q15_t       m_threshold;
 
   void processNone(q15_t sample);
-  void processData(q15_t sample);
+  void processData(q15_t sample, uint16_t rssi);
+  void writeRSSIData(unsigned char* data, uint16_t rssi);
 };
 
 #endif

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class CDStarRX {
 public:
   CDStarRX();
 
-  void samples(const q15_t* samples, uint8_t length);
+  void samples(const q15_t* samples, const uint16_t* rssi, uint8_t length);
 
   void reset();
 
@@ -54,9 +54,11 @@ private:
   q15_t        m_samples[DSTAR_DATA_SYNC_LENGTH_BITS];
   uint8_t      m_samplesPtr;
 
-  void    processNone(bool bit);
-  void    processHeader(bool bit);
-  void    processData(bool bit);
+  void    processNone(bool bit, uint16_t rssi);
+  void    processHeader(bool bit, uint16_t rssi);
+  void    processData(bool bit, uint16_t rssi);
+  void    writeRSSIHeader(unsigned char* header, uint16_t rssi);
+  void    writeRSSIData(unsigned char* data, uint16_t rssi);
   bool    rxHeader(uint8_t* in, uint8_t* out);
   void    acs(int* metric);
   void    viterbiDecode(int* data);
