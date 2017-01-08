@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ private:
   arm_fir_instance_q15 m_lpFilter;
   q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
   q15_t                m_lpState[70U];     // NoTaps + BlockSize - 1, 44 + 20 - 1 plus some spare
-  uint8_t              m_poBuffer[920U];
+  uint8_t              m_poBuffer[1200U];
   uint16_t             m_poLen;
   uint16_t             m_poPtr;
   uint16_t             m_txDelay;

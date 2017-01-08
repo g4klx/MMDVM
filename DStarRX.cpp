@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -275,7 +275,7 @@ void CDStarRX::reset()
   m_samplesPtr    = 0U;
 }
 
-void CDStarRX::samples(const q15_t* samples, uint8_t length)
+void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
     m_samples[m_samplesPtr] = samples[i];
@@ -298,13 +298,13 @@ void CDStarRX::samples(const q15_t* samples, uint8_t length)
 
       switch (m_rxState) {
         case DSRXS_NONE:
-          processNone(bit);
+          processNone(bit, rssi[i]);
           break;
         case DSRXS_HEADER:
-          processHeader(bit);
+          processHeader(bit, rssi[i]);
           break;
         case DSRXS_DATA:
-          processData(bit);
+          processData(bit, rssi[i]);
           break;
         default:
           break;
@@ -317,7 +317,7 @@ void CDStarRX::samples(const q15_t* samples, uint8_t length)
   }
 }
 
-void CDStarRX::processNone(bool bit)
+void CDStarRX::processNone(bool bit, uint16_t rssi)
 {
   m_patternBuffer <<= 1;
   if (bit)
@@ -341,7 +341,8 @@ void CDStarRX::processNone(bool bit)
     io.setDecode(true);
     io.setADCDetection(true);
 
-    serial.writeDStarData(DSTAR_DATA_SYNC_BYTES, DSTAR_DATA_LENGTH_BYTES);
+    ::memcpy(m_rxBuffer, DSTAR_DATA_SYNC_BYTES, DSTAR_DATA_LENGTH_BYTES);
+    writeRSSIData(m_rxBuffer, rssi);
 
     ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
     m_rxBufferBits = 0U;
@@ -352,7 +353,7 @@ void CDStarRX::processNone(bool bit)
   }
 }
 
-void CDStarRX::processHeader(bool bit)
+void CDStarRX::processHeader(bool bit, uint16_t rssi)
 {
   m_patternBuffer <<= 1;
   if (bit)
@@ -370,7 +371,7 @@ void CDStarRX::processHeader(bool bit)
       io.setDecode(true);
       io.setADCDetection(true);
 
-      serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES);
+      writeRSSIHeader(header, rssi);
 
       ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
       m_rxBufferBits = 0U;
@@ -384,7 +385,7 @@ void CDStarRX::processHeader(bool bit)
   }
 }
 
-void CDStarRX::processData(bool bit)
+void CDStarRX::processData(bool bit, uint16_t rssi)
 {
   m_patternBuffer <<= 1;
   if (bit)
@@ -457,14 +458,39 @@ void CDStarRX::processData(bool bit)
       m_rxBuffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
       m_rxBuffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
       m_rxBuffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
-    }
-
-    serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
+	  writeRSSIData(m_rxBuffer, rssi);
+    } else {
+	  serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
+	}
 
     // Start the next frame
     ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
     m_rxBufferBits = 0U;
   }
+}
+
+void CDStarRX::writeRSSIHeader(unsigned char* header, uint16_t rssi)
+{
+#if defined(SEND_RSSI_DATA)
+  header[41U] = (rssi >> 8) & 0xFFU;
+  header[42U] = (rssi >> 0) & 0xFFU;
+
+  serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 2U);
+#else
+  serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 0U);
+#endif
+}
+
+void CDStarRX::writeRSSIData(unsigned char* data, uint16_t rssi)
+{
+#if defined(SEND_RSSI_DATA)
+  data[12U] = (rssi >> 8) & 0xFFU;
+  data[13U] = (rssi >> 0) & 0xFFU;
+
+  serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 2U);
+#else
+  serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 0U);
+#endif
 }
 
 bool CDStarRX::rxHeader(uint8_t* in, uint8_t* out)
@@ -682,4 +708,3 @@ bool CDStarRX::checksum(const uint8_t* header) const
 
   return crc8[0U] == header[DSTAR_HEADER_LENGTH_BYTES - 2U] && crc8[1U] == header[DSTAR_HEADER_LENGTH_BYTES - 1U];
 }
-
