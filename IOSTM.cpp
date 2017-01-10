@@ -1,6 +1,6 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
- *   Copyright (C) 2016 by Andy Uribe CA6JAU
+ *   Copyright (C) 2016, 2017 by Andy Uribe CA6JAU
  *   Copyright (C) 2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -77,11 +77,22 @@ EXT_CLK  PA15   input
 #define PORT_YSF			GPIOD
 #define RCC_Per_YSF			RCC_AHB1Periph_GPIOD
 
+#define PIN_EXT_CLK			GPIO_Pin_15
+#define SRC_EXT_CLK			GPIO_PinSource15
+#define PORT_EXT_CLK		GPIOA
+
 #define PIN_RX				GPIO_Pin_0
 #define PIN_RX_CH			ADC_Channel_0
+#define PORT_RX				GPIOA
+#define RCC_Per_RX			RCC_AHB1Periph_GPIOA
 
 #define PIN_RSSI			GPIO_Pin_1
 #define PIN_RSSI_CH			ADC_Channel_1
+#define PORT_RSSI			GPIOA
+#define RCC_Per_RSSI		RCC_AHB1Periph_GPIOA
+
+#define PIN_TX				GPIO_Pin_4
+#define PIN_TX_CH			DAC_Channel_1
 
 #elif defined(STM32F4_PI)
 /*
@@ -136,11 +147,22 @@ EXT_CLK  PA15   input
 #define PORT_YSF			GPIOA
 #define RCC_Per_YSF			RCC_AHB1Periph_GPIOA
 
+#define PIN_EXT_CLK			GPIO_Pin_15
+#define SRC_EXT_CLK			GPIO_PinSource15
+#define PORT_EXT_CLK		GPIOA
+
 #define PIN_RX				GPIO_Pin_0
 #define PIN_RX_CH			ADC_Channel_0
+#define PORT_RX				GPIOA
+#define RCC_Per_RX			RCC_AHB1Periph_GPIOA
 
 #define PIN_RSSI			GPIO_Pin_7
 #define PIN_RSSI_CH			ADC_Channel_7
+#define PORT_RSSI			GPIOA
+#define RCC_Per_RSSI		RCC_AHB1Periph_GPIOA
+
+#define PIN_TX				GPIO_Pin_4
+#define PIN_TX_CH			DAC_Channel_1
 
 #elif defined(STM32F4_NUCLEO)
 
@@ -197,11 +219,22 @@ EXT_CLK  PA15  input
 #define PORT_YSF			GPIOB
 #define RCC_Per_YSF			RCC_AHB1Periph_GPIOB
 
+#define PIN_EXT_CLK			GPIO_Pin_15
+#define SRC_EXT_CLK			GPIO_PinSource15
+#define PORT_EXT_CLK		GPIOA
+
 #define PIN_RX				GPIO_Pin_0
 #define PIN_RX_CH			ADC_Channel_0
+#define PORT_RX				GPIOA
+#define RCC_Per_RX			RCC_AHB1Periph_GPIOA
 
 #define PIN_RSSI			GPIO_Pin_1
 #define PIN_RSSI_CH			ADC_Channel_1
+#define PORT_RSSI			GPIOA
+#define RCC_Per_RSSI		RCC_AHB1Periph_GPIOA
+
+#define PIN_TX				GPIO_Pin_4
+#define PIN_TX_CH			DAC_Channel_1
 
 #elif defined(STM32F4_NUCLEO_ARDUINO_HEADER)
 /*
@@ -256,11 +289,22 @@ EXT_CLK  PB8   input
 #define PORT_YSF			GPIOB
 #define RCC_Per_YSF			RCC_AHB1Periph_GPIOB
 
+#define PIN_EXT_CLK			GPIO_Pin_8
+#define SRC_EXT_CLK			GPIO_PinSource8
+#define PORT_EXT_CLK		GPIOB
+
 #define PIN_RX				GPIO_Pin_0
 #define PIN_RX_CH			ADC_Channel_0
+#define PORT_RX				GPIOA
+#define RCC_Per_RX			RCC_AHB1Periph_GPIOA
 
-#define PIN_RSSI			GPIO_Pin_1
-#define PIN_RSSI_CH			ADC_Channel_1
+#define PIN_RSSI			GPIO_Pin_0
+#define PIN_RSSI_CH			ADC_Channel_10
+#define PORT_RSSI			GPIOC
+#define RCC_Per_RSSI		RCC_AHB1Periph_GPIOC
+
+#define PIN_TX				GPIO_Pin_5
+#define PIN_TX_CH			DAC_Channel_2
 
 #else
 #error "Either STM32F4_NUCLEO_MORPHO_HEADER or STM32F4_NUCLEO_ARDUINO_HEADER need to be defined in Config.h"
@@ -357,22 +401,25 @@ void CIO::startInt()
   ADC_CommonStructInit(&ADC_CommonInitStructure);
   ADC_StructInit(&ADC_InitStructure);
 
-  // Enable ADC clock
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-#if defined(SEND_RSSI_DATA)
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_ADC2, ENABLE);
-#else
+  // Enable ADC1 clock
+  RCC_AHB1PeriphClockCmd(RCC_Per_RX, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-#endif
-  
-#if defined(SEND_RSSI_DATA)
-  GPIO_InitStruct.GPIO_Pin  = PIN_RX | PIN_RSSI;
-#else
+  // Enable ADC1 GPIO
   GPIO_InitStruct.GPIO_Pin  = PIN_RX;
-#endif
   GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;
   GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;
-  GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_Init(PORT_RX, &GPIO_InitStruct);
+    
+#if defined(SEND_RSSI_DATA)
+  // Enable ADC2 clock
+  RCC_AHB1PeriphClockCmd(RCC_Per_RSSI, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
+  // Enable ADC2 GPIO
+  GPIO_InitStruct.GPIO_Pin  = PIN_RSSI;
+  GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;
+  GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;
+  GPIO_Init(PORT_RSSI, &GPIO_InitStruct);
+#endif
 
   // Init ADCs in dual mode (RSSI), div clock by two
 #if defined(SEND_RSSI_DATA)
@@ -424,8 +471,8 @@ void CIO::startInt()
   // DAC Periph clock enable
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
 
-  // GPIO CONFIGURATION of DAC Pins (PA4)
-  GPIO_InitStruct.GPIO_Pin   = GPIO_Pin_4;
+  // GPIO CONFIGURATION of DAC Pin
+  GPIO_InitStruct.GPIO_Pin   = PIN_TX;
   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_AN;
   GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -433,18 +480,18 @@ void CIO::startInt()
   DAC_InitStructure.DAC_Trigger = DAC_Trigger_None;
   DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
   DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Enable;
-  DAC_Init(DAC_Channel_1, &DAC_InitStructure);
-  DAC_Cmd(DAC_Channel_1, ENABLE);
+  DAC_Init(PIN_TX_CH, &DAC_InitStructure);
+  DAC_Cmd(PIN_TX_CH, ENABLE);
 
   // Init the timer
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
   
 #if defined(EXTERNAL_OSC)
-  // Configure GPIO PA15 as external TIM2 clock source
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource15, GPIO_AF_TIM2);
-  GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
+  // Configure a GPIO as external TIM2 clock source
+  GPIO_PinAFConfig(PORT_EXT_CLK, SRC_EXT_CLK, GPIO_AF_TIM2);
+  GPIO_InitStruct.GPIO_Pin = PIN_EXT_CLK;
   GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_Init(PORT_EXT_CLK, &GPIO_InitStruct);
 #endif
   
   TIM_TimeBaseInitTypeDef timerInitStructure;
@@ -464,7 +511,7 @@ void CIO::startInt()
   TIM_TimeBaseInit(TIM2, &timerInitStructure);
 
 #if defined(EXTERNAL_OSC)
-  // Enable external clock (PA15)
+  // Enable external clock
   TIM_ETRClockMode2Config(TIM2, TIM_ExtTRGPSC_OFF, TIM_ExtTRGPolarity_NonInverted, 0x00);
 #else
   // Enable internal clock
