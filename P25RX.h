@@ -49,10 +49,12 @@ private:
   uint16_t    m_lostCount;
   q15_t       m_centre;
   q15_t       m_threshold;
+  uint32_t    m_rssiAccum;
+  uint16_t    m_rssiCount;
 
   void processNone(q15_t sample);
-  void processData(q15_t sample, uint16_t rssi);
-  void writeRSSILdu(uint8_t* data, uint16_t rssi);
+  void processData(q15_t sample);
+  void writeRSSILdu(uint8_t* data);
 };
 
 #endif

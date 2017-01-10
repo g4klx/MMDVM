@@ -55,7 +55,9 @@ m_bufferPtr(0U),
 m_symbolPtr(0U),
 m_lostCount(0U),
 m_centre(0),
-m_threshold(0)
+m_threshold(0),
+m_rssiAccum(0U),
+m_rssiCount(0U)
 {
   m_buffer = m_outBuffer + 1U;
 }
@@ -71,11 +73,16 @@ void CYSFRX::reset()
   m_lostCount = 0U;
   m_centre    = 0;
   m_threshold = 0;
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
 }
 
 void CYSFRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
+    m_rssiAccum += rssi[i];
+    m_rssiCount++;
+
     bool bit = samples[i] < 0;
 
     if (bit != m_prev) {
@@ -95,7 +102,7 @@ void CYSFRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
       if (m_state == YSFRXS_NONE)
         processNone(samples[i]);
       else
-        processData(samples[i], rssi[i]);
+        processData(samples[i]);
     }
   }
 }
@@ -162,6 +169,8 @@ void CYSFRX::processNone(q15_t sample)
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = YSF_SYNC_LENGTH_BITS;
       m_state     = YSFRXS_DATA;
+      m_rssiAccum = 0U;
+      m_rssiCount = 0U;
 
       io.setDecode(true);
       io.setADCDetection(true);
@@ -173,7 +182,7 @@ void CYSFRX::processNone(q15_t sample)
     m_symbolPtr = 0U;
 }
 
-void CYSFRX::processData(q15_t sample, uint16_t rssi)
+void CYSFRX::processData(q15_t sample)
 {
   sample -= m_centre;
 
@@ -233,7 +242,7 @@ void CYSFRX::processData(q15_t sample, uint16_t rssi)
     } else {
       m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
-      writeRSSIData(m_outBuffer, rssi);
+      writeRSSIData(m_outBuffer);
 
       // Start the next frame
       ::memset(m_outBuffer, 0x00U, YSF_FRAME_LENGTH_BYTES + 3U);
@@ -242,14 +251,23 @@ void CYSFRX::processData(q15_t sample, uint16_t rssi)
   }
 }
 
-void CYSFRX::writeRSSIData(uint8_t* data, uint16_t rssi)
+void CYSFRX::writeRSSIData(uint8_t* data)
 {
 #if defined(SEND_RSSI_DATA)
-  data[120U] = (rssi >> 8) & 0xFFU;
-  data[121U] = (rssi >> 0) & 0xFFU;
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
 
-  serial.writeYSFData(data, YSF_FRAME_LENGTH_BYTES + 3U);
+    data[120U] = (rssi >> 8) & 0xFFU;
+    data[121U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeYSFData(data, YSF_FRAME_LENGTH_BYTES + 3U);
+  } else {
+    serial.writeYSFData(data, YSF_FRAME_LENGTH_BYTES + 1U);
+  }
 #else
   serial.writeYSFData(data, YSF_FRAME_LENGTH_BYTES + 1U);
 #endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
 }

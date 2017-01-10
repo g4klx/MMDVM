@@ -55,7 +55,9 @@ m_bufferPtr(0U),
 m_symbolPtr(0U),
 m_lostCount(0U),
 m_centre(0),
-m_threshold(0)
+m_threshold(0),
+m_rssiAccum(0U),
+m_rssiCount(0U)
 {
   m_buffer = m_outBuffer + 1U;
 }
@@ -71,11 +73,16 @@ void CP25RX::reset()
   m_lostCount = 0U;
   m_centre    = 0;
   m_threshold = 0;
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
 }
 
 void CP25RX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
+    m_rssiAccum += rssi[i];
+    m_rssiCount++;
+
     bool bit = samples[i] < 0;
 
     if (bit != m_prev) {
@@ -95,7 +102,7 @@ void CP25RX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
       if (m_state == P25RXS_NONE)
         processNone(samples[i]);
       else
-        processData(samples[i], rssi[i]);
+        processData(samples[i]);
     }
   }
 }
@@ -162,6 +169,8 @@ void CP25RX::processNone(q15_t sample)
       m_lostCount = MAX_SYNC_FRAMES;
       m_bufferPtr = P25_SYNC_LENGTH_BITS;
       m_state     = P25RXS_DATA;
+      m_rssiAccum = 0U;
+      m_rssiCount = 0U;
 
       io.setDecode(true);
       io.setADCDetection(true);
@@ -173,7 +182,7 @@ void CP25RX::processNone(q15_t sample)
     m_symbolPtr = 0U;
 }
 
-void CP25RX::processData(q15_t sample, uint16_t rssi)
+void CP25RX::processData(q15_t sample)
 {
   sample -= m_centre;
 
@@ -216,6 +225,9 @@ void CP25RX::processData(q15_t sample, uint16_t rssi)
       m_outBuffer[0U] = 0x01U;
       serial.writeP25Hdr(m_outBuffer, P25_HDR_FRAME_LENGTH_BYTES + 1U);
 
+      m_rssiAccum = 0U;
+      m_rssiCount = 0U;
+
       // Restore the sync that's now in the wrong place
       for (uint8_t i = 0U; i < P25_SYNC_LENGTH_BYTES; i++)
         m_buffer[i] = P25_SYNC_BYTES[i];
@@ -251,7 +263,7 @@ void CP25RX::processData(q15_t sample, uint16_t rssi)
     } else {
       m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
-      writeRSSILdu(m_outBuffer, rssi);
+      writeRSSILdu(m_outBuffer);
 
       // Start the next frame
       ::memset(m_outBuffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
@@ -260,14 +272,23 @@ void CP25RX::processData(q15_t sample, uint16_t rssi)
   }
 }
 
-void CP25RX::writeRSSILdu(uint8_t* ldu, uint16_t rssi)
+void CP25RX::writeRSSILdu(uint8_t* ldu)
 {
 #if defined(SEND_RSSI_DATA)
-  ldu[216U] = (rssi >> 8) & 0xFFU;
-  ldu[217U] = (rssi >> 0) & 0xFFU;
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
 
-  serial.writeP25Ldu(ldu, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+    ldu[216U] = (rssi >> 8) & 0xFFU;
+    ldu[217U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeP25Ldu(ldu, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+  } else {
+    serial.writeP25Ldu(ldu, P25_LDU_FRAME_LENGTH_BYTES + 1U);
+  }
 #else
   serial.writeP25Ldu(ldu, P25_LDU_FRAME_LENGTH_BYTES + 1U);
 #endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
 }
