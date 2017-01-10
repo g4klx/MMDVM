@@ -143,8 +143,10 @@ EXT_CLK  PA15   input
 #define PIN_RSSI_CH			ADC_Channel_7
 
 #elif defined(STM32F4_NUCLEO)
+
+#if defined(STM32F4_NUCLEO_MORPHO_HEADER)
 /*
-Pin definitions for STM32F4 Nucleo boards:
+Pin definitions for STM32F4 Nucleo boards (ST Morpho header):
 
 PTT      PB13  output
 COSLED   PB14  output
@@ -200,6 +202,69 @@ EXT_CLK  PA15  input
 
 #define PIN_RSSI			GPIO_Pin_1
 #define PIN_RSSI_CH			ADC_Channel_1
+
+#elif defined(STM32F4_NUCLEO_ARDUINO_HEADER)
+/*
+Pin definitions for STM32F4 Nucleo boards (Arduino header):
+
+PTT      PB10  output
+COSLED   PB3   output
+LED      PB5   output
+COS      PB4   input
+
+DSTAR	 PA1   output
+DMR		 PA4   output
+YSF		 PB0   output
+P25		 PC1   output
+
+RX		 PA0   analog input
+RSSI     PC0   analog input
+TX       PA5   analog output
+
+EXT_CLK  PB8   input
+*/
+
+#define PIN_COS				GPIO_Pin_4
+#define PORT_COS			GPIOB
+#define RCC_Per_COS			RCC_AHB1Periph_GPIOB
+
+#define PIN_PTT				GPIO_Pin_10
+#define PORT_PTT			GPIOB
+#define RCC_Per_PTT			RCC_AHB1Periph_GPIOB
+
+#define PIN_COSLED			GPIO_Pin_3
+#define PORT_COSLED			GPIOB
+#define RCC_Per_COSLED		RCC_AHB1Periph_GPIOB
+
+#define PIN_LED				GPIO_Pin_5
+#define PORT_LED			GPIOB
+#define RCC_Per_LED			RCC_AHB1Periph_GPIOB
+
+#define PIN_P25				GPIO_Pin_1
+#define PORT_P25			GPIOC
+#define RCC_Per_P25			RCC_AHB1Periph_GPIOC
+
+#define PIN_DSTAR			GPIO_Pin_1
+#define PORT_DSTAR			GPIOA
+#define RCC_Per_DSTAR		RCC_AHB1Periph_GPIOA
+
+#define PIN_DMR				GPIO_Pin_4
+#define PORT_DMR			GPIOA
+#define RCC_Per_DMR			RCC_AHB1Periph_GPIOA
+
+#define PIN_YSF				GPIO_Pin_0
+#define PORT_YSF			GPIOB
+#define RCC_Per_YSF			RCC_AHB1Periph_GPIOB
+
+#define PIN_RX				GPIO_Pin_0
+#define PIN_RX_CH			ADC_Channel_0
+
+#define PIN_RSSI			GPIO_Pin_1
+#define PIN_RSSI_CH			ADC_Channel_1
+
+#else
+#error "Either STM32F4_NUCLEO_MORPHO_HEADER or STM32F4_NUCLEO_ARDUINO_HEADER need to be defined in Config.h"
+#endif
 
 #else
 #error "Either STM32F4_DISCOVERY, STM32F4_PI or STM32F4_NUCLEO need to be defined"
