@@ -543,7 +543,11 @@ void CIO::interrupt()
   m_txBuffer.get(sample, control);
 
   // Send the value to the DAC
+#if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
+  DAC_SetChannel2Data(DAC_Align_12b_R, sample);
+#else
   DAC_SetChannel1Data(DAC_Align_12b_R, sample);
+#endif  
 
   // Read value from ADC1 and ADC2
   if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)) {

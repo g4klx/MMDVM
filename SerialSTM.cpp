@@ -1,6 +1,6 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
- *   Copyright (C) 2016 by Andy Uribe CA6JAU
+ *   Copyright (C) 2016, 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,7 +31,8 @@ USART2 - TXD PA2  - RXD PA3  (Nucleo board)
 USART3 - TXD PC10 - RXD PC11 (Discovery board)
 
 - Serial repeater:
-UART5  - TXD PC12 - RXD PD2
+USART1 - TXD PA9  - RXD PA10 (Nucleo with Arduino header)
+UART5  - TXD PC12 - RXD PD2 (Discovery, Pi and Nucleo with Morpho header)
 
 */
 
@@ -48,7 +49,7 @@ extern "C" {
 }
 
 /* ************* USART1 ***************** */
-#if defined(STM32F4_PI)
+#if defined(STM32F4_PI) || (defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER))
 
 volatile uint32_t intcount1;
 volatile uint8_t  TXSerialfifo1[TX_SERIAL_FIFO_SIZE];
@@ -612,6 +613,7 @@ void WriteUSART3(const uint8_t* data, uint16_t length)
 #endif
 
 /* ************* UART5 ***************** */
+#if !(defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER))
 
 volatile uint32_t intcount5;
 volatile uint8_t  TXSerialfifo5[TX_SERIAL_FIFO_SIZE];
@@ -800,6 +802,7 @@ void WriteUART5(const uint8_t* data, uint16_t length)
 	USART_ITConfig(UART5, USART_IT_TXE, ENABLE);
 }
 
+#endif
 /////////////////////////////////////////////////////////////////
 
 void CSerialPort::beginInt(uint8_t n, int speed)
@@ -815,7 +818,11 @@ void CSerialPort::beginInt(uint8_t n, int speed)
 		#endif
       break;
     case 3U:
-		  InitUART5(speed);
+    	#if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
+    		InitUSART1(speed);
+    	#else
+			InitUART5(speed);
+		#endif
       break;
     default:
       break;
@@ -834,7 +841,11 @@ int CSerialPort::availableInt(uint8_t n)
     		return AvailUSART2();
 		#endif
       case 3U: 
-        return AvailUART5();
+    	#if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
+        	return AvailUSART1();
+        #else
+        	return AvailUART5();
+        #endif
       default:
         return false;
   	}
@@ -852,7 +863,11 @@ uint8_t CSerialPort::readInt(uint8_t n)
 	  		return ReadUSART2();
 		#endif	  	
 	  case 3U:
-		  return ReadUART5();
+    	#if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
+    		return ReadUSART1();
+    	#else
+			return ReadUART5();
+		#endif
 	  default:
       return 0U;
 	}
@@ -877,9 +892,15 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
 		#endif		
 		break;
     case 3U:
-      WriteUART5(data, length);
-      if (flush)
-        TXSerialFlush5();
+    	#if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
+			WriteUSART1(data, length);
+		  	if (flush)
+				TXSerialFlush1();
+    	#else
+      		WriteUART5(data, length);
+      		if (flush)
+        		TXSerialFlush5();
+        #endif
        break;
     default:
        break;
