@@ -259,8 +259,8 @@ m_pathMemory1(),
 m_pathMemory2(),
 m_pathMemory3(),
 m_fecOutput(),
-m_samples(),
-m_samplesPtr(0U)
+m_rssiAccum(0U),
+m_rssiCount(0U)
 {
 }
 
@@ -272,13 +272,15 @@ void CDStarRX::reset()
   m_patternBuffer = 0x00U;
   m_rxBufferBits  = 0U;
   m_dataBits      = 0U;
-  m_samplesPtr    = 0U;
+  m_rssiAccum     = 0U;
+  m_rssiCount     = 0U;
 }
 
 void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
-    m_samples[m_samplesPtr] = samples[i];
+    m_rssiAccum += rssi[i];
+    m_rssiCount++;
 
     bool bit = samples[i] < THRESHOLD;
 
@@ -298,26 +300,22 @@ void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t lengt
 
       switch (m_rxState) {
         case DSRXS_NONE:
-          processNone(bit, rssi[i]);
+          processNone(bit);
           break;
         case DSRXS_HEADER:
-          processHeader(bit, rssi[i]);
+          processHeader(bit);
           break;
         case DSRXS_DATA:
-          processData(bit, rssi[i]);
+          processData(bit);
           break;
         default:
           break;
       }
     }
-
-    m_samplesPtr++;
-    if (m_samplesPtr >= DSTAR_DATA_SYNC_LENGTH_BITS)
-      m_samplesPtr = 0U;
   }
 }
 
-void CDStarRX::processNone(bool bit, uint16_t rssi)
+void CDStarRX::processNone(bool bit)
 {
   m_patternBuffer <<= 1;
   if (bit)
@@ -330,6 +328,9 @@ void CDStarRX::processNone(bool bit, uint16_t rssi)
     ::memset(m_rxBuffer, 0x00U, DSTAR_FEC_SECTION_LENGTH_BYTES);
     m_rxBufferBits = 0U;
 
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
+
     m_rxState = DSRXS_HEADER;
     return;
   }
@@ -341,8 +342,12 @@ void CDStarRX::processNone(bool bit, uint16_t rssi)
     io.setDecode(true);
     io.setADCDetection(true);
 
+    // Suppress RSSI on the dummy sync message
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
+
     ::memcpy(m_rxBuffer, DSTAR_DATA_SYNC_BYTES, DSTAR_DATA_LENGTH_BYTES);
-    writeRSSIData(m_rxBuffer, rssi);
+    writeRSSIData(m_rxBuffer);
 
     ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
     m_rxBufferBits = 0U;
@@ -353,7 +358,7 @@ void CDStarRX::processNone(bool bit, uint16_t rssi)
   }
 }
 
-void CDStarRX::processHeader(bool bit, uint16_t rssi)
+void CDStarRX::processHeader(bool bit)
 {
   m_patternBuffer <<= 1;
   if (bit)
@@ -371,7 +376,7 @@ void CDStarRX::processHeader(bool bit, uint16_t rssi)
       io.setDecode(true);
       io.setADCDetection(true);
 
-      writeRSSIHeader(header, rssi);
+      writeRSSIHeader(header);
 
       ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
       m_rxBufferBits = 0U;
@@ -385,7 +390,7 @@ void CDStarRX::processHeader(bool bit, uint16_t rssi)
   }
 }
 
-void CDStarRX::processData(bool bit, uint16_t rssi)
+void CDStarRX::processData(bool bit)
 {
   m_patternBuffer <<= 1;
   if (bit)
@@ -458,10 +463,10 @@ void CDStarRX::processData(bool bit, uint16_t rssi)
       m_rxBuffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
       m_rxBuffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
       m_rxBuffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
-	  writeRSSIData(m_rxBuffer, rssi);
+	    writeRSSIData(m_rxBuffer);
     } else {
-	  serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
-	}
+	    serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
+	  }
 
     // Start the next frame
     ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
@@ -469,28 +474,46 @@ void CDStarRX::processData(bool bit, uint16_t rssi)
   }
 }
 
-void CDStarRX::writeRSSIHeader(unsigned char* header, uint16_t rssi)
+void CDStarRX::writeRSSIHeader(unsigned char* header)
 {
 #if defined(SEND_RSSI_DATA)
-  header[41U] = (rssi >> 8) & 0xFFU;
-  header[42U] = (rssi >> 0) & 0xFFU;
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
 
-  serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 2U);
+    header[41U] = (rssi >> 8) & 0xFFU;
+    header[42U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 2U);
+  } else {
+    serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 0U);
+  }
 #else
   serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 0U);
 #endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
 }
 
-void CDStarRX::writeRSSIData(unsigned char* data, uint16_t rssi)
+void CDStarRX::writeRSSIData(unsigned char* data)
 {
 #if defined(SEND_RSSI_DATA)
-  data[12U] = (rssi >> 8) & 0xFFU;
-  data[13U] = (rssi >> 0) & 0xFFU;
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
 
-  serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 2U);
+    data[12U] = (rssi >> 8) & 0xFFU;
+    data[13U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 2U);
+  } else {
+    serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 0U);
+  }
 #else
   serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 0U);
 #endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
 }
 
 bool CDStarRX::rxHeader(uint8_t* in, uint8_t* out)

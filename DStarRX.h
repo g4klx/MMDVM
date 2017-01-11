@@ -51,14 +51,14 @@ private:
   unsigned int m_pathMemory2[42U];
   unsigned int m_pathMemory3[42U];
   uint8_t      m_fecOutput[42U];
-  q15_t        m_samples[DSTAR_DATA_SYNC_LENGTH_BITS];
-  uint8_t      m_samplesPtr;
+  uint32_t     m_rssiAccum;
+  uint16_t     m_rssiCount;
 
-  void    processNone(bool bit, uint16_t rssi);
-  void    processHeader(bool bit, uint16_t rssi);
-  void    processData(bool bit, uint16_t rssi);
-  void    writeRSSIHeader(unsigned char* header, uint16_t rssi);
-  void    writeRSSIData(unsigned char* data, uint16_t rssi);
+  void    processNone(bool bit);
+  void    processHeader(bool bit);
+  void    processData(bool bit);
+  void    writeRSSIHeader(unsigned char* header);
+  void    writeRSSIData(unsigned char* data);
   bool    rxHeader(uint8_t* in, uint8_t* out);
   void    acs(int* metric);
   void    viterbiDecode(int* data);
