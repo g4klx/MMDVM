@@ -50,6 +50,10 @@
 // For the SP8NTH board
 // #define ARDUINO_DUE_NTH
 
+// For ST Nucleo-64 STM32F446RE board
+// #define STM32F4_NUCLEO_MORPHO_HEADER
+// #define STM32F4_NUCLEO_ARDUINO_HEADER
+
 // To use wider C4FSK filters for DMR, System Fusion and P25 on transmit
 // #define WIDE_C4FSK_FILTERS_TX
 // To use wider C4FSK filters for DMR, System Fusion and P25 on receive
