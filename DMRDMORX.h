@@ -50,7 +50,11 @@ private:
   uint16_t    m_endPtr;
   q31_t       m_maxCorr;
   q15_t       m_centre[4U];
+  q15_t       m_centreVal;
+  q15_t       m_centreBest;
   q15_t       m_threshold[4U];
+  q15_t       m_thresholdVal;
+  q15_t       m_thresholdBest;
   uint8_t     m_averagePtr;
   uint8_t     m_control;
   uint8_t     m_syncCount;
