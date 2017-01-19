@@ -46,9 +46,11 @@ m_bitBuffer(),
 m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
-m_syncPtr(0U),
+m_syncPtr(NOENDPTR),
 m_startPtr(0U),
 m_endPtr(NOENDPTR),
+m_minSyncPtr(NOENDPTR),
+m_maxSyncPtr(NOENDPTR),
 m_maxCorr(0),
 m_centre(),
 m_centreVal(0),
@@ -69,7 +71,9 @@ m_rssi()
 
 void CDMRDMORX::reset()
 {
-  m_syncPtr       = 0U;
+  m_syncPtr       = NOENDPTR;
+  m_minSyncPtr    = NOENDPTR;
+  m_maxSyncPtr    = NOENDPTR;
   m_maxCorr       = 0;
   m_control       = CONTROL_NONE;
   m_syncCount     = 0U;
@@ -96,7 +100,7 @@ void CDMRDMORX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t leng
 bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
 {
   m_buffer[m_dataPtr] = sample;
-  m_rssi[m_dataPtr] = rssi;
+  m_rssi[m_dataPtr]   = rssi;
 
   m_bitBuffer[m_bitPtr] <<= 1;
   if (sample < 0)
@@ -105,19 +109,11 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
   if (m_state == DMORXS_NONE) {
     correlateSync(true);
   } else {
-    uint16_t min  = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
-    uint16_t max  = m_syncPtr + 1U;
-
-    if (min >= DMO_BUFFER_LENGTH_SAMPLES)
-      min -= DMO_BUFFER_LENGTH_SAMPLES;
-    if (max >= DMO_BUFFER_LENGTH_SAMPLES)
-      max -= DMO_BUFFER_LENGTH_SAMPLES;
-
-    if (min < max) {
-      if (m_dataPtr >= min && m_dataPtr <= max)
+    if (m_minSyncPtr < m_maxSyncPtr) {
+      if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
         correlateSync(false);
     } else {
-      if (m_dataPtr >= min || m_dataPtr <= max)
+      if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
         correlateSync(false);
     }
   }
@@ -125,7 +121,7 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
   if (m_dataPtr == m_endPtr) {
     if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE) {
       m_threshold[m_averagePtr] = m_thresholdBest;
-      m_centre[m_averagePtr] = m_centreBest;
+      m_centre[m_averagePtr]    = m_centreBest;
 
       m_averagePtr++;
       if (m_averagePtr >= 4U)
@@ -134,6 +130,14 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
       // Find the average centre and threshold values
       m_centreVal    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
       m_thresholdVal = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
+
+      m_minSyncPtr = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
+      if (m_minSyncPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+        m_minSyncPtr -= DMO_BUFFER_LENGTH_SAMPLES;
+
+      m_maxSyncPtr = m_syncPtr + 1U;
+      if (m_maxSyncPtr >= DMO_BUFFER_LENGTH_SAMPLES)
+        m_maxSyncPtr -= DMO_BUFFER_LENGTH_SAMPLES;
     }
 
     uint8_t frame[DMR_FRAME_LENGTH_BYTES + 3U];

@@ -23,8 +23,8 @@
 #include "YSFDefines.h"
 
 enum YSFRX_STATE {
-	YSFRXS_NONE,
-	YSFRXS_DATA
+  YSFRXS_NONE,
+  YSFRXS_DATA
 };
 
 class CYSFRX {
@@ -42,10 +42,9 @@ private:
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
   uint16_t    m_endPtr;
+  uint16_t    m_minSyncPtr;
+  uint16_t    m_maxSyncPtr;
   uint16_t    m_syncPtr;
-  uint16_t    m_syncStartPtr;
-  uint16_t    m_syncEndPtr;
-  bool        m_syncCheck;
   q31_t       m_maxCorr;
   uint16_t    m_lostCount;
   q15_t       m_centre[4U];
@@ -60,6 +59,7 @@ private:
 
   void    processNone(q15_t sample);
   void    processData(q15_t sample);
+  bool    correlateSync(bool none);
   void    samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void    writeRSSIData(uint8_t* data);
 };

@@ -125,7 +125,6 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     if (m_dataPtr >= SCAN_START && m_dataPtr <= SCAN_END)
       correlateSync(true);
   } else {
-
     uint16_t min = m_syncPtr - 1U;
     uint16_t max = m_syncPtr + 1U;
     if (m_dataPtr >= min && m_dataPtr <= max)
@@ -310,8 +309,8 @@ void CDMRSlotRX::correlateSync(bool first)
             m_centreBest    = m_centreVal    = m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
           } else {
-			m_thresholdBest = threshold;
-			m_centreBest    = centre;
+            m_thresholdBest = threshold;
+            m_centreBest    = centre;
           }
 
           m_maxCorr  = corr;
@@ -331,8 +330,8 @@ void CDMRSlotRX::correlateSync(bool first)
             m_centreBest    = m_centreVal    = m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
           } else {
-		    m_thresholdBest = threshold;
-			m_centreBest    = centre;
+            m_thresholdBest = threshold;
+            m_centreBest    = centre;
           }
 
           m_maxCorr  = corr;

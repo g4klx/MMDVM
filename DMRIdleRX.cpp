@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -150,7 +150,7 @@ void CDMRIdleRX::processSample(q15_t sample)
     }
 
     m_endPtr  = NOENDPTR;
-    m_maxCorr = 0U;
+    m_maxCorr = 0;
   }
 
   m_dataPtr++;

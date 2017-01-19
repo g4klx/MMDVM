@@ -48,6 +48,8 @@ private:
   uint16_t    m_syncPtr;
   uint16_t    m_startPtr;
   uint16_t    m_endPtr;
+  uint16_t    m_minSyncPtr;
+  uint16_t    m_maxSyncPtr;
   q31_t       m_maxCorr;
   q15_t       m_centre[4U];
   q15_t       m_centreVal;
