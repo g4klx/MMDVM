@@ -65,8 +65,8 @@ EXT_CLK  PA15   input
 #define PORT_P25          GPIOD
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOD
 
-#define PIN_DSTARcw       GPIO_Pin_12
-#define PORT_DSTARcw      GPIOD
+#define PIN_DSTAR         GPIO_Pin_12
+#define PORT_DSTAR        GPIOD
 #define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOD
 
 #define PIN_DMR           GPIO_Pin_13
@@ -316,7 +316,7 @@ EXT_CLK  PB8    input
 
 const uint16_t DC_OFFSET = 2048U;
 
-// Sampling frequency 
+// Sampling frequency
 #define SAMP_FREQ   24000
 
 extern "C" {
@@ -500,7 +500,7 @@ void CIO::startInt()
    // TIM2 output frequency
 #if defined(EXTERNAL_OSC)
    timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/(2*SAMP_FREQ)) - 1);
-#else 
+#else
    timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(4*SAMP_FREQ)) - 1);
 #endif
 
@@ -547,7 +547,7 @@ void CIO::interrupt()
    DAC_SetChannel2Data(DAC_Align_12b_R, sample);
 #else
    DAC_SetChannel1Data(DAC_Align_12b_R, sample);
-#endif  
+#endif
 
    // Read value from ADC1 and ADC2
    if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)) {
@@ -595,7 +595,7 @@ void CIO::setDStarInt(bool on)
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
 }
 
-void CIO::setDMRInt(bool on) 
+void CIO::setDMRInt(bool on)
 {
    GPIO_WriteBit(PORT_DMR, PIN_DMR, on ? Bit_SET : Bit_RESET);
 }
@@ -605,7 +605,7 @@ void CIO::setYSFInt(bool on)
    GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
 }
 
-void CIO::setP25Int(bool on) 
+void CIO::setP25Int(bool on)
 {
    GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
 }
