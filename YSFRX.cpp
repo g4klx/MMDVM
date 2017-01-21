@@ -119,8 +119,12 @@ void CYSFRX::processNone(q15_t sample)
   }
 
   if (m_dataPtr == m_endPtr) {
-    m_centreVal    = m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = m_centreBest;
-    m_thresholdVal = m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = m_thresholdBest;
+    for (uint8_t i = 0U; i < 8U; i++) {
+      m_centre[i]    = m_centreBest;
+      m_threshold[i] = m_thresholdBest;
+    }
+    m_centreVal    = m_centreBest;
+    m_thresholdVal = m_thresholdBest;
     m_averagePtr   = 0U;
 
     DEBUG4("YSFRX: sync found in None pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
@@ -172,14 +176,15 @@ void CYSFRX::processData(q15_t sample)
       m_centre[m_averagePtr]    = m_centreBest;
 
       m_averagePtr++;
-      if (m_averagePtr >= 4U)
+      if (m_averagePtr >= 8U)
         m_averagePtr = 0U;
 
       // Find the average centre and threshold values
-      m_centreVal    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
-      m_thresholdVal = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
+      m_centreVal    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 3;
+      m_thresholdVal = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 3;
 
-      DEBUG4("YSFRX: sync found in Data pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+      DEBUG4("YSFRX: sync found in Data (best) pos/centre/threshold", m_syncPtr, m_centreBest, m_thresholdBest);
+      DEBUG4("YSFRX: sync found in Data (val) pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
 
       m_minSyncPtr = m_syncPtr + YSF_FRAME_LENGTH_SAMPLES - 1U;
       if (m_minSyncPtr >= YSF_FRAME_LENGTH_SAMPLES)
@@ -267,7 +272,6 @@ bool CYSFRX::correlateSync(bool none)
         errs += countBits8(sync[i] ^ YSF_SYNC_BYTES[i]);
 
       if (errs <= MAX_SYNC_BYTES_ERRS) {
-        DEBUG4("YSFRX: prov sync found pos/centre/threshold", m_dataPtr, centre, threshold);
         m_maxCorr       = corr;
         m_thresholdBest = threshold;
         m_centreBest    = centre;
@@ -289,10 +293,6 @@ bool CYSFRX::correlateSync(bool none)
 void CYSFRX::samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
 {
   for (uint16_t i = 0U; i < count; i++) {
-    if (i == (YSF_SYNC_LENGTH_SYMBOLS - 1U)) {
-      DEBUG5("YSFRX: i/sync/samples/count", i, m_syncPtr, start, count);
-    }
-
     q15_t sample = m_buffer[start] - centre;
 
     if (sample < -threshold) {

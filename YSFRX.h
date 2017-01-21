@@ -47,10 +47,10 @@ private:
   uint16_t    m_syncPtr;
   q31_t       m_maxCorr;
   uint16_t    m_lostCount;
-  q15_t       m_centre[4U];
+  q15_t       m_centre[8U];
   q15_t       m_centreVal;
   q15_t       m_centreBest;
-  q15_t       m_threshold[4U];
+  q15_t       m_threshold[8U];
   q15_t       m_thresholdVal;
   q15_t       m_thresholdBest;
   uint8_t     m_averagePtr;
