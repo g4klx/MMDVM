@@ -119,7 +119,7 @@ void CYSFRX::processNone(q15_t sample)
   }
 
   if (m_dataPtr == m_endPtr) {
-    for (uint8_t i = 0U; i < 8U; i++) {
+    for (uint8_t i = 0U; i < 16U; i++) {
       m_centre[i]    = m_centreBest;
       m_threshold[i] = m_thresholdBest;
     }
@@ -176,12 +176,18 @@ void CYSFRX::processData(q15_t sample)
       m_centre[m_averagePtr]    = m_centreBest;
 
       m_averagePtr++;
-      if (m_averagePtr >= 8U)
+      if (m_averagePtr >= 16U)
         m_averagePtr = 0U;
 
       // Find the average centre and threshold values
-      m_centreVal    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 3;
-      m_thresholdVal = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 3;
+      m_centreVal    = 0;
+      m_thresholdVal = 0;
+      for (uint8_t i = 0U; i < 16U; i++) {
+        m_centreVal    += m_centre[i];
+        m_thresholdVal += m_threshold[i];
+      }
+      m_centreVal    >>= 4;
+      m_thresholdVal >>= 4;
 
       DEBUG4("YSFRX: sync found in Data (best) pos/centre/threshold", m_syncPtr, m_centreBest, m_thresholdBest);
       DEBUG4("YSFRX: sync found in Data (val) pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
