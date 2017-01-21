@@ -229,11 +229,11 @@ EXT_CLK  PA15   input
 #define PORT_MP25         GPIOC
 #define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
 
-#define PIN_MDSTAR        GPIO_Pin_14
+#define PIN_MDSTAR        GPIO_Pin_4
 #define PORT_MDSTAR       GPIOC
 #define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
 
-#define PIN_MDMR          GPIO_Pin_15
+#define PIN_MDMR          GPIO_Pin_5
 #define PORT_MDMR         GPIOC
 #define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
 
