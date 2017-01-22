@@ -180,8 +180,8 @@ DMR      PB4    output
 YSF      PB5    output
 P25      PB3    output
 
-MDSTAR   PC14   output
-MDMR     PC15   outout
+MDSTAR   PC4   output
+MDMR     PC5   outout
 MYSF     PC2    output
 MP25     PC3    output
 
