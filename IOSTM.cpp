@@ -180,6 +180,11 @@ DMR      PB4    output
 YSF      PB5    output
 P25      PB3    output
 
+MDSTAR   PC4   output
+MDMR     PC5   outout
+MYSF     PC2    output
+MP25     PC3    output
+
 RX       PA0    analog input
 RSSI     PA1    analog input
 TX       PA4    analog output
@@ -218,6 +223,24 @@ EXT_CLK  PA15   input
 #define PIN_YSF           GPIO_Pin_5
 #define PORT_YSF          GPIOB
 #define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
+
+#if defined(STM32F4_NUCLEO_MODE_PINS)
+#define PIN_MP25          GPIO_Pin_3
+#define PORT_MP25         GPIOC
+#define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
+
+#define PIN_MDSTAR        GPIO_Pin_4
+#define PORT_MDSTAR       GPIOC
+#define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
+
+#define PIN_MDMR          GPIO_Pin_5
+#define PORT_MDMR         GPIOC
+#define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
+
+#define PIN_MYSF          GPIO_Pin_2
+#define PORT_MYSF         GPIOC
+#define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
+#endif
 
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
@@ -384,6 +407,32 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Pin   = PIN_P25;
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_P25, &GPIO_InitStruct);
+#endif
+
+#if defined(STM32F4_NUCLEO_MODE_PINS)
+   // DSTAR mode pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_MDSTAR, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_MDSTAR;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_MDSTAR, &GPIO_InitStruct);
+
+   // DMR mode pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_MDMR, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_MDMR;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_MDMR, &GPIO_InitStruct);
+
+   // YSF mode pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_MYSF, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_MYSF;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_MYSF, &GPIO_InitStruct);
+
+   // P25 mode pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_MP25, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_MP25;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_MP25, &GPIO_InitStruct);
 #endif
 }
 
@@ -593,21 +642,33 @@ void CIO::setCOSInt(bool on)
 void CIO::setDStarInt(bool on)
 {
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS)
+   GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
+#endif
 }
 
 void CIO::setDMRInt(bool on)
 {
    GPIO_WriteBit(PORT_DMR, PIN_DMR, on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS)
+   GPIO_WriteBit(PORT_MDMR, PIN_MDMR, on ? Bit_SET : Bit_RESET);
+#endif
 }
 
 void CIO::setYSFInt(bool on)
 {
    GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS)
+   GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
+#endif
 }
 
 void CIO::setP25Int(bool on)
 {
    GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS)
+   GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
+#endif
 }
 
 #endif
