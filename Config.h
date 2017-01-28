@@ -54,6 +54,9 @@
 // #define STM32F4_NUCLEO_MORPHO_HEADER
 // #define STM32F4_NUCLEO_ARDUINO_HEADER
 
+// Use separate mode pins to switch external filters/bandwidth for example
+// #define STM32F4_NUCLEO_MODE_PINS
+
 // To use wider C4FSK filters for DMR, System Fusion and P25 on transmit
 // #define WIDE_C4FSK_FILTERS_TX
 // To use wider C4FSK filters for DMR, System Fusion and P25 on receive
