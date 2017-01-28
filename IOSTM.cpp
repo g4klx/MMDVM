@@ -409,7 +409,7 @@ void CIO::initInt()
    GPIO_Init(PORT_P25, &GPIO_InitStruct);
 #endif
 
-#if defined(STM32F4_NUCLEO_MODE_PINS)
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    // DSTAR mode pin
    RCC_AHB1PeriphClockCmd(RCC_Per_MDSTAR, ENABLE);
    GPIO_InitStruct.GPIO_Pin   = PIN_MDSTAR;
@@ -642,7 +642,7 @@ void CIO::setCOSInt(bool on)
 void CIO::setDStarInt(bool on)
 {
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS)
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
 #endif
 }
@@ -650,7 +650,7 @@ void CIO::setDStarInt(bool on)
 void CIO::setDMRInt(bool on)
 {
    GPIO_WriteBit(PORT_DMR, PIN_DMR, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS)
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MDMR, PIN_MDMR, on ? Bit_SET : Bit_RESET);
 #endif
 }
@@ -658,7 +658,7 @@ void CIO::setDMRInt(bool on)
 void CIO::setYSFInt(bool on)
 {
    GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS)
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
 #endif
 }
@@ -666,7 +666,7 @@ void CIO::setYSFInt(bool on)
 void CIO::setP25Int(bool on)
 {
    GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS)
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
 #endif
 }
