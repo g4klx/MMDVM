@@ -31,31 +31,37 @@ class CP25RX {
 public:
   CP25RX();
 
-  void samples(const q15_t* samples, const uint16_t* rssi, uint8_t length);
+  void samples(const q15_t* samples, uint16_t* rssi, uint8_t length);
 
   void reset();
 
 private:
-  uint32_t    m_pll;
-  bool        m_prev;
   P25RX_STATE m_state;
-  uint32_t    m_symbolBuffer;
-  uint64_t    m_bitBuffer;
-  q15_t       m_symbols[P25_SYNC_LENGTH_SYMBOLS];
-  uint8_t     m_outBuffer[P25_LDU_FRAME_LENGTH_BYTES + 3U];
-  uint8_t*    m_buffer;
-  uint16_t    m_bufferPtr;
-  uint16_t    m_symbolPtr;
+  uint32_t    m_bitBuffer[P25_RADIO_SYMBOL_LENGTH];
+  q15_t       m_buffer[P25_LDU_FRAME_LENGTH_SAMPLES];
+  uint16_t    m_bitPtr;
+  uint16_t    m_dataPtr;
+  uint16_t    m_endPtr;
+  uint16_t    m_minSyncPtr;
+  uint16_t    m_maxSyncPtr;
+  uint16_t    m_syncPtr;
+  q31_t       m_maxCorr;
   uint16_t    m_lostCount;
-  q15_t       m_centre;
-  q15_t       m_threshold;
+  q15_t       m_centre[16U];
+  q15_t       m_centreVal;
+  q15_t       m_centreBest;
+  q15_t       m_threshold[16U];
+  q15_t       m_thresholdVal;
+  q15_t       m_thresholdBest;
+  uint8_t     m_averagePtr;
   uint32_t    m_rssiAccum;
   uint16_t    m_rssiCount;
 
   void processNone(q15_t sample);
   void processData(q15_t sample);
-  void writeRSSILdu(uint8_t* data);
+  bool correlateSync(bool none);
+  void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void writeRSSILdu(uint8_t* ldu);
 };
 
 #endif
-

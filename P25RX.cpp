@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,239 +16,194 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
+#define  WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
 #include "P25RX.h"
 #include "Utils.h"
 
-const unsigned int BUFFER_LENGTH = 200U;
-
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint32_t PLLMAX = 0x10000U;
-const uint32_t PLLINC = PLLMAX / P25_RADIO_SYMBOL_LENGTH;
-const uint32_t INC    = PLLINC / 32U;
-
-const uint8_t SYNC_SYMBOL_ERRS = 0U;
-
-const uint8_t SYNC_BIT_START_ERRS = 2U;
-const uint8_t SYNC_BIT_RUN_ERRS   = 4U;
-
-const unsigned int MAX_SYNC_FRAMES = 3U + 1U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
+const uint8_t MAX_SYNC_BYTES_ERRS   = 3U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
-#define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
+
+const uint16_t NOENDPTR = 9999U;
+
+const unsigned int MAX_SYNC_FRAMES = 4U + 1U;
 
 CP25RX::CP25RX() :
-m_pll(0U),
-m_prev(false),
 m_state(P25RXS_NONE),
-m_bitBuffer(0x00U),
-m_symbols(),
-m_outBuffer(),
-m_buffer(NULL),
-m_bufferPtr(0U),
-m_symbolPtr(0U),
+m_bitBuffer(),
+m_buffer(),
+m_bitPtr(0U),
+m_dataPtr(0U),
+m_endPtr(NOENDPTR),
+m_syncPtr(NOENDPTR),
+m_minSyncPtr(NOENDPTR),
+m_maxSyncPtr(NOENDPTR),
+m_maxCorr(0),
 m_lostCount(0U),
-m_centre(0),
-m_threshold(0),
+m_centre(),
+m_centreVal(0),
+m_centreBest(0),
+m_threshold(),
+m_thresholdVal(0),
+m_thresholdBest(0),
+m_averagePtr(0u),
 m_rssiAccum(0U),
 m_rssiCount(0U)
 {
-  m_buffer = m_outBuffer + 1U;
 }
 
 void CP25RX::reset()
 {
-  m_pll       = 0U;
-  m_prev      = false;
-  m_state     = P25RXS_NONE;
-  m_bitBuffer = 0x00U;
-  m_bufferPtr = 0U;
-  m_symbolPtr = 0U;
-  m_lostCount = 0U;
-  m_centre    = 0;
-  m_threshold = 0;
-  m_rssiAccum = 0U;
-  m_rssiCount = 0U;
+  m_state        = P25RXS_NONE;
+  m_dataPtr      = 0U;
+  m_bitPtr       = 0U;
+  m_maxCorr      = 0;
+  m_averagePtr   = 0U;
+  m_endPtr       = NOENDPTR;
+  m_syncPtr      = NOENDPTR;
+  m_minSyncPtr   = NOENDPTR;
+  m_maxSyncPtr   = NOENDPTR;
+  m_centreVal    = 0;
+  m_thresholdVal = 0;
+  m_lostCount    = 0U;
+  m_rssiAccum    = 0U;
+  m_rssiCount    = 0U;
 }
 
-void CP25RX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
+void CP25RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
 {
-  for (uint16_t i = 0U; i < length; i++) {
+  for (uint8_t i = 0U; i < length; i++) {
+    q15_t sample = samples[i];
+
     m_rssiAccum += rssi[i];
     m_rssiCount++;
 
-    bool bit = samples[i] < 0;
+    m_bitBuffer[m_bitPtr] <<= 1;
+    if (sample < 0)
+      m_bitBuffer[m_bitPtr] |= 0x01U;
 
-    if (bit != m_prev) {
-      if (m_pll < (PLLMAX / 2U))
-        m_pll += INC;
-      else
-        m_pll -= INC;
-    }
+    m_buffer[m_dataPtr] = sample;
 
-    m_prev = bit;
+    if (m_state == P25RXS_NONE)
+      processNone(sample);
+    else
+      processData(sample);
 
-    m_pll += PLLINC;
+    m_dataPtr++;
+    if (m_dataPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+      m_dataPtr = 0U;
 
-    if (m_pll >= PLLMAX) {
-      m_pll -= PLLMAX;
-
-      if (m_state == P25RXS_NONE)
-        processNone(samples[i]);
-      else
-        processData(samples[i]);
-    }
+    m_bitPtr++;
+    if (m_bitPtr >= P25_RADIO_SYMBOL_LENGTH)
+      m_bitPtr = 0U;
   }
 }
 
 void CP25RX::processNone(q15_t sample)
 {
-  m_symbolBuffer <<= 1;
-  if (sample < 0)
-    m_symbolBuffer |= 0x01U;
+  bool ret = correlateSync(true);
+  if (ret) {
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
 
-  m_symbols[m_symbolPtr] = sample;
-
-  // Fuzzy matching of the data sync bit sequence
-  if (countBits32((m_symbolBuffer & P25_SYNC_SYMBOLS_MASK) ^ P25_SYNC_SYMBOLS) <= SYNC_SYMBOL_ERRS) {
-    q15_t max  = -16000;
-    q15_t min  =  16000;
-
-    for (uint8_t i = 0U; i < P25_SYNC_LENGTH_SYMBOLS; i++) {
-      q15_t val = m_symbols[i];
-      if (val > max)
-        max = val;
-      if (val < min)
-        min = val;
-    }
-
-    q15_t centre = (max + min) >> 1;
-
-    q31_t v1 = (max - centre) * SCALING_FACTOR;
-    q15_t threshold = q15_t(v1 >> 15);
-
-    uint16_t ptr = m_symbolPtr + 1U;
-    if (ptr >= P25_SYNC_LENGTH_SYMBOLS)
-      ptr = 0U;
-
-    for (uint8_t i = 0U; i < P25_SYNC_LENGTH_SYMBOLS; i++) {
-      q15_t sample = m_symbols[ptr] - centre;
-
-      if (sample < -threshold) {
-        m_bitBuffer <<= 2;
-        m_bitBuffer |= 0x01U;
-      } else if (sample < 0) {
-        m_bitBuffer <<= 2;
-        m_bitBuffer |= 0x00U;
-      } else if (sample < threshold) {
-        m_bitBuffer <<= 2;
-        m_bitBuffer |= 0x02U;
-      } else {
-        m_bitBuffer <<= 2;
-        m_bitBuffer |= 0x03U;
-      }
-
-      ptr++;
-      if (ptr >= P25_SYNC_LENGTH_SYMBOLS)
-        ptr = 0U;
-    }
-
-    // Fuzzy matching of the data sync bit sequence
-    if (countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS) <= SYNC_BIT_START_ERRS) {
-      DEBUG5("P25RX: sync found in None min/max/centre/threshold", min, max, centre, threshold);
-      for (uint8_t i = 0U; i < P25_SYNC_LENGTH_BYTES; i++)
-        m_buffer[i] = P25_SYNC_BYTES[i];
-      m_centre    = centre;
-      m_threshold = threshold;
-      m_lostCount = MAX_SYNC_FRAMES;
-      m_bufferPtr = P25_SYNC_LENGTH_BITS;
-      m_state     = P25RXS_DATA;
-      m_rssiAccum = 0U;
-      m_rssiCount = 0U;
-
-      io.setDecode(true);
-      io.setADCDetection(true);
-    }
+    io.setDecode(true);
+    io.setADCDetection(true);
   }
 
-  m_symbolPtr++;
-  if (m_symbolPtr >= P25_SYNC_LENGTH_SYMBOLS)
-    m_symbolPtr = 0U;
+  if (m_dataPtr == m_endPtr) {
+    for (uint8_t i = 0U; i < 16U; i++) {
+      m_centre[i]    = m_centreBest;
+      m_threshold[i] = m_thresholdBest;
+    }
+    m_centreVal    = m_centreBest;
+    m_thresholdVal = m_thresholdBest;
+    m_averagePtr   = 0U;
+
+    DEBUG4("P25RX: sync found in None pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+
+    uint16_t ptr = m_endPtr + P25_RADIO_SYMBOL_LENGTH + 1U;
+    if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+	  ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+    m_minSyncPtr = m_syncPtr + P25_LDU_FRAME_LENGTH_SAMPLES - 1U;
+    if (m_minSyncPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+      m_minSyncPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+    m_maxSyncPtr = m_syncPtr + 1U;
+    if (m_maxSyncPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+      m_maxSyncPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+    uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
+    samplesToBits(ptr, P25_LDU_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+
+    frame[0U] = 0x01U;
+    writeRSSILdu(frame);
+
+    // Start the next frame
+    ::memset(frame, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+
+    m_state   = P25RXS_DATA;
+    m_maxCorr = 0;
+  }
 }
 
 void CP25RX::processData(q15_t sample)
 {
-  sample -= m_centre;
-
-  if (sample < -m_threshold) {
-    m_bitBuffer <<= 2;
-    m_bitBuffer |= 0x01U;
-    WRITE_BIT1(m_buffer, m_bufferPtr, false);
-    m_bufferPtr++;
-    WRITE_BIT1(m_buffer, m_bufferPtr, true);
-    m_bufferPtr++;
-  } else if (sample < 0) {
-    m_bitBuffer <<= 2;
-    m_bitBuffer |= 0x00U;
-    WRITE_BIT1(m_buffer, m_bufferPtr, false);
-    m_bufferPtr++;
-    WRITE_BIT1(m_buffer, m_bufferPtr, false);
-    m_bufferPtr++;
-  } else if (sample < m_threshold) {
-    m_bitBuffer <<= 2;
-    m_bitBuffer |= 0x02U;
-    WRITE_BIT1(m_buffer, m_bufferPtr, true);
-    m_bufferPtr++;
-    WRITE_BIT1(m_buffer, m_bufferPtr, false);
-    m_bufferPtr++;
+  if (m_minSyncPtr < m_maxSyncPtr) {
+    if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
+      correlateSync(false);
   } else {
-    m_bitBuffer <<= 2;
-    m_bitBuffer |= 0x03U;
-    WRITE_BIT1(m_buffer, m_bufferPtr, true);
-    m_bufferPtr++;
-    WRITE_BIT1(m_buffer, m_bufferPtr, true);
-    m_bufferPtr++;
+    if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
+      correlateSync(false);
   }
 
-  // Search for an early sync to indicate an LDU following a header
-  if (m_bufferPtr >= (P25_HDR_FRAME_LENGTH_BITS + P25_SYNC_LENGTH_BITS - 1U) && m_bufferPtr <= (P25_HDR_FRAME_LENGTH_BITS + P25_SYNC_LENGTH_BITS + 1U)) {
-    // Fuzzy matching of the data sync bit sequence
-    if (countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS) <= SYNC_BIT_RUN_ERRS) {
-      DEBUG2("P25RX: found LDU sync in Data, pos", m_bufferPtr - P25_SYNC_LENGTH_BITS);
+  if (m_dataPtr == m_endPtr) {
+    uint16_t ptr = m_endPtr + P25_RADIO_SYMBOL_LENGTH + 1U;
+    if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+      ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
 
-      m_outBuffer[0U] = 0x01U;
-      serial.writeP25Hdr(m_outBuffer, P25_HDR_FRAME_LENGTH_BYTES + 1U);
+    // Only update the centre and threshold if they are from a good sync
+    if (m_lostCount == MAX_SYNC_FRAMES) {
+      m_threshold[m_averagePtr] = m_thresholdBest;
+      m_centre[m_averagePtr]    = m_centreBest;
 
-      m_rssiAccum = 0U;
-      m_rssiCount = 0U;
+      m_averagePtr++;
+      if (m_averagePtr >= 16U)
+        m_averagePtr = 0U;
 
-      // Restore the sync that's now in the wrong place
-      for (uint8_t i = 0U; i < P25_SYNC_LENGTH_BYTES; i++)
-        m_buffer[i] = P25_SYNC_BYTES[i];
+      // Find the average centre and threshold values
+      m_centreVal    = 0;
+      m_thresholdVal = 0;
+      for (uint8_t i = 0U; i < 16U; i++) {
+        m_centreVal    += m_centre[i];
+        m_thresholdVal += m_threshold[i];
+      }
+      m_centreVal    >>= 4;
+      m_thresholdVal >>= 4;
 
-      m_lostCount = MAX_SYNC_FRAMES;
-      m_bufferPtr = P25_SYNC_LENGTH_BITS;
+      DEBUG4("P25RX: sync found in Data (best) pos/centre/threshold", m_syncPtr, m_centreBest, m_thresholdBest);
+      DEBUG4("P25RX: sync found in Data (val) pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+
+      m_minSyncPtr = m_syncPtr + P25_LDU_FRAME_LENGTH_SAMPLES - 1U;
+      if (m_minSyncPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+        m_minSyncPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+      m_maxSyncPtr = m_syncPtr + 1U;
+      if (m_maxSyncPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+        m_maxSyncPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
     }
-  }
 
-  // Only search for a sync in the right place +-2 symbols
-  if (m_bufferPtr >= (P25_SYNC_LENGTH_BITS - 2U) && m_bufferPtr <= (P25_SYNC_LENGTH_BITS + 2U)) {
-    // Fuzzy matching of the data sync bit sequence
-    if (countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS) <= SYNC_BIT_RUN_ERRS) {
-      DEBUG2("P25RX: found sync in Data, pos", m_bufferPtr - P25_SYNC_LENGTH_BITS);
-      m_lostCount = MAX_SYNC_FRAMES;
-      m_bufferPtr = P25_SYNC_LENGTH_BITS;
-    }
-  }
+    uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
+    samplesToBits(ptr, P25_LDU_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
 
-  // Send a data frame to the host if the required number of bits have been received
-  if (m_bufferPtr == P25_LDU_FRAME_LENGTH_BITS) {
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
     m_lostCount--;
     if (m_lostCount == 0U) {
@@ -259,16 +214,118 @@ void CP25RX::processData(q15_t sample)
 
       serial.writeP25Lost();
 
-      m_state = P25RXS_NONE;
-    } else {
-      m_outBuffer[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+      m_state  = P25RXS_NONE;
+      m_endPtr = NOENDPTR;
+		} else {
+      frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
-      writeRSSILdu(m_outBuffer);
+      writeRSSILdu(frame);
 
       // Start the next frame
-      ::memset(m_outBuffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
-      m_bufferPtr = 0U;
+      ::memset(frame, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
     }
+
+    m_maxCorr = 0;
+  }
+}
+
+bool CP25RX::correlateSync(bool none)
+{
+  if (countBits32((m_bitBuffer[m_bitPtr] & P25_SYNC_SYMBOLS_MASK) ^ P25_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS) {
+    uint16_t ptr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES + P25_RADIO_SYMBOL_LENGTH;
+    if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+      ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+    q31_t corr = 0;
+    q15_t max = -16000;
+    q15_t min = 16000;
+
+    uint32_t mask = 0x00080000U;
+    for (uint8_t i = 0U; i < P25_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
+      bool b = (P25_SYNC_SYMBOLS & mask) == mask;
+
+      if (m_buffer[ptr] > max)
+        max = m_buffer[ptr];
+      if (m_buffer[ptr] < min)
+        min = m_buffer[ptr];
+
+      corr += b ? -m_buffer[ptr] : m_buffer[ptr];
+
+      ptr += P25_RADIO_SYMBOL_LENGTH;
+      if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+        ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+    }
+
+    if (corr > m_maxCorr) {
+      q15_t centre = (max + min) >> 1;
+
+      q31_t v1 = (max - centre) * SCALING_FACTOR;
+      q15_t threshold = q15_t(v1 >> 15);
+
+      uint8_t sync[P25_SYNC_BYTES_LENGTH];
+
+      uint16_t ptr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES + P25_RADIO_SYMBOL_LENGTH;
+      if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+        ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+      if (none)
+        samplesToBits(ptr, P25_SYNC_LENGTH_SYMBOLS, sync, 0U, centre, threshold);
+      else
+        samplesToBits(ptr, P25_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+
+      uint8_t errs = 0U;
+      for (uint8_t i = 0U; i < P25_SYNC_BYTES_LENGTH; i++)
+        errs += countBits8(sync[i] ^ P25_SYNC_BYTES[i]);
+
+      if (errs <= MAX_SYNC_BYTES_ERRS) {
+        m_maxCorr       = corr;
+        m_thresholdBest = threshold;
+        m_centreBest    = centre;
+        m_lostCount     = MAX_SYNC_FRAMES;
+        m_syncPtr       = m_dataPtr;
+
+        m_endPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES - 1U;
+        if (m_endPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+          m_endPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+void CP25RX::samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
+{
+  for (uint16_t i = 0U; i < count; i++) {
+    q15_t sample = m_buffer[start] - centre;
+
+    if (sample < -threshold) {
+      WRITE_BIT1(buffer, offset, false);
+      offset++;
+      WRITE_BIT1(buffer, offset, true);
+      offset++;
+    } else if (sample < 0) {
+      WRITE_BIT1(buffer, offset, false);
+      offset++;
+      WRITE_BIT1(buffer, offset, false);
+      offset++;
+    } else if (sample < threshold) {
+      WRITE_BIT1(buffer, offset, true);
+      offset++;
+      WRITE_BIT1(buffer, offset, false);
+      offset++;
+    } else {
+      WRITE_BIT1(buffer, offset, true);
+      offset++;
+      WRITE_BIT1(buffer, offset, true);
+      offset++;
+    }
+
+    start += P25_RADIO_SYMBOL_LENGTH;
+    if (start >= P25_LDU_FRAME_LENGTH_SAMPLES)
+      start -= P25_LDU_FRAME_LENGTH_SAMPLES;
   }
 }
 
@@ -292,3 +349,4 @@ void CP25RX::writeRSSILdu(uint8_t* ldu)
   m_rssiAccum = 0U;
   m_rssiCount = 0U;
 }
+

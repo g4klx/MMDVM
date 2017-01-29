@@ -57,11 +57,11 @@ private:
   uint32_t    m_rssiAccum;
   uint16_t    m_rssiCount;
 
-  void    processNone(q15_t sample);
-  void    processData(q15_t sample);
-  bool    correlateSync(bool none);
-  void    samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
-  void    writeRSSIData(uint8_t* data);
+  void processNone(q15_t sample);
+  void processData(q15_t sample);
+  bool correlateSync(bool none);
+  void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void writeRSSIData(uint8_t* data);
 };
 
 #endif
