@@ -42,8 +42,10 @@ m_bitBuffer(),
 m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
-m_endPtr(NOENDPTR),
+m_endLduPtr(NOENDPTR),
 m_syncPtr(NOENDPTR),
+m_minHdrPtr(NOENDPTR),
+m_maxHdrPtr(NOENDPTR),
 m_minSyncPtr(NOENDPTR),
 m_maxSyncPtr(NOENDPTR),
 m_maxCorr(0),
@@ -67,8 +69,10 @@ void CP25RX::reset()
   m_bitPtr       = 0U;
   m_maxCorr      = 0;
   m_averagePtr   = 0U;
-  m_endPtr       = NOENDPTR;
+  m_endLduPtr    = NOENDPTR;
   m_syncPtr      = NOENDPTR;
+  m_minHdrPtr    = NOENDPTR;
+  m_maxHdrPtr    = NOENDPTR;
   m_minSyncPtr   = NOENDPTR;
   m_maxSyncPtr   = NOENDPTR;
   m_centreVal    = 0;
@@ -116,9 +120,12 @@ void CP25RX::processNone(q15_t sample)
 
     io.setDecode(true);
     io.setADCDetection(true);
+
+    // If sync is between the two Hdr ptrs then we have a Hdr
+    // Send data out and update the m_endLduPtr
   }
 
-  if (m_dataPtr == m_endPtr) {
+  if (m_dataPtr == m_endLduPtr) {
     for (uint8_t i = 0U; i < 16U; i++) {
       m_centre[i]    = m_centreBest;
       m_threshold[i] = m_thresholdBest;
@@ -129,7 +136,7 @@ void CP25RX::processNone(q15_t sample)
 
     DEBUG4("P25RX: sync found in None pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
 
-    uint16_t ptr = m_endPtr + P25_RADIO_SYMBOL_LENGTH + 1U;
+    uint16_t ptr = m_endLduPtr + P25_RADIO_SYMBOL_LENGTH + 1U;
     if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
 	  ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
 
@@ -165,8 +172,8 @@ void CP25RX::processData(q15_t sample)
       correlateSync(false);
   }
 
-  if (m_dataPtr == m_endPtr) {
-    uint16_t ptr = m_endPtr + P25_RADIO_SYMBOL_LENGTH + 1U;
+  if (m_dataPtr == m_endLduPtr) {
+    uint16_t ptr = m_endLduPtr + P25_RADIO_SYMBOL_LENGTH + 1U;
     if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
       ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
 
@@ -214,8 +221,8 @@ void CP25RX::processData(q15_t sample)
 
       serial.writeP25Lost();
 
-      m_state  = P25RXS_NONE;
-      m_endPtr = NOENDPTR;
+      m_state     = P25RXS_NONE;
+      m_endLduPtr = NOENDPTR;
 		} else {
       frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
@@ -284,9 +291,19 @@ bool CP25RX::correlateSync(bool none)
         m_lostCount     = MAX_SYNC_FRAMES;
         m_syncPtr       = m_dataPtr;
 
-        m_endPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES - 1U;
-        if (m_endPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
-          m_endPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+        m_endLduPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES - 1U;
+        if (m_endLduPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+          m_endLduPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+        if (none) {
+          m_minHdrPtr = m_dataPtr + P25_HDR_FRAME_LENGTH_SAMPLES - 1U;
+          if (m_minHdrPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+            m_minHdrPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
+          m_maxHdrPtr = m_dataPtr + P25_HDR_FRAME_LENGTH_SAMPLES + 1U;
+          if (m_maxHdrPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+            m_maxHdrPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+        }
 
         return true;
       }
