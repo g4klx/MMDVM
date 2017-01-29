@@ -46,18 +46,12 @@ m_bitBuffer(),
 m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
-m_syncPtr(NOENDPTR),
+m_syncPtr(0U),
 m_startPtr(0U),
 m_endPtr(NOENDPTR),
-m_minSyncPtr(NOENDPTR),
-m_maxSyncPtr(NOENDPTR),
 m_maxCorr(0),
 m_centre(),
-m_centreVal(0),
-m_centreBest(0),
 m_threshold(),
-m_thresholdVal(0),
-m_thresholdBest(0),
 m_averagePtr(0U),
 m_control(CONTROL_NONE),
 m_syncCount(0U),
@@ -71,19 +65,13 @@ m_rssi()
 
 void CDMRDMORX::reset()
 {
-  m_syncPtr       = NOENDPTR;
-  m_minSyncPtr    = NOENDPTR;
-  m_maxSyncPtr    = NOENDPTR;
-  m_maxCorr       = 0;
-  m_control       = CONTROL_NONE;
-  m_syncCount     = 0U;
-  m_state         = DMORXS_NONE;
-  m_startPtr      = 0U;
-  m_endPtr        = NOENDPTR;
-  m_centreVal     = 0;
-  m_centreBest    = 0;
-  m_thresholdVal  = 0;
-  m_thresholdBest = 0;
+  m_syncPtr   = 0U;
+  m_maxCorr   = 0;
+  m_control   = CONTROL_NONE;
+  m_syncCount = 0U;
+  m_state     = DMORXS_NONE;
+  m_startPtr  = 0U;
+  m_endPtr    = NOENDPTR;
 }
 
 void CDMRDMORX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
@@ -94,13 +82,12 @@ void CDMRDMORX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t leng
     dcd = processSample(samples[i], rssi[i]);
 
   io.setDecode(dcd);
-  io.setADCDetection(dcd);
 }
 
 bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
 {
   m_buffer[m_dataPtr] = sample;
-  m_rssi[m_dataPtr]   = rssi;
+  m_rssi[m_dataPtr] = rssi;
 
   m_bitBuffer[m_bitPtr] <<= 1;
   if (sample < 0)
@@ -109,36 +96,28 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
   if (m_state == DMORXS_NONE) {
     correlateSync(true);
   } else {
-    if (m_minSyncPtr < m_maxSyncPtr) {
-      if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
+
+    uint16_t min  = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
+    uint16_t max  = m_syncPtr + 1U;
+
+    if (min >= DMO_BUFFER_LENGTH_SAMPLES)
+      min -= DMO_BUFFER_LENGTH_SAMPLES;
+    if (max >= DMO_BUFFER_LENGTH_SAMPLES)
+      max -= DMO_BUFFER_LENGTH_SAMPLES;
+
+    if (min < max) {
+      if (m_dataPtr >= min && m_dataPtr <= max)
         correlateSync(false);
     } else {
-      if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
+      if (m_dataPtr >= min || m_dataPtr <= max)
         correlateSync(false);
     }
   }
 
   if (m_dataPtr == m_endPtr) {
-    if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE) {
-      m_threshold[m_averagePtr] = m_thresholdBest;
-      m_centre[m_averagePtr]    = m_centreBest;
-
-      m_averagePtr++;
-      if (m_averagePtr >= 4U)
-        m_averagePtr = 0U;
-
-      // Find the average centre and threshold values
-      m_centreVal    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
-      m_thresholdVal = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
-
-      m_minSyncPtr = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
-      if (m_minSyncPtr >= DMO_BUFFER_LENGTH_SAMPLES)
-        m_minSyncPtr -= DMO_BUFFER_LENGTH_SAMPLES;
-
-      m_maxSyncPtr = m_syncPtr + 1U;
-      if (m_maxSyncPtr >= DMO_BUFFER_LENGTH_SAMPLES)
-        m_maxSyncPtr -= DMO_BUFFER_LENGTH_SAMPLES;
-    }
+    // Find the average centre and threshold values
+    q15_t centre    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
+    q15_t threshold = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
 
     uint8_t frame[DMR_FRAME_LENGTH_BYTES + 3U];
     frame[0U] = m_control;
@@ -147,7 +126,7 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
     if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
       ptr -= DMO_BUFFER_LENGTH_SAMPLES;
 
-    samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+    samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
     
     if (m_control == CONTROL_DATA) {
       // Data sync
@@ -164,7 +143,7 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-            DEBUG4("DMRDMORX: data header found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+            DEBUG4("DMRDMORX: data header found pos/centre/threshold", m_syncPtr, centre, threshold);
             writeRSSIData(frame);
             m_state = DMORXS_DATA;
             m_type  = 0x00U;
@@ -173,32 +152,32 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
           case DT_RATE_34_DATA:
           case DT_RATE_1_DATA:
             if (m_state == DMORXS_DATA) {
-              DEBUG4("DMRDMORX: data payload found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+              DEBUG4("DMRDMORX: data payload found pos/centre/threshold", m_syncPtr, centre, threshold);
               writeRSSIData(frame);
               m_type = dataType;
             }
             break;
           case DT_VOICE_LC_HEADER:
-            DEBUG4("DMRDMORX: voice header found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+            DEBUG4("DMRDMORX: voice header found pos/centre/threshold", m_syncPtr, centre, threshold);
             writeRSSIData(frame);
             m_state = DMORXS_VOICE;
             break;
           case DT_VOICE_PI_HEADER:
             if (m_state == DMORXS_VOICE) {
-              DEBUG4("DMRDMORX: voice pi header found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+              DEBUG4("DMRDMORX: voice pi header found pos/centre/threshold", m_syncPtr, centre, threshold);
               writeRSSIData(frame);
             }
             m_state = DMORXS_VOICE;
             break;
           case DT_TERMINATOR_WITH_LC:
             if (m_state == DMORXS_VOICE) {
-              DEBUG4("DMRDMORX: voice terminator found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+              DEBUG4("DMRDMORX: voice terminator found pos/centre/threshold", m_syncPtr, centre, threshold);
               writeRSSIData(frame);
               reset();
             }
             break;
           default:    // DT_CSBK
-            DEBUG4("DMRDMORX: csbk found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+            DEBUG4("DMRDMORX: csbk found pos/centre/threshold", m_syncPtr, centre, threshold);
             writeRSSIData(frame);
             reset();
             break;
@@ -206,8 +185,8 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
       }
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
-      DEBUG4("DMRDMORX: voice sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
-      writeRSSIData(frame);
+      DEBUG4("DMRDMORX: voice sync found pos/centre/threshold", m_syncPtr, centre, threshold);
+	    writeRSSIData(frame);
       m_state     = DMORXS_VOICE;
       m_syncCount = 0U;
       m_n         = 0U;
@@ -307,10 +286,7 @@ void CDMRDMORX::correlateSync(bool first)
       if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
         ptr -= DMO_BUFFER_LENGTH_SAMPLES;
 
-      if (first)
-        samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
-      else
-        samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, m_centreVal, m_thresholdVal);
+      samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
 
       if (data1 || data2) {
         uint8_t errs = 0U;
@@ -323,12 +299,16 @@ void CDMRDMORX::correlateSync(bool first)
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
-            m_thresholdBest = m_thresholdVal = m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
-            m_centreBest    = m_centreVal    = m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
+            m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
+            m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
           } else {
-            m_thresholdBest = threshold;
-            m_centreBest    = centre;
+            m_threshold[m_averagePtr] = threshold;
+            m_centre[m_averagePtr]    = centre;
+
+            m_averagePtr++;
+            if (m_averagePtr >= 4U)
+              m_averagePtr = 0U;
           }
 
           m_maxCorr  = corr;
@@ -354,12 +334,16 @@ void CDMRDMORX::correlateSync(bool first)
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
-            m_thresholdBest = m_thresholdVal = m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
-            m_centreBest    = m_centreVal    = m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
+            m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
+            m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
           } else {
-            m_thresholdBest = threshold;
-            m_centreBest    = centre;
+            m_threshold[m_averagePtr] = threshold;
+            m_centre[m_averagePtr]    = centre;
+
+            m_averagePtr++;
+            if (m_averagePtr >= 4U)
+              m_averagePtr = 0U;
           }
 
           m_maxCorr  = corr;

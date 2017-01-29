@@ -56,11 +56,7 @@ m_endPtr(NOENDPTR),
 m_delayPtr(0U),
 m_maxCorr(0),
 m_centre(),
-m_centreVal(0),
-m_centreBest(0),
 m_threshold(),
-m_thresholdVal(0),
-m_thresholdBest(0),
 m_averagePtr(0U),
 m_control(CONTROL_NONE),
 m_syncCount(0U),
@@ -75,33 +71,25 @@ m_rssi()
 
 void CDMRSlotRX::start()
 {
-  m_dataPtr       = 0U;
-  m_delayPtr      = 0U;
-  m_bitPtr        = 0U;
-  m_maxCorr       = 0;
-  m_control       = CONTROL_NONE;
-  m_centreVal     = 0;
-  m_centreBest    = 0;
-  m_thresholdVal  = 0;
-  m_thresholdBest = 0;
+  m_dataPtr  = 0U;
+  m_delayPtr = 0U;
+  m_bitPtr   = 0U;
+  m_maxCorr  = 0;
+  m_control  = CONTROL_NONE;
 }
 
 void CDMRSlotRX::reset()
 {
-  m_syncPtr       = 0U;
-  m_dataPtr       = 0U;
-  m_delayPtr      = 0U;
-  m_bitPtr        = 0U;
-  m_maxCorr       = 0;
-  m_control       = CONTROL_NONE;
-  m_syncCount     = 0U;
-  m_state         = DMRRXS_NONE;
-  m_startPtr      = 0U;
-  m_endPtr        = NOENDPTR;
-  m_centreVal     = 0;
-  m_centreBest    = 0;
-  m_thresholdVal  = 0;
-  m_thresholdBest = 0;
+  m_syncPtr   = 0U;
+  m_dataPtr   = 0U;
+  m_delayPtr  = 0U;
+  m_bitPtr    = 0U;
+  m_maxCorr   = 0;
+  m_control   = CONTROL_NONE;
+  m_syncCount = 0U;
+  m_state     = DMRRXS_NONE;
+  m_startPtr  = 0U;
+  m_endPtr    = NOENDPTR;
 }
 
 bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
@@ -125,6 +113,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     if (m_dataPtr >= SCAN_START && m_dataPtr <= SCAN_END)
       correlateSync(true);
   } else {
+
     uint16_t min = m_syncPtr - 1U;
     uint16_t max = m_syncPtr + 1U;
     if (m_dataPtr >= min && m_dataPtr <= max)
@@ -132,24 +121,15 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
   }
 
   if (m_dataPtr == m_endPtr) {
-    if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE) {
-      m_threshold[m_averagePtr] = m_thresholdBest;
-      m_centre[m_averagePtr]    = m_centreBest;
+    // Find the average centre and threshold values
+    q15_t centre    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
+    q15_t threshold = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
 
-      m_averagePtr++;
-      if (m_averagePtr >= 4U)
-        m_averagePtr = 0U;
-
-      // Find the average centre and threshold values
-      m_centreVal    = (m_centre[0U]    + m_centre[1U]    + m_centre[2U]    + m_centre[3U])    >> 2;
-      m_thresholdVal = (m_threshold[0U] + m_threshold[1U] + m_threshold[2U] + m_threshold[3U]) >> 2;
-    }
-
-	uint8_t frame[DMR_FRAME_LENGTH_BYTES + 3U];
+    uint8_t frame[DMR_FRAME_LENGTH_BYTES + 3U];
     frame[0U] = m_control;
 
     uint16_t ptr = m_endPtr - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
-    samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+    samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
     
     if (m_control == CONTROL_DATA) {
       // Data sync
@@ -166,7 +146,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
 
         switch (dataType) {
           case DT_DATA_HEADER:
-            DEBUG5("DMRSlotRX: data header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, m_centreVal, m_thresholdVal);
+            DEBUG5("DMRSlotRX: data header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
             writeRSSIData(frame);
             m_state = DMRRXS_DATA;
             m_type  = 0x00U;
@@ -175,33 +155,33 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
           case DT_RATE_34_DATA:
           case DT_RATE_1_DATA:
             if (m_state == DMRRXS_DATA) {
-              DEBUG5("DMRSlotRX: data payload found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, m_centreVal, m_thresholdVal);
+              DEBUG5("DMRSlotRX: data payload found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
               writeRSSIData(frame);
               m_type = dataType;
             }
             break;
           case DT_VOICE_LC_HEADER:
-            DEBUG5("DMRSlotRX: voice header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, m_centreVal, m_thresholdVal);
+            DEBUG5("DMRSlotRX: voice header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
             writeRSSIData(frame);
             m_state = DMRRXS_VOICE;
             break;
           case DT_VOICE_PI_HEADER:
             if (m_state == DMRRXS_VOICE) {
-              DEBUG5("DMRSlotRX: voice pi header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, m_centreVal, m_thresholdVal);
+              DEBUG5("DMRSlotRX: voice pi header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
               writeRSSIData(frame);
             }
             m_state = DMRRXS_VOICE;
             break;
           case DT_TERMINATOR_WITH_LC:
             if (m_state == DMRRXS_VOICE) {
-              DEBUG5("DMRSlotRX: voice terminator found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, m_centreVal, m_thresholdVal);
+              DEBUG5("DMRSlotRX: voice terminator found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
               writeRSSIData(frame);
               m_state  = DMRRXS_NONE;
               m_endPtr = NOENDPTR;
             }
             break;
           default:    // DT_CSBK
-            DEBUG5("DMRSlotRX: csbk found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, m_centreVal, m_thresholdVal);
+            DEBUG5("DMRSlotRX: csbk found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
             writeRSSIData(frame);
             m_state  = DMRRXS_NONE;
             m_endPtr = NOENDPTR;
@@ -210,7 +190,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
       }
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
-      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, m_centreVal, m_thresholdVal);
+      DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
       writeRSSIData(frame);
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
@@ -292,11 +272,7 @@ void CDMRSlotRX::correlateSync(bool first)
 
       uint8_t sync[DMR_SYNC_BYTES_LENGTH];
       uint16_t ptr = m_dataPtr - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
-
-      if (first)
-        samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
-      else
-        samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, m_centreVal, m_thresholdVal);
+      samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
 
       if (data) {
         uint8_t errs = 0U;
@@ -305,12 +281,16 @@ void CDMRSlotRX::correlateSync(bool first)
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
-            m_thresholdBest = m_thresholdVal = m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
-            m_centreBest    = m_centreVal    = m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
+            m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
+            m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
           } else {
-            m_thresholdBest = threshold;
-            m_centreBest    = centre;
+            m_threshold[m_averagePtr] = threshold;
+            m_centre[m_averagePtr]    = centre;
+
+            m_averagePtr++;
+            if (m_averagePtr >= 4U)
+              m_averagePtr = 0U;
           }
 
           m_maxCorr  = corr;
@@ -326,12 +306,16 @@ void CDMRSlotRX::correlateSync(bool first)
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
-            m_thresholdBest = m_thresholdVal = m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
-            m_centreBest    = m_centreVal    = m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
+            m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
+            m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
           } else {
-            m_thresholdBest = threshold;
-            m_centreBest    = centre;
+            m_threshold[m_averagePtr] = threshold;
+            m_centre[m_averagePtr]    = centre;
+
+            m_averagePtr++;
+            if (m_averagePtr >= 4U)
+              m_averagePtr = 0U;
           }
 
           m_maxCorr  = corr;
