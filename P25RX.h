@@ -24,7 +24,8 @@
 
 enum P25RX_STATE {
   P25RXS_NONE,
-  P25RXS_DATA
+  P25RXS_HDR,
+  P25RXS_LDU
 };
 
 class CP25RX {
@@ -41,14 +42,13 @@ private:
   q15_t       m_buffer[P25_LDU_FRAME_LENGTH_SAMPLES];
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
-  uint16_t    m_endLduPtr;
-  uint16_t    m_minHdrPtr;
-  uint16_t    m_maxHdrPtr;
+  uint16_t    m_endPtr;
   uint16_t    m_minSyncPtr;
   uint16_t    m_maxSyncPtr;
   uint16_t    m_syncPtr;
   q31_t       m_maxCorr;
   uint16_t    m_lostCount;
+  uint8_t     m_countdown;
   q15_t       m_centre[16U];
   q15_t       m_centreVal;
   q15_t       m_centreBest;
@@ -60,10 +60,12 @@ private:
   uint16_t    m_rssiCount;
 
   void processNone(q15_t sample);
-  void processData(q15_t sample);
-  bool correlateSync(bool none);
+  void processHdr(q15_t sample);
+  void processLdu(q15_t sample);
+  bool correlateSync();
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSILdu(uint8_t* ldu);
+  void writeSync(uint16_t start);
 };
 
 #endif

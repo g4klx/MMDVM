@@ -47,6 +47,7 @@ private:
   uint16_t    m_syncPtr;
   q31_t       m_maxCorr;
   uint16_t    m_lostCount;
+  uint8_t     m_countdown;
   q15_t       m_centre[16U];
   q15_t       m_centreVal;
   q15_t       m_centreBest;
@@ -59,9 +60,10 @@ private:
 
   void processNone(q15_t sample);
   void processData(q15_t sample);
-  bool correlateSync(bool none);
+  bool correlateSync();
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSIData(uint8_t* data);
+  void writeSync(uint16_t start);
 };
 
 #endif

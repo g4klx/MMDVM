@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2013,2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2013,2015,2016,2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -61,6 +61,8 @@ const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
 
 const uint8_t MMDVM_SERIAL       = 0x80U;
+
+const uint8_t MMDVM_SAMPLES      = 0xF0U;
 
 const uint8_t MMDVM_DEBUG1       = 0xF1U;
 const uint8_t MMDVM_DEBUG2       = 0xF2U;
@@ -921,6 +923,29 @@ void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
   reply[1U] = count;
 
   writeInt(1U, reply, count);
+}
+
+void CSerialPort::writeSamples(unsigned char mode, const q15_t* samples, unsigned char nSamples)
+{
+  uint8_t reply[130U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_SAMPLES;
+
+  reply[3U] = mode;
+
+  uint8_t count = 4U;
+  for (uint8_t i = 0U; i < nSamples; i++) {
+    uint16_t val = uint16_t(samples[i] + 2048);
+
+    reply[count++] = (val >> 8) & 0xFF;
+    reply[count++] = (val >> 0) & 0xFF;
+  }
+
+  reply[1U] = count;
+
+  writeInt(1U, reply, count, true);
 }
 
 void CSerialPort::writeDebug(const char* text)

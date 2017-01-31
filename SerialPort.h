@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -48,6 +48,8 @@ public:
 
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
+
+  void writeSamples(unsigned char mode, const q15_t* samples, unsigned char nSamples);
 
   void writeDebug(const char* text);
   void writeDebug(const char* text, int16_t n1);
