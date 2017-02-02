@@ -18,7 +18,7 @@
 
 #define  WANT_DEBUG
 
-#define  DUMP_SAMPLES
+// #define  DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -438,6 +438,7 @@ void CP25RX::writeRSSILdu(uint8_t* ldu)
   m_rssiCount = 0U;
 }
 
+#if defined(DUMP_SAMPLES)
 void CP25RX::writeSync(uint16_t start)
 {
   q15_t sync[P25_SYNC_LENGTH_SYMBOLS];
@@ -452,3 +453,4 @@ void CP25RX::writeSync(uint16_t start)
 
   serial.writeSamples(STATE_P25, sync, P25_SYNC_LENGTH_SYMBOLS);
 }
+#endif

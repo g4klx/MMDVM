@@ -18,7 +18,7 @@
 
 #define  WANT_DEBUG
 
-#define  DUMP_SAMPLES
+// #define  DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -354,6 +354,7 @@ void CYSFRX::writeRSSIData(uint8_t* data)
   m_rssiCount = 0U;
 }
 
+#if defined(DUMP_SAMPLES)
 void CYSFRX::writeSync(uint16_t start)
 {
   q15_t sync[YSF_SYNC_LENGTH_SYMBOLS];
@@ -368,3 +369,5 @@ void CYSFRX::writeSync(uint16_t start)
 
   serial.writeSamples(STATE_YSF, sync, YSF_SYNC_LENGTH_SYMBOLS);
 }
+#endif
+
