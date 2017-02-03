@@ -182,8 +182,7 @@ void CP25RX::processHdr(q15_t sample)
     }
     DEBUG4("P25RX, sync position in HDR, pos/min/max", m_syncPtr, m_minSyncPtr, m_maxSyncPtr);
     if (isSync) {
-      // XXX this is possibly wrong
-      uint16_t ptr = m_syncPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_HDR_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES + 1U;
+      uint16_t ptr = m_syncPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_HDR_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES - 1U;
       if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
         ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
 
