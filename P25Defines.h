@@ -60,6 +60,8 @@ const uint64_t P25_SYNC_BITS_MASK = 0x0000FFFFFFFFFFFFU;
 // 01 01 01 01  01 11 01 01  11 11 01 01  11 11 11 11  01 11 01 11  11 11 11 11
 // +3 +3 +3 +3  +3 -3 +3 +3  -3 -3 +3 +3  -3 -3 -3 -3  +3 -3 +3 -3  -3 -3 -3 -3
 
+const int8_t P25_SYNC_SYMBOLS_VALUES[] = {+3, +3, +3, +3, +3, -3, +3, +3, -3, -3, +3, +3, -3, -3, -3, -3, +3, -3, +3, -3, -3, -3, -3, -3};
+
 const uint32_t P25_SYNC_SYMBOLS      = 0x00FB30A0U;
 const uint32_t P25_SYNC_SYMBOLS_MASK = 0x00FFFFFFU;
 

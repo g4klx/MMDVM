@@ -253,19 +253,34 @@ void CDMRSlotRX::correlateSync(bool first)
     q15_t min =  16000;
     q15_t max = -16000;
 
-    uint32_t mask = 0x00800000U;
-    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
 
+      int8_t corrVal;
       if (data)
-        corr += b ? -m_buffer[ptr] : m_buffer[ptr];
-      else  // if (voice)
-        corr += b ? m_buffer[ptr] : -m_buffer[ptr];
+        corrVal = DMR_MS_DATA_SYNC_SYMBOLS_VALUES[i];
+      else
+        corrVal = DMR_MS_VOICE_SYNC_SYMBOLS_VALUES[i];
+
+      switch (corrVal) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += DMR_RADIO_SYMBOL_LENGTH;
     }

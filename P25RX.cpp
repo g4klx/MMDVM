@@ -18,7 +18,7 @@
 
 #define  WANT_DEBUG
 
-// #define  DUMP_SAMPLES
+#define  DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -27,10 +27,12 @@
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
-const uint8_t MAX_SYNC_BYTES_ERRS   = 3U;
+const uint8_t MAX_SYNC_BIT_START_ERRS = 2U;
+const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 4U;
 
-const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
+
+const uint8_t BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U };
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 
@@ -44,7 +46,9 @@ m_bitBuffer(),
 m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
-m_endPtr(NOENDPTR),
+m_hdrStartPtr(NOENDPTR),
+m_lduStartPtr(NOENDPTR),
+m_lduEndPtr(NOENDPTR),
 m_minSyncPtr(NOENDPTR),
 m_maxSyncPtr(NOENDPTR),
 m_hdrSyncPtr(NOENDPTR),
@@ -71,7 +75,9 @@ void CP25RX::reset()
   m_bitPtr        = 0U;
   m_maxCorr       = 0;
   m_averagePtr    = 0U;
-  m_endPtr        = NOENDPTR;
+  m_hdrStartPtr   = NOENDPTR;
+  m_lduStartPtr   = NOENDPTR;
+  m_lduEndPtr     = NOENDPTR;
   m_hdrSyncPtr    = NOENDPTR;
   m_lduSyncPtr    = NOENDPTR;
   m_minSyncPtr    = NOENDPTR;
@@ -182,12 +188,8 @@ void CP25RX::processHdr(q15_t sample)
       if (m_lduSyncPtr >= m_minSyncPtr || m_lduSyncPtr <= m_maxSyncPtr)
         isSync = true;
     }
-    if (isSync) {
-      DEBUG4("P25RX, sync position in HDR, pos/min/max", m_lduSyncPtr, m_minSyncPtr, m_maxSyncPtr);
-      uint16_t ptr = m_hdrSyncPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_HDR_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES - 1U;
-      if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
-        ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
 
+    if (isSync) {
       m_threshold[m_averagePtr] = m_thresholdBest;
       m_centre[m_averagePtr]    = m_centreBest;
 
@@ -209,9 +211,9 @@ void CP25RX::processHdr(q15_t sample)
       DEBUG4("P25RX: sync found in Hdr pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
 
       uint8_t frame[P25_HDR_FRAME_LENGTH_BYTES + 1U];
-      samplesToBits(ptr, P25_HDR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+      samplesToBits(m_hdrStartPtr, P25_HDR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
 #if defined(DUMP_SAMPLES)
-      writeSync(ptr);
+      writeSync(m_hdrStartPtr);
 #endif
 
       frame[0U] = 0x01U;
@@ -241,11 +243,7 @@ void CP25RX::processLdu(q15_t sample)
       correlateSync();
   }
 
-  if (m_dataPtr == m_endPtr) {
-    uint16_t ptr = m_endPtr + P25_RADIO_SYMBOL_LENGTH + 1U;
-    if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
-      ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
-
+  if (m_dataPtr == m_lduEndPtr) {
     // Only update the centre and threshold if they are from a good sync
     if (m_lostCount == MAX_SYNC_FRAMES) {
       m_threshold[m_averagePtr] = m_thresholdBest;
@@ -278,9 +276,9 @@ void CP25RX::processLdu(q15_t sample)
     }
 
     uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
-    samplesToBits(ptr, P25_LDU_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+    samplesToBits(m_lduStartPtr, P25_LDU_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
 #if defined(DUMP_SAMPLES)
-    writeSync(ptr);
+    writeSync(m_lduStartPtr);
 #endif
 
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
@@ -293,9 +291,9 @@ void CP25RX::processLdu(q15_t sample)
 
       serial.writeP25Lost();
 
-      m_state   = P25RXS_NONE;
-      m_endPtr  = NOENDPTR;
-      m_maxCorr = 0;
+      m_state     = P25RXS_NONE;
+      m_lduEndPtr = NOENDPTR;
+      m_maxCorr   = 0;
 		} else {
       frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
@@ -317,16 +315,28 @@ bool CP25RX::correlateSync()
     q15_t max = -16000;
     q15_t min = 16000;
 
-    uint32_t mask = 0x00080000U;
-    for (uint8_t i = 0U; i < P25_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b = (P25_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < P25_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
 
-      corr += b ? -m_buffer[ptr] : m_buffer[ptr];
+      switch (P25_SYNC_SYMBOLS_VALUES[i]) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += P25_RADIO_SYMBOL_LENGTH;
       if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
@@ -341,35 +351,45 @@ bool CP25RX::correlateSync()
 
       uint8_t sync[P25_SYNC_BYTES_LENGTH];
 
-      uint16_t ptr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES + P25_RADIO_SYMBOL_LENGTH;
-      if (ptr >= P25_LDU_FRAME_LENGTH_SAMPLES)
-        ptr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+      uint16_t startPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES + P25_RADIO_SYMBOL_LENGTH;
+      if (startPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+        startPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
 
-      if (m_state == P25RXS_NONE)
-        samplesToBits(ptr, P25_SYNC_LENGTH_SYMBOLS, sync, 0U, centre, threshold);
-      else
-        samplesToBits(ptr, P25_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+      uint8_t maxErrs;
+      if (m_state == P25RXS_NONE) {
+        samplesToBits(startPtr, P25_SYNC_LENGTH_SYMBOLS, sync, 0U, centre, threshold);
+        maxErrs = MAX_SYNC_BIT_START_ERRS;
+      } else {
+        samplesToBits(startPtr, P25_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+        maxErrs = MAX_SYNC_BIT_RUN_ERRS;
+      }
 
       uint8_t errs = 0U;
       for (uint8_t i = 0U; i < P25_SYNC_BYTES_LENGTH; i++)
         errs += countBits8(sync[i] ^ P25_SYNC_BYTES[i]);
 
-      if (errs <= MAX_SYNC_BYTES_ERRS) {
+      if (errs <= maxErrs) {
         m_maxCorr       = corr;
         m_thresholdBest = threshold;
         m_centreBest    = centre;
         m_lostCount     = MAX_SYNC_FRAMES;
+
         m_lduSyncPtr    = m_dataPtr;
 
-        // This is the position of the end of a normal LDU
-        m_endPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES - 1U;
-        if (m_endPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
-          m_endPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+        // These are the positions of the start and end of an LDU
+        m_lduStartPtr   = startPtr;
 
-        // These are the positions of the sync in the following LDU if the HDR is present
+        m_lduEndPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_SAMPLES - P25_SYNC_LENGTH_SAMPLES - 1U;
+        if (m_lduEndPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+          m_lduEndPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
+
         if (m_state == P25RXS_NONE) {
           m_hdrSyncPtr = m_dataPtr;
 
+          // This is the position of the start of a HDR
+          m_hdrStartPtr = startPtr;
+
+          // These are the range of positions for a sync for an LDU following a HDR
           m_minSyncPtr = m_dataPtr + P25_HDR_FRAME_LENGTH_SAMPLES - 1U;
           if (m_minSyncPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
             m_minSyncPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;

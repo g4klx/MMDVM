@@ -240,16 +240,13 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
 
 void CDMRDMORX::correlateSync(bool first)
 {
-  uint8_t errs1 = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_S2_DATA_SYNC_SYMBOLS);
-  uint8_t errs2 = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_MS_DATA_SYNC_SYMBOLS);
+  uint8_t errs = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_MS_DATA_SYNC_SYMBOLS);
 
   // The voice sync is the complement of the data sync
-  bool data1  = (errs1 <= MAX_SYNC_SYMBOLS_ERRS);
-  bool data2  = (errs2 <= MAX_SYNC_SYMBOLS_ERRS);
-  bool voice1 = (errs1 >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
-  bool voice2 = (errs2 >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
+  bool data  = (errs <= MAX_SYNC_SYMBOLS_ERRS);
+  bool voice = (errs >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
 
-  if (data1 || data2 || voice1 || voice2) {
+  if (data || voice) {
     uint16_t ptr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
     if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
       ptr -= DMO_BUFFER_LENGTH_SAMPLES;
@@ -258,23 +255,34 @@ void CDMRDMORX::correlateSync(bool first)
     q15_t min =  16000;
     q15_t max = -16000;
 
-    uint32_t mask = 0x00800000U;
-    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b;
-      if (data1 || voice1)
-        b = (DMR_S2_DATA_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
+
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
+
+      int8_t corrVal;
+      if (data)
+        corrVal = DMR_MS_DATA_SYNC_SYMBOLS_VALUES[i];
       else
-        b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
+        corrVal = DMR_MS_VOICE_SYNC_SYMBOLS_VALUES[i];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
-
-      if (data1 || data2)
-        corr += b ? -m_buffer[ptr] : m_buffer[ptr];
-      else  // if (voice)
-        corr += b ? m_buffer[ptr] : -m_buffer[ptr];
+      switch (corrVal) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += DMR_RADIO_SYMBOL_LENGTH;
       if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
@@ -294,15 +302,11 @@ void CDMRDMORX::correlateSync(bool first)
 
       samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
 
-      if (data1 || data2) {
+      if (data) {
         uint8_t errs = 0U;
-        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++) {
-          if (data1)
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_DATA_SYNC_BYTES[i]);
-          else
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
-        }
-
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
+          errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
+ 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
             m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
@@ -331,12 +335,8 @@ void CDMRDMORX::correlateSync(bool first)
         }
       } else {  // if (voice1 || voice2)
         uint8_t errs = 0U;
-        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++) {
-          if (voice1)
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_VOICE_SYNC_BYTES[i]);
-          else
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
-        }
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
+          errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {

@@ -42,7 +42,9 @@ private:
   q15_t       m_buffer[P25_LDU_FRAME_LENGTH_SAMPLES];
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
-  uint16_t    m_endPtr;
+  uint16_t    m_hdrStartPtr;
+  uint16_t    m_lduStartPtr;
+  uint16_t    m_lduEndPtr;
   uint16_t    m_minSyncPtr;
   uint16_t    m_maxSyncPtr;
   uint16_t    m_hdrSyncPtr;

@@ -44,6 +44,9 @@ const uint64_t YSF_SYNC_BITS_MASK = 0x000000FFFFFFFFFFU;
 // D     4      7     1      C     9      6     3      4     D
 // 11 01 01 00  01 11 00 01  11 00 10 01  01 10 00 11  01 00 11 01
 // -3 +3 +3 +1  +3 -3 +1 +3  -3 +1 -1 +3  +3 -1 +3 -3  +3 +1 -3 +3
+
+const int8_t YSF_SYNC_SYMBOLS_VALUES[] = {-3, +3, +3, +1, +3, -3, +1, +3, -3, +1, -1, +3, +3, -1, +3, -3, +3, +1, -3, +3};
+
 const uint32_t YSF_SYNC_SYMBOLS      = 0x0007B5ADU;
 const uint32_t YSF_SYNC_SYMBOLS_MASK = 0x000FFFFFU;
 

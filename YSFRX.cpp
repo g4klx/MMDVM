@@ -18,7 +18,7 @@
 
 #define  WANT_DEBUG
 
-// #define  DUMP_SAMPLES
+#define  DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -27,8 +27,10 @@
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
-const uint8_t MAX_SYNC_BYTES_ERRS   = 3U;
+const uint8_t MAX_SYNC_BIT_START_ERRS = 2U;
+const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 4U;
+
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 3U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -44,6 +46,7 @@ m_bitBuffer(),
 m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
+m_startPtr(NOENDPTR),
 m_endPtr(NOENDPTR),
 m_syncPtr(NOENDPTR),
 m_minSyncPtr(NOENDPTR),
@@ -70,6 +73,7 @@ void CYSFRX::reset()
   m_bitPtr       = 0U;
   m_maxCorr      = 0;
   m_averagePtr   = 0U;
+  m_startPtr     = NOENDPTR;
   m_endPtr       = NOENDPTR;
   m_syncPtr      = NOENDPTR;
   m_minSyncPtr   = NOENDPTR;
@@ -168,10 +172,6 @@ void CYSFRX::processData(q15_t sample)
   }
 
   if (m_dataPtr == m_endPtr) {
-    uint16_t ptr = m_endPtr + YSF_RADIO_SYMBOL_LENGTH + 1U;
-    if (ptr >= YSF_FRAME_LENGTH_SAMPLES)
-      ptr -= YSF_FRAME_LENGTH_SAMPLES;
-
     // Only update the centre and threshold if they are from a good sync
     if (m_lostCount == MAX_SYNC_FRAMES) {
       m_threshold[m_averagePtr] = m_thresholdBest;
@@ -204,9 +204,9 @@ void CYSFRX::processData(q15_t sample)
     }
 
     uint8_t frame[YSF_FRAME_LENGTH_BYTES + 3U];
-    samplesToBits(ptr, YSF_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+    samplesToBits(m_startPtr, YSF_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
 #if defined(DUMP_SAMPLES)
-    writeSync(ptr);
+    writeSync(m_startPtr);
 #endif
 
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
@@ -244,16 +244,28 @@ bool CYSFRX::correlateSync()
     q15_t max = -16000;
     q15_t min = 16000;
 
-    uint32_t mask = 0x00080000U;
-    for (uint8_t i = 0U; i < YSF_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b = (YSF_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < YSF_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
 
-      corr += b ? -m_buffer[ptr] : m_buffer[ptr];
+      switch (YSF_SYNC_SYMBOLS_VALUES[i]) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += YSF_RADIO_SYMBOL_LENGTH;
       if (ptr >= YSF_FRAME_LENGTH_SAMPLES)
@@ -268,25 +280,31 @@ bool CYSFRX::correlateSync()
 
       uint8_t sync[YSF_SYNC_BYTES_LENGTH];
 
-      uint16_t ptr = m_dataPtr + YSF_FRAME_LENGTH_SAMPLES - YSF_SYNC_LENGTH_SAMPLES + YSF_RADIO_SYMBOL_LENGTH;
-      if (ptr >= YSF_FRAME_LENGTH_SAMPLES)
-        ptr -= YSF_FRAME_LENGTH_SAMPLES;
+      uint16_t startPtr = m_dataPtr + YSF_FRAME_LENGTH_SAMPLES - YSF_SYNC_LENGTH_SAMPLES + YSF_RADIO_SYMBOL_LENGTH;
+      if (startPtr >= YSF_FRAME_LENGTH_SAMPLES)
+        startPtr -= YSF_FRAME_LENGTH_SAMPLES;
 
-      if (m_state == YSFRXS_NONE)
-        samplesToBits(ptr, YSF_SYNC_LENGTH_SYMBOLS, sync, 0U, centre, threshold);
-      else
-        samplesToBits(ptr, YSF_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+      uint8_t maxErrs;
+      if (m_state == YSFRXS_NONE) {
+        samplesToBits(startPtr, YSF_SYNC_LENGTH_SYMBOLS, sync, 0U, centre, threshold);
+        maxErrs = MAX_SYNC_BIT_START_ERRS;
+      } else {
+        samplesToBits(startPtr, YSF_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+        maxErrs = MAX_SYNC_BIT_RUN_ERRS;
+      }
 
       uint8_t errs = 0U;
       for (uint8_t i = 0U; i < YSF_SYNC_BYTES_LENGTH; i++)
         errs += countBits8(sync[i] ^ YSF_SYNC_BYTES[i]);
 
-      if (errs <= MAX_SYNC_BYTES_ERRS) {
+      if (errs <= maxErrs) {
         m_maxCorr       = corr;
         m_thresholdBest = threshold;
         m_centreBest    = centre;
         m_lostCount     = MAX_SYNC_FRAMES;
         m_syncPtr       = m_dataPtr;
+
+        m_startPtr = startPtr;
 
         m_endPtr = m_dataPtr + YSF_FRAME_LENGTH_SAMPLES - YSF_SYNC_LENGTH_SAMPLES - 1U;
         if (m_endPtr >= YSF_FRAME_LENGTH_SAMPLES)
@@ -360,6 +378,9 @@ void CYSFRX::writeSync(uint16_t start)
   q15_t sync[YSF_SYNC_LENGTH_SYMBOLS];
 
   for (uint16_t i = 0U; i < YSF_SYNC_LENGTH_SYMBOLS; i++) {
+    if (i == (YSF_SYNC_LENGTH_SYMBOLS - 1U))
+      DEBUG3("YSFRX: sync/start", m_syncPtr, start);
+
     sync[i] = m_buffer[start];
 
     start += YSF_RADIO_SYMBOL_LENGTH;

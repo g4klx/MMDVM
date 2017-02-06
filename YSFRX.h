@@ -41,6 +41,7 @@ private:
   q15_t       m_buffer[YSF_FRAME_LENGTH_SAMPLES];
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
+  uint16_t    m_startPtr;
   uint16_t    m_endPtr;
   uint16_t    m_minSyncPtr;
   uint16_t    m_maxSyncPtr;
