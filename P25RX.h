@@ -54,10 +54,8 @@ private:
   uint8_t     m_countdown;
   q15_t       m_centre[16U];
   q15_t       m_centreVal;
-  q15_t       m_centreBest;
   q15_t       m_threshold[16U];
   q15_t       m_thresholdVal;
-  q15_t       m_thresholdBest;
   uint8_t     m_averagePtr;
   uint32_t    m_rssiAccum;
   uint16_t    m_rssiCount;
@@ -66,6 +64,7 @@ private:
   void processHdr(q15_t sample);
   void processLdu(q15_t sample);
   bool correlateSync();
+  void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSILdu(uint8_t* ldu);
   void writeSync(uint16_t start);
