@@ -397,8 +397,8 @@ void CYSFRX::writeRSSIData(uint8_t* data)
   if (m_rssiCount > 0U) {
     uint16_t rssi = m_rssiAccum / m_rssiCount;
 
-    data[120U] = (rssi >> 8) & 0xFFU;
-    data[121U] = (rssi >> 0) & 0xFFU;
+    data[121U] = (rssi >> 8) & 0xFFU;
+    data[122U] = (rssi >> 0) & 0xFFU;
 
     serial.writeYSFData(data, YSF_FRAME_LENGTH_BYTES + 3U);
   } else {

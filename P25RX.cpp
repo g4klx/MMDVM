@@ -462,8 +462,8 @@ void CP25RX::writeRSSILdu(uint8_t* ldu)
   if (m_rssiCount > 0U) {
     uint16_t rssi = m_rssiAccum / m_rssiCount;
 
-    ldu[216U] = (rssi >> 8) & 0xFFU;
-    ldu[217U] = (rssi >> 0) & 0xFFU;
+    ldu[217U] = (rssi >> 8) & 0xFFU;
+    ldu[218U] = (rssi >> 0) & 0xFFU;
 
     serial.writeP25Ldu(ldu, P25_LDU_FRAME_LENGTH_BYTES + 3U);
   } else {
