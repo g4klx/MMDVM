@@ -18,7 +18,8 @@
 
 #define  WANT_DEBUG
 
-#define  DUMP_SAMPLES
+// #define  DUMP_SYNC_SAMPLES
+#define DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -182,8 +183,11 @@ void CYSFRX::processData(q15_t sample)
 
     uint8_t frame[YSF_FRAME_LENGTH_BYTES + 3U];
     samplesToBits(m_startPtr, YSF_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+#if defined(DUMP_SYNC_SAMPLES)
+    writeSyncSamples(m_startPtr);
+#endif
 #if defined(DUMP_SAMPLES)
-    writeSync(m_startPtr);
+    writeSamples(m_startPtr);
 #endif
 
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
@@ -412,8 +416,8 @@ void CYSFRX::writeRSSIData(uint8_t* data)
   m_rssiCount = 0U;
 }
 
-#if defined(DUMP_SAMPLES)
-void CYSFRX::writeSync(uint16_t start)
+#if defined(DUMP_SYNC_SAMPLES)
+void CYSFRX::writeSyncSamples(uint16_t start)
 {
   q15_t sync[YSF_SYNC_LENGTH_SYMBOLS];
 
@@ -425,7 +429,23 @@ void CYSFRX::writeSync(uint16_t start)
       start -= YSF_FRAME_LENGTH_SAMPLES;
   }
 
-  serial.writeSamples(STATE_YSF, sync, YSF_SYNC_LENGTH_SYMBOLS);
+  serial.writeSyncSamples(STATE_YSF, sync, YSF_SYNC_LENGTH_SYMBOLS);
 }
 #endif
 
+#if defined(DUMP_SAMPLES)
+void CYSFRX::writeSamples(uint16_t start)
+{
+  q15_t samples[YSF_FRAME_LENGTH_SYMBOLS];
+
+  for (uint16_t i = 0U; i < YSF_FRAME_LENGTH_SYMBOLS; i++) {
+    samples[i] = m_buffer[start];
+
+    start += YSF_RADIO_SYMBOL_LENGTH;
+    if (start >= YSF_FRAME_LENGTH_SAMPLES)
+      start -= YSF_FRAME_LENGTH_SAMPLES;
+  }
+
+  serial.writeSamples(STATE_YSF, samples, YSF_FRAME_LENGTH_SYMBOLS);
+}
+#endif

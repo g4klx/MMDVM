@@ -62,13 +62,15 @@ const uint8_t MMDVM_NAK          = 0x7FU;
 
 const uint8_t MMDVM_SERIAL       = 0x80U;
 
-const uint8_t MMDVM_SAMPLES      = 0xF0U;
+const uint8_t MMDVM_SAMPLES      = 0xEFU;
+const uint8_t MMDVM_SYNC_SAMPLES = 0xF0U;
 
 const uint8_t MMDVM_DEBUG1       = 0xF1U;
 const uint8_t MMDVM_DEBUG2       = 0xF2U;
 const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
+
 
 #if defined(EXTERNAL_OSC)
 const uint8_t HARDWARE[]         = "MMDVM 20170206 TCXO (D-Star/DMR/System Fusion/P25/RSSI/CW Id)";
@@ -925,13 +927,13 @@ void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
   writeInt(1U, reply, count);
 }
 
-void CSerialPort::writeSamples(unsigned char mode, const q15_t* samples, unsigned char nSamples)
+void CSerialPort::writeSyncSamples(uint8_t mode, const q15_t* samples, uint8_t nSamples)
 {
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
-  reply[2U] = MMDVM_SAMPLES;
+  reply[2U] = MMDVM_SYNC_SAMPLES;
 
   reply[3U] = mode;
 
@@ -944,6 +946,30 @@ void CSerialPort::writeSamples(unsigned char mode, const q15_t* samples, unsigne
   }
 
   reply[1U] = count;
+
+  writeInt(1U, reply, count, true);
+}
+
+void CSerialPort::writeSamples(uint8_t mode, const q15_t* samples, uint16_t nSamples)
+{
+  uint8_t reply[1800U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_SAMPLES;
+
+  reply[5U] = mode;
+
+  uint16_t count = 6U;
+  for (uint16_t i = 0U; i < nSamples; i++) {
+    uint16_t val = uint16_t(samples[i] + 2048);
+
+    reply[count++] = (val >> 8) & 0xFF;
+    reply[count++] = (val >> 0) & 0xFF;
+  }
+
+  reply[3U] = (count >> 8) & 0xFFU;
+  reply[4U] = (count >> 0) & 0xFFU;
 
   writeInt(1U, reply, count, true);
 }

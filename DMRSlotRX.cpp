@@ -18,7 +18,8 @@
 
 #define  WANT_DEBUG
 
-// #define  DUMP_SAMPLES
+// #define  DUMP_SYNC_SAMPLES
+#define DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -132,11 +133,15 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
 
     uint16_t ptr = m_endPtr - DMR_FRAME_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH + 1U;
     samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
+#if defined(DUMP_SYNC_SAMPLES)
+    if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE)
+      writeSyncSamples();
+#endif
 #if defined(DUMP_SAMPLES)
     if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE)
-      writeSync();
+      writeSamples(ptr);
 #endif
-    
+
     if (m_control == CONTROL_DATA) {
       // Data sync
       uint8_t colorCode;
@@ -409,8 +414,8 @@ void CDMRSlotRX::writeRSSIData(uint8_t* frame)
 #endif
 }
 
-#if defined(DUMP_SAMPLES)
-void CDMRSlotRX::writeSync()
+#if defined(DUMP_SYNC_SAMPLES)
+void CDMRSlotRX::writeSyncSamples()
 {
   uint16_t ptr = m_syncPtr - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
 
@@ -421,7 +426,20 @@ void CDMRSlotRX::writeSync()
     ptr += DMR_RADIO_SYMBOL_LENGTH;
   }
 
-  serial.writeSamples(STATE_DMR, sync, DMR_SYNC_LENGTH_SYMBOLS);
+  serial.writeSyncSamples(STATE_DMR, sync, DMR_SYNC_LENGTH_SYMBOLS);
 }
 #endif
 
+#if defined(DUMP_SAMPLES)
+void CDMRSlotRX::writeSamples(uint16_t start)
+{
+  q15_t samples[DMR_FRAME_LENGTH_SYMBOLS];
+
+  for (uint16_t i = 0U; i < DMR_FRAME_LENGTH_SYMBOLS; i++) {
+    samples[i] = m_buffer[start];
+    start += DMR_RADIO_SYMBOL_LENGTH;
+  }
+
+  serial.writeSamples(STATE_DMR, samples, DMR_FRAME_LENGTH_SYMBOLS);
+}
+#endif

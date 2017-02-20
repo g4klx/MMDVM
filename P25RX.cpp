@@ -18,7 +18,8 @@
 
 #define  WANT_DEBUG
 
-#define  DUMP_SAMPLES
+// #define  DUMP_SYNC_SAMPLES
+#define DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -180,8 +181,8 @@ void CP25RX::processHdr(q15_t sample)
 
       uint8_t frame[P25_HDR_FRAME_LENGTH_BYTES + 1U];
       samplesToBits(m_hdrStartPtr, P25_HDR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
-#if defined(DUMP_SAMPLES)
-      writeSync(m_hdrStartPtr);
+#if defined(DUMP_SYNC_SAMPLES)
+      writeSyncSamples(m_hdrStartPtr);
 #endif
 
       frame[0U] = 0x01U;
@@ -229,8 +230,11 @@ void CP25RX::processLdu(q15_t sample)
 
     uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
     samplesToBits(m_lduStartPtr, P25_LDU_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+#if defined(DUMP_SYNC_SAMPLES)
+    writeSyncSamples(m_lduStartPtr);
+#endif
 #if defined(DUMP_SAMPLES)
-    writeSync(m_lduStartPtr);
+    writeSamples(m_lduStartPtr);
 #endif
 
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
@@ -477,8 +481,8 @@ void CP25RX::writeRSSILdu(uint8_t* ldu)
   m_rssiCount = 0U;
 }
 
-#if defined(DUMP_SAMPLES)
-void CP25RX::writeSync(uint16_t start)
+#if defined(DUMP_SYNC_SAMPLES)
+void CP25RX::writeSyncSamples(uint16_t start)
 {
   q15_t sync[P25_SYNC_LENGTH_SYMBOLS];
 
@@ -490,7 +494,23 @@ void CP25RX::writeSync(uint16_t start)
       start -= P25_LDU_FRAME_LENGTH_SAMPLES;
   }
 
-  serial.writeSamples(STATE_P25, sync, P25_SYNC_LENGTH_SYMBOLS);
+  serial.writeSyncSamples(STATE_P25, sync, P25_SYNC_LENGTH_SYMBOLS);
 }
 #endif
 
+#if defined(DUMP_SAMPLES)
+void CP25RX::writeSamples(uint16_t start)
+{
+  q15_t samples[P25_LDU_FRAME_LENGTH_SYMBOLS];
+
+  for (uint16_t i = 0U; i < P25_LDU_FRAME_LENGTH_SYMBOLS; i++) {
+    samples[i] = m_buffer[start];
+
+    start += P25_RADIO_SYMBOL_LENGTH;
+    if (start >= P25_LDU_FRAME_LENGTH_SAMPLES)
+      start -= P25_LDU_FRAME_LENGTH_SAMPLES;
+  }
+
+  serial.writeSamples(STATE_P25, samples, P25_LDU_FRAME_LENGTH_SYMBOLS);
+}
+#endif

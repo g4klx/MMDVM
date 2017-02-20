@@ -67,8 +67,8 @@ private:
   void correlateSync(bool first);
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSIData(uint8_t* frame);
-  void writeSync();
+  void writeSyncSamples();
+  void writeSamples(uint16_t start);
 };
 
 #endif
-

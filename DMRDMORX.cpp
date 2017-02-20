@@ -18,7 +18,8 @@
 
 #define  WANT_DEBUG
 
-// #define  DUMP_SAMPLES
+// #define  DUMP_SYNC_SAMPLES
+#define DUMP_SAMPLES
 
 #include "Config.h"
 #include "Globals.h"
@@ -129,9 +130,13 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
       ptr -= DMO_BUFFER_LENGTH_SAMPLES;
 
     samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
+#if defined(DUMP_SYNC_SAMPLES)
+    if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE)
+      writeSyncSamples();
+#endif
 #if defined(DUMP_SAMPLES)
     if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE)
-      writeSync();
+      writeSamples(ptr);
 #endif
 
     if (m_control == CONTROL_DATA) {
@@ -432,8 +437,8 @@ void CDMRDMORX::writeRSSIData(uint8_t* frame)
 #endif
 }
 
-#if defined(DUMP_SAMPLES)
-void CDMRDMORX::writeSync()
+#if defined(DUMP_SYNC_SAMPLES)
+void CDMRDMORX::writeSyncSamples()
 {
   uint16_t ptr = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
   if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
@@ -449,7 +454,23 @@ void CDMRDMORX::writeSync()
       ptr -= DMO_BUFFER_LENGTH_SAMPLES;
   }
 
-  serial.writeSamples(STATE_DMR, sync, DMR_SYNC_LENGTH_SYMBOLS);
+  serial.writeSyncSamples(STATE_DMR, sync, DMR_SYNC_LENGTH_SYMBOLS);
 }
 #endif
 
+#if defined(DUMP_SAMPLES)
+void CDMRDMORX::writeSamples(uint16_t start)
+{
+  q15_t samples[DMR_FRAME_LENGTH_SYMBOLS];
+
+  for (uint16_t i = 0U; i < DMR_FRAME_LENGTH_SYMBOLS; i++) {
+    samples[i] = m_buffer[start];
+
+    start += DMR_RADIO_SYMBOL_LENGTH;
+    if (start >= DMO_BUFFER_LENGTH_SAMPLES)
+      start -= DMO_BUFFER_LENGTH_SAMPLES;
+  }
+
+  serial.writeSamples(STATE_DMR, samples, DMR_FRAME_LENGTH_SYMBOLS);
+}
+#endif
