@@ -49,7 +49,6 @@ public:
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
 
-  void writeSyncSamples(uint8_t mode, const q15_t* samples, uint8_t nSamples);
   void writeSamples(uint8_t mode, const q15_t* samples, uint16_t nSamples);
 
   void writeDebug(const char* text);

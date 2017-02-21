@@ -62,8 +62,7 @@ const uint8_t MMDVM_NAK          = 0x7FU;
 
 const uint8_t MMDVM_SERIAL       = 0x80U;
 
-const uint8_t MMDVM_SAMPLES      = 0xEFU;
-const uint8_t MMDVM_SYNC_SAMPLES = 0xF0U;
+const uint8_t MMDVM_SAMPLES      = 0xF0U;
 
 const uint8_t MMDVM_DEBUG1       = 0xF1U;
 const uint8_t MMDVM_DEBUG2       = 0xF2U;
@@ -925,29 +924,6 @@ void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
   reply[1U] = count;
 
   writeInt(1U, reply, count);
-}
-
-void CSerialPort::writeSyncSamples(uint8_t mode, const q15_t* samples, uint8_t nSamples)
-{
-  uint8_t reply[130U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_SYNC_SAMPLES;
-
-  reply[3U] = mode;
-
-  uint8_t count = 4U;
-  for (uint8_t i = 0U; i < nSamples; i++) {
-    uint16_t val = uint16_t(samples[i] + 2048);
-
-    reply[count++] = (val >> 8) & 0xFF;
-    reply[count++] = (val >> 0) & 0xFF;
-  }
-
-  reply[1U] = count;
-
-  writeInt(1U, reply, count, true);
 }
 
 void CSerialPort::writeSamples(uint8_t mode, const q15_t* samples, uint16_t nSamples)
