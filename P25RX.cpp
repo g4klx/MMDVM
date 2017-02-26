@@ -226,9 +226,6 @@ void CP25RX::processLdu(q15_t sample)
 
     uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
     samplesToBits(m_lduStartPtr, P25_LDU_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
-#if defined(DUMP_SAMPLES)
-    writeSamples(m_lduStartPtr);
-#endif
 
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
     m_lostCount--;
@@ -247,9 +244,10 @@ void CP25RX::processLdu(q15_t sample)
       m_maxCorr    = 0;
 		} else {
       frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
-
       writeRSSILdu(frame);
-
+#if defined(DUMP_SAMPLES)
+      writeSamples(m_lduStartPtr, frame[0U]);
+#endif
       m_maxCorr = 0;
     }
   }
@@ -475,7 +473,7 @@ void CP25RX::writeRSSILdu(uint8_t* ldu)
 }
 
 #if defined(DUMP_SAMPLES)
-void CP25RX::writeSamples(uint16_t start)
+void CP25RX::writeSamples(uint16_t start, uint8_t control)
 {
   q15_t samples[P25_LDU_FRAME_LENGTH_SYMBOLS];
 
@@ -487,6 +485,6 @@ void CP25RX::writeSamples(uint16_t start)
       start -= P25_LDU_FRAME_LENGTH_SAMPLES;
   }
 
-  serial.writeSamples(STATE_P25, samples, P25_LDU_FRAME_LENGTH_SYMBOLS);
+  serial.writeSamples(STATE_P25, control, samples, P25_LDU_FRAME_LENGTH_SYMBOLS);
 }
 #endif

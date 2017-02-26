@@ -926,7 +926,7 @@ void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
   writeInt(1U, reply, count);
 }
 
-void CSerialPort::writeSamples(uint8_t mode, const q15_t* samples, uint16_t nSamples)
+void CSerialPort::writeSamples(uint8_t mode, uint8_t control, const q15_t* samples, uint16_t nSamples)
 {
   uint8_t reply[1800U];
 
@@ -935,8 +935,9 @@ void CSerialPort::writeSamples(uint8_t mode, const q15_t* samples, uint16_t nSam
   reply[2U] = MMDVM_SAMPLES;
 
   reply[5U] = mode;
+  reply[6U] = control;
 
-  uint16_t count = 6U;
+  uint16_t count = 7U;
   for (uint16_t i = 0U; i < nSamples; i++) {
     uint16_t val = uint16_t(samples[i] + 2048);
 

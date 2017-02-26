@@ -182,9 +182,6 @@ void CYSFRX::processData(q15_t sample)
 
     uint8_t frame[YSF_FRAME_LENGTH_BYTES + 3U];
     samplesToBits(m_startPtr, YSF_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
-#if defined(DUMP_SAMPLES)
-    writeSamples(m_startPtr);
-#endif
 
     // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
     m_lostCount--;
@@ -203,9 +200,10 @@ void CYSFRX::processData(q15_t sample)
       m_maxCorr    = 0;
     } else {
       frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
-
       writeRSSIData(frame);
-
+#if defined(DUMP_SAMPLES)
+      writeSamples(m_startPtr, frame[0U]);
+#endif
       m_maxCorr = 0;
     }
   }
@@ -413,7 +411,7 @@ void CYSFRX::writeRSSIData(uint8_t* data)
 }
 
 #if defined(DUMP_SAMPLES)
-void CYSFRX::writeSamples(uint16_t start)
+void CYSFRX::writeSamples(uint16_t start, uint8_t control)
 {
   q15_t samples[YSF_FRAME_LENGTH_SYMBOLS];
 
@@ -425,6 +423,6 @@ void CYSFRX::writeSamples(uint16_t start)
       start -= YSF_FRAME_LENGTH_SAMPLES;
   }
 
-  serial.writeSamples(STATE_YSF, samples, YSF_FRAME_LENGTH_SYMBOLS);
+  serial.writeSamples(STATE_YSF, control, samples, YSF_FRAME_LENGTH_SYMBOLS);
 }
 #endif

@@ -129,10 +129,6 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
       ptr -= DMO_BUFFER_LENGTH_SAMPLES;
 
     samplesToBits(ptr, DMR_FRAME_LENGTH_SYMBOLS, frame, 8U, centre, threshold);
-#if defined(DUMP_SAMPLES)
-    if (m_control == CONTROL_DATA || m_control == CONTROL_VOICE)
-      writeSamples(ptr);
-#endif
 
     if (m_control == CONTROL_DATA) {
       // Data sync
@@ -151,6 +147,9 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
           case DT_DATA_HEADER:
             DEBUG4("DMRDMORX: data header found pos/centre/threshold", m_syncPtr, centre, threshold);
             writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+            writeSamples(ptr, frame[0U]);
+#endif
             m_state = DMORXS_DATA;
             m_type  = 0x00U;
             break;
@@ -160,18 +159,27 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
             if (m_state == DMORXS_DATA) {
               DEBUG4("DMRDMORX: data payload found pos/centre/threshold", m_syncPtr, centre, threshold);
               writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+              writeSamples(ptr, frame[0U]);
+#endif
               m_type = dataType;
             }
             break;
           case DT_VOICE_LC_HEADER:
             DEBUG4("DMRDMORX: voice header found pos/centre/threshold", m_syncPtr, centre, threshold);
             writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+            writeSamples(ptr, frame[0U]);
+#endif
             m_state = DMORXS_VOICE;
             break;
           case DT_VOICE_PI_HEADER:
             if (m_state == DMORXS_VOICE) {
               DEBUG4("DMRDMORX: voice pi header found pos/centre/threshold", m_syncPtr, centre, threshold);
               writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+              writeSamples(ptr, frame[0U]);
+#endif
             }
             m_state = DMORXS_VOICE;
             break;
@@ -179,12 +187,18 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
             if (m_state == DMORXS_VOICE) {
               DEBUG4("DMRDMORX: voice terminator found pos/centre/threshold", m_syncPtr, centre, threshold);
               writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+              writeSamples(ptr, frame[0U]);
+#endif
               reset();
             }
             break;
           default:    // DT_CSBK
             DEBUG4("DMRDMORX: csbk found pos/centre/threshold", m_syncPtr, centre, threshold);
             writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+            writeSamples(ptr, frame[0U]);
+#endif
             reset();
             break;
         }
@@ -193,6 +207,9 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
       // Voice sync
       DEBUG4("DMRDMORX: voice sync found pos/centre/threshold", m_syncPtr, centre, threshold);
 	    writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+      writeSamples(ptr, frame[0U]);
+#endif
       m_state     = DMORXS_VOICE;
       m_syncCount = 0U;
       m_n         = 0U;
@@ -214,10 +231,16 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
         }
 
         serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+#if defined(DUMP_SAMPLES)
+        writeSamples(ptr, frame[0U]);
+#endif
       } else if (m_state == DMORXS_DATA) {
         if (m_type != 0x00U) {
           frame[0U] = CONTROL_DATA | m_type;
           writeRSSIData(frame);
+#if defined(DUMP_SAMPLES)
+          writeSamples(ptr, frame[0U]);
+#endif
         }
       }
     }
@@ -433,7 +456,7 @@ void CDMRDMORX::writeRSSIData(uint8_t* frame)
 }
 
 #if defined(DUMP_SAMPLES)
-void CDMRDMORX::writeSamples(uint16_t start)
+void CDMRDMORX::writeSamples(uint16_t start, uint8_t control)
 {
   q15_t samples[DMR_FRAME_LENGTH_SYMBOLS];
 
@@ -445,6 +468,6 @@ void CDMRDMORX::writeSamples(uint16_t start)
       start -= DMO_BUFFER_LENGTH_SAMPLES;
   }
 
-  serial.writeSamples(STATE_DMR, samples, DMR_FRAME_LENGTH_SYMBOLS);
+  serial.writeSamples(STATE_DMR, control, samples, DMR_FRAME_LENGTH_SYMBOLS);
 }
 #endif

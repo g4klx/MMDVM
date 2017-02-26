@@ -49,7 +49,7 @@ public:
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
 
-  void writeSamples(uint8_t mode, const q15_t* samples, uint16_t nSamples);
+  void writeSamples(uint8_t mode, uint8_t control, const q15_t* samples, uint16_t nSamples);
 
   void writeDebug(const char* text);
   void writeDebug(const char* text, int16_t n1);
