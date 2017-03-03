@@ -72,9 +72,9 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
 
 #if defined(EXTERNAL_OSC)
-const uint8_t HARDWARE[]         = "MMDVM 20170206 TCXO (D-Star/DMR/System Fusion/P25/RSSI/CW Id)";
+const uint8_t HARDWARE[]         = "MMDVM 20170303 TCXO (D-Star/DMR/System Fusion/P25/RSSI/CW Id)";
 #else
-const uint8_t HARDWARE[]         = "MMDVM 20170206 (D-Star/DMR/System Fusion/P25/RSSI/CW Id)";
+const uint8_t HARDWARE[]         = "MMDVM 20170303 (D-Star/DMR/System Fusion/P25/RSSI/CW Id)";
 #endif
 
 const uint8_t PROTOCOL_VERSION   = 1U;
