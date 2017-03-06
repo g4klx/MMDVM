@@ -33,7 +33,7 @@ public:
 
   void setTXDelay(uint8_t delay);
 
-  uint16_t getSpace() const;
+  uint8_t getSpace() const;
 
 private:
   CSerialRB            m_buffer;

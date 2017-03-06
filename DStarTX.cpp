@@ -460,7 +460,7 @@ void CDStarTX::setTXDelay(uint8_t delay)
   m_txDelay = 300U + uint16_t(delay) * 6U;        // 250ms + tx delay
 }
 
-uint16_t CDStarTX::getSpace() const
+uint8_t CDStarTX::getSpace() const
 {
   return m_buffer.getSpace() / (DSTAR_DATA_LENGTH_BYTES + 1U);
 }

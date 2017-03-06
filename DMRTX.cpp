@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -301,12 +301,12 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
   io.write(STATE_DMR, outBuffer, blockSize, controlBuffer);
 }
 
-uint16_t CDMRTX::getSpace1() const
+uint8_t CDMRTX::getSpace1() const
 {
   return m_fifo[0U].getSpace() / (DMR_FRAME_LENGTH_BYTES + 2U);
 }
 
-uint16_t CDMRTX::getSpace2() const
+uint8_t CDMRTX::getSpace2() const
 {
   return m_fifo[1U].getSpace() / (DMR_FRAME_LENGTH_BYTES + 2U);
 }

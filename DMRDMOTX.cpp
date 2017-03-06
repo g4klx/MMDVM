@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -158,7 +158,7 @@ void CDMRDMOTX::writeByte(uint8_t c)
   io.write(STATE_DMR, outBuffer, blockSize);
 }
 
-uint16_t CDMRDMOTX::getSpace() const
+uint8_t CDMRDMOTX::getSpace() const
 {
   return m_fifo.getSpace() / (DMR_FRAME_LENGTH_BYTES + 2U);
 }

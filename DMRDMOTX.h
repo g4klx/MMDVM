@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -35,7 +35,7 @@ public:
 
   void setTXDelay(uint8_t delay);
 
-  uint16_t getSpace() const;
+  uint8_t getSpace() const;
 
 private:
   CSerialRB            m_fifo;

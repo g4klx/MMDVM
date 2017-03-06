@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -169,7 +169,7 @@ void CYSFTX::setTXDelay(uint8_t delay)
   m_txDelay = 600U + uint16_t(delay) * 12U;        // 500ms + tx delay
 }
 
-uint16_t CYSFTX::getSpace() const
+uint8_t CYSFTX::getSpace() const
 {
   return m_buffer.getSpace() / YSF_FRAME_LENGTH_BYTES;
 }

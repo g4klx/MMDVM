@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -49,8 +49,8 @@ public:
 
   void process();
 
-  uint16_t getSpace1() const;
-  uint16_t getSpace2() const;
+  uint8_t getSpace1() const;
+  uint8_t getSpace2() const;
 
   void setColorCode(uint8_t colorCode);
 
