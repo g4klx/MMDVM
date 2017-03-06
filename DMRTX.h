@@ -68,6 +68,7 @@ private:
   uint16_t             m_poLen;
   uint16_t             m_poPtr;
   uint32_t             m_count;
+  uint32_t             m_frameCount;
   bool                 m_abort[2U];
 
   void createData(uint8_t slotIndex);

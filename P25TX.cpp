@@ -25,16 +25,14 @@
 #include "P25Defines.h"
 
 #if defined(WIDE_C4FSK_FILTERS_TX)
-// Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t P25_C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
-const uint16_t P25_C4FSK_FILTER_LEN = 22U;
+// Generated using rcosdesign(0.2, 4, 5, 'normal') in MATLAB
+static q15_t P25_C4FSK_FILTER[] = {-1393, -2602, -3044, -2238, 0, 3460, 7543, 11400, 14152, 15152, 14152,	11400, 7543, 3460, 0, -2238, -3044, -2602, -1393, 0};
+const uint16_t P25_C4FSK_FILTER_LEN = 20U;
 #else
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t P25_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                   11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
-const uint16_t P25_C4FSK_FILTER_LEN = 42U;
+// Generated using rcosdesign(0.2, 8, 5, 'normal') in MATLAB
+static q15_t P25_C4FSK_FILTER[] = {0, -413, -750, -845, -587, 0, 741, 1347, 1520, 1062, 0, -1383, -2582, -3021, -2222, 0, 3434, 7487, 11318, 14054, 15044, 14054,
+                                   11318, 7487, 3434, 0, -2222, -3021, -2582, -1383, 0, 1062, 1520, 1347, 741, 0, -587, -845, -750, -413};
+const uint16_t P25_C4FSK_FILTER_LEN = 40U;
 #endif
 
 // Generated in MATLAB using the following commands, and then normalised for unity gain

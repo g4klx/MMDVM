@@ -61,6 +61,8 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
+const uint32_t STARTUP_COUNT = 20U;
+
 CDMRTX::CDMRTX() :
 m_fifo(),
 m_modFilter(),
@@ -75,6 +77,7 @@ m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
 m_count(0U),
+m_frameCount(0U),
 m_abort()
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
@@ -233,6 +236,8 @@ void CDMRTX::setStart(bool start)
 
   m_count = 0U;
 
+  m_frameCount = 0U;
+
   m_abort[0U] = false;
   m_abort[1U] = false;
 }
@@ -313,7 +318,7 @@ uint8_t CDMRTX::getSpace2() const
 
 void CDMRTX::createData(uint8_t slotIndex)
 {
-  if (m_fifo[slotIndex].getData()> 0U) {
+  if (m_fifo[slotIndex].getData() > 0U && m_frameCount >= STARTUP_COUNT) {
     for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
       m_poBuffer[i]   = m_fifo[slotIndex].get();
       m_markBuffer[i] = MARK_NONE;
@@ -344,6 +349,8 @@ void CDMRTX::createCal()
 
 void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
 {
+  m_frameCount++;
+
   if (m_cachPtr >= 12U)
     m_cachPtr = 0U;
 
@@ -359,7 +366,9 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
   m_markBuffer[1U] = MARK_NONE;
   m_markBuffer[2U] = rxSlotIndex == 1U ? MARK_SLOT1 : MARK_SLOT2;
 
-  bool at = m_fifo[rxSlotIndex].getData() > 0U;
+  bool at = false;
+  if (m_frameCount >= STARTUP_COUNT)
+    m_fifo[rxSlotIndex].getData() > 0U;
   bool tc = txSlotIndex == 1U;
   bool ls0 = true;            // For 1 and 2
   bool ls1 = true;

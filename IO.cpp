@@ -41,6 +41,10 @@ const uint16_t C4FSK_FILTER_LEN = 42U;
 static q15_t   GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
 const uint16_t GMSK_FILTER_LEN = 12U;
 
+// One symbol boxcar filter
+static q15_t   P25_FILTER[] = {3000, 3000, 3000, 3000, 3000, 0};
+const uint16_t P25_FILTER_LEN = 6U;
+
 const uint16_t DC_OFFSET = 2048U;
 
 CIO::CIO() :
@@ -50,8 +54,10 @@ m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rssiBuffer(RX_RINGBUFFER_SIZE),
 m_C4FSKFilter(),
 m_GMSKFilter(),
+m_P25Filter(),
 m_C4FSKState(),
 m_GMSKState(),
+m_P25State(),
 m_pttInvert(false),
 m_rxLevel(128 * 128),
 m_cwIdTXLevel(128 * 128),
@@ -70,6 +76,7 @@ m_lockout(false)
 {
   ::memset(m_C4FSKState, 0x00U, 70U * sizeof(q15_t));
   ::memset(m_GMSKState,  0x00U, 40U * sizeof(q15_t));
+  ::memset(m_P25State,   0x00U, 30U * sizeof(q15_t));
 
   m_C4FSKFilter.numTaps = C4FSK_FILTER_LEN;
   m_C4FSKFilter.pState  = m_C4FSKState;
@@ -78,6 +85,10 @@ m_lockout(false)
   m_GMSKFilter.numTaps = GMSK_FILTER_LEN;
   m_GMSKFilter.pState  = m_GMSKState;
   m_GMSKFilter.pCoeffs = GMSK_FILTER;
+
+  m_P25Filter.numTaps = P25_FILTER_LEN;
+  m_P25Filter.pState  = m_P25State;
+  m_P25Filter.pCoeffs = P25_FILTER;
 
   initInt();
 }
@@ -187,7 +198,15 @@ void CIO::process()
         dstarRX.samples(GMSKVals, rssi, blockSize);
       }
 
-      if (m_dmrEnable || m_ysfEnable || m_p25Enable) {
+
+      if (m_p25Enable) {
+        q15_t P25Vals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_P25Filter, samples, P25Vals, blockSize);
+
+        p25RX.samples(P25Vals, rssi, blockSize);
+      }
+
+      if (m_dmrEnable || m_ysfEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
         ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
 
@@ -200,9 +219,6 @@ void CIO::process()
 
         if (m_ysfEnable)
           ysfRX.samples(C4FSKVals, rssi, blockSize);
-
-        if (m_p25Enable)
-          p25RX.samples(C4FSKVals, rssi, blockSize);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -235,10 +251,10 @@ void CIO::process()
       }
     } else if (m_modemState == STATE_P25) {
       if (m_p25Enable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE + 1U];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, blockSize);
+        q15_t P25Vals[RX_BLOCK_SIZE + 1U];
+        ::arm_fir_fast_q15(&m_P25Filter, samples, P25Vals, blockSize);
 
-        p25RX.samples(C4FSKVals, rssi, blockSize);
+        p25RX.samples(P25Vals, rssi, blockSize);
       }
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE + 1U];
