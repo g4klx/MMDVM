@@ -60,8 +60,7 @@ m_lpState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(240U),      // 200ms
-m_count(0U)
+m_txDelay(240U)       // 200ms
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
   ::memset(m_lpState,  0x00U, 70U * sizeof(q15_t));
@@ -82,8 +81,6 @@ void CP25TX::process()
 
   if (m_poLen == 0U) {
     if (!m_tx) {
-      m_count = 0U;
-
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = P25_START_SYNC;
     } else {
@@ -133,9 +130,9 @@ uint8_t CP25TX::writeData(const uint8_t* data, uint8_t length)
 
 void CP25TX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t intBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t outBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t intBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t outBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
@@ -157,29 +154,11 @@ void CP25TX::writeByte(uint8_t c)
     }
   }
 
-  uint16_t blockSize = P25_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, intBuffer, P25_RADIO_SYMBOL_LENGTH * 4U);
 
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += P25_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_fast_q15(&m_lpFilter, intBuffer, outBuffer, P25_RADIO_SYMBOL_LENGTH * 4U);
 
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        blockSize++;
-      } else {
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, intBuffer, blockSize);
-
-  ::arm_fir_fast_q15(&m_lpFilter, intBuffer, outBuffer, blockSize);
-
-  io.write(STATE_P25, outBuffer, blockSize);
+  io.write(STATE_P25, outBuffer, P25_RADIO_SYMBOL_LENGTH * 4U);
 }
 
 void CP25TX::setTXDelay(uint8_t delay)

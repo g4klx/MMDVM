@@ -248,18 +248,6 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   uint8_t dmrDelay = data[7U];
 
-  int8_t oscOffset = int8_t(data[8U]) - 128;
-  if (oscOffset < 0) {
-    m_sampleCount = 1000000U / uint32_t(-oscOffset);
-    m_sampleInsert = false;
-  } else if (oscOffset > 0) {
-    m_sampleCount = 1000000U / uint32_t(oscOffset);
-    m_sampleInsert = true;
-  } else {
-    m_sampleCount = 0U;
-    m_sampleInsert = false;
-  }
-
   uint8_t cwIdTXLevel  = data[5U];
   uint8_t dstarTXLevel = data[9U];
   uint8_t dmrTXLevel   = data[10U];

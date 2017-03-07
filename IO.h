@@ -83,8 +83,6 @@ private:
   uint16_t             m_adcOverflow;
   uint16_t             m_dacOverflow;
 
-  uint32_t             m_count;
-
   volatile uint32_t    m_watchdog;
 
   bool                 m_lockout;

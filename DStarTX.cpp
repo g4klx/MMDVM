@@ -195,8 +195,7 @@ m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(60U),      // 100ms
-m_count(0U)
+m_txDelay(60U)       // 100ms
 {
   ::memset(m_modState, 0x00U, 60U * sizeof(q15_t));
 
@@ -214,8 +213,6 @@ void CDStarTX::process()
 
   if (type == DSTAR_HEADER && m_poLen == 0U) {
     if (!m_tx) {
-      m_count = 0U;
-
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = BIT_SYNC;
     } else {
@@ -241,9 +238,6 @@ void CDStarTX::process()
   }
  
   if (type == DSTAR_DATA && m_poLen == 0U) {
-    if (!m_tx)
-      m_count = 0U;
-
     // Pop the type byte off
     m_buffer.get();
 
@@ -417,8 +411,8 @@ void CDStarTX::txHeader(const uint8_t* in, uint8_t* out) const
 
 void CDStarTX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U + 1U];
-  q15_t outBuffer[DSTAR_RADIO_BIT_LENGTH * 8U + 1U];
+  q15_t inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U];
+  q15_t outBuffer[DSTAR_RADIO_BIT_LENGTH * 8U];
 
   uint8_t mask = 0x01U;
 
@@ -432,27 +426,9 @@ void CDStarTX::writeByte(uint8_t c)
     mask <<= 1;
   }
 
-  uint16_t blockSize = DSTAR_RADIO_BIT_LENGTH * 8U;
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, DSTAR_RADIO_BIT_LENGTH * 8U);
 
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += DSTAR_RADIO_BIT_LENGTH * 8U;
-
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U] = inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U - 1U];
-        blockSize++;
-      } else {
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
-
-  io.write(STATE_DSTAR, outBuffer, blockSize);
+  io.write(STATE_DSTAR, outBuffer, DSTAR_RADIO_BIT_LENGTH * 8U);
 }
 
 void CDStarTX::setTXDelay(uint8_t delay)

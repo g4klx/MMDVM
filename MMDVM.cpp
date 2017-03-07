@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -35,9 +35,6 @@ bool m_duplex = true;
 
 bool m_tx  = false;
 bool m_dcd = false;
-
-uint32_t m_sampleCount = 0U;
-bool    m_sampleInsert = false;
 
 CDStarRX   dstarRX;
 CDStarTX   dstarTX;

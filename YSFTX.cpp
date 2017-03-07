@@ -52,8 +52,7 @@ m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(240U),      // 200ms
-m_count(0U)
+m_txDelay(240U)       // 200ms
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -69,8 +68,6 @@ void CYSFTX::process()
 
   if (m_poLen == 0U) {
     if (!m_tx) {
-      m_count = 0U;
-
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = YSF_START_SYNC;
     } else {
@@ -118,8 +115,8 @@ uint8_t CYSFTX::writeData(const uint8_t* data, uint8_t length)
 
 void CYSFTX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t outBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t outBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
@@ -141,27 +138,9 @@ void CYSFTX::writeByte(uint8_t c)
     }
   }
 
-  uint16_t blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, YSF_RADIO_SYMBOL_LENGTH * 4U);
 
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += YSF_RADIO_SYMBOL_LENGTH * 4U;
-
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        blockSize++;
-      } else {
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
-
-  io.write(STATE_YSF, outBuffer, blockSize);
+  io.write(STATE_YSF, outBuffer, YSF_RADIO_SYMBOL_LENGTH * 4U);
 }
 
 void CYSFTX::setTXDelay(uint8_t delay)

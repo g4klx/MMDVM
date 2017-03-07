@@ -76,7 +76,6 @@ m_markBuffer(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_count(0U),
 m_frameCount(0U),
 m_abort()
 {
@@ -234,8 +233,6 @@ void CDMRTX::setStart(bool start)
 {
   m_state = start ? DMRTXSTATE_SLOT1 : DMRTXSTATE_IDLE;
 
-  m_count = 0U;
-
   m_frameCount = 0U;
 
   m_abort[0U] = false;
@@ -245,14 +242,12 @@ void CDMRTX::setStart(bool start)
 void CDMRTX::setCal(bool start)
 {
   m_state = start ? DMRTXSTATE_CAL : DMRTXSTATE_IDLE;
-
-  m_count = 0U;
 }
 
 void CDMRTX::writeByte(uint8_t c, uint8_t control)
 {
-  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
@@ -274,36 +269,13 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
     }
   }
 
-  uint16_t blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U;
-
-  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
   ::memset(controlBuffer, MARK_NONE, DMR_RADIO_SYMBOL_LENGTH * 4U * sizeof(uint8_t));
   controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
 
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += DMR_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U);
 
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        for (int8_t i = DMR_RADIO_SYMBOL_LENGTH * 4U - 1; i >= 0; i--)
-          controlBuffer[i + 1] = controlBuffer[i];
-        blockSize++;
-      } else {
-        controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U - 1U] = control;  
-        for (uint8_t i = 0U; i < (DMR_RADIO_SYMBOL_LENGTH * 4U - 1U); i++)
-          controlBuffer[i] = controlBuffer[i + 1U];
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
-
-  io.write(STATE_DMR, outBuffer, blockSize, controlBuffer);
+  io.write(STATE_DMR, outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U, controlBuffer);
 }
 
 uint8_t CDMRTX::getSpace1() const
