@@ -26,15 +26,26 @@
 
 #if defined(WIDE_C4FSK_FILTERS_RX)
 // Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
-const uint16_t C4FSK_FILTER_LEN = 22U;
+static q15_t RRC_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
+                             11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
+const uint16_t RRC_FILTER_LEN = 22U;
+
+// Generated using rcosdesign(0.2, 4, 5, 'normal') in MATLAB
+static q15_t RC_FILTER[] = {-1393, -2602, -3044, -2238, 0, 3460, 7543, 11400, 14152, 15152, 14152, 11400,
+                            7543, 3460, 0, -2238, -3044, -2602, -1393, 0};
+const uint16_t RC_FILTER_LEN = 20U;
 #else
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                   11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
-const uint16_t C4FSK_FILTER_LEN = 42U;
+static q15_t RRC_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
+                             11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
+                             -553, -847, -731, -340, 104, 401, 0};
+const uint16_t RRC_FILTER_LEN = 42U;
+
+// Generated using rcosdesign(0.2, 8, 5, 'normal') in MATLAB
+static q15_t RC_FILTER[] = {0, -413, -750, -845, -587, 0, 741, 1347, 1520, 1062, 0, -1383, -2582, -3021, -2222, 0, 3434, 7487, 11318,
+                            14054, 15044, 14054, 11318, 7487, 3434, 0, -2222, -3021, -2582, -1383, 0, 1062, 1520, 1347, 741, 0, -587,
+                            -845, -750, -413};
+const uint16_t RC_FILTER_LEN = 40U;
 #endif
 
 // Generated using gaussfir(0.5, 4, 5) in MATLAB
@@ -52,10 +63,12 @@ m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rssiBuffer(RX_RINGBUFFER_SIZE),
-m_C4FSKFilter(),
+m_RRCFilter(),
+m_RCFilter(),
 m_GMSKFilter(),
 m_P25Filter(),
-m_C4FSKState(),
+m_RRCState(),
+m_RCState(),
 m_GMSKState(),
 m_P25State(),
 m_pttInvert(false),
@@ -73,13 +86,18 @@ m_dacOverflow(0U),
 m_watchdog(0U),
 m_lockout(false)
 {
-  ::memset(m_C4FSKState, 0x00U, 70U * sizeof(q15_t));
-  ::memset(m_GMSKState,  0x00U, 40U * sizeof(q15_t));
-  ::memset(m_P25State,   0x00U, 30U * sizeof(q15_t));
+  ::memset(m_RRCState,  0x00U, 70U * sizeof(q15_t));
+  ::memset(m_RCState,   0x00U, 70U * sizeof(q15_t));
+  ::memset(m_GMSKState, 0x00U, 40U * sizeof(q15_t));
+  ::memset(m_P25State,  0x00U, 30U * sizeof(q15_t));
 
-  m_C4FSKFilter.numTaps = C4FSK_FILTER_LEN;
-  m_C4FSKFilter.pState  = m_C4FSKState;
-  m_C4FSKFilter.pCoeffs = C4FSK_FILTER;
+  m_RRCFilter.numTaps = RRC_FILTER_LEN;
+  m_RRCFilter.pState  = m_RRCState;
+  m_RRCFilter.pCoeffs = RRC_FILTER;
+
+  m_RCFilter.numTaps = RC_FILTER_LEN;
+  m_RCFilter.pState  = m_RCState;
+  m_RCFilter.pCoeffs = RC_FILTER;
 
   m_GMSKFilter.numTaps = GMSK_FILTER_LEN;
   m_GMSKFilter.pState  = m_GMSKState;
@@ -178,22 +196,27 @@ void CIO::process()
         q15_t P25Vals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_P25Filter, samples, P25Vals, RX_BLOCK_SIZE);
 
-        p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
+        q15_t RCVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_RCFilter, P25Vals, RCVals, RX_BLOCK_SIZE);
+
+        p25RX.samples(RCVals, rssi, RX_BLOCK_SIZE);
       }
 
-      if (m_dmrEnable || m_ysfEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+      if (m_ysfEnable) {
+        q15_t RCVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_RCFilter, samples, RCVals, RX_BLOCK_SIZE);
 
-        if (m_dmrEnable) {
-          if (m_duplex)
-            dmrIdleRX.samples(C4FSKVals, RX_BLOCK_SIZE);
-          else
-            dmrDMORX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
-        }
+        ysfRX.samples(RCVals, rssi, RX_BLOCK_SIZE);
+      }
 
-        if (m_ysfEnable)
-          ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+      if (m_dmrEnable) {
+        q15_t RRCVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_RRCFilter, samples, RRCVals, RX_BLOCK_SIZE);
+
+        if (m_duplex)
+          dmrIdleRX.samples(RRCVals, RX_BLOCK_SIZE);
+        else
+          dmrDMORX.samples(RRCVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -204,25 +227,25 @@ void CIO::process()
       }
     } else if (m_modemState == STATE_DMR) {
       if (m_dmrEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        q15_t RRCVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_RRCFilter, samples, RRCVals, RX_BLOCK_SIZE);
 
         if (m_duplex) {
           // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
           if (m_tx)
-            dmrRX.samples(C4FSKVals, rssi, control, RX_BLOCK_SIZE);
+            dmrRX.samples(RRCVals, rssi, control, RX_BLOCK_SIZE);
           else
-            dmrIdleRX.samples(C4FSKVals, RX_BLOCK_SIZE);
+            dmrIdleRX.samples(RRCVals, RX_BLOCK_SIZE);
         } else {
-          dmrDMORX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+          dmrDMORX.samples(RRCVals, rssi, RX_BLOCK_SIZE);
         }
       }
     } else if (m_modemState == STATE_YSF) {
       if (m_ysfEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        q15_t RCVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_RCFilter, samples, RCVals, RX_BLOCK_SIZE);
 
-        ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+        ysfRX.samples(RCVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_P25) {
       if (m_p25Enable) {
