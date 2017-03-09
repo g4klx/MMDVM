@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -41,10 +41,11 @@ private:
   CSerialRB            m_buffer;
   arm_fir_instance_q15 m_modFilter;
   q15_t                m_modState[60U];    // NoTaps + BlockSize - 1, 12 + 40 - 1 plus some spare
-  uint8_t              m_poBuffer[400U];
+  uint8_t              m_poBuffer[600U];
   uint16_t             m_poLen;
   uint16_t             m_poPtr;
   uint16_t             m_txDelay;          // In bytes
+  uint32_t             m_count;
 
   void txHeader(const uint8_t* in, uint8_t* out) const;
   void writeByte(uint8_t c);

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@
 #define  DEBUG4(a,b,c,d)    serial.writeDebug((a),(b),(c),(d))
 #define  DEBUG5(a,b,c,d,e)  serial.writeDebug((a),(b),(c),(d),(e))
 #define  ASSERT(a)          serial.writeAssert((a),#a,__FILE__,__LINE__)
-#define  DUMP(a,b)          serial.writeDump((a),(b))
-#define  SAMPLES(a,b)       serial.writeSamples((a),(b))
 
 #else
 
@@ -42,8 +40,6 @@
 #define  DEBUG4(a,b,c,d)    
 #define  DEBUG5(a,b,c,d,e)  
 #define  ASSERT(a)          
-#define  DUMP(a,b)          
-#define  SAMPLES(a,b)       
 
 #endif
 

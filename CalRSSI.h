@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,26 +16,22 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(CALRX_H)
-#define  CALRX_H
+#if !defined(CALRSSI_H)
+#define  CALRSSI_H
 
 #include "Config.h"
-#include "DStarDefines.h"
 
-class CCalRX {
+class CCalRSSI {
 public:
-  CCalRX();
+  CCalRSSI();
 
-  void samples(const q15_t* samples, uint8_t length);
+  void samples(const uint16_t* rssi, uint8_t length);
 
 private:
-  uint32_t m_pll;
-  bool     m_prev;
-  uint32_t m_patternBuffer;
-  q15_t    m_rxBuffer[3U * 8U];
-  uint8_t  m_ptr;
-
-  void    process(q15_t value);
+  uint32_t m_count;
+  uint32_t m_accum;
+  uint16_t m_min;
+  uint16_t m_max;
 };
 
 #endif

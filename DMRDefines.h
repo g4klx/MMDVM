@@ -35,6 +35,10 @@ const unsigned int DMR_EMB_LENGTH_BITS    = 16U;
 const unsigned int DMR_EMB_LENGTH_SYMBOLS = 8U;
 const unsigned int DMR_EMB_LENGTH_SAMPLES = DMR_EMB_LENGTH_SYMBOLS * DMR_RADIO_SYMBOL_LENGTH;
 
+const unsigned int DMR_EMBSIG_LENGTH_BITS    = 32U;
+const unsigned int DMR_EMBSIG_LENGTH_SYMBOLS = 16U;
+const unsigned int DMR_EMBSIG_LENGTH_SAMPLES = DMR_EMBSIG_LENGTH_SYMBOLS * DMR_RADIO_SYMBOL_LENGTH;
+
 const unsigned int DMR_SLOT_TYPE_LENGTH_BITS    = 20U;
 const unsigned int DMR_SLOT_TYPE_LENGTH_SYMBOLS = 10U;
 const unsigned int DMR_SLOT_TYPE_LENGTH_SAMPLES = DMR_SLOT_TYPE_LENGTH_SYMBOLS * DMR_RADIO_SYMBOL_LENGTH;
@@ -71,13 +75,27 @@ const uint32_t DMR_BS_DATA_SYNC_SYMBOLS  = 0x00439B4DU;
 const uint32_t DMR_BS_VOICE_SYNC_SYMBOLS = 0x00BC64B2U;
 const uint32_t DMR_SYNC_SYMBOLS_MASK     = 0x00FFFFFFU;
 
+// D     5      D     7      F     7      7     F      D     7      5     7
+// 11 01 01 01  11 01 01 11  11 11 01 11  01 11 11 11  11 01 01 11  01 01 01 11
+// -3 +3 +3 +3  -3 +3 +3 -3  -3 -3 +3 -3  +3 -3 -3 -3  -3 +3 +3 -3  +3 +3 +3 -3
+
+const int8_t DMR_MS_DATA_SYNC_SYMBOLS_VALUES[] = {-3, +3, +3, +3, -3, +3, +3, -3, -3, -3, +3, -3, +3, -3, -3, -3, -3, +3, +3, -3, +3, +3, +3, -3};
+
+// 7     F      7     D      5     D      D     5      7     D      F     D
+// 01 11 11 11  01 11 11 01  01 01 11 01  11 01 01 01  01 11 11 01  11 11 11 01
+// +3 -3 -3 -3  +3 -3 -3 +3  +3 +3 -3 +3  -3 +3 +3 +3  +3 -3 -3 +3  -3 -3 -3 +3
+
+const int8_t DMR_MS_VOICE_SYNC_SYMBOLS_VALUES[] = {+3, -3, -3, -3, +3, -3, -3, +3, +3, +3, -3, +3, -3, +3, +3, +3, +3, -3, -3, +3, -3, -3, -3, +3};
+
 const uint8_t DT_VOICE_PI_HEADER    = 0U;
 const uint8_t DT_VOICE_LC_HEADER    = 1U;
 const uint8_t DT_TERMINATOR_WITH_LC = 2U;
 const uint8_t DT_CSBK               = 3U;
 const uint8_t DT_DATA_HEADER        = 6U;
+const uint8_t DT_RATE_12_DATA       = 7U;
+const uint8_t DT_RATE_34_DATA       = 8U;
 const uint8_t DT_IDLE               = 9U;
-// All others are for data transfer
+const uint8_t DT_RATE_1_DATA        = 10U;
 
 #endif
 

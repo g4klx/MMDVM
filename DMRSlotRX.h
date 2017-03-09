@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,37 +22,52 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
+enum DMRRX_STATE {
+  DMRRXS_NONE,
+  DMRRXS_VOICE,
+  DMRRXS_DATA
+};
+
 class CDMRSlotRX {
 public:
   CDMRSlotRX(bool slot);
 
   void start();
 
-  bool processSample(q15_t sample);
+  bool processSample(q15_t sample, uint16_t rssi);
 
   void setColorCode(uint8_t colorCode);
+  void setDelay(uint8_t delay);
 
   void reset();
 
 private:
-  bool     m_slot;
-  uint32_t m_bitBuffer[DMR_RADIO_SYMBOL_LENGTH];
-  q15_t    m_buffer[900U];
-  uint16_t m_bitPtr;
-  uint16_t m_dataPtr;
-  uint16_t m_syncPtr;
-  uint16_t m_endPtr;
-  q31_t    m_maxCorr;
-  q15_t    m_centre;
-  q15_t    m_threshold;
-  uint8_t  m_control;
-  uint8_t  m_syncCount;
-  uint8_t  m_colorCode;
-  uint8_t  m_n;
+  bool        m_slot;
+  uint32_t    m_bitBuffer[DMR_RADIO_SYMBOL_LENGTH];
+  q15_t       m_buffer[900U];
+  uint16_t    m_bitPtr;
+  uint16_t    m_dataPtr;
+  uint16_t    m_syncPtr;
+  uint16_t    m_startPtr;
+  uint16_t    m_endPtr;
+  uint16_t    m_delayPtr;
+  q31_t       m_maxCorr;
+  q15_t       m_centre[4U];
+  q15_t       m_threshold[4U];
+  uint8_t     m_averagePtr;
+  uint8_t     m_control;
+  uint8_t     m_syncCount;
+  uint8_t     m_colorCode;
+  uint16_t    m_delay;
+  DMRRX_STATE m_state;
+  uint8_t     m_n;
+  uint8_t     m_type;
+  uint16_t    m_rssi[900U];
 
-  void    correlateSync(q15_t sample);
-  void    samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void correlateSync(bool first);
+  void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void writeRSSIData(uint8_t* frame);
+  void writeSamples(uint16_t start, uint8_t control);
 };
 
 #endif
-

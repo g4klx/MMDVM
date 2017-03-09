@@ -19,19 +19,20 @@
 #if !defined(GLOBALS_H)
 #define  GLOBALS_H
 
-#if defined(__MBED__)
-#include "mbed.h"
+#if defined(STM32F4XX) || defined(STM32F4)
+#include "stm32f4xx.h"
 #else
 #include <Arduino.h>
 #endif
 
-#if defined(__SAM3X8E__) || defined(__STM32F1__) || defined(__STM32F2__)
+#if defined(__SAM3X8E__)
 #define  ARM_MATH_CM3
-#elif defined(__MK20DX256__) || defined(__STM32F3__) || defined(__STM32F4__)
+#elif defined(STM32F4XX) || defined(STM32F4) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define  ARM_MATH_CM4
 #else
 #error "Unknown processor type"
 #endif
+
 #include <arm_math.h>
 
 enum MMDVM_STATE {
@@ -39,19 +40,32 @@ enum MMDVM_STATE {
   STATE_DSTAR     = 1,
   STATE_DMR       = 2,
   STATE_YSF       = 3,
-  STATE_CALIBRATE = 99
+  STATE_P25       = 4,
+
+  // Dummy states start at 90
+  STATE_RSSICAL   = 96,
+  STATE_CWID      = 97,
+  STATE_DMRCAL    = 98,
+  STATE_DSTARCAL  = 99
 };
 
 #include "SerialPort.h"
 #include "DMRIdleRX.h"
+#include "DMRDMORX.h"
+#include "DMRDMOTX.h"
 #include "DStarRX.h"
 #include "DStarTX.h"
 #include "DMRRX.h"
 #include "DMRTX.h"
 #include "YSFRX.h"
 #include "YSFTX.h"
-#include "CalRX.h"
-#include "CalTX.h"
+#include "P25RX.h"
+#include "P25TX.h"
+#include "CalDStarRX.h"
+#include "CalDStarTX.h"
+#include "CalDMR.h"
+#include "CalRSSI.h"
+#include "CWIdTX.h"
 #include "Debug.h"
 #include "IO.h"
 
@@ -59,15 +73,25 @@ const uint8_t  MARK_SLOT1 = 0x08U;
 const uint8_t  MARK_SLOT2 = 0x04U;
 const uint8_t  MARK_NONE  = 0x00U;
 
-const uint16_t RX_BLOCK_SIZE = 20U;
+const uint16_t RX_BLOCK_SIZE = 2U;
+
+const uint16_t TX_RINGBUFFER_SIZE = 500U;
+const uint16_t RX_RINGBUFFER_SIZE = 600U;
 
 extern MMDVM_STATE m_modemState;
 
 extern bool m_dstarEnable;
 extern bool m_dmrEnable;
 extern bool m_ysfEnable;
+extern bool m_p25Enable;
+
+extern bool m_duplex;
 
 extern bool m_tx;
+extern bool m_dcd;
+
+extern uint32_t m_sampleCount;
+extern bool     m_sampleInsert;
 
 extern CSerialPort serial;
 extern CIO io;
@@ -79,11 +103,21 @@ extern CDMRIdleRX dmrIdleRX;
 extern CDMRRX dmrRX;
 extern CDMRTX dmrTX;
 
+extern CDMRDMORX dmrDMORX;
+extern CDMRDMOTX dmrDMOTX;
+
 extern CYSFRX ysfRX;
 extern CYSFTX ysfTX;
 
-extern CCalRX calRX;
-extern CCalTX calTX;
+extern CP25RX p25RX;
+extern CP25TX p25TX;
+
+extern CCalDStarRX calDStarRX;
+extern CCalDStarTX calDStarTX;
+extern CCalDMR     calDMR;
+extern CCalRSSI    calRSSI;
+
+extern CCWIdTX cwIdTX;
 
 #endif
 

@@ -1,5 +1,6 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,37 +17,33 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(YSFTX_H)
-#define  YSFTX_H
-
 #include "Config.h"
+#include "Globals.h"
+#include "CalDMR.h"
 
-#include "SerialRB.h"
 
-class CYSFTX {
-public:
-  CYSFTX();
+CCalDMR::CCalDMR() :
+m_transmit(false) 
+{
+}
 
-  uint8_t writeData(const uint8_t* data, uint8_t length);
+void CCalDMR::process()
+{
+  if (m_transmit) {
+    dmrTX.setCal(true);
+    dmrTX.process();
+  } else {
+    dmrTX.setCal(false);
+  }
+}
 
-  void process();
+uint8_t CCalDMR::write(const uint8_t* data, uint8_t length)
+{
+  if (length != 1U)
+    return 4U;
 
-  void setTXDelay(uint8_t delay);
+  m_transmit = data[0U] == 1U;
 
-  uint16_t getSpace() const;
-
-private:
-  CSerialRB            m_buffer;
-  arm_fir_instance_q15 m_modFilter;
-  q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  uint8_t              m_poBuffer[1200U];
-  uint16_t             m_poLen;
-  uint16_t             m_poPtr;
-  uint16_t             m_txDelay;
-  uint32_t             m_count;
-
-  void writeByte(uint8_t c);
-};
-
-#endif
+  return 0U;
+}
 

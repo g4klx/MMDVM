@@ -1,5 +1,5 @@
 /*
-Serial RB control - Copyright (C) KI6ZUM 2015
+TX fifo control - Copyright (C) KI6ZUM 2015
 Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
 
 This library is free software; you can redistribute it and/or
@@ -18,26 +18,20 @@ Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 Boston, MA  02110-1301, USA.
 */
 
-#include "SerialRB.h"
+#include "RSSIRB.h"
 
-CSerialRB::CSerialRB(uint16_t length) :
+CRSSIRB::CRSSIRB(uint16_t length) :
 m_length(length),
-m_buffer(NULL),
+m_rssi(NULL),
 m_head(0U),
 m_tail(0U),
-m_full(false)
+m_full(false),
+m_overflow(false)
 {
-  m_buffer = new uint8_t[length];
+  m_rssi = new uint16_t[length];
 }
 
-void CSerialRB::reset()
-{
-  m_head = 0U;
-  m_tail = 0U;
-  m_full = false;
-}
-
-uint16_t CSerialRB::getSpace() const
+uint16_t CRSSIRB::getSpace() const
 {
   uint16_t n = 0U;
 
@@ -54,7 +48,7 @@ uint16_t CSerialRB::getSpace() const
   return n;
 }
 
-uint16_t CSerialRB::getData() const
+uint16_t CRSSIRB::getData() const
 {
   if (m_tail == m_head)
     return m_full ? m_length : 0U;
@@ -64,12 +58,14 @@ uint16_t CSerialRB::getData() const
     return m_length - m_tail + m_head;
 }
 
-bool CSerialRB::put(uint8_t c)
+bool CRSSIRB::put(uint16_t rssi)
 {
-  if (m_full)
+  if (m_full) {
+    m_overflow = true;
     return false;
+  }
 
-  m_buffer[m_head] = c;
+  m_rssi[m_head] = rssi;
 
   m_head++;
   if (m_head >= m_length)
@@ -81,14 +77,12 @@ bool CSerialRB::put(uint8_t c)
   return true;
 }
 
-uint8_t CSerialRB::peek() const
+bool CRSSIRB::get(uint16_t& rssi)
 {
-  return m_buffer[m_tail];
-}
+  if (m_head == m_tail && !m_full)
+    return false;
 
-uint8_t CSerialRB::get()
-{
-  uint8_t value = m_buffer[m_tail];
+  rssi  = m_rssi[m_tail];
 
   m_full = false;
 
@@ -96,6 +90,15 @@ uint8_t CSerialRB::get()
   if (m_tail >= m_length)
     m_tail = 0U;
 
-  return value;
+  return true;
+}
+
+bool CRSSIRB::hasOverflowed()
+{
+  bool overflow = m_overflow;
+
+  m_overflow = false;
+
+  return overflow;
 }
 

@@ -26,7 +26,7 @@ m_slot2RX(true)
 {
 }
 
-void CDMRRX::samples(const q15_t* samples, const uint8_t* control, uint8_t length)
+void CDMRRX::samples(const q15_t* samples, const uint16_t* rssi, const uint8_t* control, uint8_t length)
 {
   bool dcd1 = false;
   bool dcd2 = false;
@@ -43,8 +43,8 @@ void CDMRRX::samples(const q15_t* samples, const uint8_t* control, uint8_t lengt
         break;
     }
 
-    dcd1 = m_slot1RX.processSample(samples[i]);
-    dcd2 = m_slot2RX.processSample(samples[i]);
+    dcd1 = m_slot1RX.processSample(samples[i], rssi[i]);
+    dcd2 = m_slot2RX.processSample(samples[i], rssi[i]);
   }
 
   io.setDecode(dcd1 || dcd2);
@@ -54,6 +54,12 @@ void CDMRRX::setColorCode(uint8_t colorCode)
 {
   m_slot1RX.setColorCode(colorCode);
   m_slot2RX.setColorCode(colorCode);
+}
+
+void CDMRRX::setDelay(uint8_t delay)
+{
+  m_slot1RX.setDelay(delay);
+  m_slot2RX.setDelay(delay);
 }
 
 void CDMRRX::reset()

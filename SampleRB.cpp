@@ -19,7 +19,6 @@ Boston, MA  02110-1301, USA.
 */
 
 #include "SampleRB.h"
-#include "Debug.h"
 
 CSampleRB::CSampleRB(uint16_t length) :
 m_length(length),
@@ -36,12 +35,19 @@ m_overflow(false)
 
 uint16_t CSampleRB::getSpace() const
 {
+  uint16_t n = 0U;
+
   if (m_tail == m_head)
-    return m_full ? 0U : m_length;
+    n = m_full ? 0U : m_length;
   else if (m_tail < m_head)
-    return m_length - m_head + m_tail;
+    n = m_length - m_head + m_tail;
   else
-    return m_tail - m_head;
+    n = m_tail - m_head;
+
+  if (n > m_length)
+    n = 0U;
+
+  return n;
 }
 
 uint16_t CSampleRB::getData() const

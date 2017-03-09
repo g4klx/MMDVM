@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+// #define  WANT_DEBUG
+
 #include "Config.h"
 #include "Globals.h"
 #include "DStarRX.h"
@@ -28,6 +30,10 @@ const uint32_t PLLINC = PLLMAX / DSTAR_RADIO_BIT_LENGTH;
 const uint32_t INC    = PLLINC / 32U;
 
 const unsigned int MAX_SYNC_BITS = 50U * DSTAR_DATA_LENGTH_BITS;
+
+const unsigned int SYNC_POS        = 21U * DSTAR_DATA_LENGTH_BITS;
+const unsigned int SYNC_SCAN_START = SYNC_POS - 3U;
+const unsigned int SYNC_SCAN_END   = SYNC_POS + 3U;
 
 const q15_t THRESHOLD = 0;
 
@@ -253,8 +259,8 @@ m_pathMemory1(),
 m_pathMemory2(),
 m_pathMemory3(),
 m_fecOutput(),
-m_samples(),
-m_samplesPtr(0U)
+m_rssiAccum(0U),
+m_rssiCount(0U)
 {
 }
 
@@ -266,13 +272,15 @@ void CDStarRX::reset()
   m_patternBuffer = 0x00U;
   m_rxBufferBits  = 0U;
   m_dataBits      = 0U;
-  m_samplesPtr    = 0U;
+  m_rssiAccum     = 0U;
+  m_rssiCount     = 0U;
 }
 
-void CDStarRX::samples(const q15_t* samples, uint8_t length)
+void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
-    m_samples[m_samplesPtr] = samples[i];
+    m_rssiAccum += rssi[i];
+    m_rssiCount++;
 
     bool bit = samples[i] < THRESHOLD;
 
@@ -304,10 +312,6 @@ void CDStarRX::samples(const q15_t* samples, uint8_t length)
           break;
       }
     }
-
-    m_samplesPtr++;
-    if (m_samplesPtr >= DSTAR_DATA_SYNC_LENGTH_BITS)
-      m_samplesPtr = 0U;
   }
 }
 
@@ -317,12 +321,15 @@ void CDStarRX::processNone(bool bit)
   if (bit)
     m_patternBuffer |= 0x01U;
 
-  // Exact matching of the frame sync sequence
-  if (countBits32((m_patternBuffer & FRAME_SYNC_MASK) ^ FRAME_SYNC_DATA) == 0U) {
+  // Fuzzy matching of the frame sync sequence
+  if (countBits32((m_patternBuffer & FRAME_SYNC_MASK) ^ FRAME_SYNC_DATA) <= FRAME_SYNC_ERRS) {
     DEBUG1("DStarRX: found frame sync in None");
 
     ::memset(m_rxBuffer, 0x00U, DSTAR_FEC_SECTION_LENGTH_BYTES);
     m_rxBufferBits = 0U;
+
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
 
     m_rxState = DSRXS_HEADER;
     return;
@@ -331,27 +338,22 @@ void CDStarRX::processNone(bool bit)
   // Exact matching of the data sync bit sequence
   if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) == 0U) {
     DEBUG1("DStarRX: found data sync in None");
+
     io.setDecode(true);
+    io.setADCDetection(true);
 
-#if defined(WANT_DEBUG)
-    q15_t min = 16000;
-    q15_t max = -16000;
-    for (uint8_t i = 0U; i < DSTAR_DATA_SYNC_LENGTH_BITS; i++) {
-      if (m_samples[i] > max)
-        max = m_samples[i];
-      if (m_samples[i] < min)
-        min = m_samples[i];
-    }
-    DEBUG3("DStarRX: data sync found min/max", min, max);
-#endif
+    // Suppress RSSI on the dummy sync message
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
 
-    serial.writeDStarData(DSTAR_DATA_SYNC_BYTES, DSTAR_DATA_LENGTH_BYTES);
+    ::memcpy(m_rxBuffer, DSTAR_DATA_SYNC_BYTES, DSTAR_DATA_LENGTH_BYTES);
+    writeRSSIData(m_rxBuffer);
 
-    ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES);
+    ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
     m_rxBufferBits = 0U;
 
-    m_dataBits = MAX_SYNC_BITS;
-    m_rxState = DSRXS_DATA;
+    m_dataBits  = 0U;
+    m_rxState   = DSRXS_DATA;
     return;
   }
 }
@@ -371,19 +373,17 @@ void CDStarRX::processHeader(bool bit)
     unsigned char header[DSTAR_HEADER_LENGTH_BYTES];
     bool ok = rxHeader(m_rxBuffer, header);
     if (ok) {
-      DEBUG1("DStarRX: header checksum ok");
       io.setDecode(true);
+      io.setADCDetection(true);
 
-      serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES);
+      writeRSSIHeader(header);
 
-      ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES);
+      ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
       m_rxBufferBits = 0U;
 
-      m_rxState = DSRXS_DATA;
-      m_dataBits = MAX_SYNC_BITS;
+      m_rxState   = DSRXS_DATA;
+      m_dataBits  = SYNC_POS - DSTAR_DATA_LENGTH_BITS + 1U;
     } else {
-      DEBUG1("DStarRX: header checksum failed");
-
       // The checksum failed, return to looking for syncs
       m_rxState = DSRXS_NONE;
     }
@@ -402,7 +402,9 @@ void CDStarRX::processData(bool bit)
   // Fuzzy matching of the end frame sequences
   if (countBits32((m_patternBuffer & END_SYNC_MASK) ^ END_SYNC_DATA) <= END_SYNC_ERRS) {
     DEBUG1("DStarRX: Found end sync in Data");
+
     io.setDecode(false);
+    io.setADCDetection(false);
 
     serial.writeDStarEOT();
 
@@ -412,54 +414,47 @@ void CDStarRX::processData(bool bit)
 
   // Fuzzy matching of the data sync bit sequence
   bool syncSeen = false;
-  if (m_rxBufferBits >= (DSTAR_DATA_LENGTH_BITS - 3U)) {
+  if (m_dataBits >= SYNC_SCAN_START && m_dataBits <= (SYNC_POS + 1U)) {
     if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) <= DATA_SYNC_ERRS) {
 #if defined(WANT_DEBUG)
-      if (m_rxBufferBits < DSTAR_DATA_LENGTH_BITS)
-        DEBUG2("DStarRX: found data sync in Data, early", DSTAR_DATA_LENGTH_BITS - m_rxBufferBits);
+      if (m_dataBits < SYNC_POS)
+        DEBUG2("DStarRX: found data sync in Data, early", SYNC_POS - m_dataBits);
       else
         DEBUG1("DStarRX: found data sync in Data");
-
-      q15_t min = 16000;
-      q15_t max = -16000;
-      for (uint8_t i = 0U; i < DSTAR_DATA_SYNC_LENGTH_BITS; i++) {
-        if (m_samples[i] > max)
-          max = m_samples[i];
-        if (m_samples[i] < min)
-          min = m_samples[i];
-      }
-
-      DEBUG3("DStarRX: data sync found min/max", min, max);
 #endif
       m_rxBufferBits = DSTAR_DATA_LENGTH_BITS;
-      m_dataBits = MAX_SYNC_BITS;
-      syncSeen = true;
+      m_dataBits = 0U;
+      syncSeen   = true;
     }
   }
 
-  // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
-  m_dataBits--;
-  if (m_dataBits == 0U) {
-    DEBUG1("DStarRX: data sync timed out, lost lock");
-    io.setDecode(false);
-
-    serial.writeDStarLost();
-
-    m_rxState = DSRXS_NONE;
-    return;
-  }
-
   // Check to see if the sync is arriving late
-  if (m_rxBufferBits == DSTAR_DATA_LENGTH_BITS && !syncSeen) {
+  if (m_dataBits == SYNC_POS) {
     for (uint8_t i = 1U; i <= 3U; i++) {
       uint32_t syncMask = DATA_SYNC_MASK >> i;
       uint32_t syncData = DATA_SYNC_DATA >> i;
       if (countBits32((m_patternBuffer & syncMask) ^ syncData) <= DATA_SYNC_ERRS) {
         DEBUG2("DStarRX: found data sync in Data, late", i);
         m_rxBufferBits -= i;
+        m_dataBits     -= i;
         break;
       }
     }
+  }
+
+  m_dataBits++;
+
+  // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
+  if (m_dataBits >= MAX_SYNC_BITS) {
+    DEBUG1("DStarRX: data sync timed out, lost lock");
+
+    io.setDecode(false);
+    io.setADCDetection(false);
+
+    serial.writeDStarLost();
+
+    m_rxState = DSRXS_NONE;
+    return;
   }
 
   // Send a data frame to the host if the required number of bits have been received, or if a data sync has been seen
@@ -468,14 +463,57 @@ void CDStarRX::processData(bool bit)
       m_rxBuffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
       m_rxBuffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
       m_rxBuffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
-    }
-
-    serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
+	    writeRSSIData(m_rxBuffer);
+    } else {
+	    serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
+	  }
 
     // Start the next frame
-    ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES);
+    ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
     m_rxBufferBits = 0U;
   }
+}
+
+void CDStarRX::writeRSSIHeader(unsigned char* header)
+{
+#if defined(SEND_RSSI_DATA)
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
+
+    header[41U] = (rssi >> 8) & 0xFFU;
+    header[42U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 2U);
+  } else {
+    serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 0U);
+  }
+#else
+  serial.writeDStarHeader(header, DSTAR_HEADER_LENGTH_BYTES + 0U);
+#endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
+}
+
+void CDStarRX::writeRSSIData(unsigned char* data)
+{
+#if defined(SEND_RSSI_DATA)
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
+
+    data[12U] = (rssi >> 8) & 0xFFU;
+    data[13U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 2U);
+  } else {
+    serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 0U);
+  }
+#else
+  serial.writeDStarData(data, DSTAR_DATA_LENGTH_BYTES + 0U);
+#endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
 }
 
 bool CDStarRX::rxHeader(uint8_t* in, uint8_t* out)
@@ -693,4 +731,3 @@ bool CDStarRX::checksum(const uint8_t* header) const
 
   return crc8[0U] == header[DSTAR_HEADER_LENGTH_BYTES - 2U] && crc8[1U] == header[DSTAR_HEADER_LENGTH_BYTES - 1U];
 }
-

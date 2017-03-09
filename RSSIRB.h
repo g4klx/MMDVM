@@ -18,8 +18,8 @@ Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 Boston, MA  02110-1301, USA.
 */
 
-#if !defined(SERIALRB_H)
-#define  SERIALRB_H
+#if !defined(RSSIRB_H)
+#define  RSSIRB_H
 
 #if defined(STM32F4XX) || defined(STM32F4)
 #include "stm32f4xx.h"
@@ -28,30 +28,27 @@ Boston, MA  02110-1301, USA.
 #include <Arduino.h>
 #endif
 
-const uint16_t SERIAL_RINGBUFFER_SIZE = 370U;
-
-class CSerialRB {
+class CRSSIRB {
 public:
-  CSerialRB(uint16_t length = SERIAL_RINGBUFFER_SIZE);
-
+  CRSSIRB(uint16_t length);
+  
   uint16_t getSpace() const;
-
+  
   uint16_t getData() const;
 
-  void reset();
+  bool put(uint16_t rssi);
 
-  bool put(uint8_t c);
+  bool get(uint16_t& rssi);
 
-  uint8_t peek() const;
-
-  uint8_t get();
+  bool hasOverflowed();
 
 private:
-  uint16_t          m_length;
-  volatile uint8_t* m_buffer;
-  volatile uint16_t m_head;
-  volatile uint16_t m_tail;
-  volatile bool     m_full;
+  uint16_t           m_length;
+  volatile uint16_t* m_rssi;
+  volatile uint16_t  m_head;
+  volatile uint16_t  m_tail;
+  volatile bool      m_full;
+  bool               m_overflow;
 };
 
 #endif

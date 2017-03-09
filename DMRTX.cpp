@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,20 +17,29 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+// #define WANT_DEBUG
+
 #include "Config.h"
 #include "Globals.h"
 #include "DMRSlotType.h"
 
+#if defined(WIDE_C4FSK_FILTERS_TX)
+// Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
+static q15_t DMR_C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
+                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
+const uint16_t DMR_C4FSK_FILTER_LEN = 22U;
+#else
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
 static q15_t DMR_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
                                    -553, -847, -731, -340, 104, 401, 0};
 const uint16_t DMR_C4FSK_FILTER_LEN = 42U;
+#endif
 
-q15_t DMR_A[] = { 1280,  1280,  1280,  1280,  1280};
-q15_t DMR_B[] = {  427,   427,   427,   427,   427};
-q15_t DMR_C[] = { -427,  -427,  -427,  -427,  -427};
-q15_t DMR_D[] = {-1280, -1280, -1280, -1280, -1280};
+const q15_t DMR_LEVELA[] = { 640,  640 , 640,  640,  640};
+const q15_t DMR_LEVELB[] = { 213,  213,  213,  213,  213};
+const q15_t DMR_LEVELC[] = {-213, -213, -213, -213, -213};
+const q15_t DMR_LEVELD[] = {-640, -640, -640, -640, -640};
 
 // The PR FILL and Data Sync pattern.
 const uint8_t IDLE_DATA[] =
@@ -44,7 +54,7 @@ const uint8_t CACH_INTERLEAVE[] =
          73U, 74U, 75U, 77U, 78U, 79U, 81U, 82U, 83U, 85U, 87U, 88U, 89U, 91U, 92U, 93U, 95U};
 
 const uint8_t EMPTY_SHORT_LC[] = 
-        {0x00U, 0x08U, 0x44U, 0x00U, 0x88U, 0x18U, 0x63U, 0x89U, 0x18U, 0x64U, 0x80U, 0x00U};
+        {0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -63,7 +73,9 @@ m_newShortLC(),
 m_markBuffer(),
 m_poBuffer(),
 m_poLen(0U),
-m_poPtr(0U)
+m_poPtr(0U),
+m_count(0U),
+m_abort()
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -73,6 +85,9 @@ m_poPtr(0U)
 
   ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
   ::memcpy(m_shortLC,    EMPTY_SHORT_LC, 12U);
+
+  m_abort[0U] = false;
+  m_abort[1U] = false;
 }
 
 void CDMRTX::process()
@@ -96,7 +111,11 @@ void CDMRTX::process()
         createData(1U);
         m_state = DMRTXSTATE_CACH1;
         break;
-        
+
+      case DMRTXSTATE_CAL:
+        createCal();
+        break;
+
       default:
         createCACH(0U, 1U);
         m_state = DMRTXSTATE_SLOT1;
@@ -107,7 +126,7 @@ void CDMRTX::process()
   if (m_poLen > 0U) {
     uint16_t space = io.getSpace();
     
-    while (space > (4U * DMR_RADIO_SYMBOL_LENGTH) && space < 1000U) {
+    while (space > (4U * DMR_RADIO_SYMBOL_LENGTH)) {
       uint8_t c = m_poBuffer[m_poPtr];
       uint8_t m = m_markBuffer[m_poPtr];
       m_poPtr++;
@@ -134,6 +153,11 @@ uint8_t CDMRTX::writeData1(const uint8_t* data, uint8_t length)
   if (space < DMR_FRAME_LENGTH_BYTES)
     return 5U;
 
+  if (m_abort[0U]) {
+    m_fifo[0U].reset();
+    m_abort[0U] = false;
+  }
+
   for (uint8_t i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
     m_fifo[0U].put(data[i + 1U]);
 
@@ -152,6 +176,11 @@ uint8_t CDMRTX::writeData2(const uint8_t* data, uint8_t length)
   uint16_t space = m_fifo[1U].getSpace();
   if (space < DMR_FRAME_LENGTH_BYTES)
     return 5U;
+
+  if (m_abort[1U]) {
+    m_fifo[1U].reset();
+    m_abort[1U] = false;
+  }
 
   for (uint8_t i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
     m_fifo[1U].put(data[i + 1U]);
@@ -176,24 +205,49 @@ uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint8_t length)
     WRITE_BIT1(m_newShortLC, n, b);
   }
 
-  // Set the LCSS bits
-  m_newShortLC[1U]  |= 0x08U;
-  m_newShortLC[4U]  |= 0x88U;
-  m_newShortLC[7U]  |= 0x88U;
-  m_newShortLC[10U] |= 0x80U;
-
   return 0U;
+}
+
+uint8_t CDMRTX::writeAbort(const uint8_t* data, uint8_t length)
+{
+  if (length != 1U)
+    return 4U;
+
+  switch (data[0U]) {
+    case 1U:
+      m_abort[0U] = true;
+      return 0U;
+
+    case 2U:
+      m_abort[1U] = true;
+      return 0U;
+
+    default:
+      return 4U;
+  }
 }
 
 void CDMRTX::setStart(bool start)
 {
   m_state = start ? DMRTXSTATE_SLOT1 : DMRTXSTATE_IDLE;
+
+  m_count = 0U;
+
+  m_abort[0U] = false;
+  m_abort[1U] = false;
+}
+
+void CDMRTX::setCal(bool start)
+{
+  m_state = start ? DMRTXSTATE_CAL : DMRTXSTATE_IDLE;
+
+  m_count = 0U;
 }
 
 void CDMRTX::writeByte(uint8_t c, uint8_t control)
 {
-  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
-  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
 
   const uint8_t MASK = 0xC0U;
 
@@ -201,27 +255,50 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
   for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += DMR_RADIO_SYMBOL_LENGTH) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, DMR_A, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELA, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x80U:
-        ::memcpy(p, DMR_B, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELB, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x00U:
-        ::memcpy(p, DMR_C, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELC, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       default:
-        ::memcpy(p, DMR_D, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, DMR_LEVELD, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
     }
   }
 
-  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
+  uint16_t blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U;
+
+  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
   ::memset(controlBuffer, MARK_NONE, DMR_RADIO_SYMBOL_LENGTH * 4U * sizeof(uint8_t));
-  controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;
+  controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
 
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U);
+  // Handle the case of the oscillator not being accurate enough
+  if (m_sampleCount > 0U) {
+    m_count += DMR_RADIO_SYMBOL_LENGTH * 4U;
 
-  io.write(outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U, controlBuffer);
+    if (m_count >= m_sampleCount) {
+      if (m_sampleInsert) {
+        inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U - 1U];
+        for (int8_t i = DMR_RADIO_SYMBOL_LENGTH * 4U - 1; i >= 0; i--)
+          controlBuffer[i + 1] = controlBuffer[i];
+        blockSize++;
+      } else {
+        controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U - 1U] = control;  
+        for (uint8_t i = 0U; i < (DMR_RADIO_SYMBOL_LENGTH * 4U - 1U); i++)
+          controlBuffer[i] = controlBuffer[i + 1U];
+        blockSize--;
+      }
+
+      m_count -= m_sampleCount;
+    }
+  }
+
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
+
+  io.write(STATE_DMR, outBuffer, blockSize, controlBuffer);
 }
 
 uint16_t CDMRTX::getSpace1() const
@@ -242,11 +319,23 @@ void CDMRTX::createData(uint8_t slotIndex)
       m_markBuffer[i] = MARK_NONE;
     }
   } else {
+    m_abort[slotIndex] = false;
     // Transmit an idle message
     for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
       m_poBuffer[i]   = m_idle[i];
       m_markBuffer[i] = MARK_NONE;
     }
+  }
+
+  m_poLen = DMR_FRAME_LENGTH_BYTES;
+  m_poPtr = 0U;
+}
+
+void CDMRTX::createCal()
+{
+  for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
+    m_poBuffer[i]   = 0x5FU;              // +3, +3, -3, -3 pattern for deviation cal.
+    m_markBuffer[i] = MARK_NONE;
   }
 
   m_poLen = DMR_FRAME_LENGTH_BYTES;
@@ -272,23 +361,25 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
 
   bool at = m_fifo[rxSlotIndex].getData() > 0U;
   bool tc = txSlotIndex == 1U;
-  bool lcss0 = true;            // For 1 and 2
-  bool lcss1 = true;
+  bool ls0 = true;            // For 1 and 2
+  bool ls1 = true;
 
   if (m_cachPtr == 0U)          // For 0
-    lcss0 = false;
+    ls1 = false;
   else if (m_cachPtr == 9U)     // For 3
-    lcss1 = false;
+    ls0 = false;
 
-  bool h0 = at ^ tc ^ lcss0;
-  bool h1 =      tc ^ lcss0 ^ lcss1;
-  bool h2 = at ^ tc         ^ lcss1;
+  bool h0 = at ^ tc ^ ls1;
+  bool h1 =      tc ^ ls1 ^ ls0;
+  bool h2 = at ^ tc       ^ ls0;
 
-  m_poBuffer[0U] |= at ? 0x80U : 0x00U;
-  m_poBuffer[0U] |= tc ? 0x08U : 0x00U;
-  m_poBuffer[1U] |= h0 ? 0x02U : 0x00U;
-  m_poBuffer[2U] |= h1 ? 0x20U : 0x00U;
-  m_poBuffer[2U] |= h2 ? 0x02U : 0x00U;
+  m_poBuffer[0U] |= at  ? 0x80U : 0x00U;
+  m_poBuffer[0U] |= tc  ? 0x08U : 0x00U;
+  m_poBuffer[1U] |= ls1 ? 0x80U : 0x00U;
+  m_poBuffer[1U] |= ls0 ? 0x08U : 0x00U;
+  m_poBuffer[1U] |= h0  ? 0x02U : 0x00U;
+  m_poBuffer[2U] |= h1  ? 0x20U : 0x00U;
+  m_poBuffer[2U] |= h2  ? 0x02U : 0x00U;
 
   m_poLen = DMR_CACH_LENGTH_BYTES;
   m_poPtr = 0U;

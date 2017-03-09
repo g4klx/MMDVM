@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,23 +16,38 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(CALTX_H)
-#define  CALTX_H
+#if !defined(P25TX_H)
+#define  P25TX_H
 
 #include "Config.h"
-#include "DStarDefines.h"
 
-class CCalTX {
+#include "SerialRB.h"
+
+class CP25TX {
 public:
-  CCalTX();
+  CP25TX();
 
-  uint8_t write(const uint8_t* data, uint8_t length);
+  uint8_t writeData(const uint8_t* data, uint8_t length);
 
   void process();
 
+  void setTXDelay(uint8_t delay);
+
+  uint16_t getSpace() const;
+
 private:
-  bool      m_transmit;
-  uint16_t  m_count;
+  CSerialRB            m_buffer;
+  arm_fir_instance_q15 m_modFilter;
+  arm_fir_instance_q15 m_lpFilter;
+  q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+  q15_t                m_lpState[70U];     // NoTaps + BlockSize - 1, 44 + 20 - 1 plus some spare
+  uint8_t              m_poBuffer[1200U];
+  uint16_t             m_poLen;
+  uint16_t             m_poPtr;
+  uint16_t             m_txDelay;
+  uint32_t             m_count;
+
+  void writeByte(uint8_t c);
 };
 
 #endif

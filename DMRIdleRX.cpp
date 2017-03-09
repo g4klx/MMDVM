@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,6 +16,10 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#define  WANT_DEBUG
+
+// #define DUMP_SAMPLES
+
 #include "Config.h"
 #include "Globals.h"
 #include "DMRIdleRX.h"
@@ -31,12 +35,17 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 
+const uint16_t NOENDPTR = 9999U;
+
+const uint8_t CONTROL_IDLE = 0x80U;
+const uint8_t CONTROL_DATA = 0x40U;
+
 CDMRIdleRX::CDMRIdleRX() :
 m_bitBuffer(),
 m_buffer(),
 m_bitPtr(0U),
 m_dataPtr(0U),
-m_endPtr(999U),
+m_endPtr(NOENDPTR),
 m_maxCorr(0),
 m_centre(0),
 m_threshold(0),
@@ -51,7 +60,7 @@ void CDMRIdleRX::reset()
   m_maxCorr   = 0;
   m_threshold = 0;
   m_centre    = 0;
-  m_endPtr    = 999U;
+  m_endPtr    = NOENDPTR;
 }
 
 void CDMRIdleRX::samples(const q15_t* samples, uint8_t length)
@@ -77,16 +86,28 @@ void CDMRIdleRX::processSample(q15_t sample)
     q15_t max = -16000;
     q15_t min =  16000;
 
-    uint32_t mask = 0x00800000U;
-    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
 
-      corr += b ? -m_buffer[ptr] : m_buffer[ptr];
+      switch (DMR_MS_DATA_SYNC_SYMBOLS_VALUES[i]) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += DMR_RADIO_SYMBOL_LENGTH;
       if (ptr >= DMR_FRAME_LENGTH_SAMPLES)
@@ -138,16 +159,15 @@ void CDMRIdleRX::processSample(q15_t sample)
     slotType.decode(frame + 1U, colorCode, dataType);
 
     if (colorCode == m_colorCode && dataType == DT_CSBK) {
-      frame[0U] = 0x80U | 0x40U | DT_CSBK;    // Idle RX, Data Sync, CSBK
+      frame[0U] = CONTROL_IDLE | CONTROL_DATA | DT_CSBK;
       serial.writeDMRData(false, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-#if defined(WANT_DEBUG)
-    } else {
-      DEBUG5("DMRIdleRX: invalid color code or data type", colorCode, m_colorCode, dataType, DT_CSBK);
+#if defined(DUMP_SAMPLES)
+      writeSamples(ptr, frame[0U]);
 #endif
     }
 
-    m_endPtr  = 999U;
-    m_maxCorr = 0U;
+    m_endPtr  = NOENDPTR;
+    m_maxCorr = 0;
   }
 
   m_dataPtr++;
@@ -197,3 +217,19 @@ void CDMRIdleRX::setColorCode(uint8_t colorCode)
   m_colorCode = colorCode;
 }
 
+#if defined(DUMP_SAMPLES)
+void CDMRIdleRX::writeSamples(uint16_t start, uint8_t control)
+{
+  q15_t samples[DMR_FRAME_LENGTH_SYMBOLS];
+
+  for (uint16_t i = 0U; i < DMR_FRAME_LENGTH_SYMBOLS; i++) {
+    samples[i] = m_buffer[start];
+
+    start += DMR_RADIO_SYMBOL_LENGTH;
+    if (start >= DMR_FRAME_LENGTH_SAMPLES)
+      start -= DMR_FRAME_LENGTH_SAMPLES;
+  }
+
+  serial.writeSamples(STATE_DMR, control, samples, DMR_FRAME_LENGTH_SYMBOLS);
+}
+#endif

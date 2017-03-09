@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -16,6 +17,8 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#if defined(STM32F4XX) || defined(STM32F4)
 
 #include "Config.h"
 #include "Globals.h"
@@ -96,7 +99,17 @@ void loop()
   if (m_modemState == STATE_DMRCAL)
     calDMR.process();
 
-  if (m_modemState == STATE_IDLE)
-    cwIdTX.process();
+	if (m_modemState == STATE_IDLE)
+		cwIdTX.process();
 }
+
+int main()
+{
+  setup();
+
+  for (;;)
+    loop();
+}
+
+#endif
 

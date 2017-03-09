@@ -21,8 +21,9 @@ Boston, MA  02110-1301, USA.
 #if !defined(SAMPLERB_H)
 #define  SAMPLERB_H
 
-#if defined(__MBED__)
-#include "mbed.h"
+#if defined(STM32F4XX) || defined(STM32F4)
+#include "stm32f4xx.h"
+#include <cstddef>
 #else
 #include <Arduino.h>
 #endif
