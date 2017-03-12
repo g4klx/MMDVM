@@ -41,6 +41,12 @@ const q15_t DMR_LEVELB[] = { 213,  213,  213,  213,  213};
 const q15_t DMR_LEVELC[] = {-213, -213, -213, -213, -213};
 const q15_t DMR_LEVELD[] = {-640, -640, -640, -640, -640};
 
+// The PR FILL and Data Sync pattern.
+const uint8_t IDLE_DATA[] =
+        {0x53U, 0xC2U, 0x5EU, 0xABU, 0xA8U, 0x67U, 0x1DU, 0xC7U, 0x38U, 0x3BU, 0xD9U,
+         0x36U, 0x00U, 0x0DU, 0xFFU, 0x57U, 0xD7U, 0x5DU, 0xF5U, 0xD0U, 0x03U, 0xF6U,
+         0xE4U, 0x65U, 0x17U, 0x1BU, 0x48U, 0xCAU, 0x6DU, 0x4FU, 0xC6U, 0x10U, 0xB4U};
+
 
 CDMRDMOTX::CDMRDMOTX() :
 m_fifo(),
@@ -49,7 +55,9 @@ m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(240U)       // 200ms
+m_txDelay(14U),       // 240ms
+m_idle(),
+m_frameCount(0U)
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -62,14 +70,26 @@ void CDMRDMOTX::process()
 {
   if (m_poLen == 0U && m_fifo.getData() > 0U) {
     if (!m_tx) {
-      for (uint16_t i = 0U; i < m_txDelay; i++)
-        m_poBuffer[m_poLen++] = 0x00U;
-    } else {
+      m_frameCount = 0U;
+
       for (unsigned int i = 0U; i < 72U; i++)
         m_poBuffer[m_poLen++] = 0x00U;
 
       for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
-        m_poBuffer[i] = m_fifo.get();
+        m_poBuffer[i] = m_idle[i];
+    } else {
+      for (unsigned int i = 0U; i < 72U; i++)
+        m_poBuffer[m_poLen++] = 0x00U;
+
+      if (m_frameCount >= m_txDelay) {
+        for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
+          m_poBuffer[i] = m_fifo.get();
+      } else {
+        for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
+          m_poBuffer[i] = m_idle[i];
+      }
+
+      m_frameCount++;
     }
 
     m_poPtr = 0U;
@@ -146,6 +166,14 @@ uint8_t CDMRDMOTX::getSpace() const
 
 void CDMRDMOTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = 600U + uint16_t(delay) * 12U;        // 500ms + tx delay
+  m_txDelay = 10U + uint32_t(delay) / 6U;
+}
+
+void CDMRDMOTX::setColorCode(uint8_t colorCode)
+{
+  ::memcpy(m_idle, IDLE_DATA, DMR_FRAME_LENGTH_BYTES);
+
+  CDMRSlotType slotType;
+  slotType.encode(colorCode, DT_IDLE, m_idle);
 }
 
