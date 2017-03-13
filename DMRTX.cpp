@@ -340,7 +340,7 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
 
   bool at = false;
   if (m_frameCount >= STARTUP_COUNT)
-    m_fifo[rxSlotIndex].getData() > 0U;
+    at = m_fifo[rxSlotIndex].getData() > 0U;
   bool tc = txSlotIndex == 1U;
   bool ls0 = true;            // For 1 and 2
   bool ls1 = true;
