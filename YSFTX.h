@@ -35,6 +35,8 @@ public:
 
   uint8_t getSpace() const;
 
+  void setLoDev(bool on);
+
 private:
   CSerialRB            m_buffer;
   arm_fir_instance_q15 m_modFilter;
@@ -43,6 +45,7 @@ private:
   uint16_t             m_poLen;
   uint16_t             m_poPtr;
   uint16_t             m_txDelay;
+  bool                 m_loDev;
 
   void writeByte(uint8_t c);
 };

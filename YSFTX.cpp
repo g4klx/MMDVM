@@ -37,10 +37,15 @@ static q15_t YSF_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1
 const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
 #endif
 
-const q15_t YSF_LEVELA[] = { 809,  809,  809,  809,  809};
-const q15_t YSF_LEVELB[] = { 269,  269,  269,  269,  269};
-const q15_t YSF_LEVELC[] = {-269, -269, -269, -269, -269};
-const q15_t YSF_LEVELD[] = {-809, -809, -809, -809, -809};
+const q15_t YSF_LEVELA_HI[] = { 809,  809,  809,  809,  809};
+const q15_t YSF_LEVELB_HI[] = { 269,  269,  269,  269,  269};
+const q15_t YSF_LEVELC_HI[] = {-269, -269, -269, -269, -269};
+const q15_t YSF_LEVELD_HI[] = {-809, -809, -809, -809, -809};
+
+const q15_t YSF_LEVELA_LO[] = { 405,  405,  405,  405,  405};
+const q15_t YSF_LEVELB_LO[] = { 135,  135,  135,  135,  135};
+const q15_t YSF_LEVELC_LO[] = {-135, -135, -135, -135, -135};
+const q15_t YSF_LEVELD_LO[] = {-405, -405, -405, -405, -405};
 
 const uint8_t YSF_START_SYNC = 0x77U;
 const uint8_t YSF_END_SYNC   = 0xFFU;
@@ -52,7 +57,8 @@ m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(240U)       // 200ms
+m_txDelay(240U),      // 200ms
+m_loDev(false)
 {
   ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
 
@@ -124,16 +130,16 @@ void CYSFTX::writeByte(uint8_t c)
   for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += YSF_RADIO_SYMBOL_LENGTH) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, YSF_LEVELA, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_loDev ? YSF_LEVELA_LO : YSF_LEVELA_HI, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x80U:
-        ::memcpy(p, YSF_LEVELB, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_loDev ? YSF_LEVELB_LO : YSF_LEVELB_HI, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       case 0x00U:
-        ::memcpy(p, YSF_LEVELC, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_loDev ? YSF_LEVELC_LO : YSF_LEVELC_HI, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       default:
-        ::memcpy(p, YSF_LEVELD, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(p, m_loDev ? YSF_LEVELD_LO : YSF_LEVELD_HI, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
     }
   }
@@ -151,5 +157,10 @@ void CYSFTX::setTXDelay(uint8_t delay)
 uint8_t CYSFTX::getSpace() const
 {
   return m_buffer.getSpace() / YSF_FRAME_LENGTH_BYTES;
+}
+
+void CYSFTX::setLoDev(bool on)
+{
+  m_loDev = on;
 }
 
