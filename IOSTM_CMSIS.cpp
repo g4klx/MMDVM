@@ -295,9 +295,6 @@ void CIO::initInt()
   GPIOInit();
   ADCInit();
   DACInit();
-#if defined(STM32F1_POG)
-  FancyLEDEffect();
-#endif
 }
 
 void CIO::startInt()

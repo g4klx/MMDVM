@@ -141,7 +141,7 @@ $(OBJDIR):
 $(BINDIR):
 	mkdir -p $(BINDIR)
 
-$(ELF): $(BINDIR) $(OBJ)
+$(ELF): $(OBJDIR) $(BINDIR) $(OBJ)
 	$(LD) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
 $(DIS): $(ELF)
