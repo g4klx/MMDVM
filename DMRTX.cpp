@@ -36,10 +36,10 @@ static q15_t DMR_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1
 const uint16_t DMR_C4FSK_FILTER_LEN = 42U;
 #endif
 
-const q15_t DMR_LEVELA[] = { 640,  640 , 640,  640,  640};
-const q15_t DMR_LEVELB[] = { 213,  213,  213,  213,  213};
-const q15_t DMR_LEVELC[] = {-213, -213, -213, -213, -213};
-const q15_t DMR_LEVELD[] = {-640, -640, -640, -640, -640};
+const q15_t DMR_LEVELA[] = { 3195,  0 , 0,  0,  0};
+const q15_t DMR_LEVELB[] = { 1065,  0 , 0,  0,  0};
+const q15_t DMR_LEVELC[] = {-1065,  0 , 0,  0,  0};
+const q15_t DMR_LEVELD[] = {-3195,  0 , 0,  0,  0};
 
 // The PR FILL and Data Sync pattern.
 const uint8_t IDLE_DATA[] =
