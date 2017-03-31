@@ -36,10 +36,10 @@ static q15_t DMR_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1
 const uint16_t DMR_C4FSK_FILTER_LEN = 42U;
 #endif
 
-const q15_t DMR_LEVELA[] = { 640,  640 , 640,  640,  640};
-const q15_t DMR_LEVELB[] = { 213,  213,  213,  213,  213};
-const q15_t DMR_LEVELC[] = {-213, -213, -213, -213, -213};
-const q15_t DMR_LEVELD[] = {-640, -640, -640, -640, -640};
+const q15_t DMR_LEVELA[] = { 3195,  0 , 0,  0,  0};
+const q15_t DMR_LEVELB[] = { 1065,  0 , 0,  0,  0};
+const q15_t DMR_LEVELC[] = {-1065,  0 , 0,  0,  0};
+const q15_t DMR_LEVELD[] = {-3195,  0 , 0,  0,  0};
 
 const uint8_t CACH_INTERLEAVE[] =
       {1U,   2U,  3U,  5U,  6U,  7U,  9U, 10U, 11U, 13U, 15U, 16U, 17U, 19U, 20U, 21U, 23U,
