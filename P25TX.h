@@ -36,15 +36,15 @@ public:
   uint8_t getSpace() const;
 
 private:
-  CSerialRB            m_buffer;
-  arm_fir_instance_q15 m_modFilter;
-  arm_fir_instance_q15 m_lpFilter;
-  q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  q15_t                m_lpState[70U];     // NoTaps + BlockSize - 1, 44 + 20 - 1 plus some spare
-  uint8_t              m_poBuffer[1200U];
-  uint16_t             m_poLen;
-  uint16_t             m_poPtr;
-  uint16_t             m_txDelay;
+  CSerialRB                        m_buffer;
+  arm_fir_interpolate_instance_q15 m_modFilter;
+  arm_fir_instance_q15             m_lpFilter;
+  q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
+  q15_t                            m_lpState[70U];     // NoTaps + BlockSize - 1, 44 + 20 - 1 plus some spare
+  uint8_t                          m_poBuffer[1200U];
+  uint16_t                         m_poLen;
+  uint16_t                         m_poPtr;
+  uint16_t                         m_txDelay;
 
   void writeByte(uint8_t c);
 };

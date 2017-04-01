@@ -55,20 +55,20 @@ public:
   void setColorCode(uint8_t colorCode);
 
 private:
-  CSerialRB            m_fifo[2U];
-  arm_fir_instance_q15 m_modFilter;
-  q15_t                m_modState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  DMRTXSTATE           m_state;
-  uint8_t              m_idle[DMR_FRAME_LENGTH_BYTES];
-  uint8_t              m_cachPtr;
-  uint8_t              m_shortLC[12U];
-  uint8_t              m_newShortLC[12U];
-  uint8_t              m_markBuffer[40U];
-  uint8_t              m_poBuffer[40U];
-  uint16_t             m_poLen;
-  uint16_t             m_poPtr;
-  uint32_t             m_frameCount;
-  bool                 m_abort[2U];
+  CSerialRB                        m_fifo[2U];
+  arm_fir_interpolate_instance_q15 m_modFilter;
+  q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
+  DMRTXSTATE                       m_state;
+  uint8_t                          m_idle[DMR_FRAME_LENGTH_BYTES];
+  uint8_t                          m_cachPtr;
+  uint8_t                          m_shortLC[12U];
+  uint8_t                          m_newShortLC[12U];
+  uint8_t                          m_markBuffer[40U];
+  uint8_t                          m_poBuffer[40U];
+  uint16_t                         m_poLen;
+  uint16_t                         m_poPtr;
+  uint32_t                         m_frameCount;
+  bool                             m_abort[2U];
 
   void createData(uint8_t slotIndex);
   void createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex);

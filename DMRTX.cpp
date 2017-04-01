@@ -25,21 +25,21 @@
 
 #if defined(WIDE_C4FSK_FILTERS_TX)
 // Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t DMR_C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
-const uint16_t DMR_C4FSK_FILTER_LEN = 22U;
+static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
+                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688}; // numTaps = 25, L = 5
+const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 5U;                                              // phaseLength = numTaps/L
 #else
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t DMR_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
+static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
-const uint16_t DMR_C4FSK_FILTER_LEN = 42U;
+                                   -553, -847, -731, -340, 104, 401};        // numTaps = 45, L = 5
+const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 9U;                              // phaseLength = numTaps/L
 #endif
 
-const q15_t DMR_LEVELA[] = { 3195,  0 , 0,  0,  0};
-const q15_t DMR_LEVELB[] = { 1065,  0 , 0,  0,  0};
-const q15_t DMR_LEVELC[] = {-1065,  0 , 0,  0,  0};
-const q15_t DMR_LEVELD[] = {-3195,  0 , 0,  0,  0};
+const q15_t DMR_LEVELA =  3195;
+const q15_t DMR_LEVELB =  1065;
+const q15_t DMR_LEVELC = -1065;
+const q15_t DMR_LEVELD = -3195;
 
 // The PR FILL and Data Sync pattern.
 const uint8_t IDLE_DATA[] =
@@ -79,11 +79,12 @@ m_poPtr(0U),
 m_frameCount(0U),
 m_abort()
 {
-  ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
 
-  m_modFilter.numTaps = DMR_C4FSK_FILTER_LEN;
-  m_modFilter.pState  = m_modState;
+  m_modFilter.L = DMR_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = DMR_C4FSK_FILTER_PHASE_LEN;
   m_modFilter.pCoeffs = DMR_C4FSK_FILTER;
+  m_modFilter.pState  = m_modState;
 
   ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
   ::memcpy(m_shortLC,    EMPTY_SHORT_LC, 12U);
@@ -246,25 +247,24 @@ void CDMRTX::setCal(bool start)
 
 void CDMRTX::writeByte(uint8_t c, uint8_t control)
 {
-  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t inBuffer[4U];
   q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
-  q15_t* p = inBuffer;
-  for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += DMR_RADIO_SYMBOL_LENGTH) {
+  for (uint8_t i = 0U; i < 4U; i++, c <<= 2) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, DMR_LEVELA, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELA;
         break;
       case 0x80U:
-        ::memcpy(p, DMR_LEVELB, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELB;
         break;
       case 0x00U:
-        ::memcpy(p, DMR_LEVELC, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELC;
         break;
       default:
-        ::memcpy(p, DMR_LEVELD, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELD;
         break;
     }
   }
@@ -273,7 +273,7 @@ void CDMRTX::writeByte(uint8_t c, uint8_t control)
   ::memset(controlBuffer, MARK_NONE, DMR_RADIO_SYMBOL_LENGTH * 4U * sizeof(uint8_t));
   controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
 
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U);
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
 
   io.write(STATE_DMR, outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U, controlBuffer);
 }
