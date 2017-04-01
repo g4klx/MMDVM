@@ -38,8 +38,8 @@ UART5  - TXD PC12 - RXD PD2 (Discovery, Pi and Nucleo with Morpho header)
 
 #if defined(STM32F4XX) || defined(STM32F4)
 
-#define TX_SERIAL_FIFO_SIZE 256U
-#define RX_SERIAL_FIFO_SIZE 256U
+#define TX_SERIAL_FIFO_SIZE 1024U
+#define RX_SERIAL_FIFO_SIZE 1024U
 
 extern "C" {
    void USART1_IRQHandler();
