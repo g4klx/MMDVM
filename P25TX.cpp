@@ -26,13 +26,15 @@
 
 #if defined(WIDE_C4FSK_FILTERS_TX)
 // Generated using rcosdesign(0.2, 4, 5, 'normal') in MATLAB
+// numTaps = 20, L = 5
 static q15_t P25_C4FSK_FILTER[] = {-1392, -2602, -3043, -2238, 0, 3460, 7543, 11400, 14153, 15152, 14153,	11400, 7543, 3460, 0, -2238, -3043, -2602, -1392, 0};
-const uint16_t P25_C4FSK_FILTER_LEN = 20U;
+const uint16_t P25_C4FSK_FILTER_PHASE_LEN = 4U;  // phaseLength = numTaps/L
 #else
 // Generated using rcosdesign(0.2, 8, 5, 'normal') in MATLAB
+// numTaps = 40, L = 5
 static q15_t P25_C4FSK_FILTER[] = {-413, -751, -845, -587, 0, 740, 1348, 1520, 1063, 0, -1383, -2583, -3021, -2222, 0, 3435, 7488, 11318, 14053, 15044, 14053,
                                    11318, 7488, 3435, 0, -2222, -3021, -2583, -1383, 0, 1063, 1520, 1348, 740, 0, -587, -845, -751, -413, 0};
-const uint16_t P25_C4FSK_FILTER_LEN = 40U;
+const uint16_t P25_C4FSK_FILTER_PHASE_LEN = 8U;  // phaseLength = numTaps/L
 #endif
 
 // Generated in MATLAB using the following commands, and then normalised for unity gain
@@ -44,10 +46,10 @@ static q15_t P25_LP_FILTER[] = {170, 401, 340, -203, -715, -478, 281, 419, -440,
                                 281, -478, -715, -203, 340, 401, 170};
 const uint16_t P25_LP_FILTER_LEN = 44U;
 
-const q15_t P25_LEVELA[] = { 2475,  0,  0,  0,  0};
-const q15_t P25_LEVELB[] = { 825,  0,  0,  0,  0};
-const q15_t P25_LEVELC[] = {-825,  0,  0,  0,  0};
-const q15_t P25_LEVELD[] = {-2475,  0,  0,  0,  0};
+const q15_t P25_LEVELA =  2475;
+const q15_t P25_LEVELB =   825;
+const q15_t P25_LEVELC =  -825;
+const q15_t P25_LEVELD = -2475;
 
 const uint8_t P25_START_SYNC = 0x77U;
 
@@ -62,12 +64,13 @@ m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(240U)       // 200ms
 {
-  ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
   ::memset(m_lpState,  0x00U, 70U * sizeof(q15_t));
 
-  m_modFilter.numTaps = P25_C4FSK_FILTER_LEN;
-  m_modFilter.pState  = m_modState;
+  m_modFilter.L = P25_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = P25_C4FSK_FILTER_PHASE_LEN;
   m_modFilter.pCoeffs = P25_C4FSK_FILTER;
+  m_modFilter.pState  = m_modState;
 
   m_lpFilter.numTaps = P25_LP_FILTER_LEN;
   m_lpFilter.pState  = m_lpState;
@@ -130,31 +133,30 @@ uint8_t CP25TX::writeData(const uint8_t* data, uint8_t length)
 
 void CP25TX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t inBuffer[4U];
   q15_t intBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
   q15_t outBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
-  q15_t* p = inBuffer;
-  for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += P25_RADIO_SYMBOL_LENGTH) {
+  for (uint8_t i = 0U; i < 4U; i++, c <<= 2) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, P25_LEVELA, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELA;
         break;
       case 0x80U:
-        ::memcpy(p, P25_LEVELB, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELB;
         break;
       case 0x00U:
-        ::memcpy(p, P25_LEVELC, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELC;
         break;
       default:
-        ::memcpy(p, P25_LEVELD, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELD;
         break;
     }
   }
 
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, intBuffer, P25_RADIO_SYMBOL_LENGTH * 4U);
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, intBuffer, 4U);
 
   ::arm_fir_fast_q15(&m_lpFilter, intBuffer, outBuffer, P25_RADIO_SYMBOL_LENGTH * 4U);
 

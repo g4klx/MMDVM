@@ -29,11 +29,11 @@ const uint8_t BIT_SYNC = 0xAAU;
 const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 
 // Generated using gaussfir(0.5, 4, 5) in MATLAB
-static q15_t DSTAR_GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
-const uint16_t DSTAR_GMSK_FILTER_LEN = 12U;
+static q15_t DSTAR_GMSK_FILTER[] = {0, 0, 0, 0, 8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8}; // numTaps = 15, L = 5
+const uint16_t DSTAR_GMSK_FILTER_PHASE_LEN = 3U; // phaseLength = numTaps/L
 
-const q15_t DSTAR_LEVEL0[] = {-4000, 0, 0, 0, 0};
-const q15_t DSTAR_LEVEL1[] = { 4000, 0, 0, 0, 0};
+const q15_t DSTAR_LEVEL0 = -4000;
+const q15_t DSTAR_LEVEL1 =  4000;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -197,11 +197,12 @@ m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(60U)       // 100ms
 {
-  ::memset(m_modState, 0x00U, 60U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 20U * sizeof(q15_t));
 
-  m_modFilter.numTaps = DSTAR_GMSK_FILTER_LEN;
-  m_modFilter.pState  = m_modState;
+  m_modFilter.L = DSTAR_RADIO_BIT_LENGTH;
+  m_modFilter.phaseLength = DSTAR_GMSK_FILTER_PHASE_LEN;
   m_modFilter.pCoeffs = DSTAR_GMSK_FILTER;
+  m_modFilter.pState  = m_modState;
 }
 
 void CDStarTX::process()
@@ -411,23 +412,22 @@ void CDStarTX::txHeader(const uint8_t* in, uint8_t* out) const
 
 void CDStarTX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U];
+  q15_t inBuffer[8U];
   q15_t outBuffer[DSTAR_RADIO_BIT_LENGTH * 8U];
 
   uint8_t mask = 0x01U;
 
-  q15_t* p = inBuffer;
-  for (uint8_t i = 0U; i < 8U; i++, p += DSTAR_RADIO_BIT_LENGTH) {
+  for (uint8_t i = 0U; i < 8U; i++) {
     if ((c & mask) == mask)
-      ::memcpy(p, DSTAR_LEVEL0, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
+      inBuffer[i] = DSTAR_LEVEL0;
     else
-      ::memcpy(p, DSTAR_LEVEL1, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
+      inBuffer[i] = DSTAR_LEVEL1;
 
     mask <<= 1;
   }
 
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, DSTAR_RADIO_BIT_LENGTH * 8U);
-
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 8U);
+  
   io.write(STATE_DSTAR, outBuffer, DSTAR_RADIO_BIT_LENGTH * 8U);
 }
 
