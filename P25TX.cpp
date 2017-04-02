@@ -166,6 +166,9 @@ void CP25TX::writeByte(uint8_t c)
 void CP25TX::setTXDelay(uint8_t delay)
 {
   m_txDelay = 600U + uint16_t(delay) * 12U;        // 500ms + tx delay
+
+  if (m_txDelay > 1200U)
+    m_txDelay = 1200U;
 }
 
 uint8_t CP25TX::getSpace() const

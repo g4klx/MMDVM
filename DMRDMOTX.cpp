@@ -166,7 +166,10 @@ uint8_t CDMRDMOTX::getSpace() const
 
 void CDMRDMOTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = 240U + uint16_t(delay) * 12U;        // 200ms + tx delay
+  m_txDelay = 600U + uint16_t(delay) * 12U;        // 500ms + tx delay
+
+  if (m_txDelay > 1200U)
+    m_txDelay = 1200U;
 }
 
 void CDMRDMOTX::createCACH(uint8_t* buffer, uint8_t slotIndex)

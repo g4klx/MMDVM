@@ -42,7 +42,7 @@ private:
   CSerialRB                        m_fifo;
   arm_fir_interpolate_instance_q15 m_modFilter;
   q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
-  uint8_t                          m_poBuffer[800U];
+  uint8_t                          m_poBuffer[1200U];
   uint16_t                         m_poLen;
   uint16_t                         m_poPtr;
   uint32_t                         m_txDelay;
