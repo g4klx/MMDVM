@@ -36,10 +36,10 @@ static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553,
 const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 9U;                              // phaseLength = numTaps/L
 #endif
 
-const q15_t DMR_LEVELA =  3195;
-const q15_t DMR_LEVELB =  1065;
-const q15_t DMR_LEVELC = -1065;
-const q15_t DMR_LEVELD = -3195;
+const q15_t DMR_LEVELA =  2889;
+const q15_t DMR_LEVELB =  963;
+const q15_t DMR_LEVELC = -963;
+const q15_t DMR_LEVELD = -2889;
 
 // The PR FILL and Data Sync pattern.
 const uint8_t IDLE_DATA[] =

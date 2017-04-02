@@ -36,10 +36,10 @@ static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553,
 const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 9U;                              // phaseLength = numTaps/L
 #endif
 
-const q15_t DMR_LEVELA =  3195;
-const q15_t DMR_LEVELB =  1065;
-const q15_t DMR_LEVELC = -1065;
-const q15_t DMR_LEVELD = -3195;
+const q15_t DMR_LEVELA =  2889;
+const q15_t DMR_LEVELB =  963;
+const q15_t DMR_LEVELC = -963;
+const q15_t DMR_LEVELD = -2889;
 
 const uint8_t CACH_INTERLEAVE[] =
       {1U,   2U,  3U,  5U,  6U,  7U,  9U, 10U, 11U, 13U, 15U, 16U, 17U, 19U, 20U, 21U, 23U,
