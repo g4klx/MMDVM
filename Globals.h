@@ -21,11 +21,14 @@
 
 #if defined(STM32F4XX) || defined(STM32F4)
 #include "stm32f4xx.h"
+#elif defined(STM32F105xC)
+#include "stm32f1xx.h"
+#include "STM32Utils.h"
 #else
 #include <Arduino.h>
 #endif
 
-#if defined(__SAM3X8E__)
+#if defined(__SAM3X8E__) || defined(STM32F105xC)
 #define  ARM_MATH_CM3
 #elif defined(STM32F4XX) || defined(STM32F4) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define  ARM_MATH_CM4
