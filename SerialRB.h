@@ -24,6 +24,9 @@ Boston, MA  02110-1301, USA.
 #if defined(STM32F4XX) || defined(STM32F4)
 #include "stm32f4xx.h"
 #include <cstddef>
+#elif defined(STM32F105xC)
+#include "stm32f1xx.h"
+#include <cstddef>
 #else
 #include <Arduino.h>
 #endif
