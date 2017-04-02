@@ -46,10 +46,10 @@ static q15_t P25_LP_FILTER[] = {170, 401, 340, -203, -715, -478, 281, 419, -440,
                                 281, -478, -715, -203, 340, 401, 170};
 const uint16_t P25_LP_FILTER_LEN = 44U;
 
-const q15_t P25_LEVELA =  2475;
-const q15_t P25_LEVELB =   825;
-const q15_t P25_LEVELC =  -825;
-const q15_t P25_LEVELD = -2475;
+const q15_t P25_LEVELA =  1698;
+const q15_t P25_LEVELB =   566;
+const q15_t P25_LEVELC =  -566;
+const q15_t P25_LEVELD = -1698;
 
 const uint8_t P25_START_SYNC = 0x77U;
 
