@@ -28,8 +28,8 @@ const uint8_t BIT_SYNC = 0xAAU;
 
 const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 
-// Generated using gaussfir(0.5, 4, 5) in MATLAB
-static q15_t DSTAR_GMSK_FILTER[] = {0, 0, 0, 0, 8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8}; // numTaps = 15, L = 5
+// Generated using gaussfir(0.35, 1, 5) in MATLAB
+static q15_t DSTAR_GMSK_FILTER[] = {0, 0, 0, 0, 212, 743, 1974, 3965, 6026, 6929, 6026, 3965, 1974, 743, 212}; // numTaps = 15, L = 5
 const uint16_t DSTAR_GMSK_FILTER_PHASE_LEN = 3U; // phaseLength = numTaps/L
 
 const q15_t DSTAR_LEVEL0 = -4000;
