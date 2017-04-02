@@ -84,6 +84,7 @@
   *
   ******************************************************************************
   */
+#if !defined(ARDUINO)
 
 /** @addtogroup CMSIS
   * @{
@@ -220,6 +221,7 @@ static void SetSysClock(void)
 /**
   * @}
   */
-
+  
+#endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
