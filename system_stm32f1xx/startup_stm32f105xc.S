@@ -30,6 +30,8 @@
    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    POSSIBILITY OF SUCH DAMAGE.
    ---------------------------------------------------------------------------*/
+#if defined(STM32F105xC)
+
 	.syntax	unified
 	.arch	armv7-m
 
@@ -421,3 +423,5 @@ Default_Handler:
   def_irq_handler OTG_FS_IRQHandler
 
 	.end
+	
+#endif
