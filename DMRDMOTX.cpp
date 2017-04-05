@@ -94,7 +94,7 @@ void CDMRDMOTX::process()
 
       for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
         m_poBuffer[i + 3U] = m_fifo.get();
-        m_poBuffer[i + 39U] = IDLE_DATA[i];
+        m_poBuffer[i + 39U] = m_idle[i];
       }
 
       m_poLen = 72U;
@@ -209,4 +209,12 @@ void CDMRDMOTX::createCACH(uint8_t* buffer, uint8_t slotIndex)
   buffer[2U] |= h2 ? 0x02U : 0x00U;
 
   m_cachPtr += 3U;
+}
+
+void CDMRDMOTX::setColorCode(uint8_t colorCode)
+{
+  ::memcpy(m_idle, IDLE_DATA, DMR_FRAME_LENGTH_BYTES);
+
+  CDMRSlotType slotType;
+  slotType.encode(colorCode, DT_IDLE, m_idle);
 }
