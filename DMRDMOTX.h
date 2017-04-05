@@ -36,6 +36,8 @@ public:
   void setTXDelay(uint8_t delay);
 
   uint8_t getSpace() const;
+  
+  void setColorCode(uint8_t colorCode);
 
 private:
 
@@ -47,6 +49,7 @@ private:
   uint16_t                         m_poPtr;
   uint32_t                         m_txDelay;
   uint8_t                          m_cachPtr;
+  uint8_t                          m_idle[DMR_FRAME_LENGTH_BYTES];
 
   void createCACH(uint8_t* buffer, uint8_t slotIndex);
   void writeByte(uint8_t c);

@@ -41,6 +41,11 @@ const q15_t DMR_LEVELB =  963;
 const q15_t DMR_LEVELC = -963;
 const q15_t DMR_LEVELD = -2889;
 
+const uint8_t IDLE_DATA[] =
+        {0x53U, 0xC2U, 0x5EU, 0xABU, 0xA8U, 0x67U, 0x1DU, 0xC7U, 0x38U, 0x3BU, 0xD9U,
+         0x36U, 0x00U, 0x0DU, 0xFFU, 0x57U, 0xD7U, 0x5DU, 0xF5U, 0xD0U, 0x03U, 0xF6U,
+         0xE4U, 0x65U, 0x17U, 0x1BU, 0x48U, 0xCAU, 0x6DU, 0x4FU, 0xC6U, 0x10U, 0xB4U};
+
 const uint8_t CACH_INTERLEAVE[] =
       {1U,   2U,  3U,  5U,  6U,  7U,  9U, 10U, 11U, 13U, 15U, 16U, 17U, 19U, 20U, 21U, 23U,
        25U, 26U, 27U, 29U, 30U, 31U, 33U, 34U, 35U, 37U, 39U, 40U, 41U, 43U, 44U, 45U, 47U,
@@ -87,8 +92,10 @@ void CDMRDMOTX::process()
       createCACH(m_poBuffer + 0U,  0U);
       createCACH(m_poBuffer + 36U, 1U);
 
-      for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
-        m_poBuffer[i + 3U] = m_poBuffer[i + 39U] = m_fifo.get();
+      for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
+        m_poBuffer[i + 3U] = m_fifo.get();
+        m_poBuffer[i + 39U] = m_idle[i];
+      }
 
       m_poLen = 72U;
     }
@@ -202,4 +209,12 @@ void CDMRDMOTX::createCACH(uint8_t* buffer, uint8_t slotIndex)
   buffer[2U] |= h2 ? 0x02U : 0x00U;
 
   m_cachPtr += 3U;
+}
+
+void CDMRDMOTX::setColorCode(uint8_t colorCode)
+{
+  ::memcpy(m_idle, IDLE_DATA, DMR_FRAME_LENGTH_BYTES);
+
+  CDMRSlotType slotType;
+  slotType.encode(colorCode, DT_IDLE, m_idle);
 }
