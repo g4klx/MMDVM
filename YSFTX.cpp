@@ -37,15 +37,15 @@ static q15_t YSF_C4FSK_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553,
 const uint16_t YSF_C4FSK_FILTER_PHASE_LEN = 9U;                       // phaseLength = numTaps/L
 #endif
 
-const q15_t YSF_LEVELA_HI =  3900;
-const q15_t YSF_LEVELB_HI =  1300;
-const q15_t YSF_LEVELC_HI = -1300;
-const q15_t YSF_LEVELD_HI = -3900;
+const q15_t YSF_LEVELA_HI =  3510;
+const q15_t YSF_LEVELB_HI =  1170;
+const q15_t YSF_LEVELC_HI = -1170;
+const q15_t YSF_LEVELD_HI = -3510;
 
-const q15_t YSF_LEVELA_LO =  1950;
-const q15_t YSF_LEVELB_LO =  650;
-const q15_t YSF_LEVELC_LO = -650;
-const q15_t YSF_LEVELD_LO = -1950;
+const q15_t YSF_LEVELA_LO =  1755;
+const q15_t YSF_LEVELB_LO =  585;
+const q15_t YSF_LEVELC_LO = -585;
+const q15_t YSF_LEVELD_LO = -1755;
 
 const uint8_t YSF_START_SYNC = 0x77U;
 const uint8_t YSF_END_SYNC   = 0xFFU;
