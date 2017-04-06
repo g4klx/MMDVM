@@ -35,19 +35,21 @@ BINDIR=bin
 ifdef SYSTEMROOT
 	ASOURCES=$(shell dir /S /B *.s)
 	CSOURCES=$(shell dir /S /B *.c)
+	CSOURCES:=$(foreach a,$(CSOURCES),$(if $(findstring stm32f1xx,$a),,$a))
 	CXXSOURCES=$(shell dir /S /B *.cpp)
 	CLEANCMD=del /S *.o *.hex *.bin *.elf
 	MDBIN=md $@
 else ifdef SystemRoot
 	ASOURCES=$(shell dir /S /B *.s)
 	CSOURCES=$(shell dir /S /B *.c)
+	CSOURCES:=$(foreach a,$(CSOURCES),$(if $(findstring stm32f1xx,$a),,$a))
 	CXXSOURCES=$(shell dir /S /B *.cpp)
 	CLEANCMD=del /S *.o *.hex *.bin *.elf
 	MDBIN=md $@
 else
 	ASOURCES=$(shell find . -name '*.s')
 	CSOURCES=$(shell find . -name '*.c')
-	CSOURCES:=$(filter-out $(wildcard ./system_stm32f1xx/*.c), $(CSOURCES))
+	CSOURCES:=$(foreach a,$(CSOURCES),$(if $(findstring stm32f1xx,$a),,$a))
 	CXXSOURCES=$(shell find . -name '*.cpp')
 	CLEANCMD=rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/$(BINBIN)
 	MDBIN=mkdir $@
