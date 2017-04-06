@@ -47,6 +47,7 @@ else ifdef SystemRoot
 else
 	ASOURCES=$(shell find . -name '*.s')
 	CSOURCES=$(shell find . -name '*.c')
+	CSOURCES:=$(filter-out $(wildcard ./system_stm32f1xx/*.c), $(CSOURCES))
 	CXXSOURCES=$(shell find . -name '*.cpp')
 	CLEANCMD=rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/$(BINBIN)
 	MDBIN=mkdir $@
