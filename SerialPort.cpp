@@ -72,9 +72,9 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
 
 #if defined(EXTERNAL_OSC)
-#define DESCRIPTION              "MMDVM 20170303 TCXO (D-Star/DMR/System Fusion/P25/RSSI/CW Id)"
+#define DESCRIPTION              "MMDVM 20170406 TCXO (D-Star/DMR/System Fusion/P25/RSSI/CW Id)"
 #else
-#define DESCRIPTION              "MMDVM 20170303 (D-Star/DMR/System Fusion/P25/RSSI/CW Id)"
+#define DESCRIPTION              "MMDVM 20170406 (D-Star/DMR/System Fusion/P25/RSSI/CW Id)"
 #endif
 #define concat(a, b, c) a " (Build: " b " " c ")"
 const char HARDWARE[] = concat(DESCRIPTION, __TIME__, __DATE__);
