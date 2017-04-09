@@ -262,14 +262,16 @@ m_pathMemory2(),
 m_pathMemory3(),
 m_fecOutput(),
 m_rssiAccum(0U),
-m_rssiCount(0U)
+m_rssiCount(0U),
+m_dcFilter(),
+m_dcState()
 {
-  ::memset(m_DCState, 0x00U, 4U * sizeof(q15_t));
+  ::memset(m_dcState, 0x00U, 4U * sizeof(q15_t));
   
-  m_DCFilter.numStages = DC_FILTER_STAGES;
-  m_DCFilter.pState  = m_DCState;
-  m_DCFilter.pCoeffs = DC_FILTER;
-  m_DCFilter.postShift = 0;
+  m_dcFilter.numStages = DC_FILTER_STAGES;
+  m_dcFilter.pState  = m_dcState;
+  m_dcFilter.pCoeffs = DC_FILTER;
+  m_dcFilter.postShift = 0;
 }
 
 void CDStarRX::reset()
@@ -287,12 +289,12 @@ void CDStarRX::reset()
 void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   q31_t dc_level = 0;
-  q15_t DCVals[20];
+  q15_t dcVals[20];
   
-  ::arm_biquad_cascade_df1_q15(&m_DCFilter, (q15_t*)samples, DCVals, length);
+  ::arm_biquad_cascade_df1_q15(&m_dcFilter, (q15_t*)samples, dcVals, length);
 
   for (uint8_t i = 0U; i < length; i++)
-    dc_level += (q31_t)DCVals[i];
+    dc_level += q31_t(dcVals[i]);
 
   dc_level /= length; 
   
@@ -300,7 +302,7 @@ void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t lengt
     m_rssiAccum += rssi[i];
     m_rssiCount++;
 
-    bool bit = samples[i] < (q15_t)dc_level;
+    bool bit = samples[i] < q15_t(dc_level);
 
     if (bit != m_prev) {
       if (m_pll < (PLLMAX / 2U))

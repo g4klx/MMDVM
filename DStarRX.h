@@ -53,9 +53,8 @@ private:
   uint8_t      m_fecOutput[42U];
   uint32_t     m_rssiAccum;
   uint16_t     m_rssiCount;
-  
-  arm_biquad_casd_df1_inst_q15 m_DCFilter;
-  q15_t                        m_DCState[4];
+  arm_biquad_casd_df1_inst_q15 m_dcFilter;
+  q15_t                        m_dcState[4];
   
   void    processNone(bool bit);
   void    processHeader(bool bit);
