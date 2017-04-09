@@ -35,17 +35,16 @@ public:
 
   void setTXDelay(uint8_t delay);
 
-  uint16_t getSpace() const;
+  uint8_t getSpace() const;
 
 private:
-  CSerialRB            m_buffer;
-  arm_fir_instance_q15 m_modFilter;
-  q15_t                m_modState[60U];    // NoTaps + BlockSize - 1, 12 + 40 - 1 plus some spare
-  uint8_t              m_poBuffer[600U];
-  uint16_t             m_poLen;
-  uint16_t             m_poPtr;
-  uint16_t             m_txDelay;          // In bytes
-  uint32_t             m_count;
+  CSerialRB                        m_buffer;
+  arm_fir_interpolate_instance_q15 m_modFilter;
+  q15_t                            m_modState[20U];    // blockSize + phaseLength - 1, 8 + 9 - 1 plus some spare
+  uint8_t                          m_poBuffer[600U];
+  uint16_t                         m_poLen;
+  uint16_t                         m_poPtr;
+  uint16_t                         m_txDelay;          // In bytes
 
   void txHeader(const uint8_t* in, uint8_t* out) const;
   void writeByte(uint8_t c);

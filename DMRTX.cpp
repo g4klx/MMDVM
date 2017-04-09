@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -25,21 +25,21 @@
 
 #if defined(WIDE_C4FSK_FILTERS_TX)
 // Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t DMR_C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
-const uint16_t DMR_C4FSK_FILTER_LEN = 22U;
+static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
+                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688}; // numTaps = 25, L = 5
+const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 5U;                                              // phaseLength = numTaps/L
 #else
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t DMR_C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
+static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
-const uint16_t DMR_C4FSK_FILTER_LEN = 42U;
+                                   -553, -847, -731, -340, 104, 401};        // numTaps = 45, L = 5
+const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 9U;                              // phaseLength = numTaps/L
 #endif
 
-const q15_t DMR_LEVELA[] = { 640,  640 , 640,  640,  640};
-const q15_t DMR_LEVELB[] = { 213,  213,  213,  213,  213};
-const q15_t DMR_LEVELC[] = {-213, -213, -213, -213, -213};
-const q15_t DMR_LEVELD[] = {-640, -640, -640, -640, -640};
+const q15_t DMR_LEVELA =  2889;
+const q15_t DMR_LEVELB =  963;
+const q15_t DMR_LEVELC = -963;
+const q15_t DMR_LEVELD = -2889;
 
 // The PR FILL and Data Sync pattern.
 const uint8_t IDLE_DATA[] =
@@ -61,6 +61,8 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
+const uint32_t STARTUP_COUNT = 20U;
+
 CDMRTX::CDMRTX() :
 m_fifo(),
 m_modFilter(),
@@ -74,14 +76,15 @@ m_markBuffer(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_count(0U),
+m_frameCount(0U),
 m_abort()
 {
-  ::memset(m_modState, 0x00U, 70U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
 
-  m_modFilter.numTaps = DMR_C4FSK_FILTER_LEN;
-  m_modFilter.pState  = m_modState;
+  m_modFilter.L = DMR_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = DMR_C4FSK_FILTER_PHASE_LEN;
   m_modFilter.pCoeffs = DMR_C4FSK_FILTER;
+  m_modFilter.pState  = m_modState;
 
   ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
   ::memcpy(m_shortLC,    EMPTY_SHORT_LC, 12U);
@@ -231,7 +234,7 @@ void CDMRTX::setStart(bool start)
 {
   m_state = start ? DMRTXSTATE_SLOT1 : DMRTXSTATE_IDLE;
 
-  m_count = 0U;
+  m_frameCount = 0U;
 
   m_abort[0U] = false;
   m_abort[1U] = false;
@@ -240,80 +243,54 @@ void CDMRTX::setStart(bool start)
 void CDMRTX::setCal(bool start)
 {
   m_state = start ? DMRTXSTATE_CAL : DMRTXSTATE_IDLE;
-
-  m_count = 0U;
 }
 
 void CDMRTX::writeByte(uint8_t c, uint8_t control)
 {
-  q15_t inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t inBuffer[4U];
+  q15_t outBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
-  q15_t* p = inBuffer;
-  for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += DMR_RADIO_SYMBOL_LENGTH) {
+  for (uint8_t i = 0U; i < 4U; i++, c <<= 2) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, DMR_LEVELA, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELA;
         break;
       case 0x80U:
-        ::memcpy(p, DMR_LEVELB, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELB;
         break;
       case 0x00U:
-        ::memcpy(p, DMR_LEVELC, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELC;
         break;
       default:
-        ::memcpy(p, DMR_LEVELD, DMR_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = DMR_LEVELD;
         break;
     }
   }
 
-  uint16_t blockSize = DMR_RADIO_SYMBOL_LENGTH * 4U;
-
-  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  uint8_t controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U];
   ::memset(controlBuffer, MARK_NONE, DMR_RADIO_SYMBOL_LENGTH * 4U * sizeof(uint8_t));
   controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U] = control;  
 
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += DMR_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
 
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[DMR_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        for (int8_t i = DMR_RADIO_SYMBOL_LENGTH * 4U - 1; i >= 0; i--)
-          controlBuffer[i + 1] = controlBuffer[i];
-        blockSize++;
-      } else {
-        controlBuffer[DMR_RADIO_SYMBOL_LENGTH * 2U - 1U] = control;  
-        for (uint8_t i = 0U; i < (DMR_RADIO_SYMBOL_LENGTH * 4U - 1U); i++)
-          controlBuffer[i] = controlBuffer[i + 1U];
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
-
-  io.write(STATE_DMR, outBuffer, blockSize, controlBuffer);
+  io.write(STATE_DMR, outBuffer, DMR_RADIO_SYMBOL_LENGTH * 4U, controlBuffer);
 }
 
-uint16_t CDMRTX::getSpace1() const
+uint8_t CDMRTX::getSpace1() const
 {
   return m_fifo[0U].getSpace() / (DMR_FRAME_LENGTH_BYTES + 2U);
 }
 
-uint16_t CDMRTX::getSpace2() const
+uint8_t CDMRTX::getSpace2() const
 {
   return m_fifo[1U].getSpace() / (DMR_FRAME_LENGTH_BYTES + 2U);
 }
 
 void CDMRTX::createData(uint8_t slotIndex)
 {
-  if (m_fifo[slotIndex].getData()> 0U) {
+  if (m_fifo[slotIndex].getData() > 0U && m_frameCount >= STARTUP_COUNT) {
     for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
       m_poBuffer[i]   = m_fifo[slotIndex].get();
       m_markBuffer[i] = MARK_NONE;
@@ -344,6 +321,8 @@ void CDMRTX::createCal()
 
 void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
 {
+  m_frameCount++;
+
   if (m_cachPtr >= 12U)
     m_cachPtr = 0U;
 
@@ -359,7 +338,9 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
   m_markBuffer[1U] = MARK_NONE;
   m_markBuffer[2U] = rxSlotIndex == 1U ? MARK_SLOT1 : MARK_SLOT2;
 
-  bool at = m_fifo[rxSlotIndex].getData() > 0U;
+  bool at = false;
+  if (m_frameCount >= STARTUP_COUNT)
+    at = m_fifo[rxSlotIndex].getData() > 0U;
   bool tc = txSlotIndex == 1U;
   bool ls0 = true;            // For 1 and 2
   bool ls1 = true;

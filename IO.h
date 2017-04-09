@@ -62,8 +62,10 @@ private:
 
   arm_fir_instance_q15 m_C4FSKFilter;
   arm_fir_instance_q15 m_GMSKFilter;
+  arm_fir_instance_q15 m_P25Filter;
   q15_t                m_C4FSKState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
   q15_t                m_GMSKState[40U];     // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
+  q15_t                m_P25State[30U];      // NoTaps + BlockSize - 1, 6 + 20 - 1 plus some spare
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;
@@ -80,8 +82,6 @@ private:
 
   uint16_t             m_adcOverflow;
   uint16_t             m_dacOverflow;
-
-  uint32_t             m_count;
 
   volatile uint32_t    m_watchdog;
 

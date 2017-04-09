@@ -84,6 +84,7 @@
   *
   ******************************************************************************
   */
+#if defined(STM32F105xC)
 
 /** @addtogroup CMSIS
   * @{
@@ -220,6 +221,7 @@ static void SetSysClock(void)
 /**
   * @}
   */
-
+  
+#endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

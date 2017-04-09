@@ -218,6 +218,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
   bool txInvert  = (data[0U] & 0x02U) == 0x02U;
   bool pttInvert = (data[0U] & 0x04U) == 0x04U;
+  bool ysfLoDev  = (data[0U] & 0x08U) == 0x08U;
   bool simplex   = (data[0U] & 0x80U) == 0x80U;
 
   bool dstarEnable = (data[1U] & 0x01U) == 0x01U;
@@ -250,18 +251,6 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   uint8_t dmrDelay = data[7U];
 
-  int8_t oscOffset = int8_t(data[8U]) - 128;
-  if (oscOffset < 0) {
-    m_sampleCount = 1000000U / uint32_t(-oscOffset);
-    m_sampleInsert = false;
-  } else if (oscOffset > 0) {
-    m_sampleCount = 1000000U / uint32_t(oscOffset);
-    m_sampleInsert = true;
-  } else {
-    m_sampleCount = 0U;
-    m_sampleInsert = false;
-  }
-
   uint8_t cwIdTXLevel  = data[5U];
   uint8_t dstarTXLevel = data[9U];
   uint8_t dmrTXLevel   = data[10U];
@@ -284,8 +273,11 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   dmrTX.setColorCode(colorCode);
   dmrRX.setColorCode(colorCode);
   dmrRX.setDelay(dmrDelay);
+  dmrDMOTX.setColorCode(colorCode);
   dmrDMORX.setColorCode(colorCode);
   dmrIdleRX.setColorCode(colorCode);
+
+  ysfTX.setLoDev(ysfLoDev);
 
   io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel);
 

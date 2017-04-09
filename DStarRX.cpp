@@ -35,7 +35,9 @@ const unsigned int SYNC_POS        = 21U * DSTAR_DATA_LENGTH_BITS;
 const unsigned int SYNC_SCAN_START = SYNC_POS - 3U;
 const unsigned int SYNC_SCAN_END   = SYNC_POS + 3U;
 
-const q15_t THRESHOLD = 0;
+// Generated using [b, a] = butter(1, 0.002) in MATLAB
+static q15_t   DC_FILTER[] = {103, 0, 103, 0, 32563, 0}; // {b0, 0, b1, b2, -a1, -a2}
+const uint16_t DC_FILTER_STAGES = 1U; // One Biquad stage
 
 // D-Star bit order version of 0x55 0x55 0x6E 0x0A
 const uint32_t FRAME_SYNC_DATA = 0x00557650U;
@@ -262,6 +264,12 @@ m_fecOutput(),
 m_rssiAccum(0U),
 m_rssiCount(0U)
 {
+  ::memset(m_DCState, 0x00U, 4U * sizeof(q15_t));
+  
+  m_DCFilter.numStages = DC_FILTER_STAGES;
+  m_DCFilter.pState  = m_DCState;
+  m_DCFilter.pCoeffs = DC_FILTER;
+  m_DCFilter.postShift = 0;
 }
 
 void CDStarRX::reset()
@@ -278,11 +286,21 @@ void CDStarRX::reset()
 
 void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
+  q31_t dc_level = 0;
+  q15_t DCVals[20];
+  
+  ::arm_biquad_cascade_df1_q15(&m_DCFilter, (q15_t*)samples, DCVals, length);
+
+  for (uint8_t i = 0U; i < length; i++)
+    dc_level += (q31_t)DCVals[i];
+
+  dc_level /= length; 
+  
   for (uint16_t i = 0U; i < length; i++) {
     m_rssiAccum += rssi[i];
     m_rssiCount++;
 
-    bool bit = samples[i] < THRESHOLD;
+    bool bit = samples[i] < (q15_t)dc_level;
 
     if (bit != m_prev) {
       if (m_pll < (PLLMAX / 2U))
