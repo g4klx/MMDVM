@@ -18,8 +18,6 @@
 
 #define  WANT_DEBUG
 
-// #define DUMP_SAMPLES
-
 #include "Config.h"
 #include "Globals.h"
 #include "YSFRX.h"
@@ -201,9 +199,6 @@ void CYSFRX::processData(q15_t sample)
     } else {
       frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
       writeRSSIData(frame);
-#if defined(DUMP_SAMPLES)
-      writeSamples(m_startPtr, frame[0U]);
-#endif
       m_maxCorr = 0;
     }
   }
@@ -409,20 +404,3 @@ void CYSFRX::writeRSSIData(uint8_t* data)
   m_rssiAccum = 0U;
   m_rssiCount = 0U;
 }
-
-#if defined(DUMP_SAMPLES)
-void CYSFRX::writeSamples(uint16_t start, uint8_t control)
-{
-  q15_t samples[YSF_FRAME_LENGTH_SYMBOLS];
-
-  for (uint16_t i = 0U; i < YSF_FRAME_LENGTH_SYMBOLS; i++) {
-    samples[i] = m_buffer[start];
-
-    start += YSF_RADIO_SYMBOL_LENGTH;
-    if (start >= YSF_FRAME_LENGTH_SAMPLES)
-      start -= YSF_FRAME_LENGTH_SAMPLES;
-  }
-
-  serial.writeSamples(STATE_YSF, control, samples, YSF_FRAME_LENGTH_SYMBOLS);
-}
-#endif
