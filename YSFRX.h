@@ -63,7 +63,6 @@ private:
   void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSIData(uint8_t* data);
-  void writeSamples(uint16_t start, uint8_t control);
 };
 
 #endif
