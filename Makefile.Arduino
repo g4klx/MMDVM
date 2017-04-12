@@ -32,7 +32,7 @@ ADIR:=$(HOME)/.arduino15
 #the basename.
 PORT:=ttyACM0
 #if you want to verify the bossac upload, define this to -v
-VERIFY:=
+VERIFY:=-v
 
 
 #end of user configuration.
@@ -188,7 +188,7 @@ $(TMPDIR)/$(PROJNAME).bin: $(TMPDIR)/$(PROJNAME).elf
 #upload to the arduino by first resetting it (stty) and the running bossac
 upload: $(TMPDIR)/$(PROJNAME).bin
 	stty -F /dev/$(PORT) cs8 1200 hupcl
-	$(ADIR)/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i -d --port=$(PORT) -U false -e -w $(VERIFY) -b $(TMPDIR)/$(PROJNAME).bin -R
+	$(ADIR)/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i --port=$(PORT) -U false -e -w $(VERIFY) -b $(TMPDIR)/$(PROJNAME).bin -R
 
 # Export the current git version if the index file exists, else 000...
 GitVersion.h:
