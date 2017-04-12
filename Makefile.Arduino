@@ -1,26 +1,13 @@
 #!/usr/bin/make
 # makefile for the arduino due (works with arduino IDE 1.6.11)
 #
+# The original file can be found at https://github.com/pauldreik/arduino-due-makefile
+#
 # USAGE: put this file in the same dir as your .ino file is.
 # configure the PORT variable and ADIR at the top of the file
 # to match your local configuration.
 # Type make upload to compile and upload.
-# Type make monitor to watch the serial port with gnu screen.
 #
-# TODO:
-#  * support libraries
-#  * handle possibly missing files in the currently hard coded ar step
-#    when assembling core.a together. 
-#  * see what to do about the $(SAM)/cores/arduino/wiring_pulse_asm.S" add -x assembler-with-cpp
-#    and this one: $(SAM)/cores/arduino/avr/dtostrf.c
-#
-# LICENSE: GPLv2 or later (at your option)
-#
-# This file can be found at https://github.com/pauldreik/arduino-due-makefile
-#
-# By Paul Dreik http://www.pauldreik.se/
-# 20130503 initial version
-# 20160924 updated to work with arduino 1.6.11
 
 #user specific settings:
 #where to find the IDE
