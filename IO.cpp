@@ -37,9 +37,9 @@ static q15_t C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472,
 const uint16_t C4FSK_FILTER_LEN = 42U;
 #endif
 
-// Generated using gaussfir(0.5, 4, 5) in MATLAB
-static q15_t   GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
-const uint16_t GMSK_FILTER_LEN = 12U;
+// Generated using fir1(31, 0.25) in MATLAB
+static q15_t   GMSK_FILTER[] = {-21,-60,-84,-52,78,273,387,221,-301,-974,-1305,-731,1017,3642,6306,7987,7987,6306,3642,1017,-731,-1305,-974,-301,221,387,273,78,-52,-84,-60,-21};
+const uint16_t GMSK_FILTER_LEN = 32U;
 
 // One symbol boxcar filter
 static q15_t   P25_FILTER[] = {3000, 3000, 3000, 3000, 3000, 0};
