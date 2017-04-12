@@ -130,7 +130,7 @@ clean:
 	test ! -d $(TMPDIR) || rm -rf $(TMPDIR)
 	$(RM) GitVersion.h
 
-.PHONY: upload default
+.PHONY: .FORCE upload default
 
 $(TMPDIR):
 	mkdir -p $(TMPDIR)
@@ -193,9 +193,11 @@ upload: $(TMPDIR)/$(PROJNAME).bin
 	$(ADIR)/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i --port=$(PORT) -U false -e -w $(VERIFY) -b $(TMPDIR)/$(PROJNAME).bin -R
 
 # Export the current git version if the index file exists, else 000...
-GitVersion.h:
+GitVersion.h: .FORCE
 ifneq ("$(wildcard .git/index)","")
 	echo "#define GITVERSION \"$(shell git rev-parse --short HEAD)\"" > $@
 else
 	echo "#define GITVERSION \"0000000\"" > $@
 endif
+
+.FORCE:
