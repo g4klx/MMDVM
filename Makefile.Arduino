@@ -47,7 +47,7 @@ OBJCOPY:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-n
 
 C:=$(CC)
 #SAM:=arduino/sam/
-SAM:=$(ADIR)/packages/arduino/hardware/sam/1.6.9
+SAM:=$(ADIR)/packages/arduino/hardware/sam/1.6.11
 #CMSIS:=arduino/sam/system/CMSIS/
 #LIBSAM:=arduino/sam/system/libsam
 TMPDIR:=$(PWD)/build
@@ -92,7 +92,7 @@ CORESRCXX:=$(shell ls ${SAM}/cores/arduino/*.cpp ${SAM}/cores/arduino/USB/*.cpp 
 CORESRC:=$(shell ls ${SAM}/cores/arduino/*.c)
 
 #hey this one is needed too: $(SAM)/cores/arduino/wiring_pulse_asm.S" add -x assembler-with-cpp
-#and this one: /1.6.9/cores/arduino/avr/dtostrf.c but it seems to work
+#and this one: /1.6.11/cores/arduino/avr/dtostrf.c but it seems to work
 #anyway, probably because I do not use that functionality.
 
 #convert the core source files to object files. assume no clashes.
