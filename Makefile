@@ -36,19 +36,19 @@ ifdef SYSTEMROOT
 	ASOURCES=$(shell dir /S /B *.s)
 	CSOURCES=$(shell dir /S /B *.c)
 	CXXSOURCES=$(shell dir /S /B *.cpp)
-	CLEANCMD=del /S *.o *.hex *.bin *.elf
+	CLEANCMD=del /S *.o *.hex *.bin *.elf GitVersion.h
 	MDBIN=md $@
 else ifdef SystemRoot
 	ASOURCES=$(shell dir /S /B *.s)
 	CSOURCES=$(shell dir /S /B *.c)
 	CXXSOURCES=$(shell dir /S /B *.cpp)
-	CLEANCMD=del /S *.o *.hex *.bin *.elf
+	CLEANCMD=del /S *.o *.hex *.bin *.elf GitVersion.h
 	MDBIN=md $@
 else
 	ASOURCES=$(shell find . -name '*.s')
 	CSOURCES=$(shell find . -name '*.c')
 	CXXSOURCES=$(shell find . -name '*.cpp')
-	CLEANCMD=rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/$(BINBIN)
+	CLEANCMD=rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/$(BINBIN) GitVersion.h
 	MDBIN=mkdir $@
 endif
 
