@@ -36,19 +36,19 @@ ifdef SYSTEMROOT
 	ASOURCES=$(shell dir /S /B *.s)
 	CSOURCES=$(shell dir /S /B *.c)
 	CXXSOURCES=$(shell dir /S /B *.cpp)
-	CLEANCMD=del /S *.o *.hex *.bin *.elf
+	CLEANCMD=del /S *.o *.hex *.bin *.elf GitVersion.h
 	MDBIN=md $@
 else ifdef SystemRoot
 	ASOURCES=$(shell dir /S /B *.s)
 	CSOURCES=$(shell dir /S /B *.c)
 	CXXSOURCES=$(shell dir /S /B *.cpp)
-	CLEANCMD=del /S *.o *.hex *.bin *.elf
+	CLEANCMD=del /S *.o *.hex *.bin *.elf GitVersion.h
 	MDBIN=md $@
 else
 	ASOURCES=$(shell find . -name '*.s')
 	CSOURCES=$(shell find . -name '*.c')
 	CXXSOURCES=$(shell find . -name '*.cpp')
-	CLEANCMD=rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/$(BINBIN)
+	CLEANCMD=rm -f $(OBJECTS) $(BINDIR)/$(BINELF) $(BINDIR)/$(BINHEX) $(BINDIR)/$(BINBIN) GitVersion.h
 	MDBIN=mkdir $@
 endif
 
@@ -109,6 +109,7 @@ pi: CXXFLAGS+=$(DEFS_PI) -Os -fno-exceptions -ffunction-sections -fdata-sections
 pi: LDFLAGS+=-Os --specs=nano.specs
 pi: release
 
+nucleo: GitVersion.h
 nucleo: CFLAGS+=$(DEFS_NUCLEO) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 nucleo: CXXFLAGS+=$(DEFS_NUCLEO) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
 nucleo: LDFLAGS+=-Os --specs=nano.specs
@@ -170,4 +171,12 @@ endif
 
 ifneq ($(wildcard /opt/openocd/bin/openocd),)
 	/opt/openocd/bin/openocd -f /opt/openocd/share/openocd/scripts/board/stm32f4discovery.cfg -c "program bin/$(BINELF) verify reset exit"
+endif
+
+# Export the current git version if the index file exists, else 000...
+GitVersion.h:
+ifneq ("$(wildcard .git/index)","")
+	echo "#define GITVERSION \"$(shell git rev-parse --short HEAD)\"" > $@
+else
+	echo "#define GITVERSION \"0000000\"" > $@
 endif
