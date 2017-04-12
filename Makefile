@@ -109,6 +109,7 @@ pi: CXXFLAGS+=$(DEFS_PI) -Os -fno-exceptions -ffunction-sections -fdata-sections
 pi: LDFLAGS+=-Os --specs=nano.specs
 pi: release
 
+nucleo: GitVersion.h
 nucleo: CFLAGS+=$(DEFS_NUCLEO) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 nucleo: CXXFLAGS+=$(DEFS_NUCLEO) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
 nucleo: LDFLAGS+=-Os --specs=nano.specs
@@ -175,7 +176,7 @@ endif
 # Export the current git version if the index file exists, else 000...
 GitVersion.h:
 ifneq ("$(wildcard .git/index)","")
-	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
+	echo "#define GITVERSION \"$(shell git rev-parse --short HEAD)\"" > $@
 else
-	echo "const char *gitversion = \"0000000000000000000000000000000000000000\";" > $@
+	echo "#define GITVERSION \"0000000\"" > $@
 endif
