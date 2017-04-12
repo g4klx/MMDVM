@@ -58,7 +58,8 @@ AR:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-e
 #all these values are hard coded and should maybe be configured somehow else,
 #like olikraus does in his makefile.
 DEFINES:=-Dprintf=iprintf -DF_CPU=84000000  -DARDUINO=10611 -D__SAM3X8E__ -DUSB_PID=0x003e -DUSB_VID=0x2341 -DUSBCON \
-         -DARDUINO_SAM_DUE -DARDUINO_ARCH_SAM '-DUSB_MANUFACTURER="Arduino LLC"' '-DUSB_PRODUCT="Arduino Due"'
+         -DARDUINO_SAM_DUE -DARDUINO_ARCH_SAM '-DUSB_MANUFACTURER="Arduino LLC"' '-DUSB_PRODUCT="Arduino Due"' \
+         -DMADEBYMAKEFILE
 
 INCLUDES:=-I$(SAM)/system/libsam -I$(SAM)/system/CMSIS/CMSIS/Include/ \
           -I$(SAM)/system/CMSIS/Device/ATMEL/ -I$(SAM)/cores/arduino \
@@ -105,6 +106,7 @@ default:
 
 #This rule is good to just make sure stuff compiles, without having to wait
 #for bossac.
+compile: GitVersion.h
 compile: $(TMPDIR)/$(PROJNAME).elf
 
 #This is a make rule template to create object files from the source files.
