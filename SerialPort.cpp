@@ -81,7 +81,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #endif
 
 #if defined(GITVERSION)
-#define concat(a, b) a " GitID #"b""
+#define concat(a, b) a " GitID #" b ""
 const char HARDWARE[] = concat(DESCRIPTION, GITVERSION);
 #else
 #define concat(a, b, c) a " (Build: " b " " c ")"
