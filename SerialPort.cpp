@@ -22,7 +22,7 @@
 #include "Config.h"
 #include "Globals.h"
 
-#if defined(STM32F4XX) || defined(STM32F4)
+#if defined(MADEBYMAKEFILE)
 #include "GitVersion.h"
 #endif
 
