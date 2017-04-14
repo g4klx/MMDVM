@@ -61,6 +61,7 @@ private:
   uint8_t m_buffer[256U];
   uint8_t m_ptr;
   uint8_t m_len;
+  bool    m_debug;
 
   void    sendACK();
   void    sendNAK(uint8_t err);

@@ -17,8 +17,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 
@@ -94,7 +92,8 @@ const uint8_t PROTOCOL_VERSION   = 1U;
 CSerialPort::CSerialPort() :
 m_buffer(),
 m_ptr(0U),
-m_len(0U)
+m_len(0U),
+m_debug(false)
 {
 }
 
@@ -229,6 +228,8 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   bool pttInvert = (data[0U] & 0x04U) == 0x04U;
   bool ysfLoDev  = (data[0U] & 0x08U) == 0x08U;
   bool simplex   = (data[0U] & 0x80U) == 0x80U;
+
+  m_debug = (data[0U] & 0x10U) == 0x10U;
 
   bool dstarEnable = (data[1U] & 0x01U) == 0x01U;
   bool dmrEnable   = (data[1U] & 0x02U) == 0x02U;
@@ -931,6 +932,9 @@ void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
 
 void CSerialPort::writeDebug(const char* text)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -948,6 +952,9 @@ void CSerialPort::writeDebug(const char* text)
 
 void CSerialPort::writeDebug(const char* text, int16_t n1)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -968,6 +975,9 @@ void CSerialPort::writeDebug(const char* text, int16_t n1)
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -991,6 +1001,9 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -1017,6 +1030,9 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;

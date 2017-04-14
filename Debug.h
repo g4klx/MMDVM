@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,9 +20,6 @@
 #define  DEBUG_H
 
 #include "Config.h"
-
-#if defined(WANT_DEBUG)
-
 #include "Globals.h"
 
 #define  DEBUG1(a)          serial.writeDebug((a))
@@ -31,17 +28,6 @@
 #define  DEBUG4(a,b,c,d)    serial.writeDebug((a),(b),(c),(d))
 #define  DEBUG5(a,b,c,d,e)  serial.writeDebug((a),(b),(c),(d),(e))
 #define  ASSERT(a)          serial.writeAssert((a),#a,__FILE__,__LINE__)
-
-#else
-
-#define  DEBUG1(a)          
-#define  DEBUG2(a,b)        
-#define  DEBUG3(a,b,c)      
-#define  DEBUG4(a,b,c,d)    
-#define  DEBUG5(a,b,c,d,e)  
-#define  ASSERT(a)          
-
-#endif
 
 #endif
 

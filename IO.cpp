@@ -18,8 +18,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "IO.h"
@@ -345,11 +343,6 @@ void CIO::getOverflow(bool& adcOverflow, bool& dacOverflow)
 {
   adcOverflow = m_adcOverflow > 0U;
   dacOverflow = m_dacOverflow > 0U;
-
-#if defined(WANT_DEBUG)
-  if (m_adcOverflow > 0U || m_dacOverflow > 0U)
-    DEBUG3("IO: adc/dac", m_adcOverflow, m_dacOverflow);
-#endif
 
   m_adcOverflow = 0U;
   m_dacOverflow = 0U;
