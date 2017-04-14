@@ -22,18 +22,11 @@
 #include "Globals.h"
 #include "DMRSlotType.h"
 
-#if defined(WIDE_C4FSK_FILTERS_TX)
-// Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688}; // numTaps = 25, L = 5
-const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 5U;                                              // phaseLength = numTaps/L
-#else
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
 static q15_t DMR_C4FSK_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
                                    -553, -847, -731, -340, 104, 401};        // numTaps = 45, L = 5
 const uint16_t DMR_C4FSK_FILTER_PHASE_LEN = 9U;                              // phaseLength = numTaps/L
-#endif
 
 const q15_t DMR_LEVELA =  2889;
 const q15_t DMR_LEVELB =  963;

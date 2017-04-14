@@ -23,18 +23,11 @@
 
 #include "P25Defines.h"
 
-#if defined(WIDE_C4FSK_FILTERS_TX)
-// Generated using rcosdesign(0.2, 4, 5, 'normal') in MATLAB
-// numTaps = 20, L = 5
-static q15_t P25_C4FSK_FILTER[] = {-1392, -2602, -3043, -2238, 0, 3460, 7543, 11400, 14153, 15152, 14153,	11400, 7543, 3460, 0, -2238, -3043, -2602, -1392, 0};
-const uint16_t P25_C4FSK_FILTER_PHASE_LEN = 4U;  // phaseLength = numTaps/L
-#else
 // Generated using rcosdesign(0.2, 8, 5, 'normal') in MATLAB
 // numTaps = 40, L = 5
 static q15_t P25_C4FSK_FILTER[] = {-413, -751, -845, -587, 0, 740, 1348, 1520, 1063, 0, -1383, -2583, -3021, -2222, 0, 3435, 7488, 11318, 14053, 15044, 14053,
                                    11318, 7488, 3435, 0, -2222, -3021, -2583, -1383, 0, 1063, 1520, 1348, 740, 0, -587, -845, -751, -413, 0};
 const uint16_t P25_C4FSK_FILTER_PHASE_LEN = 8U;  // phaseLength = numTaps/L
-#endif
 
 // Generated in MATLAB using the following commands, and then normalised for unity gain
 // shape2 = 'Inverse-sinc Lowpass';
