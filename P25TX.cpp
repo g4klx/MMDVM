@@ -25,23 +25,22 @@
 
 // Generated using rcosdesign(0.2, 8, 5, 'normal') in MATLAB
 // numTaps = 40, L = 5
-static q15_t RC_0_2_FILTER[] = {-413, -751, -845, -587, 0, 740, 1348, 1520, 1063, 0, -1383, -2583, -3021, -2222, 0, 3435, 7488, 11318, 14053, 15044, 14053,
-                                   11318, 7488, 3435, 0, -2222, -3021, -2583, -1383, 0, 1063, 1520, 1348, 740, 0, -587, -845, -751, -413, 0};
-const uint16_t RC_0_2_FILTER_PHASE_LEN = 8U;  // phaseLength = numTaps/L
+static q15_t RC_0_2_FILTER[] = {-897, -1636, -1840, -1278, 0, 1613, 2936, 3310, 2315, 0, -3011, -5627, -6580, -4839,
+                                0, 7482, 16311, 24651, 30607, 32767, 30607, 24651, 16311, 7482, 0, -4839, -6580, -5627,
+                               -3011, 0, 2315, 3310, 2936, 1613, 0, -1278, -1840, -1636, -897, 0}; // numTaps = 40, L = 5
+const uint16_t RC_0_2_FILTER_PHASE_LEN = 8U; // phaseLength = numTaps/L
 
 // Generated in MATLAB using the following commands, and then normalised for unity gain
 // shape2 = 'Inverse-sinc Lowpass';
-// d2 = fdesign.interpolator(2, shape2);  
+// d2 = fdesign.interpolator(1, shape2);  
 // h2 = design(d2, 'SystemObject', true);
-static q15_t LOWPASS_FILTER[] = {170, 401, 340, -203, -715, -478, 281, 419, -440, -1002, -103, 1114, 528, -1389, -1520, 1108, 2674, -388, -4662,
-                                -2132, 9168, 20241, 20241, 9168, -2132, -4662, -388, 2674, 1108, -1520, -1389, 528, 1114, -103, -1002, -440, 419,
-                                281, -478, -715, -203, 340, 401, 170};
-const uint16_t LOWPASS_FILTER_LEN = 44U;
+static q15_t LOWPASS_FILTER[] = {1376, -2393, 4584, -8933, 22325, 22325, -8933, 4584, -2393, 1376};
+const uint16_t LOWPASS_FILTER_LEN = 10U;
 
-const q15_t P25_LEVELA =  1698;
-const q15_t P25_LEVELB =   566;
-const q15_t P25_LEVELC =  -566;
-const q15_t P25_LEVELD = -1698;
+const q15_t P25_LEVELA =  1260;
+const q15_t P25_LEVELB =   420;
+const q15_t P25_LEVELC =  -420;
+const q15_t P25_LEVELD = -1260;
 
 const uint8_t P25_START_SYNC = 0x77U;
 
