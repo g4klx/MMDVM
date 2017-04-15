@@ -24,10 +24,10 @@
 #include "YSFDefines.h"
 
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t YSF_C4FSK_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
+static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
                                    -553, -847, -731, -340, 104, 401}; // numTaps = 45, L = 5
-const uint16_t YSF_C4FSK_FILTER_PHASE_LEN = 9U;                       // phaseLength = numTaps/L
+const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U;                       // phaseLength = numTaps/L
 
 const q15_t YSF_LEVELA_HI =  3900;
 const q15_t YSF_LEVELB_HI =  1300;
@@ -54,10 +54,10 @@ m_loDev(false)
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
 
-  m_modFilter.L = YSF_RADIO_SYMBOL_LENGTH;
-  m_modFilter.phaseLength = YSF_C4FSK_FILTER_PHASE_LEN;
-  m_modFilter.pCoeffs = YSF_C4FSK_FILTER;
-  m_modFilter.pState  = m_modState;
+  m_modFilter.L           = YSF_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = RRC_0_2_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = RRC_0_2_FILTER;
+  m_modFilter.pState      = m_modState;
 }
 
 void CYSFTX::process()
