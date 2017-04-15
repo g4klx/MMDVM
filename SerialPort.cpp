@@ -17,10 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
+
+#if defined(MADEBYMAKEFILE)
+#include "GitVersion.h"
+#endif
+
 
 #include "SerialPort.h"
 
@@ -62,8 +65,6 @@ const uint8_t MMDVM_NAK          = 0x7FU;
 
 const uint8_t MMDVM_SERIAL       = 0x80U;
 
-const uint8_t MMDVM_SAMPLES      = 0xF0U;
-
 const uint8_t MMDVM_DEBUG1       = 0xF1U;
 const uint8_t MMDVM_DEBUG2       = 0xF2U;
 const uint8_t MMDVM_DEBUG3       = 0xF3U;
@@ -76,8 +77,14 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #else
 #define DESCRIPTION              "MMDVM 20170406 (D-Star/DMR/System Fusion/P25/RSSI/CW Id)"
 #endif
+
+#if defined(GITVERSION)
+#define concat(a, b) a " GitID #" b ""
+const char HARDWARE[] = concat(DESCRIPTION, GITVERSION);
+#else
 #define concat(a, b, c) a " (Build: " b " " c ")"
 const char HARDWARE[] = concat(DESCRIPTION, __TIME__, __DATE__);
+#endif
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
@@ -85,7 +92,8 @@ const uint8_t PROTOCOL_VERSION   = 1U;
 CSerialPort::CSerialPort() :
 m_buffer(),
 m_ptr(0U),
-m_len(0U)
+m_len(0U),
+m_debug(false)
 {
 }
 
@@ -220,6 +228,8 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   bool pttInvert = (data[0U] & 0x04U) == 0x04U;
   bool ysfLoDev  = (data[0U] & 0x08U) == 0x08U;
   bool simplex   = (data[0U] & 0x80U) == 0x80U;
+
+  m_debug = (data[0U] & 0x10U) == 0x10U;
 
   bool dstarEnable = (data[1U] & 0x01U) == 0x01U;
   bool dmrEnable   = (data[1U] & 0x02U) == 0x02U;
@@ -920,33 +930,11 @@ void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
   writeInt(1U, reply, count);
 }
 
-void CSerialPort::writeSamples(uint8_t mode, uint8_t control, const q15_t* samples, uint16_t nSamples)
-{
-  uint8_t reply[1800U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_SAMPLES;
-
-  reply[5U] = mode;
-  reply[6U] = control;
-
-  uint16_t count = 7U;
-  for (uint16_t i = 0U; i < nSamples; i++) {
-    uint16_t val = uint16_t(samples[i] + 2048);
-
-    reply[count++] = (val >> 8) & 0xFF;
-    reply[count++] = (val >> 0) & 0xFF;
-  }
-
-  reply[3U] = (count >> 8) & 0xFFU;
-  reply[4U] = (count >> 0) & 0xFFU;
-
-  writeInt(1U, reply, count, true);
-}
-
 void CSerialPort::writeDebug(const char* text)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -964,6 +952,9 @@ void CSerialPort::writeDebug(const char* text)
 
 void CSerialPort::writeDebug(const char* text, int16_t n1)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -984,6 +975,9 @@ void CSerialPort::writeDebug(const char* text, int16_t n1)
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -1007,6 +1001,9 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;
@@ -1033,6 +1030,9 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4)
 {
+  if (!m_debug)
+    return;
+
   uint8_t reply[130U];
 
   reply[0U] = MMDVM_FRAME_START;

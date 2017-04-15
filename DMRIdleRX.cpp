@@ -16,10 +16,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define  WANT_DEBUG
-
-// #define DUMP_SAMPLES
-
 #include "Config.h"
 #include "Globals.h"
 #include "DMRIdleRX.h"
@@ -161,9 +157,6 @@ void CDMRIdleRX::processSample(q15_t sample)
     if (colorCode == m_colorCode && dataType == DT_CSBK) {
       frame[0U] = CONTROL_IDLE | CONTROL_DATA | DT_CSBK;
       serial.writeDMRData(false, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-#if defined(DUMP_SAMPLES)
-      writeSamples(ptr, frame[0U]);
-#endif
     }
 
     m_endPtr  = NOENDPTR;
@@ -216,20 +209,3 @@ void CDMRIdleRX::setColorCode(uint8_t colorCode)
 {
   m_colorCode = colorCode;
 }
-
-#if defined(DUMP_SAMPLES)
-void CDMRIdleRX::writeSamples(uint16_t start, uint8_t control)
-{
-  q15_t samples[DMR_FRAME_LENGTH_SYMBOLS];
-
-  for (uint16_t i = 0U; i < DMR_FRAME_LENGTH_SYMBOLS; i++) {
-    samples[i] = m_buffer[start];
-
-    start += DMR_RADIO_SYMBOL_LENGTH;
-    if (start >= DMR_FRAME_LENGTH_SAMPLES)
-      start -= DMR_FRAME_LENGTH_SAMPLES;
-  }
-
-  serial.writeSamples(STATE_DMR, control, samples, DMR_FRAME_LENGTH_SYMBOLS);
-}
-#endif

@@ -49,8 +49,6 @@ public:
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
 
-  void writeSamples(uint8_t mode, uint8_t control, const q15_t* samples, uint16_t nSamples);
-
   void writeDebug(const char* text);
   void writeDebug(const char* text, int16_t n1);
   void writeDebug(const char* text, int16_t n1, int16_t n2);
@@ -63,6 +61,7 @@ private:
   uint8_t m_buffer[256U];
   uint8_t m_ptr;
   uint8_t m_len;
+  bool    m_debug;
 
   void    sendACK();
   void    sendNAK(uint8_t err);

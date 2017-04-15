@@ -2,3 +2,5 @@
 obj/
 bin/
 STM32F4XX_Lib/
+GitVersion.h
+build/

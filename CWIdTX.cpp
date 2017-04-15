@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,6 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-// #define  WANT_DEBUG
 
 #include "Config.h"
 #include "Globals.h"
@@ -77,6 +75,8 @@ const struct {
   {'/', 0xEAE80000U, 16U},
   {'?', 0xAEEA0000U, 18U},
   {',', 0xEEAEE000U, 22U},
+  {'-', 0xEAAE0000U, 18U},
+  {'=', 0xEAB80000U, 16U},
   {' ', 0x00000000U, 4U},
   {0U,  0x00000000U, 0U}
 };

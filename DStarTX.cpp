@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,8 +17,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "DStarTX.h"
@@ -29,8 +28,8 @@ const uint8_t BIT_SYNC = 0xAAU;
 const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 
 // Generated using gaussfir(0.35, 1, 5) in MATLAB
-static q15_t DSTAR_GMSK_FILTER[] = {0, 0, 0, 0, 212, 743, 1974, 3965, 6026, 6929, 6026, 3965, 1974, 743, 212}; // numTaps = 15, L = 5
-const uint16_t DSTAR_GMSK_FILTER_PHASE_LEN = 3U; // phaseLength = numTaps/L
+static q15_t GAUSSIAN_0_35_FILTER[] = {0, 0, 0, 0, 212, 743, 1974, 3965, 6026, 6929, 6026, 3965, 1974, 743, 212}; // numTaps = 15, L = 5
+const uint16_t GAUSSIAN_0_35_FILTER_PHASE_LEN = 3U; // phaseLength = numTaps/L
 
 const q15_t DSTAR_LEVEL0 = -4000;
 const q15_t DSTAR_LEVEL1 =  4000;
@@ -199,10 +198,10 @@ m_txDelay(60U)       // 100ms
 {
   ::memset(m_modState, 0x00U, 20U * sizeof(q15_t));
 
-  m_modFilter.L = DSTAR_RADIO_BIT_LENGTH;
-  m_modFilter.phaseLength = DSTAR_GMSK_FILTER_PHASE_LEN;
-  m_modFilter.pCoeffs = DSTAR_GMSK_FILTER;
-  m_modFilter.pState  = m_modState;
+  m_modFilter.L           = DSTAR_RADIO_BIT_LENGTH;
+  m_modFilter.phaseLength = GAUSSIAN_0_35_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = GAUSSIAN_0_35_FILTER;
+  m_modFilter.pState      = m_modState;
 }
 
 void CDStarTX::process()

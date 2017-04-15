@@ -16,10 +16,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define  WANT_DEBUG
-
-// #define DUMP_SAMPLES
-
 #include "Config.h"
 #include "Globals.h"
 #include "P25RX.h"
@@ -245,9 +241,6 @@ void CP25RX::processLdu(q15_t sample)
 		} else {
       frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
       writeRSSILdu(frame);
-#if defined(DUMP_SAMPLES)
-      writeSamples(m_lduStartPtr, frame[0U]);
-#endif
       m_maxCorr = 0;
     }
   }
@@ -471,20 +464,3 @@ void CP25RX::writeRSSILdu(uint8_t* ldu)
   m_rssiAccum = 0U;
   m_rssiCount = 0U;
 }
-
-#if defined(DUMP_SAMPLES)
-void CP25RX::writeSamples(uint16_t start, uint8_t control)
-{
-  q15_t samples[P25_LDU_FRAME_LENGTH_SYMBOLS];
-
-  for (uint16_t i = 0U; i < P25_LDU_FRAME_LENGTH_SYMBOLS; i++) {
-    samples[i] = m_buffer[start];
-
-    start += P25_RADIO_SYMBOL_LENGTH;
-    if (start >= P25_LDU_FRAME_LENGTH_SAMPLES)
-      start -= P25_LDU_FRAME_LENGTH_SAMPLES;
-  }
-
-  serial.writeSamples(STATE_P25, control, samples, P25_LDU_FRAME_LENGTH_SYMBOLS);
-}
-#endif
