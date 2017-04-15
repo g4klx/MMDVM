@@ -23,15 +23,15 @@
 #include "DMRSlotType.h"
 
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                   11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401};        // numTaps = 45, L = 5
-const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U;                              // phaseLength = numTaps/L
+static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172, 237, 1927, 3120, 3073, 1447, -1431, -4544, -6442,
+                                 -5735, -1633, 5651, 14822, 23810, 30367, 32767, 30367, 23810, 14822, 5651, -1633, -5735, -6442,
+                                 -4544, -1431, 1447, 3073, 3120, 1927, 237, -1172, -1795, -1548, -720, 219, 850}; // numTaps = 45, L = 5
+const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t DMR_LEVELA =  2889;
-const q15_t DMR_LEVELB =  963;
-const q15_t DMR_LEVELC = -963;
-const q15_t DMR_LEVELD = -2889;
+const q15_t DMR_LEVELA =  1362;
+const q15_t DMR_LEVELB =  454;
+const q15_t DMR_LEVELC = -454;
+const q15_t DMR_LEVELD = -1362;
 
 // The PR FILL and BS Data Sync pattern.
 const uint8_t IDLE_DATA[] =

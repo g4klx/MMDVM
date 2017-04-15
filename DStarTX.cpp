@@ -28,11 +28,11 @@ const uint8_t BIT_SYNC = 0xAAU;
 const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 
 // Generated using gaussfir(0.35, 1, 5) in MATLAB
-static q15_t GAUSSIAN_0_35_FILTER[] = {0, 0, 0, 0, 212, 743, 1974, 3965, 6026, 6929, 6026, 3965, 1974, 743, 212}; // numTaps = 15, L = 5
+static q15_t GAUSSIAN_0_35_FILTER[] = {0, 0, 0, 0, 1001, 3514, 9333, 18751, 28499, 32767, 28499, 18751, 9333, 3514, 1001}; // numTaps = 15, L = 5
 const uint16_t GAUSSIAN_0_35_FILTER_PHASE_LEN = 3U; // phaseLength = numTaps/L
 
-const q15_t DSTAR_LEVEL0 = -4000;
-const q15_t DSTAR_LEVEL1 =  4000;
+const q15_t DSTAR_LEVEL0 = -841;
+const q15_t DSTAR_LEVEL1 =  841;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
