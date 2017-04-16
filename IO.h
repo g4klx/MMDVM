@@ -61,13 +61,11 @@ private:
   CRSSIRB              m_rssiBuffer;
 
   arm_fir_instance_q15 m_rrcFilter;
-  arm_fir_instance_q15 m_rcFilter;
   arm_fir_instance_q15 m_gaussianFilter;
-  arm_fir_instance_q15 m_boxcarFilter;
+  arm_fir_instance_q15 m_lpFilter;
   q15_t                m_rrcState[70U];           // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  q15_t                m_rcState[70U];            // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
   q15_t                m_gaussianState[40U];      // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
-  q15_t                m_boxcarState[30U];        // NoTaps + BlockSize - 1, 6 + 20 - 1 plus some spare
+  q15_t                m_lpState[40U];            // NoTaps + BlockSize - 1, 10 + 20 - 1 plus some spare
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;
