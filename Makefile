@@ -101,9 +101,10 @@ LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) --specs=nosys.specs $(INCLUDES_LIBS) $(LINK_L
 # Build Rules
 .PHONY: all release dis pi nucleo debug clean
 
-# Default target: STM32F4 Discovery board
-all: dis
+# Default target: STM32F4 Nucleo F446RE board
+all: nucleo
 
+pi: GitVersion.h
 pi: CFLAGS+=$(DEFS_PI) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 pi: CXXFLAGS+=$(DEFS_PI) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
 pi: LDFLAGS+=-Os --specs=nano.specs
@@ -115,6 +116,7 @@ nucleo: CXXFLAGS+=$(DEFS_NUCLEO) -Os -fno-exceptions -ffunction-sections -fdata-
 nucleo: LDFLAGS+=-Os --specs=nano.specs
 nucleo: release
 
+dis: GitVersion.h
 dis: CFLAGS+=$(DEFS_DIS) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 dis: CXXFLAGS+=$(DEFS_DIS) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
 dis: LDFLAGS+=-Os --specs=nano.specs
