@@ -101,9 +101,10 @@ LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) --specs=nosys.specs $(INCLUDES_LIBS) $(LINK_L
 # Build Rules
 .PHONY: all release dis pi nucleo debug clean
 
-# Default target: STM32F4 Discovery board
-all: dis
+# Default target: STM32F4 Nucleo F446RE board
+all: nucleo
 
+pi: GitVersion.h
 pi: CFLAGS+=$(DEFS_PI) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 pi: CXXFLAGS+=$(DEFS_PI) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
 pi: LDFLAGS+=-Os --specs=nano.specs
@@ -115,6 +116,7 @@ nucleo: CXXFLAGS+=$(DEFS_NUCLEO) -Os -fno-exceptions -ffunction-sections -fdata-
 nucleo: LDFLAGS+=-Os --specs=nano.specs
 nucleo: release
 
+dis: GitVersion.h
 dis: CFLAGS+=$(DEFS_DIS) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 dis: CXXFLAGS+=$(DEFS_DIS) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
 dis: LDFLAGS+=-Os --specs=nano.specs
@@ -171,6 +173,17 @@ endif
 
 ifneq ($(wildcard /opt/openocd/bin/openocd),)
 	/opt/openocd/bin/openocd -f /opt/openocd/share/openocd/scripts/board/stm32f4discovery.cfg -c "program bin/$(BINELF) verify reset exit"
+endif
+
+deploy-pi:
+ifneq ($(wildcard /usr/local/bin/stm32flash),)
+	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
+	/usr/local/bin/stm32flash -v -w bin/outp.bin -g 0x0 -R -c /dev/ttyAMA0
+endif
+
+ifneq ($(wildcard /usr/bin/stm32flash),)
+	-/usr/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
+	/usr/bin/stm32flash -v -w bin/outp.bin -g 0x0 -R -c /dev/ttyAMA0
 endif
 
 # Export the current git version if the index file exists, else 000...
