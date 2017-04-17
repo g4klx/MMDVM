@@ -37,8 +37,6 @@ public:
 
   uint8_t getSpace() const;
 
-  void setColorCode(uint8_t colorCode);
-
 private:
   CSerialRB                        m_fifo;
   arm_fir_interpolate_instance_q15 m_modFilter;
@@ -47,10 +45,7 @@ private:
   uint16_t                         m_poLen;
   uint16_t                         m_poPtr;
   uint32_t                         m_txDelay;
-  uint8_t                          m_idle[DMR_FRAME_LENGTH_BYTES];
-  uint8_t                          m_cachPtr;
 
-  void createCACH(uint8_t* buffer, uint8_t slotIndex);
   void writeByte(uint8_t c);
 };
 
