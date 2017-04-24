@@ -27,7 +27,6 @@
 #define  DEBUG3(a,b,c)      serial.writeDebug((a),(b),(c))
 #define  DEBUG4(a,b,c,d)    serial.writeDebug((a),(b),(c),(d))
 #define  DEBUG5(a,b,c,d,e)  serial.writeDebug((a),(b),(c),(d),(e))
-#define  ASSERT(a)          serial.writeAssert((a),#a,__FILE__,__LINE__)
 
 #endif
 

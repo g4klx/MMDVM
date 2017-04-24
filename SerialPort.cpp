@@ -93,7 +93,8 @@ CSerialPort::CSerialPort() :
 m_buffer(),
 m_ptr(0U),
 m_len(0U),
-m_debug(false)
+m_debug(false),
+m_repeat()
 {
 }
 
@@ -643,8 +644,10 @@ void CSerialPort::process()
             break;
 
 #if defined(SERIAL_REPEATER)
-          case MMDVM_SERIAL:
-            writeInt(3U, m_buffer + 3U, m_len - 3U);
+          case MMDVM_SERIAL: {
+				for (uint8_t i = 3U; i < m_len; i++)
+					m_repeat.put(m_buffer[i]);
+			}
             break;
 #endif
 
@@ -661,9 +664,22 @@ void CSerialPort::process()
   }
 
 #if defined(SERIAL_REPEATER)
-  // Drain any incoming serial data
-  while (availableInt(3U))
-    readInt(3U);
+	// Write any outgoing serial data
+	uint16_t space = m_repeat.getData();
+	if (space > 0U) {
+		int avail = availableForWriteInt(3U);
+		if (avail < space)
+			space = avail;
+
+		for (uint16_t i = 0U; i < space; i++) {
+			uint8_t c = m_repeat.get();
+			writeInt(3U, &c, 1U);
+		}
+	}
+
+	// Read any incoming serial data
+	while (availableInt(3U))
+		readInt(3U);
 #endif
 }
 
@@ -1058,32 +1074,3 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
 
   writeInt(1U, reply, count, true);
 }
-
-void CSerialPort::writeAssert(bool cond, const char* text, const char* file, long line)
-{
-  if (cond)
-    return;
-
-  uint8_t reply[200U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_DEBUG2;
-
-  uint8_t count = 3U;
-  for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
-    reply[count] = text[i];
-
-  reply[count++] = ' ';
-  
-  for (uint8_t i = 0U; file[i] != '\0'; i++, count++)
-    reply[count] = file[i];
-
-  reply[count++] = (line >> 8) & 0xFF;
-  reply[count++] = (line >> 0) & 0xFF;
-
-  reply[1U] = count;
-
-  writeInt(1U, reply, count, true);
-}
-

@@ -21,6 +21,7 @@
 
 #include "Config.h"
 #include "Globals.h"
+#include "SerialRB.h"
 
 
 class CSerialPort {
@@ -55,13 +56,12 @@ public:
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3);
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4);
 
-  void writeAssert(bool cond, const char* text, const char* file, long line);
-
 private:
-  uint8_t m_buffer[256U];
-  uint8_t m_ptr;
-  uint8_t m_len;
-  bool    m_debug;
+  uint8_t   m_buffer[256U];
+  uint8_t   m_ptr;
+  uint8_t   m_len;
+  bool      m_debug;
+  CSerialRB m_repeat;
 
   void    sendACK();
   void    sendNAK(uint8_t err);
@@ -74,9 +74,9 @@ private:
   // Hardware versions
   void    beginInt(uint8_t n, int speed);
   int     availableInt(uint8_t n);
+  int     availableForWriteInt(uint8_t n);
   uint8_t readInt(uint8_t n);
   void    writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool flush = false);
 };
 
 #endif
-

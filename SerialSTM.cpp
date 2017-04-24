@@ -1,6 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016, 2017 by Andy Uribe CA6JAU
+ *   Copyright (c) 2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -207,7 +208,7 @@ void InitUSART1(int speed)
    RXSerialfifoinit1();
 }
 
-uint8_t AvailUSART1(void)
+uint8_t AvailUSART1()
 {
    if (RXSerialfifolevel1() > 0U)
       return 1U;
@@ -215,7 +216,12 @@ uint8_t AvailUSART1(void)
       return 0U;
 }
 
-uint8_t ReadUSART1(void)
+int AvailForWriteUSART1()
+{
+   return TXSerialfifolevel1();
+}
+
+uint8_t ReadUSART1()
 {
    uint8_t data_c = RXSerialfifo1[RXSerialfifotail1];
 
@@ -395,7 +401,7 @@ void InitUSART2(int speed)
    RXSerialfifoinit2();
 }
 
-uint8_t AvailUSART2(void)
+uint8_t AvailUSART2()
 {
    if (RXSerialfifolevel2() > 0U)
       return 1U;
@@ -403,7 +409,12 @@ uint8_t AvailUSART2(void)
       return 0U;
 }
 
-uint8_t ReadUSART2(void)
+int AvailForWriteUSART2()
+{
+   return TXSerialfifolevel2();
+}
+
+uint8_t ReadUSART2()
 {
    uint8_t data_c = RXSerialfifo2[RXSerialfifotail2];
 
@@ -583,7 +594,7 @@ void InitUSART3(int speed)
    RXSerialfifoinit3();
 }
 
-uint8_t AvailUSART3(void)
+uint8_t AvailUSART3()
 {
    if (RXSerialfifolevel3() > 0U)
       return 1U;
@@ -591,7 +602,12 @@ uint8_t AvailUSART3(void)
       return 0U;
 }
 
-uint8_t ReadUSART3(void)
+int AvailForWriteUSART3()
+{
+   return TXSerialfifolevel3();
+}
+
+uint8_t ReadUSART3()
 {
    uint8_t data_c = RXSerialfifo3[RXSerialfifotail3];
 
@@ -775,7 +791,7 @@ void InitUART5(int speed)
    RXSerialfifoinit5();
 }
 
-uint8_t AvailUART5(void)
+uint8_t AvailUART5()
 {
    if (RXSerialfifolevel5() > 0U)
       return 1U;
@@ -783,7 +799,12 @@ uint8_t AvailUART5(void)
       return 0U;
 }
 
-uint8_t ReadUART5(void)
+int AvailForWriteUSART5()
+{
+   return TXSerialfifolevel5();
+}
+
+uint8_t ReadUART5()
 {
    uint8_t data_c = RXSerialfifo5[RXSerialfifotail5];
 
@@ -847,7 +868,29 @@ int CSerialPort::availableInt(uint8_t n)
          return AvailUART5();
          #endif
       default:
-         return false;
+         return 0;
+   }
+}
+
+int CSerialPort::availableForWriteInt(uint8_t n)
+{
+   switch (n) {
+      case 1U:
+         #if defined(STM32F4_DISCOVERY)
+         return AvailForWriteUSART3();
+         #elif defined(STM32F4_PI)
+         return AvailForWriteUSART1();
+         #elif defined(STM32F4_NUCLEO)
+         return AvailForWriteUSART2();
+         #endif
+      case 3U:
+         #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
+         return AvailForWriteUSART1();
+         #else
+         return AvailForWriteUART5();
+         #endif
+      default:
+         return 0;
    }
 }
 
