@@ -799,7 +799,7 @@ uint8_t AvailUART5()
       return 0U;
 }
 
-int AvailForWriteUSART5()
+int AvailForWriteUART5()
 {
    return TXSerialfifolevel5();
 }
