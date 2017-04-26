@@ -218,7 +218,7 @@ uint8_t AvailUSART1()
 
 int AvailForWriteUSART1()
 {
-   return TXSerialfifolevel1();
+   return TX_SERIAL_FIFO_SIZE - TXSerialfifolevel1();
 }
 
 uint8_t ReadUSART1()
@@ -411,7 +411,7 @@ uint8_t AvailUSART2()
 
 int AvailForWriteUSART2()
 {
-   return TXSerialfifolevel2();
+   return TX_SERIAL_FIFO_SIZE - TXSerialfifolevel2();
 }
 
 uint8_t ReadUSART2()
@@ -604,7 +604,7 @@ uint8_t AvailUSART3()
 
 int AvailForWriteUSART3()
 {
-   return TXSerialfifolevel3();
+   return TX_SERIAL_FIFO_SIZE - TXSerialfifolevel3();
 }
 
 uint8_t ReadUSART3()
@@ -801,7 +801,7 @@ uint8_t AvailUART5()
 
 int AvailForWriteUART5()
 {
-   return TXSerialfifolevel5();
+   return TX_SERIAL_FIFO_SIZE - TXSerialfifolevel5();
 }
 
 uint8_t ReadUART5()
