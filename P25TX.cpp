@@ -34,7 +34,7 @@ const uint16_t RC_0_2_FILTER_PHASE_LEN = 8U; // phaseLength = numTaps/L
 // shape2 = 'Inverse-sinc Lowpass';
 // d2 = fdesign.interpolator(1, shape2);  
 // h2 = design(d2, 'SystemObject', true);
-static q15_t LOWPASS_FILTER[] = {1376, -2393, 4584, -8933, 22325, 22325, -8933, 4584, -2393, 1376};
+static q15_t LOWPASS_FILTER[] = {1294, -2251, 4312, -8402, 20999, 20999, -8402, 4312, -2251, 1294};
 const uint16_t LOWPASS_FILTER_LEN = 10U;
 
 const q15_t P25_LEVELA =  1260;
