@@ -26,9 +26,10 @@
 Pin definitions (configuration in IOSTM_CMSIS.c):
 
 - Host communication:
-USART2 - TXD PA2  - RXD PA3
+USART1 - TXD PA9  - RXD PA10
 
 */
+
 
 #if defined(STM32F1)
 
@@ -42,22 +43,22 @@ USART2 - TXD PA2  - RXD PA3
 #define USART_BUFFER_SIZE 256U
 DECLARE_RINGBUFFER_TYPE(USARTBuffer, USART_BUFFER_SIZE);
 
-/* ************* USART2 ***************** */
-static volatile USARTBuffer_t txBuffer2={.size=USART_BUFFER_SIZE};
-static volatile USARTBuffer_t rxBuffer2={.size=USART_BUFFER_SIZE};
+/* ************* USART1 ***************** */
+static volatile USARTBuffer_t txBuffer1={.size=USART_BUFFER_SIZE};
+static volatile USARTBuffer_t rxBuffer1={.size=USART_BUFFER_SIZE};
 
 
 extern "C" {
-  bitband_t txe = (bitband_t)BITBAND_PERIPH(&USART2->SR, USART_SR_TXE_Pos);
-  bitband_t rxne = (bitband_t)BITBAND_PERIPH(&USART2->SR, USART_SR_RXNE_Pos);
-  bitband_t txeie = (bitband_t)BITBAND_PERIPH(&USART2->CR1, USART_CR1_TXEIE_Pos);
+  bitband_t txe = (bitband_t)BITBAND_PERIPH(&USART1->SR, USART_SR_TXE_Pos);
+  bitband_t rxne = (bitband_t)BITBAND_PERIPH(&USART1->SR, USART_SR_RXNE_Pos);
+  bitband_t txeie = (bitband_t)BITBAND_PERIPH(&USART1->CR1, USART_CR1_TXEIE_Pos);
   
-  RAMFUNC void USART2_IRQHandler()
+  RAMFUNC void USART1_IRQHandler()
   {
     /* Transmitting data */
     if(*txe){
-      if(!(RINGBUFF_EMPTY(txBuffer2))){
-        USART2->DR = RINGBUFF_READ(txBuffer2);
+      if(!(RINGBUFF_EMPTY(txBuffer1))){
+        USART1->DR = RINGBUFF_READ(txBuffer1);
       }else{  /* Buffer empty */
         *txeie = 0;  /* Don't send further data */
       }
@@ -65,42 +66,42 @@ extern "C" {
 
     /* Receiving data */
     if(*rxne){
-      RINGBUFF_WRITE(rxBuffer2, USART2->DR);
+      RINGBUFF_WRITE(rxBuffer1, USART1->DR);
     }
   }
 }
 
 
-void USART2Init(int speed)
+void USART1Init(int speed)
 {
-  RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+  RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
   
-  USART2->BRR = USART_BRR(36000000UL, speed);
+  USART1->BRR = USART_BRR(72000000UL, speed);
   
-  USART2->CR1 = USART_CR1_UE | USART_CR1_TE |
+  USART1->CR1 = USART_CR1_UE | USART_CR1_TE |
                 USART_CR1_RE | USART_CR1_RXNEIE;  // Enable USART and RX interrupt
-  NVIC_EnableIRQ(USART2_IRQn);
+  NVIC_EnableIRQ(USART1_IRQn);
 }
 
-RAMFUNC void USART2TxData(const uint8_t* data, uint16_t length)
+RAMFUNC void USART1TxData(const uint8_t* data, uint16_t length)
 {
-  NVIC_DisableIRQ(USART2_IRQn);
+  NVIC_DisableIRQ(USART1_IRQn);
   
   /* Check remaining space in buffer */
-  if(RINGBUFF_COUNT(txBuffer2) + length > RINGBUFF_SIZE(txBuffer2)){
-    NVIC_EnableIRQ(USART2_IRQn);
+  if(RINGBUFF_COUNT(txBuffer1) + length > RINGBUFF_SIZE(txBuffer1)){
+    NVIC_EnableIRQ(USART1_IRQn);
     return;
   }
   
   /* Append data to buffer  */
   while(length--){
-    RINGBUFF_WRITE(txBuffer2, *(data++));
+    RINGBUFF_WRITE(txBuffer1, *(data++));
   }
 
   /* Start sending data */
-  USART2->CR1 |= USART_CR1_TXEIE;
+  USART1->CR1 |= USART_CR1_TXEIE;
 
-  NVIC_EnableIRQ(USART2_IRQn);
+  NVIC_EnableIRQ(USART1_IRQn);
 }
 
 
@@ -110,7 +111,7 @@ void CSerialPort::beginInt(uint8_t n, int speed)
 {
   switch (n) {
     case 1U:
-      USART2Init(speed);
+      USART1Init(speed);
       break;
   default:
     break;
@@ -121,7 +122,7 @@ int CSerialPort::availableInt(uint8_t n)
 {
   switch (n) {
     case 1U:
-      return !RINGBUFF_EMPTY(rxBuffer2);
+      return !RINGBUFF_EMPTY(rxBuffer1);
     default:
       return false;
   }
@@ -131,7 +132,7 @@ uint8_t CSerialPort::readInt(uint8_t n)
 {
   switch (n) {
     case 1U:
-      return RINGBUFF_READ(rxBuffer2);
+      return RINGBUFF_READ(rxBuffer1);
     default:
       return 0U;
   }
@@ -139,15 +140,15 @@ uint8_t CSerialPort::readInt(uint8_t n)
 
 void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool flush)
 {
-  bitband_t tc = (bitband_t)BITBAND_PERIPH(&USART2->SR, USART_SR_TC_Pos);
+  bitband_t tc = (bitband_t)BITBAND_PERIPH(&USART1->SR, USART_SR_TC_Pos);
   
   switch (n) {
     case 1U:
-      USART2TxData(data, length);
+      USART1TxData(data, length);
       *tc = 0;
       
       if (flush) {
-        while (!RINGBUFF_EMPTY(txBuffer2) || !tc)
+        while (!RINGBUFF_EMPTY(txBuffer1) || !tc)
           ;
       }
       break;
