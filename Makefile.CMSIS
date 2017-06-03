@@ -39,7 +39,7 @@ OBJDIR:=obj
 BINDIR:=bin
 
 # Port definition for programming via bootloader (using stm32flash)
-BL_PORT:=/dev/ttyUSB0
+BL_PORT:=ttyUSB0
 
 
 
@@ -102,7 +102,7 @@ program: $(HEX) $(ELF)
 
 .PHONY: program_bl
 program_bl: $(HEX) $(ELF)
-	stm32flash -w $(HEX) -v $(BL_PORT)
+	stm32flash -w $(HEX) -v /dev/$(BL_PORT)
 	$(SIZE) $(ELF)
 
 .PHONY: run
