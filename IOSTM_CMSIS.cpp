@@ -151,17 +151,17 @@ void FancyLEDEffect()
   for(int i=0; i<7; i++){
     *foo[i] = 0x01;
   }
-  GPIOConfigPin(PORT_USART2_TXD, PIN_USART2_TXD, GPIO_CRL_MODE0_1);
-  *((bitband_t)BITBAND_PERIPH(&PORT_USART2_TXD->ODR, PIN_USART2_TXD)) = 0x00;
+  GPIOConfigPin(PORT_USART1_TXD, PIN_USART1_TXD, GPIO_CRL_MODE0_1);
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
   delay(SystemCoreClock/1000*100);
   for(int i=0; i<7; i++){
     *foo[i] = 0x00;
   }
-  *((bitband_t)BITBAND_PERIPH(&PORT_USART2_TXD->ODR, PIN_USART2_TXD)) = 0x01;
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
   delay(SystemCoreClock/1000*20);
-  *((bitband_t)BITBAND_PERIPH(&PORT_USART2_TXD->ODR, PIN_USART2_TXD)) = 0x00;
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
   delay(SystemCoreClock/1000*10);
-  *((bitband_t)BITBAND_PERIPH(&PORT_USART2_TXD->ODR, PIN_USART2_TXD)) = 0x01;
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
   
   *foo[0] = 0x01;
   for(int i=1; i<7; i++){
@@ -176,10 +176,10 @@ void FancyLEDEffect()
   }
   delay(SystemCoreClock/1000*10);
   *foo[5+1-6] = 0x00;
-  *((bitband_t)BITBAND_PERIPH(&PORT_USART2_TXD->ODR, PIN_USART2_TXD)) = 0x00;
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
   delay(SystemCoreClock/1000*10);
-  *((bitband_t)BITBAND_PERIPH(&PORT_USART2_TXD->ODR, PIN_USART2_TXD)) = 0x01;
-  GPIOConfigPin(PORT_USART2_TXD, PIN_USART2_TXD, GPIO_CRL_MODE0_1|GPIO_CRL_CNF0_1);
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
+  GPIOConfigPin(PORT_USART1_TXD, PIN_USART1_TXD, GPIO_CRL_MODE0_1|GPIO_CRL_CNF0_1);
   delay(SystemCoreClock/1000*50);
 }
 #endif
