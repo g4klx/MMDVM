@@ -175,7 +175,7 @@ $(TMPDIR)/$(PROJNAME).bin: $(TMPDIR)/$(PROJNAME).elf
 	$(OBJCOPY) -O binary $< $@
 
 #upload to the arduino by first resetting it (stty) and the running bossac
-upload: $(TMPDIR)/$(PROJNAME).bin
+upload: GitVersion.h $(TMPDIR)/$(PROJNAME).bin
 	stty -F /dev/$(PORT) cs8 1200 hupcl
 	$(ADIR)/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i --port=$(PORT) -U false -e -w $(VERIFY) -b $(TMPDIR)/$(PROJNAME).bin -R
 
