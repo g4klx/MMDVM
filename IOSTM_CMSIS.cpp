@@ -46,8 +46,8 @@ TX       PA4    analog output (DAC_OUT1)
 
 EXT_CLK  PA15   input (AF: TIM2_CH1_ETR)
 
-USART2_TXD PA2  output (AF)
-USART2_RXD PA3  input (AF)
+USART1_TXD PA9  output (AF)
+USART1_RXD PA10  input (AF)
 
 */
 
@@ -91,10 +91,10 @@ USART2_RXD PA3  input (AF)
 #define SRC_EXT_CLK       15
 #define PORT_EXT_CLK      GPIOA
 
-#define PIN_USART2_TXD    2
-#define PORT_USART2_TXD   GPIOA
-#define PIN_USART2_RXD    3
-#define PORT_USART2_RXD   GPIOA
+#define PIN_USART1_TXD    9
+#define PORT_USART1_TXD   GPIOA
+#define PIN_USART1_RXD    10
+#define PORT_USART1_RXD   GPIOA
 
 #else   // defined(STM32F1_POG)
 #error "Either STM32F1_POG, or sth need to be defined"
@@ -143,6 +143,46 @@ void GPIOConfigPin(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t mode_cnf_value
 	*cr_ptr = cr_value;				// save localized value to CRL / CRL
 }
 
+#if defined(STM32F1_POG)
+void FancyLEDEffect()
+{
+  bitband_t foo[] = {&BB_LED, &BB_COSLED, &BB_PTT, &BB_DMR, &BB_DSTAR, &BB_YSF, &BB_P25};
+   
+  for(int i=0; i<7; i++){
+    *foo[i] = 0x01;
+  }
+  GPIOConfigPin(PORT_USART1_TXD, PIN_USART1_TXD, GPIO_CRL_MODE0_1);
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
+  delay(SystemCoreClock/1000*100);
+  for(int i=0; i<7; i++){
+    *foo[i] = 0x00;
+  }
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
+  delay(SystemCoreClock/1000*20);
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
+  delay(SystemCoreClock/1000*10);
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
+  
+  *foo[0] = 0x01;
+  for(int i=1; i<7; i++){
+    delay(SystemCoreClock/1000*10);
+    *foo[i-1] = 0x00;
+    *foo[i] = 0x01;
+  }
+  for(int i=5; i>=0; i--){
+    delay(SystemCoreClock/1000*10);
+    *foo[i+1] = 0x00;
+    *foo[i] = 0x01;
+  }
+  delay(SystemCoreClock/1000*10);
+  *foo[5+1-6] = 0x00;
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
+  delay(SystemCoreClock/1000*10);
+  *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
+  GPIOConfigPin(PORT_USART1_TXD, PIN_USART1_TXD, GPIO_CRL_MODE0_1|GPIO_CRL_CNF0_1);
+  delay(SystemCoreClock/1000*50);
+}
+#endif
 
 static inline void GPIOInit()
 {
@@ -188,8 +228,8 @@ static inline void GPIOInit()
 #endif
 #endif
 
-  GPIOConfigPin(PORT_USART2_TXD, PIN_USART2_TXD, GPIO_CRL_MODE0_1|GPIO_CRL_CNF0_1);
-  GPIOConfigPin(PORT_USART2_RXD, PIN_USART2_RXD, GPIO_CRL_CNF0_0);
+  GPIOConfigPin(PORT_USART1_TXD, PIN_USART1_TXD, GPIO_CRL_MODE0_1|GPIO_CRL_CNF0_1);
+  GPIOConfigPin(PORT_USART1_RXD, PIN_USART1_RXD, GPIO_CRL_CNF0_0);
   
   AFIO->MAPR = (AFIO->MAPR & ~AFIO_MAPR_SWJ_CFG) | AFIO_MAPR_SWJ_CFG_1;
 }
@@ -295,6 +335,9 @@ void CIO::initInt()
   GPIOInit();
   ADCInit();
   DACInit();
+#if defined(STM32F1_POG)
+  FancyLEDEffect();
+#endif
 }
 
 void CIO::startInt()

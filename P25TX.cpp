@@ -17,40 +17,30 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "P25TX.h"
 
 #include "P25Defines.h"
 
-#if defined(WIDE_C4FSK_FILTERS_TX)
-// Generated using rcosdesign(0.2, 4, 5, 'normal') in MATLAB
-// numTaps = 20, L = 5
-static q15_t P25_C4FSK_FILTER[] = {-1392, -2602, -3043, -2238, 0, 3460, 7543, 11400, 14153, 15152, 14153,	11400, 7543, 3460, 0, -2238, -3043, -2602, -1392, 0};
-const uint16_t P25_C4FSK_FILTER_PHASE_LEN = 4U;  // phaseLength = numTaps/L
-#else
 // Generated using rcosdesign(0.2, 8, 5, 'normal') in MATLAB
 // numTaps = 40, L = 5
-static q15_t P25_C4FSK_FILTER[] = {-413, -751, -845, -587, 0, 740, 1348, 1520, 1063, 0, -1383, -2583, -3021, -2222, 0, 3435, 7488, 11318, 14053, 15044, 14053,
-                                   11318, 7488, 3435, 0, -2222, -3021, -2583, -1383, 0, 1063, 1520, 1348, 740, 0, -587, -845, -751, -413, 0};
-const uint16_t P25_C4FSK_FILTER_PHASE_LEN = 8U;  // phaseLength = numTaps/L
-#endif
+static q15_t RC_0_2_FILTER[] = {-897, -1636, -1840, -1278, 0, 1613, 2936, 3310, 2315, 0, -3011, -5627, -6580, -4839,
+                                0, 7482, 16311, 24651, 30607, 32767, 30607, 24651, 16311, 7482, 0, -4839, -6580, -5627,
+                               -3011, 0, 2315, 3310, 2936, 1613, 0, -1278, -1840, -1636, -897, 0}; // numTaps = 40, L = 5
+const uint16_t RC_0_2_FILTER_PHASE_LEN = 8U; // phaseLength = numTaps/L
 
 // Generated in MATLAB using the following commands, and then normalised for unity gain
 // shape2 = 'Inverse-sinc Lowpass';
-// d2 = fdesign.interpolator(2, shape2);  
+// d2 = fdesign.interpolator(1, shape2);  
 // h2 = design(d2, 'SystemObject', true);
-static q15_t P25_LP_FILTER[] = {170, 401, 340, -203, -715, -478, 281, 419, -440, -1002, -103, 1114, 528, -1389, -1520, 1108, 2674, -388, -4662,
-                                -2132, 9168, 20241, 20241, 9168, -2132, -4662, -388, 2674, 1108, -1520, -1389, 528, 1114, -103, -1002, -440, 419,
-                                281, -478, -715, -203, 340, 401, 170};
-const uint16_t P25_LP_FILTER_LEN = 44U;
+static q15_t LOWPASS_FILTER[] = {1294, -2251, 4312, -8402, 20999, 20999, -8402, 4312, -2251, 1294};
+const uint16_t LOWPASS_FILTER_LEN = 10U;
 
-const q15_t P25_LEVELA =  1698;
-const q15_t P25_LEVELB =   566;
-const q15_t P25_LEVELC =  -566;
-const q15_t P25_LEVELD = -1698;
+const q15_t P25_LEVELA =  1260;
+const q15_t P25_LEVELB =   420;
+const q15_t P25_LEVELC =  -420;
+const q15_t P25_LEVELD = -1260;
 
 const uint8_t P25_START_SYNC = 0x77U;
 
@@ -68,14 +58,14 @@ m_txDelay(240U)       // 200ms
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
   ::memset(m_lpState,  0x00U, 70U * sizeof(q15_t));
 
-  m_modFilter.L = P25_RADIO_SYMBOL_LENGTH;
-  m_modFilter.phaseLength = P25_C4FSK_FILTER_PHASE_LEN;
-  m_modFilter.pCoeffs = P25_C4FSK_FILTER;
-  m_modFilter.pState  = m_modState;
+  m_modFilter.L           = P25_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = RC_0_2_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = RC_0_2_FILTER;
+  m_modFilter.pState      = m_modState;
 
-  m_lpFilter.numTaps = P25_LP_FILTER_LEN;
+  m_lpFilter.numTaps = LOWPASS_FILTER_LEN;
   m_lpFilter.pState  = m_lpState;
-  m_lpFilter.pCoeffs = P25_LP_FILTER;
+  m_lpFilter.pCoeffs = LOWPASS_FILTER;
 }
 
 void CP25TX::process()

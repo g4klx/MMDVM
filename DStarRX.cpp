@@ -17,8 +17,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "DStarRX.h"
@@ -439,12 +437,11 @@ void CDStarRX::processData(bool bit)
   bool syncSeen = false;
   if (m_dataBits >= SYNC_SCAN_START && m_dataBits <= (SYNC_POS + 1U)) {
     if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) <= DATA_SYNC_ERRS) {
-#if defined(WANT_DEBUG)
       if (m_dataBits < SYNC_POS)
         DEBUG2("DStarRX: found data sync in Data, early", SYNC_POS - m_dataBits);
       else
         DEBUG1("DStarRX: found data sync in Data");
-#endif
+
       m_rxBufferBits = DSTAR_DATA_LENGTH_BITS;
       m_dataBits = 0U;
       syncSeen   = true;

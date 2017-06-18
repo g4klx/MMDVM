@@ -18,32 +18,23 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "IO.h"
 
-#if defined(WIDE_C4FSK_FILTERS_RX)
-// Generated using rcosdesign(0.2, 4, 5, 'sqrt') in MATLAB
-static q15_t C4FSK_FILTER[] = {688, -680, -2158, -3060, -2724, -775, 2684, 7041, 11310, 14425, 15565, 14425,
-                                   11310, 7041, 2684, -775, -2724, -3060, -2158, -680, 688, 0};
-const uint16_t C4FSK_FILTER_LEN = 22U;
-#else
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t C4FSK_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
+static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
                                    -553, -847, -731, -340, 104, 401, 0};
-const uint16_t C4FSK_FILTER_LEN = 42U;
-#endif
+const uint16_t RRC_0_2_FILTER_LEN = 42U;
 
 // Generated using gaussfir(0.5, 4, 5) in MATLAB
-static q15_t   GMSK_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
-const uint16_t GMSK_FILTER_LEN = 12U;
+static q15_t   GAUSSIAN_0_5_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
+const uint16_t GAUSSIAN_0_5_FILTER_LEN = 12U;
 
 // One symbol boxcar filter
-static q15_t   P25_FILTER[] = {3000, 3000, 3000, 3000, 3000, 0};
-const uint16_t P25_FILTER_LEN = 6U;
+static q15_t   BOXCAR_FILTER[] = {3000, 3000, 3000, 3000, 3000, 0};
+const uint16_t BOXCAR_FILTER_LEN = 6U;
 
 const uint16_t DC_OFFSET = 2048U;
 
@@ -52,12 +43,12 @@ m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rssiBuffer(RX_RINGBUFFER_SIZE),
-m_C4FSKFilter(),
-m_GMSKFilter(),
-m_P25Filter(),
-m_C4FSKState(),
-m_GMSKState(),
-m_P25State(),
+m_rrcFilter(),
+m_gaussianFilter(),
+m_boxcarFilter(),
+m_rrcState(),
+m_gaussianState(),
+m_boxcarState(),
 m_pttInvert(false),
 m_rxLevel(128 * 128),
 m_cwIdTXLevel(128 * 128),
@@ -73,21 +64,21 @@ m_dacOverflow(0U),
 m_watchdog(0U),
 m_lockout(false)
 {
-  ::memset(m_C4FSKState, 0x00U, 70U * sizeof(q15_t));
-  ::memset(m_GMSKState,  0x00U, 40U * sizeof(q15_t));
-  ::memset(m_P25State,   0x00U, 30U * sizeof(q15_t));
+  ::memset(m_rrcState,      0x00U, 70U * sizeof(q15_t));
+  ::memset(m_gaussianState, 0x00U, 40U * sizeof(q15_t));
+  ::memset(m_boxcarState,   0x00U, 30U * sizeof(q15_t));
 
-  m_C4FSKFilter.numTaps = C4FSK_FILTER_LEN;
-  m_C4FSKFilter.pState  = m_C4FSKState;
-  m_C4FSKFilter.pCoeffs = C4FSK_FILTER;
+  m_rrcFilter.numTaps = RRC_0_2_FILTER_LEN;
+  m_rrcFilter.pState  = m_rrcState;
+  m_rrcFilter.pCoeffs = RRC_0_2_FILTER;
 
-  m_GMSKFilter.numTaps = GMSK_FILTER_LEN;
-  m_GMSKFilter.pState  = m_GMSKState;
-  m_GMSKFilter.pCoeffs = GMSK_FILTER;
+  m_gaussianFilter.numTaps = GAUSSIAN_0_5_FILTER_LEN;
+  m_gaussianFilter.pState  = m_gaussianState;
+  m_gaussianFilter.pCoeffs = GAUSSIAN_0_5_FILTER;
 
-  m_P25Filter.numTaps = P25_FILTER_LEN;
-  m_P25Filter.pState  = m_P25State;
-  m_P25Filter.pCoeffs = P25_FILTER;
+  m_boxcarFilter.numTaps = BOXCAR_FILTER_LEN;
+  m_boxcarFilter.pState  = m_boxcarState;
+  m_boxcarFilter.pCoeffs = BOXCAR_FILTER;
 
   initInt();
 }
@@ -169,21 +160,21 @@ void CIO::process()
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
 
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
 
       if (m_p25Enable) {
         q15_t P25Vals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_P25Filter, samples, P25Vals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
 
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
 
       if (m_dmrEnable || m_ysfEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
 
         if (m_dmrEnable) {
           if (m_duplex)
@@ -198,14 +189,14 @@ void CIO::process()
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
 
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DMR) {
       if (m_dmrEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
 
         if (m_duplex) {
           // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
@@ -220,20 +211,20 @@ void CIO::process()
     } else if (m_modemState == STATE_YSF) {
       if (m_ysfEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_C4FSKFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
 
         ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_P25) {
       if (m_p25Enable) {
         q15_t P25Vals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_P25Filter, samples, P25Vals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
 
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
-      ::arm_fir_fast_q15(&m_GMSKFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+      ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
 
       calDStarRX.samples(GMSKVals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_RSSICAL) {
@@ -345,11 +336,6 @@ void CIO::getOverflow(bool& adcOverflow, bool& dacOverflow)
 {
   adcOverflow = m_adcOverflow > 0U;
   dacOverflow = m_dacOverflow > 0U;
-
-#if defined(WANT_DEBUG)
-  if (m_adcOverflow > 0U || m_dacOverflow > 0U)
-    DEBUG3("IO: adc/dac", m_adcOverflow, m_dacOverflow);
-#endif
 
   m_adcOverflow = 0U;
   m_dacOverflow = 0U;
