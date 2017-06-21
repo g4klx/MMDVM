@@ -28,21 +28,21 @@
 /*
 Pin definitions for STM32F4 Discovery Board:
 
-PTT      PB13   output
-COSLED   PA7    output
-LED      PD15   output
-COS      PA5    input
+PTT      PB13   output           P1 Pin37
+COSLED   PA7    output           P1 Pin17
+LED      PD15   output           P1 Pin47
+COS      PA5    input            P1 Pin15
 
-DSTAR    PD12   output
-DMR      PD13   output
-YSF      PD14   output
-P25      PD11   output
+DSTAR    PD12   output           P1 Pin44
+DMR      PD13   output           P1 Pin45
+YSF      PD14   output           P1 Pin46
+P25      PD11   output           P1 Pin43
 
-RX       PA0    analog input
-RSSI     PA1    analog input
-TX       PA4    analog output
+RX       PA0    analog input     P1 Pin12
+RSSI     PA1    analog input     P1 Pin11
+TX       PA4    analog output    P1 Pin16
 
-EXT_CLK  PA15   input
+EXT_CLK  PA15   input            P2 Pin40
 */
 
 #define PIN_COS           GPIO_Pin_5
