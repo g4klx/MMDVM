@@ -170,26 +170,26 @@ EXT_CLK  PA15   input
 /*
 Pin definitions for STM32F4 Nucleo boards (ST Morpho header):
 
-PTT      PB13   output
-COSLED   PB14   output
-LED      PA5    output
-COS      PB15   input
+PTT      PB13   output           CN10 Pin30
+COSLED   PB14   output           CN10 Pin28
+LED      PA5    output           CN10 Pin11
+COS      PB15   input            CN10 Pin26
 
-DSTAR    PB10   output
-DMR      PB4    output
-YSF      PB5    output
-P25      PB3    output
+DSTAR    PB10   output           CN10 Pin25
+DMR      PB4    output           CN10 Pin27
+YSF      PB5    output           CN10 Pin29
+P25      PB3    output           CN10 Pin
 
-MDSTAR   PC4   output
-MDMR     PC5   outout
-MYSF     PC2    output
-MP25     PC3    output
+MDSTAR   PC4    output           CN7 Pin34
+MDMR     PC5    output           CN7 Pin6
+MYSF     PC2    output           CN7 Pin35
+MP25     PC3    output           CN7 Pin37
 
-RX       PA0    analog input
-RSSI     PA1    analog input
-TX       PA4    analog output
+RX       PA0    analog input     CN7 Pin28
+RSSI     PA1    analog input     CN7 Pin30
+TX       PA4    analog output    CN7 Pin32
 
-EXT_CLK  PA15   input
+EXT_CLK  PA15   input            CN7 Pin18
 */
 
 #define PIN_COS           GPIO_Pin_15
