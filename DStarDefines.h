@@ -21,14 +21,15 @@
 
 const unsigned int DSTAR_RADIO_BIT_LENGTH = 5U;      // At 24 kHz sample rate
 
-const unsigned int DSTAR_HEADER_LENGTH_BYTES = 41U;
-const unsigned int DSTAR_HEADER_LENGTH_BITS  = DSTAR_HEADER_LENGTH_BYTES * 8U;
+const unsigned int DSTAR_HEADER_LENGTH_BYTES   = 41U;
 
-const unsigned int DSTAR_FEC_SECTION_LENGTH_BYTES = 83U;
-const unsigned int DSTAR_FEC_SECTION_LENGTH_BITS  = 660U;
+const unsigned int DSTAR_FEC_SECTION_LENGTH_BYTES   = 83U;
+const unsigned int DSTAR_FEC_SECTION_LENGTH_BITS    = 660U;
+const unsigned int DSTAR_FEC_SECTION_LENGTH_SAMPLES = DSTAR_FEC_SECTION_LENGTH_BITS * DSTAR_RADIO_BIT_LENGTH;
 
-const unsigned int DSTAR_DATA_LENGTH_BYTES = 12U;
-const unsigned int DSTAR_DATA_LENGTH_BITS  = DSTAR_DATA_LENGTH_BYTES * 8U;
+const unsigned int DSTAR_DATA_LENGTH_BYTES   = 12U;
+const unsigned int DSTAR_DATA_LENGTH_BITS    = DSTAR_DATA_LENGTH_BYTES * 8U;
+const unsigned int DSTAR_DATA_LENGTH_SAMPLES = DSTAR_DATA_LENGTH_BITS * DSTAR_RADIO_BIT_LENGTH;
 
 const uint8_t      DSTAR_EOT_BYTES[] = {0x55, 0x55, 0x55, 0x55, 0xC8, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 const unsigned int DSTAR_EOT_LENGTH_BYTES = 6U;

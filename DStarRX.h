@@ -37,13 +37,19 @@ public:
   void reset();
 
 private:
-  uint32_t     m_pll;
-  bool         m_prev;
   DSRX_STATE   m_rxState;
-  uint32_t     m_patternBuffer;
-  uint8_t      m_rxBuffer[100U];
-  unsigned int m_rxBufferBits;
-  unsigned int m_dataBits;
+  uint32_t     m_bitBuffer[DSTAR_RADIO_BIT_LENGTH];
+  q15_t        m_buffer[DSTAR_FEC_SECTION_LENGTH_SAMPLES];
+  uint16_t     m_bitPtr;
+  uint16_t     m_dataPtr;
+  uint16_t     m_startPtr;
+  uint16_t     m_endPtr;
+  uint16_t     m_minSyncPtr;
+  uint16_t     m_maxSyncPtr;
+  uint16_t     m_syncPtr;
+  q31_t        m_maxCorr;
+  uint16_t     m_lostCount;
+  uint8_t      m_countdown;
   unsigned int m_mar;
   int          m_pathMetric[4U];
   unsigned int m_pathMemory0[42U];
@@ -56,9 +62,12 @@ private:
   arm_biquad_casd_df1_inst_q31 m_dcFilter;
   q31_t                        m_dcState[4];
   
-  void    processNone(bool bit);
-  void    processHeader(bool bit);
-  void    processData(bool bit);
+  void    processNone(q15_t sample);
+  void    processHeader(q15_t sample);
+  void    processData(q15_t sample);
+  bool    correlateFrameSync();
+  bool    correlateDataSync();
+  void    samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset);
   void    writeRSSIHeader(unsigned char* header);
   void    writeRSSIData(unsigned char* data);
   bool    rxHeader(uint8_t* in, uint8_t* out);
