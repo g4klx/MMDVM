@@ -22,16 +22,6 @@
 #include "Globals.h"
 #include "IO.h"
 
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                   11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                   -553, -847, -731, -340, 104, 401, 0};
-const uint16_t RRC_0_2_FILTER_LEN = 42U;
-
-// Generated using gaussfir(0.5, 4, 5) in MATLAB
-static q15_t   GAUSSIAN_0_5_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
-const uint16_t GAUSSIAN_0_5_FILTER_LEN = 12U;
-
 // One symbol boxcar filter
 static q15_t   BOXCAR_FILTER[] = {3000, 3000, 3000, 3000, 3000, 0};
 const uint16_t BOXCAR_FILTER_LEN = 6U;
@@ -43,11 +33,7 @@ m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rssiBuffer(RX_RINGBUFFER_SIZE),
-m_rrcFilter(),
-m_gaussianFilter(),
 m_boxcarFilter(),
-m_rrcState(),
-m_gaussianState(),
 m_boxcarState(),
 m_pttInvert(false),
 m_rxLevel(128 * 128),
@@ -64,17 +50,7 @@ m_dacOverflow(0U),
 m_watchdog(0U),
 m_lockout(false)
 {
-  ::memset(m_rrcState,      0x00U, 70U * sizeof(q15_t));
-  ::memset(m_gaussianState, 0x00U, 40U * sizeof(q15_t));
-  ::memset(m_boxcarState,   0x00U, 30U * sizeof(q15_t));
-
-  m_rrcFilter.numTaps = RRC_0_2_FILTER_LEN;
-  m_rrcFilter.pState  = m_rrcState;
-  m_rrcFilter.pCoeffs = RRC_0_2_FILTER;
-
-  m_gaussianFilter.numTaps = GAUSSIAN_0_5_FILTER_LEN;
-  m_gaussianFilter.pState  = m_gaussianState;
-  m_gaussianFilter.pCoeffs = GAUSSIAN_0_5_FILTER;
+  ::memset(m_boxcarState, 0x00U, 30U * sizeof(q15_t));
 
   m_boxcarFilter.numTaps = BOXCAR_FILTER_LEN;
   m_boxcarFilter.pState  = m_boxcarState;
@@ -157,76 +133,48 @@ void CIO::process()
     if (m_lockout)
       return;
 
+    q15_t vals[RX_BLOCK_SIZE];
+    ::arm_fir_fast_q15(&m_boxcarFilter, samples, vals, RX_BLOCK_SIZE);
+
     if (m_modemState == STATE_IDLE) {
-      if (m_dstarEnable) {
-        q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+      if (m_dstarEnable)
+        dstarRX.samples(vals, rssi, RX_BLOCK_SIZE);
 
-        dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
+      if (m_p25Enable)
+        p25RX.samples(vals, rssi, RX_BLOCK_SIZE);
+
+      if (m_dmrEnable) {
+        if (m_duplex)
+          dmrIdleRX.samples(vals, RX_BLOCK_SIZE);
+        else
+          dmrDMORX.samples(vals, rssi, RX_BLOCK_SIZE);
       }
 
-      if (m_p25Enable) {
-        q15_t P25Vals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
-
-        p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
-      }
-
-      if (m_dmrEnable || m_ysfEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
-
-        if (m_dmrEnable) {
-          if (m_duplex)
-            dmrIdleRX.samples(C4FSKVals, RX_BLOCK_SIZE);
-          else
-            dmrDMORX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
-        }
-
-        if (m_ysfEnable)
-          ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
-      }
+      if (m_ysfEnable)
+        ysfRX.samples(vals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DSTAR) {
-      if (m_dstarEnable) {
-        q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
-
-        dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
-      }
+      if (m_dstarEnable)
+        dstarRX.samples(vals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DMR) {
       if (m_dmrEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
-
         if (m_duplex) {
           // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
           if (m_tx)
-            dmrRX.samples(C4FSKVals, rssi, control, RX_BLOCK_SIZE);
+            dmrRX.samples(vals, rssi, control, RX_BLOCK_SIZE);
           else
-            dmrIdleRX.samples(C4FSKVals, RX_BLOCK_SIZE);
+            dmrIdleRX.samples(vals, RX_BLOCK_SIZE);
         } else {
-          dmrDMORX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+          dmrDMORX.samples(vals, rssi, RX_BLOCK_SIZE);
         }
       }
     } else if (m_modemState == STATE_YSF) {
-      if (m_ysfEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
-
-        ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
-      }
+      if (m_ysfEnable)
+        ysfRX.samples(vals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_P25) {
-      if (m_p25Enable) {
-        q15_t P25Vals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
-
-        p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
-      }
+      if (m_p25Enable)
+        p25RX.samples(vals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DSTARCAL) {
-      q15_t GMSKVals[RX_BLOCK_SIZE];
-      ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
-
-      calDStarRX.samples(GMSKVals, RX_BLOCK_SIZE);
+      calDStarRX.samples(vals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_RSSICAL) {
       calRSSI.samples(rssi, RX_BLOCK_SIZE);
     }
