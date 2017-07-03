@@ -23,7 +23,7 @@
 #include "IO.h"
 
 // One symbol boxcar filter
-static q15_t   BOXCAR_FILTER[] = {3000, 3000, 3000, 3000, 3000, 0};
+static q15_t   BOXCAR_FILTER[] = {6000, 6000, 6000, 6000, 6000, 0};
 const uint16_t BOXCAR_FILTER_LEN = 6U;
 
 const uint16_t DC_OFFSET = 2048U;
