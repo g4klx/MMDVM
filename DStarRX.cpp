@@ -25,27 +25,16 @@
 const unsigned int MAX_SYNC_BITS = 50U * DSTAR_DATA_LENGTH_BITS;
 
 const unsigned int SYNC_POS        = 21U * DSTAR_DATA_LENGTH_BITS;
-const unsigned int SYNC_SCAN_START = SYNC_POS - 3U;
-const unsigned int SYNC_SCAN_END   = SYNC_POS + 3U;
+const unsigned int SYNC_SCAN_START = SYNC_POS - 2U;
+const unsigned int SYNC_SCAN_END   = SYNC_POS + 2U;
 
 // Generated using [b, a] = butter(1, 0.001) in MATLAB
 static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0, b1, b2, -a1, -a2}
 const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
 
-// D-Star bit order version of 0x55 0x55 0x6E 0x0A
-const uint32_t FRAME_SYNC_DATA = 0x00557650U;
-const uint32_t FRAME_SYNC_MASK = 0x00FFFFFFU;
-const uint8_t  FRAME_SYNC_ERRS = 2U;
-
-// D-Star bit order version of 0x55 0x2D 0x16
-const uint32_t DATA_SYNC_DATA = 0x00AAB468U;
-const uint32_t DATA_SYNC_MASK = 0x00FFFFFFU;
-const uint8_t  DATA_SYNC_ERRS = 2U;
-
-// D-Star bit order version of 0x55 0x55 0xC8 0x7A
-const uint32_t END_SYNC_DATA = 0xAAAA135EU;
-const uint32_t END_SYNC_MASK = 0xFFFFFFFFU;
-const uint8_t  END_SYNC_ERRS = 3U;
+const uint8_t  MAX_FRAME_SYNC_SYMBOL_ERRS = 2U;
+const uint8_t  MAX_DATA_SYNC_SYMBOL_ERRS  = 2U;
+const uint8_t  MAX_END_SYNC_SYMBOL_ERRS   = 3U;
 
 const uint8_t BIT_MASK_TABLE0[] = {0x7FU, 0xBFU, 0xDFU, 0xEFU, 0xF7U, 0xFBU, 0xFDU, 0xFEU};
 const uint8_t BIT_MASK_TABLE1[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
@@ -244,15 +233,18 @@ const uint16_t NOENDPTR = 9999U;
 CDStarRX::CDStarRX() :
 m_rxState(DSRXS_NONE),
 m_bitBuffer(),
-m_buffer(),
+m_headerBuffer(),
+m_dataBuffer(),
 m_bitPtr(0U),
+m_headerPtr(0U),
 m_dataPtr(0U),
 m_startPtr(NOENDPTR),
 m_endPtr(NOENDPTR),
 m_syncPtr(NOENDPTR),
 m_minSyncPtr(NOENDPTR),
 m_maxSyncPtr(NOENDPTR),
-m_maxCorr(0),
+m_maxFrameCorr(0),
+m_maxDataCorr(0),
 m_lostCount(0U),
 m_countdown(0U),
 m_mar(0U),
@@ -278,9 +270,11 @@ m_dcState()
 void CDStarRX::reset()
 {
   m_rxState      = DSRXS_NONE;
+  m_headerPtr    = 0U;
   m_dataPtr      = 0U;
   m_bitPtr       = 0U;
-  m_maxCorr      = 0;
+  m_maxFrameCorr = 0;
+  m_maxDataCorr  = 0;
   m_startPtr     = NOENDPTR;
   m_endPtr       = NOENDPTR;
   m_syncPtr      = NOENDPTR;
@@ -316,14 +310,14 @@ void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t lengt
     if (sample < 0)
       m_bitBuffer[m_bitPtr] |= 0x01U;
 
-    m_buffer[m_dataPtr] = sample;
+    m_dataBuffer[m_dataPtr] = sample;
 
     switch (m_rxState) {
       case DSRXS_HEADER:
         processHeader(sample);
         break;
       case DSRXS_DATA:
-        processData(sample);
+        processData();
         break;
       default:
         processNone(sample);
@@ -331,11 +325,11 @@ void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t lengt
     }
 
     m_dataPtr++;
-    if (m_dataPtr >= DSTAR_FRAME_LENGTH_SAMPLES)
+    if (m_dataPtr >= DSTAR_DATA_LENGTH_SAMPLES)
       m_dataPtr = 0U;
 
     m_bitPtr++;
-    if (m_bitPtr >= DSTAR_RADIO_BIT_LENGTH)
+    if (m_bitPtr >= DSTAR_RADIO_SYMBOL_LENGTH)
       m_bitPtr = 0U;
   }
 }
@@ -343,21 +337,26 @@ void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t lengt
 void CDStarRX::processNone(q15_t sample)
 {
   // Fuzzy matching of the frame sync sequence
-  if (countBits32((m_patternBuffer & FRAME_SYNC_MASK) ^ FRAME_SYNC_DATA) <= FRAME_SYNC_ERRS) {
+  bool ret = correlateFrameSync();
+  if (ret) {
     DEBUG1("DStarRX: found frame sync in None");
 
-    ::memset(m_rxBuffer, 0x00U, DSTAR_FEC_SECTION_LENGTH_BYTES);
-    m_rxBufferBits = 0U;
+	m_countdown = 5U;
+	
+    m_headerBuffer[0U] = sample;
+    m_headerPtr = 1U;
 
     m_rssiAccum = 0U;
     m_rssiCount = 0U;
 
     m_rxState = DSRXS_HEADER;
+
     return;
   }
 
-  // Exact matching of the data sync bit sequence
-  if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) == 0U) {
+  // Fuzzy matching of the data sync bit sequence
+  ret = correlateDataSync();
+  if (ret) {
     DEBUG1("DStarRX: found data sync in None");
 
     io.setDecode(true);
@@ -375,28 +374,32 @@ void CDStarRX::processNone(q15_t sample)
 
     m_dataBits  = 0U;
     m_rxState   = DSRXS_DATA;
-    return;
   }
 }
 
 void CDStarRX::processHeader(q15_t sample)
 {
-  WRITE_BIT2(m_rxBuffer, m_rxBufferBits, bit);
-  m_rxBufferBits++;
+  if (m_countdown > 0U) {
+    correlateFrameSync();
+    m_countdown--;
+  }
+
+  m_headerBuffer[m_headerPtr] = sample;
+  m_headerPtr++;
 
   // A full FEC header
-  if (m_rxBufferBits == DSTAR_FEC_SECTION_LENGTH_BITS) {
+  if (m_headerPtr == DSTAR_FEC_SECTION_LENGTH_SAMPLES) {
     // Process the scrambling, interleaving and FEC, then return if the chcksum was correct
-    unsigned char header[DSTAR_HEADER_LENGTH_BYTES];
-    bool ok = rxHeader(m_rxBuffer, header);
+    uint8_t buffer[DSTAR_FEC_SECTION_LENGTH_BYTES];
+    samplesToBits(m_headerBuffer, m_startPtr, DSTAR_FEC_SECTION_LENGTH_SYMBOLS, buffer, DSTAR_FEC_SECTION_LENGTH_SAMPLES);
+
+    uint8_t header[DSTAR_HEADER_LENGTH_BYTES];
+    bool ok = rxHeader(buffer, header);
     if (ok) {
       io.setDecode(true);
       io.setADCDetection(true);
 
       writeRSSIHeader(header);
-
-      ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
-      m_rxBufferBits = 0U;
 
       m_rxState   = DSRXS_DATA;
       m_dataBits  = SYNC_POS - DSTAR_DATA_LENGTH_BITS + 1U;
@@ -407,13 +410,10 @@ void CDStarRX::processHeader(q15_t sample)
   }
 }
 
-void CDStarRX::processData(q15_t sample)
+void CDStarRX::processData()
 {
-  WRITE_BIT2(m_rxBuffer, m_rxBufferBits, bit);
-  m_rxBufferBits++;
-
   // Fuzzy matching of the end frame sequences
-  if (countBits32((m_patternBuffer & END_SYNC_MASK) ^ END_SYNC_DATA) <= END_SYNC_ERRS) {
+  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_END_SYNC_MASK) ^ DSTAR_END_SYNC_DATA) <= MAX_END_SYNC_SYMBOL_ERRS) {
     DEBUG1("DStarRX: Found end sync in Data");
 
     io.setDecode(false);
@@ -426,35 +426,8 @@ void CDStarRX::processData(q15_t sample)
   }
 
   // Fuzzy matching of the data sync bit sequence
-  bool syncSeen = false;
-  if (m_dataBits >= SYNC_SCAN_START && m_dataBits <= (SYNC_POS + 1U)) {
-    if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) <= DATA_SYNC_ERRS) {
-      if (m_dataBits < SYNC_POS)
-        DEBUG2("DStarRX: found data sync in Data, early", SYNC_POS - m_dataBits);
-      else
-        DEBUG1("DStarRX: found data sync in Data");
-
-      m_rxBufferBits = DSTAR_DATA_LENGTH_BITS;
-      m_dataBits = 0U;
-      syncSeen   = true;
-    }
-  }
 
   // Check to see if the sync is arriving late
-  if (m_dataBits == SYNC_POS) {
-    for (uint8_t i = 1U; i <= 3U; i++) {
-      uint32_t syncMask = DATA_SYNC_MASK >> i;
-      uint32_t syncData = DATA_SYNC_DATA >> i;
-      if (countBits32((m_patternBuffer & syncMask) ^ syncData) <= DATA_SYNC_ERRS) {
-        DEBUG2("DStarRX: found data sync in Data, late", i);
-        m_rxBufferBits -= i;
-        m_dataBits     -= i;
-        break;
-      }
-    }
-  }
-
-  m_dataBits++;
 
   // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
   if (m_dataBits >= MAX_SYNC_BITS) {
@@ -469,20 +442,18 @@ void CDStarRX::processData(q15_t sample)
     return;
   }
 
-  // Send a data frame to the host if the required number of bits have been received, or if a data sync has been seen
-  if (m_rxBufferBits == DSTAR_DATA_LENGTH_BITS) {
+  // Send a data frame to the host if the required number of bits have been received
+  if (m_dataPtr == m_endPtr) {
+    uint8_t buffer[DSTAR_DATA_LENGTH_BYTES + 2U];
+    samplesToBits(m_dataBuffer, m_startPtr, DSTAR_DATA_LENGTH_SYMBOLS, buffer, DSTAR_DATA_LENGTH_SAMPLES);
     if (syncSeen) {
-      m_rxBuffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
-      m_rxBuffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
-      m_rxBuffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
-	    writeRSSIData(m_rxBuffer);
+      buffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
+      buffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
+      buffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
+      writeRSSIData(buffer);
     } else {
-	    serial.writeDStarData(m_rxBuffer, DSTAR_DATA_LENGTH_BYTES);
-	  }
-
-    // Start the next frame
-    ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
-    m_rxBufferBits = 0U;
+      serial.writeDStarData(buffer, DSTAR_DATA_LENGTH_BYTES);
+    }
   }
 }
 
@@ -528,68 +499,108 @@ void CDStarRX::writeRSSIData(unsigned char* data)
   m_rssiCount = 0U;
 }
 
-bool CDStarRX::correlateDataSync()
+bool CDStarRX::correlateFrameSync()
 {
-  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_SYNC_SYMBOLS_MASK) ^ DSTAR_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS) {
+  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_FRAME_SYNC_MASK) ^ DSTAR_FRAME_SYNC_DATA) <= MAX_FRAME_SYNC_SYMBOLS_ERRS) {
     uint16_t ptr = m_dataPtr + DSTAR_FRAME_LENGTH_SAMPLES - DSTAR_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
-    if (ptr >= DSTAR_FRAME_LENGTH_SAMPLES)
-      ptr -= DSTAR_FRAME_LENGTH_SAMPLES;
+    if (ptr >= DSTAR_DATA_LENGTH_SAMPLES)
+      ptr -= DSTAR_DATA_LENGTH_SAMPLES;
 
     q31_t corr = 0;
 
-    for (uint8_t i = 0U; i < YSF_SYNC_LENGTH_SYMBOLS; i++) {
-      q15_t val = m_buffer[ptr];
+    for (uint8_t i = 0U; i < DSTAR_FRAME_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_dataBuffer[ptr];
 
-      switch (DSTAR_SYNC_SYMBOLS_VALUES[i]) {
-      case +1:
+      if (DSTAR_FRAME_SYNC_SYMBOLS[i])
         corr -= val;
-        break;
-      default:
+      else
         corr += val;
-        break;
-      }
 
       ptr += DSTAR_RADIO_SYMBOL_LENGTH;
-      if (ptr >= DSTAR_FRAME_LENGTH_SAMPLES)
-        ptr -= DSTAR_FRAME_LENGTH_SAMPLES;
+      if (ptr >= DSTAR_DATA_LENGTH_SAMPLES)
+        ptr -= DSTAR_DATA_LENGTH_SAMPLES;
     }
 
-    if (corr > m_maxCorr) {
+    if (corr > m_maxFrameCorr) {
       uint16_t startPtr = m_dataPtr + DSTAR_FRAME_LENGTH_SAMPLES - DSTAR_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
       if (startPtr >= DSTAR_FRAME_LENGTH_SAMPLES)
         startPtr -= DSTAR_FRAME_LENGTH_SAMPLES;
 
-        m_maxCorr   = corr;
-        m_lostCount = MAX_SYNC_FRAMES;
-        m_syncPtr   = m_dataPtr;
+      m_maxFrameCorr = corr;
+      m_lostCount    = MAX_SYNC_FRAMES;
+      m_syncPtr      = m_dataPtr;
+      m_headerPtr    = 0U;
 
-        m_startPtr = startPtr;
+      m_startPtr     = startPtr;
 
-        m_endPtr = m_dataPtr + DSTAR_FRAME_LENGTH_SAMPLES - DSTAR_SYNC_LENGTH_SAMPLES - 1U;
-        if (m_endPtr >= DSTAR_FRAME_LENGTH_SAMPLES)
-          m_endPtr -= DSTAR_FRAME_LENGTH_SAMPLES;
+      m_endPtr       = m_dataPtr + DSTAR_FRAME_LENGTH_SAMPLES - DSTAR_SYNC_LENGTH_SAMPLES - 1U;
+      if (m_endPtr >= DSTAR_FRAME_LENGTH_SAMPLES)
+        m_endPtr -= DSTAR_FRAME_LENGTH_SAMPLES;
 
-        return true;
-      }
+      return true;
     }
   }
 
   return false;
 }
 
-void CDStarRX::samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset)
+bool CDStarRX::correlateDataSync()
 {
-  for (uint16_t i = 0U; i < count; i++, offset++) {
-    q15_t sample = m_buffer[start];
+  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_DATA_SYNC_MASK) ^ DSTAR_DATA_SYNC_DATA) <= MAX_DATA_SYNC_SYMBOLS_ERRS) {
+    uint16_t ptr = m_dataPtr + DSTAR_FRAME_LENGTH_SAMPLES - DSTAR_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
+    if (ptr >= DSTAR_DATA_LENGTH_SAMPLES)
+      ptr -= DSTAR_DATA_LENGTH_SAMPLES;
+
+    q31_t corr = 0;
+
+    for (uint8_t i = 0U; i < DSTAR_DATA_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_dataBuffer[ptr];
+
+      if (DSTAR_DATA_SYNC_SYMBOLS[i])
+        corr -= val;
+      else
+        corr += val;
+
+      ptr += DSTAR_RADIO_SYMBOL_LENGTH;
+      if (ptr >= DSTAR_DATA_LENGTH_SAMPLES)
+        ptr -= DSTAR_DATA_LENGTH_SAMPLES;
+    }
+
+    if (corr > m_maxDataCorr) {
+      uint16_t startPtr = m_dataPtr + DSTAR_FRAME_LENGTH_SAMPLES - DSTAR_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
+      if (startPtr >= DSTAR_DATA_LENGTH_SAMPLES)
+        startPtr -= DSTAR_DATA_LENGTH_SAMPLES;
+
+      m_maxDataCorr = corr;
+      m_lostCount   = MAX_SYNC_FRAMES;
+      m_syncPtr     = m_dataPtr;
+
+      m_startPtr    = startPtr;
+
+      m_endPtr      = m_dataPtr + 2U;
+      if (m_endPtr >= DSTAR_DATA_LENGTH_SAMPLES)
+        m_endPtr -= DSTAR_DATA_LENGTH_SAMPLES;
+
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void CDStarRX::samplesToBits(const uint8_t* inBuffer, uint16_t start, uint16_t count, uint8_t* outBuffer, uint16_t limit)
+{
+  for (uint16_t i = 0U; i < count; i++) {
+    q15_t sample = inBuffer[start];
 
     if (sample < 0)
-      WRITE_BIT2(buffer, offset, true);
+      WRITE_BIT2(outBuffer, i, true);
     else
-      WRITE_BIT2(buffer, offset, false);
+      WRITE_BIT2(outBuffer, i, false);
 
     start += DSTAR_RADIO_SYMBOL_LENGTH;
-    if (start >= DSTAR_FRAME_LENGTH_SAMPLES)
-      start -= DSTAR_FRAME_LENGTH_SAMPLES;
+    if (start >= limit)
+      start -= limit;
   }
 }
 
