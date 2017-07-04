@@ -28,21 +28,21 @@
 /*
 Pin definitions for STM32F4 Discovery Board:
 
-PTT      PB13   output
-COSLED   PA7    output
-LED      PD15   output
-COS      PA5    input
+PTT      PB13   output           P1 Pin37
+COSLED   PA7    output           P1 Pin17
+LED      PD15   output           P1 Pin47
+COS      PA5    input            P1 Pin15
 
-DSTAR    PD12   output
-DMR      PD13   output
-YSF      PD14   output
-P25      PD11   output
+DSTAR    PD12   output           P1 Pin44
+DMR      PD13   output           P1 Pin45
+YSF      PD14   output           P1 Pin46
+P25      PD11   output           P1 Pin43
 
-RX       PA0    analog input
-RSSI     PA1    analog input
-TX       PA4    analog output
+RX       PA0    analog input     P1 Pin12
+RSSI     PA1    analog input     P1 Pin11
+TX       PA4    analog output    P1 Pin16
 
-EXT_CLK  PA15   input
+EXT_CLK  PA15   input            P2 Pin40
 */
 
 #define PIN_COS           GPIO_Pin_5
@@ -170,26 +170,26 @@ EXT_CLK  PA15   input
 /*
 Pin definitions for STM32F4 Nucleo boards (ST Morpho header):
 
-PTT      PB13   output
-COSLED   PB14   output
-LED      PA5    output
-COS      PB15   input
+PTT      PB13   output           CN10 Pin30
+COSLED   PB14   output           CN10 Pin28
+LED      PA5    output           CN10 Pin11
+COS      PB15   input            CN10 Pin26
 
-DSTAR    PB10   output
-DMR      PB4    output
-YSF      PB5    output
-P25      PB3    output
+DSTAR    PB10   output           CN10 Pin25
+DMR      PB4    output           CN10 Pin27
+YSF      PB5    output           CN10 Pin29
+P25      PB3    output           CN10 Pin
 
-MDSTAR   PC4   output
-MDMR     PC5   outout
-MYSF     PC2    output
-MP25     PC3    output
+MDSTAR   PC4    output           CN7 Pin34
+MDMR     PC5    output           CN7 Pin6
+MYSF     PC2    output           CN7 Pin35
+MP25     PC3    output           CN7 Pin37
 
-RX       PA0    analog input
-RSSI     PA1    analog input
-TX       PA4    analog output
+RX       PA0    analog input     CN7 Pin28
+RSSI     PA1    analog input     CN7 Pin30
+TX       PA4    analog output    CN7 Pin32
 
-EXT_CLK  PA15   input
+EXT_CLK  PA15   input            CN7 Pin18
 */
 
 #define PIN_COS           GPIO_Pin_15
@@ -263,21 +263,21 @@ EXT_CLK  PA15   input
 /*
 Pin definitions for STM32F4 Nucleo boards (Arduino header):
 
-PTT      PB10   output
-COSLED   PB3    output
-LED      PB5    output
-COS      PB4    input
+PTT      PB10   output           CN9 Pin7
+COSLED   PB3    output           CN9 Pin4
+LED      PB5    output           CN9 Pin5
+COS      PB4    input            CN9 Pin6
 
-DSTAR    PA1    output
-DMR      PA4    output
-YSF      PB0    output
-P25      PC1    output
+DSTAR    PA1    output           CN8 Pin2
+DMR      PA4    output           CN8 Pin3
+YSF      PB0    output           CN8 Pin4
+P25      PC1    output           CN8 Pin5
 
-RX       PA0    analog input
-RSSI     PC0    analog input
-TX       PA5    analog output
+RX       PA0    analog input     CN8 Pin1
+RSSI     PC0    analog input     CN8 Pin6
+TX       PA5    analog output    CN5 Pin6
 
-EXT_CLK  PB8    input
+EXT_CLK  PB8    input            CN5 Pin10
 */
 
 #define PIN_COS           GPIO_Pin_4
