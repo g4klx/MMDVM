@@ -39,19 +39,17 @@ public:
 private:
   DSRX_STATE   m_rxState;
   uint32_t     m_bitBuffer[DSTAR_RADIO_SYMBOL_LENGTH];
-  q15_t        m_headerBuffer[DSTAR_FEC_SECTION_LENGTH_SAMPLES];
+  q15_t        m_headerBuffer[DSTAR_FEC_SECTION_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH];
   q15_t        m_dataBuffer[DSTAR_DATA_LENGTH_SAMPLES];
   uint16_t     m_bitPtr;
   uint16_t     m_headerPtr;
   uint16_t     m_dataPtr;
   uint16_t     m_startPtr;
-  uint16_t     m_endPtr;
   uint16_t     m_minSyncPtr;
   uint16_t     m_maxSyncPtr;
-  uint16_t     m_syncPtr;
   q31_t        m_maxFrameCorr;
   q31_t        m_maxDataCorr;
-  uint16_t     m_lostCount;
+  uint16_t     m_frameCount;
   uint8_t      m_countdown;
   unsigned int m_mar;
   int          m_pathMetric[4U];
@@ -70,7 +68,7 @@ private:
   void    processData();
   bool    correlateFrameSync();
   bool    correlateDataSync();
-  void    samplesToBits(const uint8_t* inBuffer, uint16_t start, uint16_t count, uint8_t* outBuffer, uint16_t limit);
+  void    samplesToBits(const q15_t* inBuffer, uint16_t start, uint16_t count, uint8_t* outBuffer, uint16_t limit);
   void    writeRSSIHeader(unsigned char* header);
   void    writeRSSIData(unsigned char* data);
   bool    rxHeader(uint8_t* in, uint8_t* out);
