@@ -93,6 +93,8 @@ extern bool m_duplex;
 extern bool m_tx;
 extern bool m_dcd;
 
+extern q15_t m_dc_level;
+
 extern CSerialPort serial;
 extern CIO io;
 
