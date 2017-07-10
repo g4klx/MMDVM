@@ -235,6 +235,7 @@ m_bitPtr(0U),
 m_headerPtr(0U),
 m_dataPtr(0U),
 m_startPtr(NOENDPTR),
+m_syncPtr(NOENDPTR),
 m_minSyncPtr(NOENDPTR),
 m_maxSyncPtr(NOENDPTR),
 m_maxFrameCorr(0),
@@ -270,6 +271,7 @@ void CDStarRX::reset()
   m_maxFrameCorr = 0;
   m_maxDataCorr  = 0;
   m_startPtr     = NOENDPTR;
+  m_syncPtr      = NOENDPTR;
   m_minSyncPtr   = NOENDPTR;
   m_maxSyncPtr   = NOENDPTR;
   m_frameCount   = 0U;
@@ -333,7 +335,7 @@ void CDStarRX::processNone(q15_t sample)
   if (ret) {
     DEBUG1("DStarRX: found frame sync in None");
 
-	m_countdown = 5U;
+    m_countdown = 5U;
 	
     m_headerBuffer[m_headerPtr] = sample;
     m_headerPtr++;
@@ -369,9 +371,9 @@ void CDStarRX::processHeader(q15_t sample)
   m_headerPtr++;
 
   // A full FEC header
-  if (m_headerPtr == DSTAR_FEC_SECTION_LENGTH_SAMPLES) {
+  if (m_headerPtr == (DSTAR_FEC_SECTION_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH)) {
     uint8_t buffer[DSTAR_FEC_SECTION_LENGTH_BYTES];
-    samplesToBits(m_headerBuffer, 0U, DSTAR_FEC_SECTION_LENGTH_SYMBOLS, buffer, DSTAR_FEC_SECTION_LENGTH_SAMPLES);
+    samplesToBits(m_headerBuffer, DSTAR_RADIO_SYMBOL_LENGTH, DSTAR_FEC_SECTION_LENGTH_SYMBOLS, buffer, DSTAR_FEC_SECTION_LENGTH_SAMPLES);
 
     // Process the scrambling, interleaving and FEC, then return true if the chcksum was correct
     uint8_t header[DSTAR_HEADER_LENGTH_BYTES];
@@ -384,23 +386,26 @@ void CDStarRX::processHeader(q15_t sample)
     }
   }
 
-  // Reday to start the first data section
-  if (m_headerPtr == (DSTAR_FEC_SECTION_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH)) {
+  // Ready to start the first data section
+  if (m_headerPtr == (DSTAR_FEC_SECTION_LENGTH_SAMPLES + 2U * DSTAR_RADIO_SYMBOL_LENGTH)) {
     m_frameCount = 0U;
 
     m_startPtr   = m_dataPtr;
 	  
-    m_maxSyncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_DATA_SYNC_LENGTH_SAMPLES + 2U;
+    m_syncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH;
+    if (m_syncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
+      m_syncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
+
+    m_maxSyncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH + 2U;
     if (m_maxSyncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
       m_maxSyncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
 
-    m_minSyncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_DATA_SYNC_LENGTH_SAMPLES - 2U;
+    m_minSyncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH - 2U;
     if (m_minSyncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
       m_minSyncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
-  }
 
-  // Reday to start the first data section
-  if (m_headerPtr == (DSTAR_FEC_SECTION_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH + DSTAR_RADIO_SYMBOL_LENGTH)) {
+    DEBUG2("DStarRX: calc sync at", m_syncPtr);
+
     m_rxState = DSRXS_DATA;
     m_maxFrameCorr = 0;
     m_maxDataCorr  = 0;
@@ -458,6 +463,7 @@ void CDStarRX::processData()
     samplesToBits(m_dataBuffer, m_startPtr, DSTAR_DATA_LENGTH_SYMBOLS, buffer, DSTAR_DATA_LENGTH_SAMPLES);
 
     if (m_frameCount == 0U) {
+      DEBUG2("DStarRX: found sync at", m_syncPtr);
       buffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
       buffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
       buffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
@@ -573,15 +579,17 @@ bool CDStarRX::correlateDataSync()
       m_maxDataCorr = corr;
       m_frameCount  = 0U;
 
+      m_syncPtr    = m_dataPtr;
+
       m_startPtr   = m_dataPtr + DSTAR_RADIO_SYMBOL_LENGTH;
       if (m_startPtr >= DSTAR_DATA_LENGTH_SAMPLES)
         m_startPtr -= DSTAR_DATA_LENGTH_SAMPLES;
 
-      m_maxSyncPtr = m_startPtr + DSTAR_DATA_LENGTH_SAMPLES + 2U;
+      m_maxSyncPtr = m_syncPtr + 2U;
       if (m_maxSyncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
         m_maxSyncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
 
-      m_minSyncPtr = m_startPtr + DSTAR_DATA_LENGTH_SAMPLES - 2U;
+      m_minSyncPtr = m_syncPtr + DSTAR_DATA_LENGTH_SAMPLES - 2U;
       if (m_minSyncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
         m_minSyncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
 
@@ -595,6 +603,9 @@ bool CDStarRX::correlateDataSync()
 void CDStarRX::samplesToBits(const q15_t* inBuffer, uint16_t start, uint16_t count, uint8_t* outBuffer, uint16_t limit)
 {
   for (uint16_t i = 0U; i < count; i++) {
+    if (i == (count - 1U))
+      DEBUG2("DStarRX: last pos", start);
+    
     q15_t sample = inBuffer[start];
 
     if (sample < 0)
