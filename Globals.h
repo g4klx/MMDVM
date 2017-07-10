@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ extern bool m_duplex;
 extern bool m_tx;
 extern bool m_dcd;
 
-extern q15_t m_dc_level;
+extern q15_t m_dcLevel;
 
 extern CSerialPort serial;
 extern CIO io;

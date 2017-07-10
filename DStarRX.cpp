@@ -279,7 +279,7 @@ void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t lengt
     m_rssiAccum += rssi[i];
     m_rssiCount++;
 
-    bool bit = samples[i] < m_dc_level;
+    bool bit = samples[i] < m_dcLevel;
 
     if (bit != m_prev) {
       if (m_pll < (PLLMAX / 2U))

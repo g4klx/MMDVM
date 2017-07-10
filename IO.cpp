@@ -169,7 +169,7 @@ void CIO::process()
     if (m_lockout)
       return;
       
-    q31_t dc_level = 0;
+    q31_t dcLevel = 0;
     q31_t dcVals[20];
     q31_t intSamp[20];
   
@@ -177,11 +177,11 @@ void CIO::process()
     ::arm_biquad_cascade_df1_q31(&m_dcFilter, intSamp, dcVals, RX_BLOCK_SIZE);
 
     for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
-      dc_level += dcVals[i];
+      dcLevel += dcVals[i];
 
-    dc_level /= RX_BLOCK_SIZE;
+    dcLevel /= RX_BLOCK_SIZE;
     
-    m_dc_level = (q15_t) (dc_level >> 16);
+    m_dcLevel = q15_t(dcLevel >> 16);
 
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable) {
