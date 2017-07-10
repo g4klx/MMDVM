@@ -98,8 +98,6 @@
           <Define name="HSE_VALUE=12000000"/>
           <Define name="STM32F4_PI"/>
           <Define name="ARDUINO_MODE_PINS"/>
-          <Define name="SEND_RSSI_DATA"/>
-          <Define name="SERIAL_REPEATER"/>
         </DefinedSymbols>
       </Compile>
       <Link useDefault="0">

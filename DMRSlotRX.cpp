@@ -104,7 +104,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
   m_rssi[m_dataPtr] = rssi;
   
   m_bitBuffer[m_bitPtr] <<= 1;
-  if (sample < 0)
+  if (sample < m_dcLevel)
     m_bitBuffer[m_bitPtr] |= 0x01U;
 
   if (m_state == DMRRXS_NONE) {

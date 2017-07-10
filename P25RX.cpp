@@ -95,7 +95,7 @@ void CP25RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
     m_rssiCount++;
 
     m_bitBuffer[m_bitPtr] <<= 1;
-    if (sample < 0)
+    if (sample < m_dcLevel)
       m_bitBuffer[m_bitPtr] |= 0x01U;
 
     m_buffer[m_dataPtr] = sample;

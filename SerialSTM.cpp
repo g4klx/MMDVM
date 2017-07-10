@@ -52,7 +52,6 @@ extern "C" {
 /* ************* USART1 ***************** */
 #if defined(STM32F4_PI) || (defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER))
 
-volatile uint32_t intcount1;
 volatile uint8_t  TXSerialfifo1[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo1[RX_SERIAL_FIFO_SIZE];
 volatile uint16_t TXSerialfifohead1, TXSerialfifotail1;
@@ -139,7 +138,6 @@ void USART1_IRQHandler()
       }
 
       USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-      intcount1++;
    }
 
    if (USART_GetITStatus(USART1, USART_IT_TXE)) {
@@ -245,7 +243,6 @@ void WriteUSART1(const uint8_t* data, uint16_t length)
 /* ************* USART2 ***************** */
 #if defined(STM32F4_NUCLEO)
 
-volatile uint32_t intcount2;
 volatile uint8_t  TXSerialfifo2[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo2[RX_SERIAL_FIFO_SIZE];
 volatile uint16_t TXSerialfifohead2, TXSerialfifotail2;
@@ -332,7 +329,6 @@ void USART2_IRQHandler()
       }
 
       USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-      intcount2++;
    }
 
    if (USART_GetITStatus(USART2, USART_IT_TXE)) {
@@ -438,7 +434,6 @@ void WriteUSART2(const uint8_t* data, uint16_t length)
 /* ************* USART3 ***************** */
 #if defined(STM32F4_DISCOVERY) || defined(STM32F4_PI)
 
-volatile uint32_t intcount3;
 volatile uint8_t  TXSerialfifo3[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo3[RX_SERIAL_FIFO_SIZE];
 volatile uint16_t TXSerialfifohead3, TXSerialfifotail3;
@@ -525,7 +520,6 @@ void USART3_IRQHandler()
       }
 
       USART_ClearITPendingBit(USART3, USART_IT_RXNE);
-      intcount3++;
    }
 
    if (USART_GetITStatus(USART3, USART_IT_TXE)) {
@@ -631,7 +625,6 @@ void WriteUSART3(const uint8_t* data, uint16_t length)
 /* ************* UART5 ***************** */
 #if !(defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER))
 
-volatile uint32_t intcount5;
 volatile uint8_t  TXSerialfifo5[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo5[RX_SERIAL_FIFO_SIZE];
 volatile uint16_t TXSerialfifohead5, TXSerialfifotail5;
@@ -718,7 +711,6 @@ void UART5_IRQHandler()
       }
 
       USART_ClearITPendingBit(UART5, USART_IT_RXNE);
-      intcount5++;
    }
 
    if (USART_GetITStatus(UART5, USART_IT_TXE)) {

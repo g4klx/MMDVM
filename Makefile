@@ -87,7 +87,7 @@ MCFLAGS=-mcpu=cortex-m4 -mthumb -mlittle-endian \
 # STM32F4 Discovery board:
 DEFS_DIS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_DISCOVERY -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # Pi board:
-DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DARDUINO_MODE_PINS -DSEND_RSSI_DATA -DSERIAL_REPEATER -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DARDUINO_MODE_PINS -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # STM32F4 Nucleo 446 board:
 DEFS_NUCLEO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
@@ -178,11 +178,13 @@ endif
 deploy-pi:
 ifneq ($(wildcard /usr/local/bin/stm32flash),)
 	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
+	-/usr/local/bin/stm32ld /dev/ttyAMA0 57600 bin/outp.bin
 	/usr/local/bin/stm32flash -v -w bin/outp.bin -g 0x0 -R -c /dev/ttyAMA0
 endif
 
 ifneq ($(wildcard /usr/bin/stm32flash),)
 	-/usr/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
+	-/usr/bin/stm32ld /dev/ttyAMA0 57600 bin/outp.bin
 	/usr/bin/stm32flash -v -w bin/outp.bin -g 0x0 -R -c /dev/ttyAMA0
 endif
 
