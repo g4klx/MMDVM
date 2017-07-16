@@ -57,15 +57,15 @@ m_dcFilter(),
 m_dcState()
 {
   ::memset(m_boxcarState, 0x00U, 30U * sizeof(q15_t));
-  ::memset(m_dcState,       0x00U, 4U * sizeof(q31_t));
+  ::memset(m_dcState,     0x00U, 4U * sizeof(q31_t));
 
   m_boxcarFilter.numTaps = BOXCAR_FILTER_LEN;
   m_boxcarFilter.pState  = m_boxcarState;
   m_boxcarFilter.pCoeffs = BOXCAR_FILTER;
   
   m_dcFilter.numStages = DC_FILTER_STAGES;
-  m_dcFilter.pState  = m_dcState;
-  m_dcFilter.pCoeffs = DC_FILTER;
+  m_dcFilter.pState    = m_dcState;
+  m_dcFilter.pCoeffs   = DC_FILTER;
   m_dcFilter.postShift = 0;
 
   initInt();
@@ -147,17 +147,19 @@ void CIO::process()
       
     q31_t dcLevel = 0;
     q31_t dcVals[20];
-    q31_t intSamp[20];
-  
-    ::arm_q15_to_q31((q15_t*)samples, intSamp, RX_BLOCK_SIZE);
-    ::arm_biquad_cascade_df1_q31(&m_dcFilter, intSamp, dcVals, RX_BLOCK_SIZE);
+    q31_t q31Samples[20U];
+
+    ::arm_q15_to_q31(samples, q31Samples, RX_BLOCK_SIZE);
+    ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcVals, RX_BLOCK_SIZE);
 
     for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
       dcLevel += dcVals[i];
-
     dcLevel /= RX_BLOCK_SIZE;
+
+    q15_t offset = q15_t(dcLevel >> 16);
     
-    m_dcLevel = q15_t(dcLevel >> 16);
+    for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
+      samples[i] -= offset;
 
     q15_t vals[RX_BLOCK_SIZE];
     ::arm_fir_fast_q15(&m_boxcarFilter, samples, vals, RX_BLOCK_SIZE);

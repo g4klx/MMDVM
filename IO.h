@@ -60,8 +60,8 @@ private:
   CSampleRB            m_txBuffer;
   CRSSIRB              m_rssiBuffer;
 
-  arm_fir_instance_q15 m_boxcarFilter;
-  q15_t                m_boxcarState[30U];        // NoTaps + BlockSize - 1, 6 + 20 - 1 plus some spare
+  arm_fir_instance_q15         m_boxcarFilter;
+  q15_t                        m_boxcarState[30U];        // NoTaps + BlockSize - 1, 6 + 20 - 1 plus some spare
   arm_biquad_casd_df1_inst_q31 m_dcFilter;
   q31_t                        m_dcState[4];
 
