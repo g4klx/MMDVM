@@ -24,13 +24,20 @@
 
 const unsigned int MAX_FRAMES = 75U;
 
-// Generated using [b, a] = butter(1, 0.001) in MATLAB
-static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0, b1, b2, -a1, -a2}
-const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
+// D-Star bit order version of 0x55 0x55 0x6E 0x0A
+const uint32_t FRAME_SYNC_DATA = 0x00557650U;
+const uint32_t FRAME_SYNC_MASK = 0x00FFFFFFU;
+const uint8_t  FRAME_SYNC_ERRS = 2U;
 
-const uint8_t  MAX_FRAME_SYNC_BIT_ERRS = 2U;
-const uint8_t  MAX_DATA_SYNC_BIT_ERRS  = 2U;
-const uint8_t  MAX_END_SYNC_BIT_ERRS   = 3U;
+// D-Star bit order version of 0x55 0x2D 0x16
+const uint32_t DATA_SYNC_DATA = 0x00AAB468U;
+const uint32_t DATA_SYNC_MASK = 0x00FFFFFFU;
+const uint8_t  DATA_SYNC_ERRS = 2U;
+
+// D-Star bit order version of 0x55 0x55 0xC8 0x7A
+const uint32_t END_SYNC_DATA = 0xAAAA135EU;
+const uint32_t END_SYNC_MASK = 0xFFFFFFFFU;
+const uint8_t  END_SYNC_ERRS = 3U;
 
 const uint8_t BIT_MASK_TABLE0[] = {0x7FU, 0xBFU, 0xDFU, 0xEFU, 0xF7U, 0xFBU, 0xFDU, 0xFEU};
 const uint8_t BIT_MASK_TABLE1[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
@@ -250,16 +257,8 @@ m_pathMemory2(),
 m_pathMemory3(),
 m_fecOutput(),
 m_rssiAccum(0U),
-m_rssiCount(0U),
-m_dcFilter(),
-m_dcState()
+m_rssiCount(0U)
 {
-  ::memset(m_dcState, 0x00U, 4U * sizeof(q31_t));
-  
-  m_dcFilter.numStages = DC_FILTER_STAGES;
-  m_dcFilter.pState    = m_dcState;
-  m_dcFilter.pCoeffs   = DC_FILTER;
-  m_dcFilter.postShift = 0;
 }
 
 void CDStarRX::reset()
@@ -281,24 +280,12 @@ void CDStarRX::reset()
 }
 
 void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
-{
-  q31_t dc_level = 0;
-  q31_t dcVals[20];
-  q31_t intSamp[20];
-  
-  ::arm_q15_to_q31((q15_t*)samples, intSamp, length);
-  ::arm_biquad_cascade_df1_q31(&m_dcFilter, intSamp, dcVals, length);
-
-  for (uint8_t i = 0U; i < length; i++)
-    dc_level += dcVals[i];
-
-  dc_level /= length; 
-  
+{ 
   for (uint16_t i = 0U; i < length; i++) {
     m_rssiAccum += rssi[i];
     m_rssiCount++;
 
-    q15_t sample = samples[i] - q15_t(dc_level >> 16);
+    q15_t sample = samples[i];
 
     m_bitBuffer[m_bitPtr] <<= 1;
     if (sample < 0)
@@ -408,7 +395,7 @@ void CDStarRX::processHeader(q15_t sample)
 void CDStarRX::processData()
 {
   // Fuzzy matching of the end frame sequences
-  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_END_SYNC_MASK) ^ DSTAR_END_SYNC_DATA) <= MAX_END_SYNC_BIT_ERRS) {
+  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_END_SYNC_MASK) ^ DSTAR_END_SYNC_DATA) <= END_SYNC_ERRS) {
     DEBUG1("DStarRX: Found end sync in Data");
 
     io.setDecode(false);
@@ -460,9 +447,8 @@ void CDStarRX::processData()
         buffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
         buffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
         buffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
-
         DEBUG5("DStarRX: found start/sync/max/min", m_startPtr, m_syncPtr, m_maxSyncPtr, m_minSyncPtr);
-	  }
+      }
 
       writeRSSIData(buffer);
     } else {
@@ -520,7 +506,7 @@ void CDStarRX::writeRSSIData(unsigned char* data)
 
 bool CDStarRX::correlateFrameSync()
 {
-  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_FRAME_SYNC_MASK) ^ DSTAR_FRAME_SYNC_DATA) <= MAX_FRAME_SYNC_BIT_ERRS) {
+  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_FRAME_SYNC_MASK) ^ DSTAR_FRAME_SYNC_DATA) <= FRAME_SYNC_ERRS) {
     uint16_t ptr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_FRAME_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
     if (ptr >= DSTAR_DATA_LENGTH_SAMPLES)
       ptr -= DSTAR_DATA_LENGTH_SAMPLES;
@@ -554,7 +540,7 @@ bool CDStarRX::correlateDataSync()
 {
   uint8_t maxErrs = 0U;
   if (m_rxState == DSRXS_DATA)
-    maxErrs = MAX_DATA_SYNC_BIT_ERRS;
+    maxErrs = DATA_SYNC_ERRS;
 
   if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_DATA_SYNC_MASK) ^ DSTAR_DATA_SYNC_DATA) <= maxErrs) {
     uint16_t ptr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_DATA_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
