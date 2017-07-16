@@ -33,7 +33,7 @@ static q15_t   GAUSSIAN_0_5_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 315
 const uint16_t GAUSSIAN_0_5_FILTER_LEN = 12U;
 
 // One symbol boxcar filter
-static q15_t   BOXCAR_FILTER[] = {3000, 3000, 3000, 3000, 3000, 0};
+static q15_t   BOXCAR_FILTER[] = {12000, 12000, 12000, 12000, 12000, 0};
 const uint16_t BOXCAR_FILTER_LEN = 6U;
 
 // Generated using [b, a] = butter(1, 0.001) in MATLAB
@@ -73,7 +73,7 @@ m_dcState()
   ::memset(m_rrcState,      0x00U, 70U * sizeof(q15_t));
   ::memset(m_gaussianState, 0x00U, 40U * sizeof(q15_t));
   ::memset(m_boxcarState,   0x00U, 30U * sizeof(q15_t));
-  ::memset(m_dcState,       0x00U, 4U * sizeof(q31_t));
+  ::memset(m_dcState,       0x00U,  4U * sizeof(q31_t));
 
   m_rrcFilter.numTaps = RRC_0_2_FILTER_LEN;
   m_rrcFilter.pState  = m_rrcState;
@@ -88,8 +88,8 @@ m_dcState()
   m_boxcarFilter.pCoeffs = BOXCAR_FILTER;
   
   m_dcFilter.numStages = DC_FILTER_STAGES;
-  m_dcFilter.pState  = m_dcState;
-  m_dcFilter.pCoeffs = DC_FILTER;
+  m_dcFilter.pState    = m_dcState;
+  m_dcFilter.pCoeffs   = DC_FILTER;
   m_dcFilter.postShift = 0;
 
   initInt();
@@ -171,17 +171,19 @@ void CIO::process()
       
     q31_t dcLevel = 0;
     q31_t dcVals[20];
-    q31_t intSamp[20];
-  
-    ::arm_q15_to_q31((q15_t*)samples, intSamp, RX_BLOCK_SIZE);
-    ::arm_biquad_cascade_df1_q31(&m_dcFilter, intSamp, dcVals, RX_BLOCK_SIZE);
+    q31_t q31Samples[20U];
+
+    ::arm_q15_to_q31(samples, q31Samples, RX_BLOCK_SIZE);
+    ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcVals, RX_BLOCK_SIZE);
 
     for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
       dcLevel += dcVals[i];
-
     dcLevel /= RX_BLOCK_SIZE;
+
+    q15_t offset = q15_t(dcLevel >> 16);
     
-    m_dcLevel = q15_t(dcLevel >> 16);
+    for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
+      samples[i] -= offset;
 
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable) {

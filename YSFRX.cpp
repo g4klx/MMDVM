@@ -91,7 +91,7 @@ void CYSFRX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
     m_rssiCount++;
 
     m_bitBuffer[m_bitPtr] <<= 1;
-    if (sample < m_dcLevel)
+    if (sample < 0)
       m_bitBuffer[m_bitPtr] |= 0x01U;
 
     m_buffer[m_dataPtr] = sample;
