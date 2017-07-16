@@ -392,26 +392,16 @@ void CDStarRX::processHeader(q15_t sample)
   // Ready to start the first data section
   if (m_headerPtr == (DSTAR_FEC_SECTION_LENGTH_SAMPLES + 2U * DSTAR_RADIO_SYMBOL_LENGTH)) {
     m_frameCount = 0U;
+    m_dataPtr    = 0U;
 
-    m_startPtr   = m_dataPtr;
-	  
-    m_syncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH;
-    if (m_syncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
-      m_syncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
-
-    m_maxSyncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH + 1U;
-    if (m_maxSyncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
-      m_maxSyncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
-
-    m_minSyncPtr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH - 1U;
-    if (m_minSyncPtr >= DSTAR_DATA_LENGTH_SAMPLES)
-      m_minSyncPtr -= DSTAR_DATA_LENGTH_SAMPLES;
+    m_startPtr   = 0U;
+    m_syncPtr    = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH;
+    m_maxSyncPtr = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH + 1U;
+    m_minSyncPtr = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH - 1U;
 
     DEBUG5("DStarRX: calc start/sync/max/min", m_startPtr, m_syncPtr, m_maxSyncPtr, m_minSyncPtr);
 
     m_rxState = DSRXS_DATA;
-    m_maxFrameCorr = 0;
-    m_maxDataCorr  = 0;
   }
 }
 
@@ -465,12 +455,15 @@ void CDStarRX::processData()
     uint8_t buffer[DSTAR_DATA_LENGTH_BYTES + 2U];
     samplesToBits(m_dataBuffer, m_startPtr, DSTAR_DATA_LENGTH_SYMBOLS, buffer, DSTAR_DATA_LENGTH_SAMPLES);
 
-    if (m_frameCount == 0U) {
-      DEBUG5("DStarRX: found start/sync/max/min", m_startPtr, m_syncPtr, m_maxSyncPtr, m_minSyncPtr);
+    if ((m_frameCount % 21U) == 0U) {
+      if (m_frameCount == 0U) {
+        buffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
+        buffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
+        buffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
 
-      buffer[9U]  = DSTAR_DATA_SYNC_BYTES[9U];
-      buffer[10U] = DSTAR_DATA_SYNC_BYTES[10U];
-      buffer[11U] = DSTAR_DATA_SYNC_BYTES[11U];
+        DEBUG5("DStarRX: found start/sync/max/min", m_startPtr, m_syncPtr, m_maxSyncPtr, m_minSyncPtr);
+	  }
+
       writeRSSIData(buffer);
     } else {
       serial.writeDStarData(buffer, DSTAR_DATA_LENGTH_BYTES);
@@ -550,7 +543,6 @@ bool CDStarRX::correlateFrameSync()
     if (corr > m_maxFrameCorr) {
       m_maxFrameCorr = corr;
       m_headerPtr    = 0U;
-      m_dataPtr      = 0U;
       return true;
     }
   }
