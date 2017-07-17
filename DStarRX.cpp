@@ -383,8 +383,8 @@ void CDStarRX::processHeader(q15_t sample)
 
     m_startPtr   = 0U;
     m_syncPtr    = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH;
-    m_maxSyncPtr = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH + 1U;
-    m_minSyncPtr = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH - 1U;
+    m_maxSyncPtr = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH + 3U;
+    m_minSyncPtr = DSTAR_DATA_LENGTH_SAMPLES - DSTAR_RADIO_SYMBOL_LENGTH - 3U;
 
     DEBUG5("DStarRX: calc start/sync/max/min", m_startPtr, m_syncPtr, m_maxSyncPtr, m_minSyncPtr);
 
