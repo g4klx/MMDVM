@@ -304,11 +304,13 @@ void CDStarRX::samples(q15_t* samples, const uint16_t* rssi, uint8_t length)
     dcLevel += dcVals[i];
   dcLevel /= length;
 
+  q15_t offset = q15_t(__SSAT((dcLevel >> 16), 16));
+
   for (uint16_t i = 0U; i < length; i++) {
     m_rssiAccum += rssi[i];
     m_rssiCount++;
 
-    q15_t sample = samples[i] - dcLevel;
+    q15_t sample = samples[i] - offset;
 
     m_bitBuffer[m_bitPtr] <<= 1;
     if (sample < 0)
