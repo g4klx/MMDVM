@@ -22,12 +22,12 @@
 #include "DStarRX.h"
 #include "Utils.h"
 
-const unsigned int MAX_FRAMES = 75U;
+const unsigned int MAX_FRAMES = 150U;
 
 // D-Star bit order version of 0x55 0x55 0x6E 0x0A
 const uint32_t FRAME_SYNC_DATA = 0x00557650U;
 const uint32_t FRAME_SYNC_MASK = 0x00FFFFFFU;
-const uint8_t  FRAME_SYNC_ERRS = 2U;
+const uint8_t  FRAME_SYNC_ERRS = 1U;
 
 // D-Star bit order version of 0x55 0x2D 0x16
 const uint32_t DATA_SYNC_DATA = 0x00AAB468U;
@@ -436,14 +436,12 @@ void CDStarRX::processData()
   }
 
   // Fuzzy matching of the data sync bit sequence
-  if ((m_frameCount % 21U) == 0U) {
-    if (m_minSyncPtr < m_maxSyncPtr) {
-      if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-        correlateDataSync();
-    } else {
-      if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-        correlateDataSync();
-    }
+  if (m_minSyncPtr < m_maxSyncPtr) {
+    if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
+      correlateDataSync();
+  } else {
+    if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
+      correlateDataSync();
   }
 
   // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
