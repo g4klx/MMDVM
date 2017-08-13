@@ -33,8 +33,6 @@ bool m_duplex = true;
 bool m_tx  = false;
 bool m_dcd = false;
 
-q15_t m_dc_level = 0;
-
 CDStarRX   dstarRX;
 CDStarTX   dstarTX;
 

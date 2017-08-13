@@ -66,8 +66,6 @@ private:
   q15_t                m_rrcState[70U];           // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
   q15_t                m_gaussianState[40U];      // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
   q15_t                m_boxcarState[30U];        // NoTaps + BlockSize - 1, 6 + 20 - 1 plus some spare
-  arm_biquad_casd_df1_inst_q31 m_dcFilter;
-  q31_t                        m_dcState[4];
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;

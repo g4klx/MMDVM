@@ -28,11 +28,7 @@ const uint32_t PLLMAX = 0x10000U;
 const uint32_t PLLINC = PLLMAX / DSTAR_RADIO_BIT_LENGTH;
 const uint32_t INC    = PLLINC / 32U;
 
-const unsigned int MAX_SYNC_BITS = 50U * DSTAR_DATA_LENGTH_BITS;
-
-const unsigned int SYNC_POS        = 21U * DSTAR_DATA_LENGTH_BITS;
-const unsigned int SYNC_SCAN_START = SYNC_POS - 3U;
-const unsigned int SYNC_SCAN_END   = SYNC_POS + 3U;
+const unsigned int MAX_SYNC_BITS = 100U * DSTAR_DATA_LENGTH_BITS;
 
 // D-Star bit order version of 0x55 0x55 0x6E 0x0A
 const uint32_t FRAME_SYNC_DATA = 0x00557650U;
@@ -241,6 +237,10 @@ const uint16_t CCITT_TABLE[] = {
   0xf78fU, 0xe606U, 0xd49dU, 0xc514U, 0xb1abU, 0xa022U, 0x92b9U, 0x8330U,
   0x7bc7U, 0x6a4eU, 0x58d5U, 0x495cU, 0x3de3U, 0x2c6aU, 0x1ef1U, 0x0f78U};
 
+// Generated using [b, a] = butter(1, 0.001) in MATLAB
+static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0, b1, b2, -a1, -a2}
+const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
+
 CDStarRX::CDStarRX() :
 m_pll(0U),
 m_prev(false),
@@ -257,8 +257,16 @@ m_pathMemory2(),
 m_pathMemory3(),
 m_fecOutput(),
 m_rssiAccum(0U),
-m_rssiCount(0U)
+m_rssiCount(0U),
+m_dcFilter(),
+m_dcState()
 {
+  ::memset(m_dcState,       0x00U,  4U * sizeof(q31_t));
+
+  m_dcFilter.numStages = DC_FILTER_STAGES;
+  m_dcFilter.pState    = m_dcState;
+  m_dcFilter.pCoeffs   = DC_FILTER;
+  m_dcFilter.postShift = 0;
 }
 
 void CDStarRX::reset()
@@ -273,13 +281,24 @@ void CDStarRX::reset()
   m_rssiCount     = 0U;
 }
 
-void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
-{ 
+void CDStarRX::samples(q15_t* samples, const uint16_t* rssi, uint8_t length)
+{
+  q31_t dcLevel = 0;
+  q31_t dcVals[20U];
+  q31_t q31Samples[20U];
+
+  ::arm_q15_to_q31(samples, q31Samples, length);
+  ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcVals, length);
+
+  for (uint8_t i = 0U; i < length; i++)
+    dcLevel += dcVals[i];
+  dcLevel /= length;
+
   for (uint16_t i = 0U; i < length; i++) {
     m_rssiAccum += rssi[i];
     m_rssiCount++;
 
-    bool bit = samples[i] < m_dc_level;
+    bool bit = (q31Samples[i] - dcLevel) < 0;
 
     if (bit != m_prev) {
       if (m_pll < (PLLMAX / 2U))
@@ -349,7 +368,7 @@ void CDStarRX::processNone(bool bit)
     ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
     m_rxBufferBits = 0U;
 
-    m_dataBits  = 0U;
+    m_dataBits  = MAX_SYNC_BITS;
     m_rxState   = DSRXS_DATA;
     return;
   }
@@ -378,8 +397,8 @@ void CDStarRX::processHeader(bool bit)
       ::memset(m_rxBuffer, 0x00U, DSTAR_DATA_LENGTH_BYTES + 2U);
       m_rxBufferBits = 0U;
 
-      m_rxState   = DSRXS_DATA;
-      m_dataBits  = SYNC_POS - DSTAR_DATA_LENGTH_BITS + 1U;
+      m_rxState  = DSRXS_DATA;
+      m_dataBits = MAX_SYNC_BITS;
     } else {
       // The checksum failed, return to looking for syncs
       m_rxState = DSRXS_NONE;
@@ -411,37 +430,29 @@ void CDStarRX::processData(bool bit)
 
   // Fuzzy matching of the data sync bit sequence
   bool syncSeen = false;
-  if (m_dataBits >= SYNC_SCAN_START && m_dataBits <= (SYNC_POS + 1U)) {
+  if (m_rxBufferBits >= (DSTAR_DATA_LENGTH_BITS - 3U)) {
     if (countBits32((m_patternBuffer & DATA_SYNC_MASK) ^ DATA_SYNC_DATA) <= DATA_SYNC_ERRS) {
-      if (m_dataBits < SYNC_POS)
-        DEBUG2("DStarRX: found data sync in Data, early", SYNC_POS - m_dataBits);
-      else
-        DEBUG1("DStarRX: found data sync in Data");
-
       m_rxBufferBits = DSTAR_DATA_LENGTH_BITS;
-      m_dataBits = 0U;
-      syncSeen   = true;
+      m_dataBits     = MAX_SYNC_BITS;
+      syncSeen       = true;
     }
   }
 
   // Check to see if the sync is arriving late
-  if (m_dataBits == SYNC_POS) {
+  if (m_rxBufferBits == DSTAR_DATA_LENGTH_BITS && !syncSeen) {
     for (uint8_t i = 1U; i <= 3U; i++) {
       uint32_t syncMask = DATA_SYNC_MASK >> i;
       uint32_t syncData = DATA_SYNC_DATA >> i;
       if (countBits32((m_patternBuffer & syncMask) ^ syncData) <= DATA_SYNC_ERRS) {
-        DEBUG2("DStarRX: found data sync in Data, late", i);
         m_rxBufferBits -= i;
-        m_dataBits     -= i;
         break;
       }
     }
   }
 
-  m_dataBits++;
+  m_dataBits--;
 
-  // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
-  if (m_dataBits >= MAX_SYNC_BITS) {
+  if (m_dataBits == 0U) {
     DEBUG1("DStarRX: data sync timed out, lost lock");
 
     io.setDecode(false);
