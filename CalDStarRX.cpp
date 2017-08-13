@@ -24,7 +24,7 @@
 const unsigned int BUFFER_LENGTH = 200U;
 
 const uint32_t PLLMAX = 0x10000U;
-const uint32_t PLLINC = PLLMAX / DSTAR_RADIO_BIT_LENGTH;
+const uint32_t PLLINC = PLLMAX / DSTAR_RADIO_SYMBOL_LENGTH;
 const uint32_t INC    = PLLINC / 32U;
 
 // D-Star bit order version of 0x55 0x2D 0x16
