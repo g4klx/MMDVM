@@ -32,7 +32,7 @@ class CDStarRX {
 public:
   CDStarRX();
 
-  void samples(const q15_t* samples, const uint16_t* rssi, uint8_t length);
+  void samples(q15_t* samples, const uint16_t* rssi, uint8_t length);
 
   void reset();
 

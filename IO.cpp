@@ -55,7 +55,7 @@ m_lockout(false)
   m_boxcarFilter.numTaps = BOXCAR_FILTER_LEN;
   m_boxcarFilter.pState  = m_boxcarState;
   m_boxcarFilter.pCoeffs = BOXCAR_FILTER;
-
+  
   initInt();
 }
 

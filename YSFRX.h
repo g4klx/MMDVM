@@ -31,7 +31,7 @@ class CYSFRX {
 public:
   CYSFRX();
 
-  void samples(const q15_t* samples, uint16_t* rssi, uint8_t length);
+  void samples(q15_t* samples, uint16_t* rssi, uint8_t length);
 
   void reset();
 
@@ -56,6 +56,8 @@ private:
   uint8_t     m_averagePtr;
   uint32_t    m_rssiAccum;
   uint16_t    m_rssiCount;
+  arm_biquad_casd_df1_inst_q31 m_dcFilter;
+  q31_t                        m_dcState[4];
 
   void processNone(q15_t sample);
   void processData(q15_t sample);
