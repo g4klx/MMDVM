@@ -170,20 +170,20 @@ void CIO::process()
       return;
 
     q31_t dcLevel = 0;
-    q31_t dcVals[20U];
-    q31_t q31Samples[20U];
+    q31_t dcValues[RX_BLOCK_SIZE];
+    q31_t q31Samples[RX_BLOCK_SIZE];
 
-    ::arm_q15_to_q31(samples, q31Samples, length);
-    ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcVals, length);
+    ::arm_q15_to_q31(samples, q31Samples, RX_BLOCK_SIZE);
+    ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcValues, RX_BLOCK_SIZE);
 
-    for (uint8_t i = 0U; i < length; i++)
-      dcLevel += dcVals[i];
-    dcLevel /= length;
+    for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
+      dcLevel += dcValues[i];
+    dcLevel /= RX_BLOCK_SIZE;
 
     q15_t offset = q15_t(__SSAT((dcLevel >> 16), 16));;
 
     q15_t dcSamples[RX_BLOCK_SIZE];
-    for (uint8_t i = 0U; i < length; i++)
+    for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
       dcSamples[i] = samples[i] - offset;
 
     if (m_modemState == STATE_IDLE) {
