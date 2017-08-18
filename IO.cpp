@@ -22,6 +22,10 @@
 #include "Globals.h"
 #include "IO.h"
 
+// Generated using [b, a] = butter(1, 0.001) in MATLAB
+static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0, b1, b2, -a1, -a2}
+const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
+
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
 static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
                                    11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
@@ -43,6 +47,8 @@ m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rssiBuffer(RX_RINGBUFFER_SIZE),
+m_dcFilter(),
+m_dcState(),
 m_rrcFilter(),
 m_gaussianFilter(),
 m_boxcarFilter(),
@@ -67,6 +73,12 @@ m_lockout(false)
   ::memset(m_rrcState,      0x00U, 70U * sizeof(q15_t));
   ::memset(m_gaussianState, 0x00U, 40U * sizeof(q15_t));
   ::memset(m_boxcarState,   0x00U, 30U * sizeof(q15_t));
+  ::memset(m_dcState,       0x00U,  4U * sizeof(q31_t));
+
+  m_dcFilter.numStages = DC_FILTER_STAGES;
+  m_dcFilter.pState    = m_dcState;
+  m_dcFilter.pCoeffs   = DC_FILTER;
+  m_dcFilter.postShift = 0;
 
   m_rrcFilter.numTaps = RRC_0_2_FILTER_LEN;
   m_rrcFilter.pState  = m_rrcState;
@@ -157,21 +169,39 @@ void CIO::process()
     if (m_lockout)
       return;
 
+    q31_t dcLevel = 0;
+    q31_t dcVals[20U];
+    q31_t q31Samples[20U];
+
+    ::arm_q15_to_q31(samples, q31Samples, length);
+    ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcVals, length);
+
+    for (uint8_t i = 0U; i < length; i++)
+      dcLevel += dcVals[i];
+    dcLevel /= length;
+
+    q15_t offset = q15_t(__SSAT((dcLevel >> 16), 16));;
+
+    q15_t dcSamples[RX_BLOCK_SIZE];
+    for (uint8_t i = 0U; i < length; i++)
+      dcSamples[i] = samples[i] - offset;
+
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_gaussianFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
 
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
 
       if (m_p25Enable) {
         q15_t P25Vals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, P25Vals, RX_BLOCK_SIZE);
 
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
 
+	  // XXX YSF should use dcSamples, but DMR not
       if (m_dmrEnable || m_ysfEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
@@ -189,7 +219,7 @@ void CIO::process()
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_gaussianFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
 
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
@@ -211,14 +241,14 @@ void CIO::process()
     } else if (m_modemState == STATE_YSF) {
       if (m_ysfEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrcFilter, dcSamples, C4FSKVals, RX_BLOCK_SIZE);
 
         ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_P25) {
       if (m_p25Enable) {
         q15_t P25Vals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, P25Vals, RX_BLOCK_SIZE);
 
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
