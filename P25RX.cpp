@@ -38,10 +38,6 @@ const uint16_t NOENDPTR = 9999U;
 
 const unsigned int MAX_SYNC_FRAMES = 4U + 1U;
 
-// Generated using [b, a] = butter(1, 0.001) in MATLAB
-static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0, b1, b2, -a1, -a2}
-const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
-
 CP25RX::CP25RX() :
 m_state(P25RXS_NONE),
 m_bitBuffer(),
@@ -64,16 +60,8 @@ m_threshold(),
 m_thresholdVal(0),
 m_averagePtr(NOAVEPTR),
 m_rssiAccum(0U),
-m_rssiCount(0U),
-m_dcFilter(),
-m_dcState()
+m_rssiCount(0U)
 {
-  ::memset(m_dcState,       0x00U,  4U * sizeof(q31_t));
-
-  m_dcFilter.numStages = DC_FILTER_STAGES;
-  m_dcFilter.pState    = m_dcState;
-  m_dcFilter.pCoeffs   = DC_FILTER;
-  m_dcFilter.postShift = 0;
 }
 
 void CP25RX::reset()
@@ -100,21 +88,8 @@ void CP25RX::reset()
 
 void CP25RX::samples(q15_t* samples, uint16_t* rssi, uint8_t length)
 {
-  q31_t dcLevel = 0;
-  q31_t dcVals[20U];
-  q31_t q31Samples[20U];
-
-  ::arm_q15_to_q31(samples, q31Samples, length);
-  ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcVals, length);
-
-  for (uint8_t i = 0U; i < length; i++)
-    dcLevel += dcVals[i];
-  dcLevel /= length;
-
-  q15_t offset = q15_t(__SSAT((dcLevel >> 16), 16));;
-
   for (uint8_t i = 0U; i < length; i++) {
-    q15_t sample = samples[i] - offset;
+    q15_t sample = samples[i];
 
     m_rssiAccum += rssi[i];
     m_rssiCount++;
