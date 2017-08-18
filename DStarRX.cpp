@@ -269,7 +269,7 @@ void CDStarRX::reset()
   m_rssiCount     = 0U;
 }
 
-void CDStarRX::samples(q15_t* samples, const uint16_t* rssi, uint8_t length)
+void CDStarRX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   for (uint16_t i = 0U; i < length; i++) {
     m_rssiAccum += rssi[i];

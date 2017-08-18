@@ -32,7 +32,7 @@ class CP25RX {
 public:
   CP25RX();
 
-  void samples(q15_t* samples, uint16_t* rssi, uint8_t length);
+  void samples(const q15_t* samples, uint16_t* rssi, uint8_t length);
 
   void reset();
 
