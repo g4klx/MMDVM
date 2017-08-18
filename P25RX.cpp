@@ -86,7 +86,7 @@ void CP25RX::reset()
   m_rssiCount     = 0U;
 }
 
-void CP25RX::samples(q15_t* samples, uint16_t* rssi, uint8_t length)
+void CP25RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
 {
   for (uint8_t i = 0U; i < length; i++) {
     q15_t sample = samples[i];

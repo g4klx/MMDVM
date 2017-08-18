@@ -201,7 +201,7 @@ void CIO::process()
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
 
-	  // XXX YSF should use dcSamples, but DMR not
+      // XXX YSF should use dcSamples, but DMR not
       if (m_dmrEnable || m_ysfEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
