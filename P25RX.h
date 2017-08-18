@@ -59,8 +59,6 @@ private:
   uint8_t     m_averagePtr;
   uint32_t    m_rssiAccum;
   uint16_t    m_rssiCount;
-  arm_biquad_casd_df1_inst_q31 m_dcFilter;
-  q31_t                        m_dcState[4];
 
   void processNone(q15_t sample);
   void processHdr(q15_t sample);
