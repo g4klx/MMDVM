@@ -355,7 +355,7 @@ void CIO::initInt()
 {
    GPIO_InitTypeDef GPIO_InitStruct;
    GPIO_StructInit(&GPIO_InitStruct);
-   GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+   GPIO_InitStruct.GPIO_Speed = GPIO_Fast_Speed;
    GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
    GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_DOWN;
 
