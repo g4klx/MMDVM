@@ -386,6 +386,11 @@ void CIO::resetWatchdog()
   m_watchdog = 0U;
 }
 
+uint32_t CIO::getWatchdog()
+{
+  return m_watchdog;
+}
+
 bool CIO::hasLockout() const
 {
   return m_lockout;
