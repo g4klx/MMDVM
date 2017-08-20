@@ -52,6 +52,7 @@ public:
   bool hasLockout() const;
 
   void resetWatchdog();
+  uint32_t getWatchdog();
 
 private:
   bool                 m_started;

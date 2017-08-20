@@ -423,6 +423,10 @@ void CSerialPort::process()
         m_ptr = 1U;
         m_len = 0U;
       }
+      else {
+        m_ptr = 0U;
+        m_len = 0U;
+      }
     } else if (m_ptr == 1U) {
       // Handle the frame length
       m_len = m_buffer[m_ptr] = c;
@@ -647,9 +651,9 @@ void CSerialPort::process()
 
 #if defined(SERIAL_REPEATER)
           case MMDVM_SERIAL: {
-				for (uint8_t i = 3U; i < m_len; i++)
-					m_repeat.put(m_buffer[i]);
-			}
+            for (uint8_t i = 3U; i < m_len; i++)
+              m_repeat.put(m_buffer[i]);
+            }
             break;
 #endif
 
@@ -665,23 +669,28 @@ void CSerialPort::process()
     }
   }
 
+  if (io.getWatchdog() >= 48000U) {
+    m_ptr = 0U;
+    m_len = 0U;
+  }
+
 #if defined(SERIAL_REPEATER)
-	// Write any outgoing serial data
-	uint16_t space = m_repeat.getData();
-	if (space > 0U) {
-		int avail = availableForWriteInt(3U);
-		if (avail < space)
-			space = avail;
+  // Write any outgoing serial data
+  uint16_t space = m_repeat.getData();
+  if (space > 0U) {
+    int avail = availableForWriteInt(3U);
+    if (avail < space)
+      space = avail;
 
-		for (uint16_t i = 0U; i < space; i++) {
-			uint8_t c = m_repeat.get();
-			writeInt(3U, &c, 1U);
-		}
-	}
+    for (uint16_t i = 0U; i < space; i++) {
+      uint8_t c = m_repeat.get();
+      writeInt(3U, &c, 1U);
+    }
+  }
 
-	// Read any incoming serial data
-	while (availableInt(3U))
-		readInt(3U);
+  // Read any incoming serial data
+  while (availableInt(3U))
+    readInt(3U);
 #endif
 }
 
