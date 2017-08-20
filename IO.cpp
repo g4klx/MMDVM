@@ -48,6 +48,7 @@ m_dstarTXLevel(128 * 128),
 m_dmrTXLevel(128 * 128),
 m_ysfTXLevel(128 * 128),
 m_p25TXLevel(128 * 128),
+m_txDCOffset(DC_OFFSET),
 m_ledCount(0U),
 m_ledValue(true),
 m_detect(false),
@@ -246,7 +247,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   for (uint16_t i = 0U; i < length; i++) {
     q31_t res1 = samples[i] * txLevel;
     q15_t res2 = q15_t(__SSAT((res1 >> 15), 16));
-    uint16_t res3 = uint16_t(res2 + DC_OFFSET);
+    uint16_t res3 = uint16_t(res2 + m_txDCOffset);
 
     // Detect DAC overflow
     if (res3 > 4095U)
@@ -287,7 +288,7 @@ void CIO::setMode()
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, int16_t txDCOffset)
 {
   m_pttInvert = pttInvert;
 
@@ -297,6 +298,8 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
   m_dmrTXLevel   = q15_t(dmrTXLevel * 128);
   m_ysfTXLevel   = q15_t(ysfTXLevel * 128);
   m_p25TXLevel   = q15_t(p25TXLevel * 128);
+
+  m_txDCOffset   = DC_OFFSET + txDCOffset;
   
   if (rxInvert)
     m_rxLevel = -m_rxLevel;
