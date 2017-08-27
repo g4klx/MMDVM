@@ -22,7 +22,7 @@
 #include "Globals.h"
 #include "IO.h"
 
-#if defined(STM32F4XX) || defined(STM32F4) || defined(STM32F7XX)
+#if defined(STM32F4XX) || defined(STM32F7XX)
 
 #if defined(STM32F4_DISCOVERY)
 /*

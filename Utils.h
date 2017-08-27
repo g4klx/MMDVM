@@ -19,7 +19,7 @@
 #if !defined(UTILS_H)
 #define  UTILS_H
 
-#if defined(STM32F4XX) || defined(STM32F4)
+#if defined(STM32F4XX)
 #include "stm32f4xx.h"
 #include <cstddef>
 #elif defined(STM32F7XX)

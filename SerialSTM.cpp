@@ -37,7 +37,7 @@ UART5  - TXD PC12 - RXD PD2 (Discovery, Pi and Nucleo with Morpho header)
 
 */
 
-#if defined(STM32F4XX) || defined(STM32F4) || defined(STM32F7XX)
+#if defined(STM32F4XX) || defined(STM32F7XX)
 
 #define TX_SERIAL_FIFO_SIZE 512U
 #define RX_SERIAL_FIFO_SIZE 512U
