@@ -112,8 +112,8 @@ void CIO::selfTest()
       ledCount = 0U;
       ledValue = !ledValue;
 
+      // We exclude PTT to avoid trigger the transmitter
       setLEDInt(ledValue);
-      setPTTInt(ledValue);
       setDStarInt(ledValue);
       setDMRInt(ledValue);
       setYSFInt(ledValue);
