@@ -94,6 +94,38 @@ m_lockout(false)
   m_boxcarFilter.pCoeffs = BOXCAR_FILTER;
   
   initInt();
+  
+  selfTest();
+}
+
+void CIO::selfTest()
+{
+  bool ledValue = false;
+  uint32_t ledCount = 0;
+  uint32_t blinks = 0;
+
+  while(true) {
+    ledCount++;
+    delayInt(100);
+
+    if(ledCount >= 2U) {
+      ledCount = 0U;
+      ledValue = !ledValue;
+
+      setLEDInt(ledValue);
+      setPTTInt(ledValue);
+      setDStarInt(ledValue);
+      setDMRInt(ledValue);
+      setYSFInt(ledValue);
+      setP25Int(ledValue);
+      setCOSInt(ledValue);
+
+      blinks++;
+
+      if(blinks > 5)
+        break;
+    }
+  }
 }
 
 void CIO::start()

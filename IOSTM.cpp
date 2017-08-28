@@ -764,4 +764,23 @@ void CIO::setP25Int(bool on)
 #endif
 }
 
+void CIO::delayInt(unsigned int dly)
+{
+  unsigned int loopsPerMillisecond = (SystemCoreClock/1000) / 3; //3 clock cycles per loop
+  for (; dly > 0; dly--)
+  {
+    asm volatile //this routine waits (approximately) one millisecond
+    (
+      "mov r3, %[loopsPerMillisecond] \n\t" //load the initial loop counter
+      "loop: \n\t"
+        "subs r3, #1 \n\t"
+        "bne loop \n\t"
+
+      : //empty output list
+      : [loopsPerMillisecond] "r" (loopsPerMillisecond) //input to the asm routine
+      : "r3", "cc" //clobber list
+    );
+  }
+}
+
 #endif
