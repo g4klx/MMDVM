@@ -221,7 +221,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-  if (length < 13U)
+  if (length < 14U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -268,6 +268,8 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   uint8_t ysfTXLevel   = data[11U];
   uint8_t p25TXLevel   = data[12U];
 
+  int16_t txDCOffset = int16_t(data[13U]) - 128;
+
   m_modemState  = modemState;
 
   m_dstarEnable = dstarEnable;
@@ -289,7 +291,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   ysfTX.setLoDev(ysfLoDev);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, txDCOffset);
 
   io.start();
 
@@ -419,6 +421,9 @@ void CSerialPort::process()
         // Handle the frame start correctly
         m_buffer[0U] = c;
         m_ptr = 1U;
+        m_len = 0U;
+      } else {
+        m_ptr = 0U;
         m_len = 0U;
       }
     } else if (m_ptr == 1U) {
@@ -645,9 +650,9 @@ void CSerialPort::process()
 
 #if defined(SERIAL_REPEATER)
           case MMDVM_SERIAL: {
-				for (uint8_t i = 3U; i < m_len; i++)
-					m_repeat.put(m_buffer[i]);
-			}
+            for (uint8_t i = 3U; i < m_len; i++)
+              m_repeat.put(m_buffer[i]);
+            }
             break;
 #endif
 
@@ -663,23 +668,28 @@ void CSerialPort::process()
     }
   }
 
+  if (io.getWatchdog() >= 48000U) {
+    m_ptr = 0U;
+    m_len = 0U;
+  }
+
 #if defined(SERIAL_REPEATER)
-	// Write any outgoing serial data
-	uint16_t space = m_repeat.getData();
-	if (space > 0U) {
-		int avail = availableForWriteInt(3U);
-		if (avail < space)
-			space = avail;
+  // Write any outgoing serial data
+  uint16_t space = m_repeat.getData();
+  if (space > 0U) {
+    int avail = availableForWriteInt(3U);
+     if (avail < space)
+      space = avail;
 
-		for (uint16_t i = 0U; i < space; i++) {
-			uint8_t c = m_repeat.get();
-			writeInt(3U, &c, 1U);
-		}
-	}
+    for (uint16_t i = 0U; i < space; i++) {
+      uint8_t c = m_repeat.get();
+      writeInt(3U, &c, 1U);
+    }
+  }
 
-	// Read any incoming serial data
-	while (availableInt(3U))
-		readInt(3U);
+  // Read any incoming serial data
+  while (availableInt(3U))
+    readInt(3U);
 #endif
 }
 

@@ -22,6 +22,10 @@
 #include "Globals.h"
 #include "IO.h"
 
+// Generated using [b, a] = butter(1, 0.001) in MATLAB
+static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0, b1, b2, -a1, -a2}
+const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
+
 // One symbol boxcar filter
 static q15_t   BOXCAR_FILTER[] = {12000, 12000, 12000, 12000, 12000, 0};
 const uint16_t BOXCAR_FILTER_LEN = 6U;
@@ -33,6 +37,8 @@ m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rssiBuffer(RX_RINGBUFFER_SIZE),
+m_dcFilter(),
+m_dcState(),
 m_boxcarFilter(),
 m_boxcarState(),
 m_pttInvert(false),
@@ -42,6 +48,7 @@ m_dstarTXLevel(128 * 128),
 m_dmrTXLevel(128 * 128),
 m_ysfTXLevel(128 * 128),
 m_p25TXLevel(128 * 128),
+m_txDCOffset(DC_OFFSET),
 m_ledCount(0U),
 m_ledValue(true),
 m_detect(false),
@@ -51,6 +58,12 @@ m_watchdog(0U),
 m_lockout(false)
 {
   ::memset(m_boxcarState, 0x00U, 30U * sizeof(q15_t));
+  ::memset(m_dcState,     0x00U,  4U * sizeof(q31_t));
+
+  m_dcFilter.numStages = DC_FILTER_STAGES;
+  m_dcFilter.pState    = m_dcState;
+  m_dcFilter.pCoeffs   = DC_FILTER;
+  m_dcFilter.postShift = 0;
 
   m_boxcarFilter.numTaps = BOXCAR_FILTER_LEN;
   m_boxcarFilter.pState  = m_boxcarState;
@@ -136,12 +149,29 @@ void CIO::process()
     q15_t vals[RX_BLOCK_SIZE];
     ::arm_fir_fast_q15(&m_boxcarFilter, samples, vals, RX_BLOCK_SIZE);
 
+    q31_t dcLevel = 0;
+    q31_t dcValues[RX_BLOCK_SIZE];
+    q31_t q31Vals[RX_BLOCK_SIZE];
+
+    ::arm_q15_to_q31(vals, q31Vals, RX_BLOCK_SIZE);
+    ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Vals, dcValues, RX_BLOCK_SIZE);
+
+    for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
+      dcLevel += dcValues[i];
+    dcLevel /= RX_BLOCK_SIZE;
+
+    q15_t offset = q15_t(__SSAT((dcLevel >> 16), 16));;
+
+    q15_t dcVals[RX_BLOCK_SIZE];
+    for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
+      dcVals[i] = vals[i] - offset;
+
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable)
-        dstarRX.samples(vals, rssi, RX_BLOCK_SIZE);
+        dstarRX.samples(dcVals, rssi, RX_BLOCK_SIZE);
 
       if (m_p25Enable)
-        p25RX.samples(vals, rssi, RX_BLOCK_SIZE);
+        p25RX.samples(dcVals, rssi, RX_BLOCK_SIZE);
 
       if (m_dmrEnable) {
         if (m_duplex)
@@ -151,10 +181,10 @@ void CIO::process()
       }
 
       if (m_ysfEnable)
-        ysfRX.samples(vals, rssi, RX_BLOCK_SIZE);
+        ysfRX.samples(dcVals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable)
-        dstarRX.samples(vals, rssi, RX_BLOCK_SIZE);
+        dstarRX.samples(dcVals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DMR) {
       if (m_dmrEnable) {
         if (m_duplex) {
@@ -169,10 +199,10 @@ void CIO::process()
       }
     } else if (m_modemState == STATE_YSF) {
       if (m_ysfEnable)
-        ysfRX.samples(vals, rssi, RX_BLOCK_SIZE);
+        ysfRX.samples(dcVals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_P25) {
       if (m_p25Enable)
-        p25RX.samples(vals, rssi, RX_BLOCK_SIZE);
+        p25RX.samples(dcVals, rssi, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DSTARCAL) {
       calDStarRX.samples(vals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_RSSICAL) {
@@ -217,7 +247,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   for (uint16_t i = 0U; i < length; i++) {
     q31_t res1 = samples[i] * txLevel;
     q15_t res2 = q15_t(__SSAT((res1 >> 15), 16));
-    uint16_t res3 = uint16_t(res2 + DC_OFFSET);
+    uint16_t res3 = uint16_t(res2 + m_txDCOffset);
 
     // Detect DAC overflow
     if (res3 > 4095U)
@@ -258,7 +288,7 @@ void CIO::setMode()
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, int16_t txDCOffset)
 {
   m_pttInvert = pttInvert;
 
@@ -268,6 +298,8 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
   m_dmrTXLevel   = q15_t(dmrTXLevel * 128);
   m_ysfTXLevel   = q15_t(ysfTXLevel * 128);
   m_p25TXLevel   = q15_t(p25TXLevel * 128);
+
+  m_txDCOffset   = DC_OFFSET + txDCOffset;
   
   if (rxInvert)
     m_rxLevel = -m_rxLevel;
@@ -302,6 +334,11 @@ bool CIO::hasRXOverflow()
 void CIO::resetWatchdog()
 {
   m_watchdog = 0U;
+}
+
+uint32_t CIO::getWatchdog()
+{
+  return m_watchdog;
 }
 
 bool CIO::hasLockout() const

@@ -42,7 +42,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, int16_t txDCOffset);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -52,6 +52,7 @@ public:
   bool hasLockout() const;
 
   void resetWatchdog();
+  uint32_t getWatchdog();
 
 private:
   bool                 m_started;
@@ -59,6 +60,9 @@ private:
   CSampleRB            m_rxBuffer;
   CSampleRB            m_txBuffer;
   CRSSIRB              m_rssiBuffer;
+
+  arm_biquad_casd_df1_inst_q31 m_dcFilter;
+  q31_t                        m_dcState[4];
 
   arm_fir_instance_q15 m_boxcarFilter;
   q15_t                m_boxcarState[30U];        // NoTaps + BlockSize - 1, 6 + 20 - 1 plus some spare
@@ -70,6 +74,8 @@ private:
   q15_t                m_dmrTXLevel;
   q15_t                m_ysfTXLevel;
   q15_t                m_p25TXLevel;
+
+  uint16_t             m_txDCOffset;
 
   uint32_t             m_ledCount;
   bool                 m_ledValue;
