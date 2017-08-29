@@ -43,9 +43,9 @@ private:
   uint16_t    m_dataPtr;
   uint16_t    m_startPtr;
   uint16_t    m_endPtr;
+  uint16_t    m_syncPtr;
   uint16_t    m_minSyncPtr;
   uint16_t    m_maxSyncPtr;
-  uint16_t    m_syncPtr;
   q31_t       m_maxCorr;
   uint16_t    m_lostCount;
   uint8_t     m_countdown;

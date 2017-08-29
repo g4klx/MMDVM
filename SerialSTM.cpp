@@ -37,7 +37,7 @@ UART5  - TXD PC12 - RXD PD2 (Discovery, Pi and Nucleo with Morpho header)
 
 */
 
-#if defined(STM32F4XX) || defined(STM32F4)
+#if defined(STM32F4XX) || defined(STM32F7XX)
 
 #define TX_SERIAL_FIFO_SIZE 512U
 #define RX_SERIAL_FIFO_SIZE 512U
@@ -432,7 +432,7 @@ void WriteUSART2(const uint8_t* data, uint16_t length)
 #endif
 
 /* ************* USART3 ***************** */
-#if defined(STM32F4_DISCOVERY) || defined(STM32F4_PI)
+#if defined(STM32F4_DISCOVERY) || defined(STM32F4_PI) || defined(STM32F7_NUCLEO)
 
 volatile uint8_t  TXSerialfifo3[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo3[RX_SERIAL_FIFO_SIZE];
@@ -541,17 +541,34 @@ void USART3_IRQHandler()
    }
 }
 
+#if defined(STM32F7_NUCLEO)
+// USART3 - TXD PD8 - RXD PD9
+#define USART3_GPIO_PinSource_TX   GPIO_PinSource8
+#define USART3_GPIO_PinSource_RX   GPIO_PinSource9
+#define USART3_GPIO_Pin_TX         GPIO_Pin_8
+#define USART3_GPIO_Pin_RX         GPIO_Pin_9
+#define USART3_GPIO_PORT           GPIOD
+#define USART3_RCC_Periph          RCC_AHB1Periph_GPIOD
+#else
+// USART3 - TXD PC10 - RXD PC11
+#define USART3_GPIO_PinSource_TX   GPIO_PinSource10
+#define USART3_GPIO_PinSource_RX   GPIO_PinSource11
+#define USART3_GPIO_Pin_TX         GPIO_Pin_10
+#define USART3_GPIO_Pin_RX         GPIO_Pin_11
+#define USART3_GPIO_PORT           GPIOC
+#define USART3_RCC_Periph          RCC_AHB1Periph_GPIOC
+#endif
+
 void InitUSART3(int speed)
 {
-   // USART3 - TXD PC10 - RXD PC11
    GPIO_InitTypeDef GPIO_InitStructure;
    USART_InitTypeDef USART_InitStructure;
    NVIC_InitTypeDef NVIC_InitStructure;
 
-   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+   RCC_AHB1PeriphClockCmd(USART3_RCC_Periph, ENABLE);
    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-   GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART3);
-   GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_USART3);
+   GPIO_PinAFConfig(USART3_GPIO_PORT, USART3_GPIO_PinSource_TX, GPIO_AF_USART3);
+   GPIO_PinAFConfig(USART3_GPIO_PORT, USART3_GPIO_PinSource_RX, GPIO_AF_USART3);
 
    // USART IRQ init
    NVIC_InitStructure.NVIC_IRQChannel    = USART3_IRQn;
@@ -565,9 +582,9 @@ void InitUSART3(int speed)
    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-   GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_10 | GPIO_Pin_11; //  Tx | Rx
+   GPIO_InitStructure.GPIO_Pin   = USART3_GPIO_Pin_TX | USART3_GPIO_Pin_RX; //  Tx | Rx
    GPIO_InitStructure.GPIO_Speed = GPIO_Fast_Speed;
-   GPIO_Init(GPIOC, &GPIO_InitStructure);
+   GPIO_Init(USART3_GPIO_PORT, &GPIO_InitStructure);
 
    // Configure USART baud rate
    USART_StructInit(&USART_InitStructure);
@@ -822,7 +839,7 @@ void CSerialPort::beginInt(uint8_t n, int speed)
 {
    switch (n) {
       case 1U:
-         #if defined(STM32F4_DISCOVERY)
+         #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          InitUSART3(speed);
          #elif defined(STM32F4_PI)
          InitUSART1(speed);
@@ -846,7 +863,7 @@ int CSerialPort::availableInt(uint8_t n)
 {
    switch (n) {
       case 1U:
-         #if defined(STM32F4_DISCOVERY)
+         #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return AvailUSART3();
          #elif defined(STM32F4_PI)
          return AvailUSART1();
@@ -868,7 +885,7 @@ int CSerialPort::availableForWriteInt(uint8_t n)
 {
    switch (n) {
       case 1U:
-         #if defined(STM32F4_DISCOVERY)
+         #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return AvailForWriteUSART3();
          #elif defined(STM32F4_PI)
          return AvailForWriteUSART1();
@@ -890,7 +907,7 @@ uint8_t CSerialPort::readInt(uint8_t n)
 {
    switch (n) {
       case 1U:
-         #if defined(STM32F4_DISCOVERY)
+         #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return ReadUSART3();
          #elif defined(STM32F4_PI)
          return ReadUSART1();
@@ -912,7 +929,7 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
 {
    switch (n) {
       case 1U:
-         #if defined(STM32F4_DISCOVERY)
+         #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          WriteUSART3(data, length);
          if (flush)
             TXSerialFlush3();
