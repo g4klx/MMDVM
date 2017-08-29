@@ -53,6 +53,8 @@ public:
 
   void resetWatchdog();
   uint32_t getWatchdog();
+  
+  void selfTest();
 
 private:
   bool                 m_started;
@@ -107,6 +109,8 @@ private:
   void setDMRInt(bool on);
   void setYSFInt(bool on);
   void setP25Int(bool on);
+  
+  void delayInt(unsigned int dly);
 };
 
 #endif

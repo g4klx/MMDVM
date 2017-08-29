@@ -94,6 +94,84 @@ m_lockout(false)
   m_boxcarFilter.pCoeffs = BOXCAR_FILTER;
   
   initInt();
+  
+  selfTest();
+}
+
+void CIO::selfTest()
+{
+  bool ledValue = false;
+
+  for (uint8_t i = 0; i < 6; i++) {
+    ledValue = !ledValue;
+
+    // We exclude PTT to avoid trigger the transmitter
+    setLEDInt(ledValue);
+    setCOSInt(ledValue);
+#if defined(ARDUINO_MODE_PINS)
+    setDStarInt(ledValue);
+    setDMRInt(ledValue);
+    setYSFInt(ledValue);
+    setP25Int(ledValue);
+#endif
+    delayInt(250);
+  }
+
+#if defined(ARDUINO_MODE_PINS)
+  setDStarInt(true);
+  setDMRInt(false);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(false);
+  
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(true);
+
+  delayInt(250);
+  
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(false);
+
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(250);
+  
+  setDStarInt(true);
+  setDMRInt(false);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(250);
+
+  setDStarInt(false);
+  setDMRInt(false);
+  setYSFInt(false);
+  setP25Int(false);
+#endif
 }
 
 void CIO::start()
