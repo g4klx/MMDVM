@@ -101,31 +101,53 @@ m_lockout(false)
 void CIO::selfTest()
 {
   bool ledValue = false;
-  uint32_t ledCount = 0;
-  uint32_t blinks = 0;
 
-  while(true) {
-    ledCount++;
-    delayInt(100);
+  for (uint8_t i = 0; i < 6; i++) {
+    ledValue = !ledValue;
 
-    if(ledCount >= 2U) {
-      ledCount = 0U;
-      ledValue = !ledValue;
+    // We exclude PTT to avoid trigger the transmitter
+    setLEDInt(ledValue);
+    setDStarInt(ledValue);
+    setDMRInt(ledValue);
+    setYSFInt(ledValue);
+    setP25Int(ledValue);
+    setCOSInt(ledValue);
 
-      // We exclude PTT to avoid trigger the transmitter
-      setLEDInt(ledValue);
-      setDStarInt(ledValue);
-      setDMRInt(ledValue);
-      setYSFInt(ledValue);
-      setP25Int(ledValue);
-      setCOSInt(ledValue);
-
-      blinks++;
-
-      if(blinks > 5)
-        break;
-    }
+    delayInt(250);
   }
+
+  setDStarInt(true);
+  setDMRInt(false);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(500);
+
+  setDStarInt(false);
+  setDMRInt(true);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(500);
+
+  setDStarInt(false);
+  setDMRInt(false);
+  setYSFInt(true);
+  setP25Int(false);
+  
+  delayInt(500);
+
+  setDStarInt(false);
+  setDMRInt(false);
+  setYSFInt(false);
+  setP25Int(true);
+
+  delayInt(500);
+
+  setDStarInt(false);
+  setDMRInt(false);
+  setYSFInt(false);
+  setP25Int(false);
 }
 
 void CIO::start()
