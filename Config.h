@@ -27,7 +27,7 @@
 // Frequencies such as 10.0 Mhz (48000 * 208.333) or 20 Mhz (48000 * 416.666) are not suitable.
 //
 // For 12 MHz
-// #define EXTERNAL_OSC 12000000
+#define EXTERNAL_OSC 12000000
 // For 12.288 MHz
 // #define EXTERNAL_OSC 12288000
 // For 14.4 MHz
@@ -39,7 +39,7 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode
-#define ARDUINO_MODE_PINS
+// #define ARDUINO_MODE_PINS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
@@ -54,16 +54,16 @@
 // #define ARDUINO_DUE_NTH
 
 // For ST Nucleo-64 STM32F446RE board
-#define STM32F4_NUCLEO_MORPHO_HEADER
+// #define STM32F4_NUCLEO_MORPHO_HEADER
 // #define STM32F4_NUCLEO_ARDUINO_HEADER
 
 // Use separate mode pins to switch external filters/bandwidth for example
 // #define STM32F4_NUCLEO_MODE_PINS
 
 // Pass RSSI information to the host
-#define SEND_RSSI_DATA
+// #define SEND_RSSI_DATA
 
 // Use the modem as a serial repeater for Nextion displays
-#define SERIAL_REPEATER
+// #define SERIAL_REPEATER
 
 #endif
