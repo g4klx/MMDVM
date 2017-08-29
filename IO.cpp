@@ -121,28 +121,49 @@ void CIO::selfTest()
   setYSFInt(false);
   setP25Int(false);
 
-  delayInt(500);
+  delayInt(250);
 
-  setDStarInt(false);
+  setDStarInt(true);
   setDMRInt(true);
   setYSFInt(false);
   setP25Int(false);
 
-  delayInt(500);
+  delayInt(250);
 
-  setDStarInt(false);
-  setDMRInt(false);
+  setDStarInt(true);
+  setDMRInt(true);
   setYSFInt(true);
   setP25Int(false);
   
-  delayInt(500);
+  delayInt(250);
 
-  setDStarInt(false);
-  setDMRInt(false);
-  setYSFInt(false);
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
   setP25Int(true);
 
-  delayInt(500);
+  delayInt(250);
+  
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(false);
+
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(250);
+  
+  setDStarInt(true);
+  setDMRInt(false);
+  setYSFInt(false);
+  setP25Int(false);
+
+  delayInt(250);
 
   setDStarInt(false);
   setDMRInt(false);
