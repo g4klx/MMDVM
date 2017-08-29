@@ -426,10 +426,6 @@ void CSerialPort::process()
         m_ptr = 0U;
         m_len = 0U;
       }
-      else {
-        m_ptr = 0U;
-        m_len = 0U;
-      }
     } else if (m_ptr == 1U) {
       // Handle the frame length
       m_len = m_buffer[m_ptr] = c;
@@ -682,7 +678,6 @@ void CSerialPort::process()
   uint16_t space = m_repeat.getData();
   if (space > 0U) {
     int avail = availableForWriteInt(3U);
-
     if (avail < space)
       space = avail;
 
