@@ -107,15 +107,17 @@ void CIO::selfTest()
 
     // We exclude PTT to avoid trigger the transmitter
     setLEDInt(ledValue);
+    setCOSInt(ledValue);
+#if defined(ARDUINO_MODE_PINS)
     setDStarInt(ledValue);
     setDMRInt(ledValue);
     setYSFInt(ledValue);
     setP25Int(ledValue);
-    setCOSInt(ledValue);
-
+#endif
     delayInt(250);
   }
 
+#if defined(ARDUINO_MODE_PINS)
   setDStarInt(true);
   setDMRInt(false);
   setYSFInt(false);
@@ -169,6 +171,7 @@ void CIO::selfTest()
   setDMRInt(false);
   setYSFInt(false);
   setP25Int(false);
+#endif
 }
 
 void CIO::start()
