@@ -1,4 +1,4 @@
-#  Copyright (C) 2016 by Andy Uribe CA6JAU
+#  Copyright (C) 2016,2017 by Andy Uribe CA6JAU
 #  Copyright (C) 2016 by Jim McLaughlin KI6ZUM
 
 #  This program is free software; you can redistribute it and/or modify
@@ -62,12 +62,14 @@ ifndef $(OSC)
 endif
 
 # Find header directories
-INC= . STM32F4XX_Lib/CMSIS/Include/ STM32F4XX_Lib/Device/ STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/
-INCLUDES=$(INC:%=-I%)
+INC_F4= . STM32F4XX_Lib/CMSIS/Include/ STM32F4XX_Lib/Device/ STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/
+INCLUDES_F4=$(INC_F4:%=-I%)
+INC_F7= . STM32F7XX_Lib/CMSIS/Include/ STM32F7XX_Lib/Device/ STM32F7XX_Lib/STM32F7xx_StdPeriph_Driver/inc/
+INCLUDES_F7=$(INC_F7:%=-I%)
 
 # Find libraries
-INCLUDES_LIBS=STM32F4XX_Lib/CMSIS/Lib/GCC/libarm_cortexM4lf_math.a
-LINK_LIBS=
+INCLUDES_LIBS_F4=STM32F4XX_Lib/CMSIS/Lib/GCC/libarm_cortexM4lf_math.a
+INCLUDES_LIBS_F7=STM32F7XX_Lib/CMSIS/Lib/GCC/libarm_cortexM7lfsp_math.a
 
 # Create object list
 OBJECTS=$(ASOURCES:%.s=%.o)
@@ -80,52 +82,62 @@ BINHEX=outp.hex
 BINBIN=outp.bin
 
 # MCU FLAGS
-MCFLAGS=-mcpu=cortex-m4 -mthumb -mlittle-endian \
--mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork
+MCFLAGS_F4=-mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork
+MCFLAGS_F7=-mcpu=cortex-m7 -mthumb -mlittle-endian -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb-interwork
 
 # COMPILE FLAGS
 # STM32F4 Discovery board:
 DEFS_DIS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_DISCOVERY -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
-# Pi board:
-DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DARDUINO_MODE_PINS -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
-# STM32F4 Nucleo 446 board:
+# MMDVM-Pi board:
+DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# STM32F4 Nucleo-64 F446RE board:
 DEFS_NUCLEO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# STM32F7 Nucleo-144-F767ZI board:
+DEFS_NUCLEO_F767=-DUSE_HAL_DRIVER -DSTM32F767xx -DSTM32F7XX -DSTM32F7_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
-CFLAGS=-c $(MCFLAGS) $(INCLUDES)
-CXXFLAGS=-c $(MCFLAGS) $(INCLUDES)
+CFLAGS_F4=-c $(MCFLAGS_F4) $(INCLUDES_F4)
+CXXFLAGS_F4=-c $(MCFLAGS_F4) $(INCLUDES_F4)
+CFLAGS_F7=-c $(MCFLAGS_F7) $(INCLUDES_F7)
+CXXFLAGS_F7=-c $(MCFLAGS_F7) $(INCLUDES_F7)
 
 # LINKER FLAGS
-LDSCRIPT=stm32f4xx_link.ld
-LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) --specs=nosys.specs $(INCLUDES_LIBS) $(LINK_LIBS)
+LDFLAGS_F4 =-T stm32f4xx_link.ld $(MCFLAGS_F4) --specs=nosys.specs $(INCLUDES_LIBS_F4)
+LDFLAGS_F7 =-T stm32f7xx_link.ld $(MCFLAGS_F7) --specs=nosys.specs $(INCLUDES_LIBS_F7)
+
+# COMMON FLAGS
+CFLAGS=-Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
+CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
+LDFLAGS=-Os --specs=nano.specs
 
 # Build Rules
-.PHONY: all release dis pi nucleo debug clean
+.PHONY: all release dis pi nucleo clean
 
 # Default target: STM32F4 Nucleo F446RE board
 all: nucleo
 
 pi: GitVersion.h
-pi: CFLAGS+=$(DEFS_PI) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
-pi: CXXFLAGS+=$(DEFS_PI) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
-pi: LDFLAGS+=-Os --specs=nano.specs
+pi: CFLAGS+=$(CFLAGS_F4) $(DEFS_PI)
+pi: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_PI)
+pi: LDFLAGS+=$(LDFLAGS_F4)
 pi: release
 
 nucleo: GitVersion.h
-nucleo: CFLAGS+=$(DEFS_NUCLEO) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
-nucleo: CXXFLAGS+=$(DEFS_NUCLEO) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
-nucleo: LDFLAGS+=-Os --specs=nano.specs
+nucleo: CFLAGS+=$(CFLAGS_F4) $(DEFS_NUCLEO)
+nucleo: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_NUCLEO)
+nucleo: LDFLAGS+=$(LDFLAGS_F4)
 nucleo: release
 
 dis: GitVersion.h
-dis: CFLAGS+=$(DEFS_DIS) -Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
-dis: CXXFLAGS+=$(DEFS_DIS) -Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
-dis: LDFLAGS+=-Os --specs=nano.specs
+dis: CFLAGS+=$(CFLAGS_F4) $(DEFS_DIS)
+dis: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DIS)
+dis: LDFLAGS+=$(LDFLAGS_F4)
 dis: release
 
-debug: CFLAGS+=-g
-debug: CXXFLAGS+=-g
-debug: LDFLAGS+=-g
-debug: release
+f767: GitVersion.h
+f767: CFLAGS+=$(CFLAGS_F7) $(DEFS_NUCLEO_F767)
+f767: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_NUCLEO_F767)
+f767: LDFLAGS+=$(LDFLAGS_F7)
+f767: release
 
 release: $(BINDIR)
 release: $(BINDIR)/$(BINHEX)
@@ -164,15 +176,28 @@ clean:
 	
 deploy:
 ifneq ($(wildcard /usr/bin/openocd),)
-	/usr/bin/openocd -f /usr/share/openocd/scripts/board/stm32f4discovery.cfg -c "program bin/$(BINELF) verify reset exit"
+	/usr/bin/openocd -f /usr/share/openocd/scripts/interface/stlink-v2-1.cfg -f /usr/share/openocd/scripts/target/stm32f4x.cfg -c "program bin/$(BINELF) verify reset exit"
 endif
 
 ifneq ($(wildcard /usr/local/bin/openocd),)
-	/usr/local/bin/openocd -f /usr/local/share/openocd/scripts/board/stm32f4discovery.cfg -c "program bin/$(BINELF) verify reset exit"
+	/usr/local/bin/openocd -f /usr/local/share/openocd/scripts/interface/stlink-v2-1.cfg -f /usr/local/share/openocd/scripts/target/stm32f4x.cfg -c "program bin/$(BINELF) verify reset exit"
 endif
 
 ifneq ($(wildcard /opt/openocd/bin/openocd),)
-	/opt/openocd/bin/openocd -f /opt/openocd/share/openocd/scripts/board/stm32f4discovery.cfg -c "program bin/$(BINELF) verify reset exit"
+	/opt/openocd/bin/openocd -f /opt/openocd/share/openocd/scripts/interface/stlink-v2-1.cfg -f /opt/openocd/share/openocd/scripts/target/stm32f4x.cfg -c "program bin/$(BINELF) verify reset exit"
+endif
+
+deploy-f7:
+ifneq ($(wildcard /usr/bin/openocd),)
+	/usr/bin/openocd -f /usr/share/openocd/scripts/interface/stlink-v2-1.cfg -f /usr/share/openocd/scripts/target/stm32f7x.cfg -c "program bin/$(BINELF) verify reset exit"
+endif
+
+ifneq ($(wildcard /usr/local/bin/openocd),)
+	/usr/local/bin/openocd -f /usr/local/share/openocd/scripts/interface/stlink-v2-1.cfg -f /usr/local/share/openocd/scripts/target/stm32f7x.cfg -c "program bin/$(BINELF) verify reset exit"
+endif
+
+ifneq ($(wildcard /opt/openocd/bin/openocd),)
+	/opt/openocd/bin/openocd -f /opt/openocd/share/openocd/scripts/interface/stlink-v2-1.cfg -f /opt/openocd/share/openocd/scripts/target/stm32f7x.cfg -c "program bin/$(BINELF) verify reset exit"
 endif
 
 deploy-pi:
