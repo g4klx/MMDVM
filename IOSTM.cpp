@@ -764,4 +764,30 @@ void CIO::setP25Int(bool on)
 #endif
 }
 
+// Simple delay function for STM32
+// Example from: http://thehackerworkshop.com/?p=1209
+void CIO::delayInt(unsigned int dly)
+{
+#if defined(STM32F7_NUCLEO)
+  unsigned int loopsPerMillisecond = (SystemCoreClock/1000);
+#else
+  unsigned int loopsPerMillisecond = (SystemCoreClock/1000) / 3;
+#endif
+
+  for (; dly > 0; dly--)
+  {
+    asm volatile //this routine waits (approximately) one millisecond
+    (
+      "mov r3, %[loopsPerMillisecond] \n\t" //load the initial loop counter
+      "loop: \n\t"
+        "subs r3, #1 \n\t"
+        "bne loop \n\t"
+
+      : //empty output list
+      : [loopsPerMillisecond] "r" (loopsPerMillisecond) //input to the asm routine
+      : "r3", "cc" //clobber list
+    );
+  }
+}
+
 #endif
