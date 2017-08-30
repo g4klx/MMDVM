@@ -226,4 +226,9 @@ void CIO::setP25Int(bool on)
   digitalWrite(PIN_P25, on ? HIGH : LOW);
 }
 
+void CIO::delayInt(unsigned int dly)
+{
+  delay(dly);
+}
+
 #endif
