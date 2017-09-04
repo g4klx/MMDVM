@@ -415,4 +415,9 @@ void CIO::setP25Int(bool on)
   BB_P25 = !!on;
 }
 
+void CIO::delayInt(unsigned int dly)
+{
+  delay(dly);
+}
+
 #endif
