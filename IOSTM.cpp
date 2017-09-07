@@ -339,7 +339,7 @@ Pin definitions for STM32F7 Nucleo boards (ST Morpho header):
 
 PTT      PB13   output           CN10 Pin30
 COSLED   PB14   output           CN10 Pin28
-LED      PB0    output           CN10 Pin11
+LED      PA5    output           CN10 Pin11
 COS      PB15   input            CN10 Pin26
 
 DSTAR    PB10   output           CN10 Pin25
@@ -371,9 +371,9 @@ EXT_CLK  PA15   input            CN7 Pin18
 #define PORT_COSLED       GPIOB
 #define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
 
-#define PIN_LED           GPIO_Pin_0
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
+#define PIN_LED           GPIO_Pin_5
+#define PORT_LED          GPIOA
+#define RCC_Per_LED       RCC_AHB1Periph_GPIOA
 
 #define PIN_P25           GPIO_Pin_3
 #define PORT_P25          GPIOB
