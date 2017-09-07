@@ -178,10 +178,10 @@ COS      PB15   input            CN10 Pin26
 DSTAR    PB10   output           CN10 Pin25
 DMR      PB4    output           CN10 Pin27
 YSF      PB5    output           CN10 Pin29
-P25      PB3    output           CN10 Pin
+P25      PB3    output           CN10 Pin31
 
-MDSTAR   PC4    output           CN7 Pin34
-MDMR     PC5    output           CN7 Pin6
+MDSTAR   PC4    output           CN10 Pin34
+MDMR     PC5    output           CN10 Pin6
 MYSF     PC2    output           CN7 Pin35
 MP25     PC3    output           CN7 Pin37
 
@@ -189,7 +189,7 @@ RX       PA0    analog input     CN7 Pin28
 RSSI     PA1    analog input     CN7 Pin30
 TX       PA4    analog output    CN7 Pin32
 
-EXT_CLK  PA15   input            CN7 Pin18
+EXT_CLK  PA15   input            CN7 Pin17
 */
 
 #define PIN_COS           GPIO_Pin_15
@@ -337,26 +337,26 @@ EXT_CLK  PB8    input            CN5 Pin10
 /*
 Pin definitions for STM32F7 Nucleo boards (ST Morpho header):
 
-PTT      PB13   output           CN10 Pin30
-COSLED   PB14   output           CN10 Pin28
-LED      PA5    output           CN10 Pin11
-COS      PB15   input            CN10 Pin26
+PTT      PB13   output           CN12 Pin30
+COSLED   PB14   output           CN12 Pin28
+LED      PA5    output           CN12 Pin11
+COS      PB15   input            CN12 Pin26
 
-DSTAR    PB10   output           CN10 Pin25
-DMR      PB4    output           CN10 Pin27
-YSF      PB5    output           CN10 Pin29
-P25      PB3    output           CN10 Pin
+DSTAR    PB10   output           CN12 Pin25
+DMR      PB4    output           CN12 Pin27
+YSF      PB5    output           CN12 Pin29
+P25      PB3    output           CN12 Pin31
 
-MDSTAR   PC4    output           CN7 Pin34
-MDMR     PC5    output           CN7 Pin6
-MYSF     PC2    output           CN7 Pin35
-MP25     PC3    output           CN7 Pin37
+MDSTAR   PC4    output           CN12 Pin34
+MDMR     PC5    output           CN12 Pin6
+MYSF     PC2    output           CN11 Pin35
+MP25     PC3    output           CN11 Pin37
 
-RX       PA0    analog input     CN7 Pin28
-RSSI     PA1    analog input     CN7 Pin30
-TX       PA4    analog output    CN7 Pin32
+RX       PA0    analog input     CN11 Pin28
+RSSI     PA1    analog input     CN11 Pin30
+TX       PA4    analog output    CN11 Pin32
 
-EXT_CLK  PA15   input            CN7 Pin18
+EXT_CLK  PA15   input            CN11 Pin17
 */
 
 #define PIN_COS           GPIO_Pin_15
