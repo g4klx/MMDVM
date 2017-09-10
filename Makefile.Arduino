@@ -93,8 +93,7 @@ default:
 
 #This rule is good to just make sure stuff compiles, without having to wait
 #for bossac.
-compile: GitVersion.h
-compile: $(TMPDIR)/$(PROJNAME).elf
+compile: GitVersion.h $(TMPDIR)/$(PROJNAME).elf $(TMPDIR)/$(PROJNAME).bin
 
 #This is a make rule template to create object files from the source files.
 # arg 1=src file
@@ -175,7 +174,7 @@ $(TMPDIR)/$(PROJNAME).bin: $(TMPDIR)/$(PROJNAME).elf
 	$(OBJCOPY) -O binary $< $@
 
 #upload to the arduino by first resetting it (stty) and the running bossac
-upload: GitVersion.h $(TMPDIR)/$(PROJNAME).bin
+upload: compile
 	stty -F /dev/$(PORT) cs8 1200 hupcl
 	$(ADIR)/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i --port=$(PORT) -U false -e -w $(VERIFY) -b $(TMPDIR)/$(PROJNAME).bin -R
 
