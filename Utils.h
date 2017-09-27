@@ -21,10 +21,8 @@
 
 #if defined(STM32F4XX)
 #include "stm32f4xx.h"
-#include <cstddef>
 #elif defined(STM32F7XX)
 #include "stm32f7xx.h"
-#include <cstddef>
 #elif defined(STM32F105xC)
 #include "stm32f1xx.h"
 #include <cstddef>
