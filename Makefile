@@ -75,7 +75,6 @@ NM=arm-none-eabi-nm
 SIZE=arm-none-eabi-size
 A2L=arm-none-eabi-addr2line
 
-# Find source files
 # "SystemRoot" is only defined in Windows
 ifdef SYSTEMROOT
 	CLEANCMD=del /S *.o *.hex *.bin *.elf GitVersion.h
@@ -119,7 +118,7 @@ DEFS_DIS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_DISCOVERY
 DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # STM32F4 Nucleo-64 F446RE board:
 DEFS_NUCLEO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
-# STM32F7 Nucleo-144-F767ZI board:
+# STM32F7 Nucleo-144 F767ZI board:
 DEFS_NUCLEO_F767=-DUSE_HAL_DRIVER -DSTM32F767xx -DSTM32F7XX -DSTM32F7_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
 # Build compiler flags
@@ -140,7 +139,7 @@ LDFLAGS=-Os --specs=nano.specs
 # Build Rules
 .PHONY: all release dis pi nucleo f767 clean
 
-# Default target: STM32F4 Nucleo F446RE board
+# Default target: Nucleo-64 F446RE board
 all: nucleo
 
 pi: GitVersion.h
