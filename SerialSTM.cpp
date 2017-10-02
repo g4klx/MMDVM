@@ -27,14 +27,14 @@
 Pin definitions:
 
 - Host communication:
-USART1 - TXD PA9  - RXD PA10 (Pi board)
-USART2 - TXD PA2  - RXD PA3  (Nucleo board)
+USART1 - TXD PA9  - RXD PA10 (MMDVM-Pi board)
+USART2 - TXD PA2  - RXD PA3  (Nucleo64 F446RE board)
 USART3 - TXD PC10 - RXD PC11 (Discovery board)
+USART3 - TXD PD8  - RXD PD9  (Nucleo144 F767ZI board)
 
 - Serial repeater:
 USART1 - TXD PA9  - RXD PA10 (Nucleo with Arduino header)
-UART5  - TXD PC12 - RXD PD2 (Discovery, Pi and Nucleo with Morpho header)
-
+UART5  - TXD PC12 - RXD PD2 (Discovery, MMDVM-Pi, Nucleo64 with Morpho header and Nucleo144 F767ZI)
 */
 
 #if defined(STM32F4XX) || defined(STM32F7XX)
