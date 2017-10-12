@@ -27,8 +27,8 @@ static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0,
 const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
 
 // One symbol boxcar filter
-static q15_t   BOXCAR_FILTER[] = {12000, 12000, 12000, 12000, 12000, 0};
-const uint16_t BOXCAR_FILTER_LEN = 6U;
+static q15_t   BOXCAR_FILTER[] = {6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 0, 0};
+const uint16_t BOXCAR_FILTER_LEN = 12U;
 
 const uint16_t DC_OFFSET = 2048U;
 

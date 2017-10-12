@@ -19,7 +19,7 @@
 #if !defined(P25DEFINES_H)
 #define  P25DEFINES_H
 
-const unsigned int P25_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
+const unsigned int P25_RADIO_SYMBOL_LENGTH = 10U;      // At 48 kHz sample rate
 
 const unsigned int P25_HDR_FRAME_LENGTH_BYTES      = 99U;
 const unsigned int P25_HDR_FRAME_LENGTH_BITS       = P25_HDR_FRAME_LENGTH_BYTES * 8U;

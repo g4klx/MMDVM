@@ -1,0 +1,40 @@
+Jobs To Do
+----------
+
+1.  DC Offset coefficients
+2.  TX Filters:
+	 D-Star
+	 DMR
+	 YSF
+	 P25
+3.  TX Filter workspaces and clearing:
+	 D-Star
+	 DMR
+	 YSF
+	 P25
+4.  CW Id sine wave, silence and construction
+5.  RX Filters
+6.  RX Filter workspaces and clearing:
+	 D-Star
+	 DMR
+	 YSF
+	 P25
+7.  Sample ring buffer sizing
+	 RX
+	 TX
+8.  TX symbols.
+9.  DC Offset workspace and clearing.
+10. Hardware sample rates:
+	 Due
+	 STM32
+	 Teensy
+
+Jobs Done
+---------
+
+1.  Boxcar coefficients
+2.  Symbols lengths for:
+	 D-Star
+	 DMR
+	 YSF
+	 P25

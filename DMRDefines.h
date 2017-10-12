@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #if !defined(DMRDEFINES_H)
 #define  DMRDEFINES_H
 
-const unsigned int DMR_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
+const unsigned int DMR_RADIO_SYMBOL_LENGTH = 10U;      // At 48 kHz sample rate
 
 const unsigned int DMR_FRAME_LENGTH_BYTES   = 33U;
 const unsigned int DMR_FRAME_LENGTH_BITS    = DMR_FRAME_LENGTH_BYTES * 8U;
