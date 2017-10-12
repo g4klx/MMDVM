@@ -19,15 +19,8 @@ Jobs To Do
 	 DMR
 	 YSF
 	 P25
-7.  Sample ring buffer sizing
-	 RX
-	 TX
 8.  TX symbols.
 9.  DC Offset workspace and clearing.
-10. Hardware sample rates:
-	 Due
-	 STM32
-	 Teensy
 
 Jobs Done
 ---------
@@ -38,3 +31,10 @@ Jobs Done
 	 DMR
 	 YSF
 	 P25
+3.  Sample ring buffer sizing
+	 RX
+	 TX
+4.  Hardware sample rates:
+	 Due
+	 STM32
+	 Teensy

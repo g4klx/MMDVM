@@ -112,7 +112,7 @@ void CIO::startInt()
 #endif
 
 #if defined(EXTERNAL_OSC)
-  // Set ADC0 to trigger from the LPTMR at 24 kHz
+  // Set ADC0 to trigger from the LPTMR at 48 kHz
   SIM_SOPT7   = SIM_SOPT7_ADC0ALTTRGEN |                              // Enable ADC0 alternate trigger
                 SIM_SOPT7_ADC0TRGSEL(14);                             // Trigger ADC0 by LPTMR0
 
@@ -121,14 +121,14 @@ void CIO::startInt()
   SIM_SCGC5  |= SIM_SCGC5_LPTIMER;                                    // Enable Low Power Timer Access
   LPTMR0_CSR  = 0;                                                    // Disable
   LPTMR0_PSR  = LPTMR_PSR_PBYP;                                       // Bypass prescaler/filter
-  LPTMR0_CMR  = (EXTERNAL_OSC / 24000) - 1;                           // Frequency divided by CMR + 1
+  LPTMR0_CMR  = (EXTERNAL_OSC / 48000) - 1;                           // Frequency divided by CMR + 1
   LPTMR0_CSR  = LPTMR_CSR_TPS(2) |                                    // Pin: 0=CMP0, 1=xtal, 2=pin13
                 LPTMR_CSR_TMS;                                        // Mode Select, 0=timer, 1=counter
   LPTMR0_CSR |= LPTMR_CSR_TEN;                                        // Enable
 #else
-  // Setup PDB for ADC0 at 24 kHz
+  // Setup PDB for ADC0 at 48 kHz
   SIM_SCGC6  |= SIM_SCGC6_PDB;                                        // Enable PDB clock
-  PDB0_MOD    = (F_BUS / 24000) - 1;                                  // Timer period - 1
+  PDB0_MOD    = (F_BUS / 48000) - 1;                                  // Timer period - 1
   PDB0_IDLY   = 0;                                                    // Interrupt delay
   PDB0_CH0C1  = PDB_CHnC1_TOS | PDB_CHnC1_EN;                         // Enable pre-trigger for ADC0
   PDB0_SC     = PDB_SC_TRGSEL(15) | PDB_SC_PDBEN |                    // SW trigger, enable interrupts, continuous mode

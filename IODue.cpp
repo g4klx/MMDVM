@@ -140,11 +140,11 @@ void CIO::startInt()
     TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_CLEAR |
     TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_CLEAR;
 #if defined(EXTERNAL_OSC)
-  t->TC_RC  = EXTERNAL_OSC / 24000;           // Counter resets on RC, so sets period in terms of the external clock
-  t->TC_RA  = EXTERNAL_OSC / 48000;           // Roughly square wave
+  t->TC_RC  = EXTERNAL_OSC / 48000;           // Counter resets on RC, so sets period in terms of the external clock
+  t->TC_RA  = EXTERNAL_OSC / 96000;           // Roughly square wave
 #else
-  t->TC_RC  = 1750;                           // Counter resets on RC, so sets period in terms of 42MHz internal clock
-  t->TC_RA  = 880;                            // Roughly square wave
+  t->TC_RC  = 875;                            // Counter resets on RC, so sets period in terms of 42MHz internal clock
+  t->TC_RA  = 438;                            // Roughly square wave
 #endif
   t->TC_CMR = (t->TC_CMR & 0xFFF0FFFF) | TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET;  // Set clear and set from RA and RC compares
   t->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;    // re-enable local clocking and switch to hardware trigger source.
