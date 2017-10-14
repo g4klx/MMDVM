@@ -22,8 +22,8 @@
 #include "DMRSlotType.h"
 #include "Utils.h"
 
-const uint16_t SCAN_START = 400U;
-const uint16_t SCAN_END   = 490U;
+const uint16_t SCAN_START = 790U;
+const uint16_t SCAN_END   = 920U;
 
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
 
@@ -97,7 +97,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     return m_state != DMRRXS_NONE;
 
   // Ensure that the buffer doesn't overflow
-  if (m_dataPtr > m_endPtr || m_dataPtr >= 900U)
+  if (m_dataPtr > m_endPtr || m_dataPtr >= 1900U)
     return m_state != DMRRXS_NONE;
 
   m_buffer[m_dataPtr] = sample;

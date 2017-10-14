@@ -22,7 +22,7 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
-const uint16_t DMO_BUFFER_LENGTH_SAMPLES = 1440U;   // 60ms at 24 kHz
+const uint16_t DMO_BUFFER_LENGTH_SAMPLES = 2880U;   // 60ms at 48 kHz
 
 enum DMORX_STATE {
   DMORXS_NONE,
