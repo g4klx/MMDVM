@@ -40,7 +40,7 @@ public:
 private:
   CSerialRB                        m_buffer;
   arm_fir_interpolate_instance_q15 m_modFilter;
-  q15_t                            m_modState[20U];    // blockSize + phaseLength - 1, 8 + 9 - 1 plus some spare
+  q15_t                            m_modState[15U];    // blockSize + phaseLength - 1, 8 + 3 - 1 plus some spare
   uint8_t                          m_poBuffer[600U];
   uint16_t                         m_poLen;
   uint16_t                         m_poPtr;
