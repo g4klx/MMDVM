@@ -23,7 +23,7 @@
 #include "IO.h"
 
 // Generated using [b, a] = butter(1, 0.001) in MATLAB
-static q31_t   DC_FILTER[] = {3367972, 0, 3367972, 0, 2140747704, 0}; // {b0, 0, b1, b2, -a1, -a2}
+static q31_t   DC_FILTER[] = {1685306, 0, 1685306, 0, 2144113034, 0}; // {b0, 0, b1, b2, -a1, -a2}
 const uint32_t DC_FILTER_STAGES = 1U; // One Biquad stage
 
 // One symbol boxcar filter

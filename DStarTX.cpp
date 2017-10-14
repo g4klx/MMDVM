@@ -27,8 +27,10 @@ const uint8_t BIT_SYNC = 0xAAU;
 
 const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 
-// Generated using gaussfir(0.35, 1, 5) in MATLAB
-static q15_t GAUSSIAN_0_35_FILTER[] = {0, 0, 0, 0, 1001, 3514, 9333, 18751, 28499, 32767, 28499, 18751, 9333, 3514, 1001}; // numTaps = 15, L = 5
+// Generated using gaussfir(0.35, 1, 10) in MATLAB
+static q15_t GAUSSIAN_0_35_FILTER[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1001, 1942, 3514, 5930,
+                                      9333, 13699, 18751, 23938, 28499, 31644, 32767, 31644,
+                                      28499, 23938, 18751, 13699, 9333, 5930, 3514, 1942, 1001}; // numTaps = 30, L = 10
 const uint16_t GAUSSIAN_0_35_FILTER_PHASE_LEN = 3U; // phaseLength = numTaps/L
 
 const q15_t DSTAR_LEVEL0 = -841;
@@ -196,7 +198,7 @@ m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(60U)       // 100ms
 {
-  ::memset(m_modState, 0x00U, 20U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 15U * sizeof(q15_t));
 
   m_modFilter.L           = DSTAR_RADIO_SYMBOL_LENGTH;
   m_modFilter.phaseLength = GAUSSIAN_0_35_FILTER_PHASE_LEN;
