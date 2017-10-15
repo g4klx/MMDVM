@@ -668,7 +668,7 @@ void CSerialPort::process()
     }
   }
 
-  if (io.getWatchdog() >= 48000U) {
+  if (io.getWatchdog() >= 96000U) {
     m_ptr = 0U;
     m_len = 0U;
   }
