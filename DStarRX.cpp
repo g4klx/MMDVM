@@ -381,10 +381,10 @@ void CDStarRX::processHeader(q15_t sample)
     m_frameCount = 0U;
     m_dataPtr    = 0U;
 
-    m_startPtr   = 476U;
-    m_syncPtr    = 471U;
-    m_maxSyncPtr = 472U;
-    m_minSyncPtr = 470U;
+    m_startPtr   = 952U;
+    m_syncPtr    = 942U;
+    m_maxSyncPtr = 944U;
+    m_minSyncPtr = 940U;
 
     DEBUG5("DStarRX: calc start/sync/max/min", m_startPtr, m_syncPtr, m_maxSyncPtr, m_minSyncPtr);
 
