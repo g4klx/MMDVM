@@ -628,7 +628,7 @@ void CIO::startInt()
    // Init the timer
    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
-#if defined(EXTERNAL_OSC)
+#if defined(EXTERNAL_OSC) && !defined(STM32F4_PI)
    // Configure a GPIO as external TIM2 clock source
    GPIO_PinAFConfig(PORT_EXT_CLK, SRC_EXT_CLK, GPIO_AF_TIM2);
    GPIO_InitStruct.GPIO_Pin = PIN_EXT_CLK;
@@ -640,7 +640,7 @@ void CIO::startInt()
    TIM_TimeBaseStructInit (&timerInitStructure);
 
    // TIM2 output frequency
-#if defined(EXTERNAL_OSC)
+#if defined(EXTERNAL_OSC) && !defined(STM32F4_PI)
    timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/(2*SAMP_FREQ)) - 1);
 #else
    timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(4*SAMP_FREQ)) - 1);
@@ -652,7 +652,7 @@ void CIO::startInt()
    timerInitStructure.TIM_RepetitionCounter = 0;
    TIM_TimeBaseInit(TIM2, &timerInitStructure);
 
-#if defined(EXTERNAL_OSC)
+#if defined(EXTERNAL_OSC) && !defined(STM32F4_PI)
    // Enable external clock
    TIM_ETRClockMode2Config(TIM2, TIM_ExtTRGPSC_OFF, TIM_ExtTRGPolarity_NonInverted, 0x00);
 #else
