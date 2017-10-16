@@ -642,12 +642,13 @@ void CIO::startInt()
    // TIM2 output frequency
 #if defined(EXTERNAL_OSC) && !defined(STM32F4_PI)
    timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/(2*SAMP_FREQ)) - 1);
+   timerInitStructure.TIM_Period = 1;
 #else
-   timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(4*SAMP_FREQ)) - 1);
+   timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(6*SAMP_FREQ)) - 1);
+   timerInitStructure.TIM_Period = 2;
 #endif
 
    timerInitStructure.TIM_CounterMode       = TIM_CounterMode_Up;
-   timerInitStructure.TIM_Period            = 1;
    timerInitStructure.TIM_ClockDivision     = TIM_CKD_DIV1;
    timerInitStructure.TIM_RepetitionCounter = 0;
    TIM_TimeBaseInit(TIM2, &timerInitStructure);

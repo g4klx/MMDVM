@@ -167,7 +167,7 @@ void CIO::process()
   m_ledCount++;
   if (m_started) {
     // Two seconds timeout
-    if (m_watchdog >= 48000U) {
+    if (m_watchdog >= 96000U) {
       if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF) {
         if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
@@ -178,13 +178,13 @@ void CIO::process()
       m_watchdog = 0U;
     }
 
-    if (m_ledCount >= 24000U) {
+    if (m_ledCount >= 48000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
       setLEDInt(m_ledValue);
     }
   } else {
-    if (m_ledCount >= 240000U) {
+    if (m_ledCount >= 480000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
       setLEDInt(m_ledValue);

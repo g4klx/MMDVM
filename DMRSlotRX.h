@@ -44,7 +44,7 @@ public:
 private:
   bool        m_slot;
   uint32_t    m_bitBuffer[DMR_RADIO_SYMBOL_LENGTH];
-  q15_t       m_buffer[900U];
+  q15_t       m_buffer[1900U];
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
   uint16_t    m_syncPtr;
@@ -62,7 +62,7 @@ private:
   DMRRX_STATE m_state;
   uint8_t     m_n;
   uint8_t     m_type;
-  uint16_t    m_rssi[900U];
+  uint16_t    m_rssi[1900U];
 
   void correlateSync(bool first);
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
