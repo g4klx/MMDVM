@@ -281,7 +281,6 @@ ifneq ($(wildcard /opt/openocd/bin/openocd),)
 endif
 
 deploy-pi:
-deploy-f4m:
 ifneq ($(wildcard /usr/local/bin/stm32flash),)
 	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
 	-/usr/local/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F4)
@@ -293,6 +292,8 @@ ifneq ($(wildcard /usr/bin/stm32flash),)
 	-/usr/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F4)
 	/usr/bin/stm32flash -v -w bin/$(BINBIN_F4) -g 0x0 -R -c /dev/ttyAMA0
 endif
+
+deploy-f4m: deploy-pi
 
 # Export the current git version if the index file exists, else 000...
 GitVersion.h:
