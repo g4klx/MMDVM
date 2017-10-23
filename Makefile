@@ -116,6 +116,8 @@ MCFLAGS_F7=-mcpu=cortex-m7 -mthumb -mlittle-endian -mfpu=fpv5-sp-d16 -mfloat-abi
 DEFS_DIS=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_DISCOVERY -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # MMDVM-Pi board:
 DEFS_PI=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# MMDVM-F4M F0DEI board:
+DEFS_F4M=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_F4M -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # STM32F4 Nucleo-64 F446RE board:
 DEFS_NUCLEO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # STM32F7 Nucleo-144 F767ZI board:
@@ -137,7 +139,7 @@ CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -f
 LDFLAGS=-Os --specs=nano.specs
 
 # Build Rules
-.PHONY: all release dis pi nucleo f767 clean
+.PHONY: all release dis pi f4m nucleo f767 clean
 
 # Default target: Nucleo-64 F446RE board
 all: nucleo
@@ -147,6 +149,12 @@ pi: CFLAGS+=$(CFLAGS_F4) $(DEFS_PI)
 pi: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_PI)
 pi: LDFLAGS+=$(LDFLAGS_F4)
 pi: release_f4
+
+f4m: GitVersion.h
+f4m: CFLAGS+=$(CFLAGS_F4) $(DEFS_F4M)
+f4m: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_F4M)
+f4m: LDFLAGS+=$(LDFLAGS_F4)
+f4m: release_f4
 
 nucleo: GitVersion.h
 nucleo: CFLAGS+=$(CFLAGS_F4) $(DEFS_NUCLEO)
@@ -273,6 +281,7 @@ ifneq ($(wildcard /opt/openocd/bin/openocd),)
 endif
 
 deploy-pi:
+deploy-f4m:
 ifneq ($(wildcard /usr/local/bin/stm32flash),)
 	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
 	-/usr/local/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F4)
