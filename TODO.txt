@@ -1,27 +1,6 @@
 Jobs To Do
 ----------
 
-1.  DC Offset coefficients
-2.  TX Filters:
-	 D-Star
-	 DMR
-	 YSF
-	 P25
-3.  TX Filter workspaces and clearing:
-	 D-Star
-	 DMR
-	 YSF
-	 P25
-4.  CW Id sine wave, silence and construction
-5.  RX Filters
-6.  RX Filter workspaces and clearing:
-	 D-Star
-	 DMR
-	 YSF
-	 P25
-8.  TX symbols.
-9.  DC Offset workspace and clearing.
-
 Jobs Done
 ---------
 
@@ -38,3 +17,25 @@ Jobs Done
 	 Due
 	 STM32
 	 Teensy
+5.  DC Offset coefficients
+6.  TX Filters:
+	 D-Star
+	 DMR
+	 YSF
+	 P25
+7.  TX Filter workspaces and clearing:
+	 D-Star
+	 DMR
+	 YSF
+	 P25
+8.  CW Id sine wave, silence and construction
+9.  RX Filters
+10. RX Filter workspaces and clearing:
+	 D-Star
+	 DMR
+	 YSF
+	 P25
+11. TX symbols.
+12. DC Offset workspace and clearing.
+13. DMR magic numbers.
+14. Watchdog values.
