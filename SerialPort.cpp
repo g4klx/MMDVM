@@ -221,7 +221,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-  if (length < 14U)
+  if (length < 15U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -269,6 +269,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   uint8_t p25TXLevel   = data[12U];
 
   int16_t txDCOffset = int16_t(data[13U]) - 128;
+  int16_t rxDCOffset = int16_t(data[14U]) - 128;
 
   m_modemState  = modemState;
 
@@ -291,7 +292,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   ysfTX.setLoDev(ysfLoDev);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, txDCOffset);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, txDCOffset, rxDCOffset);
 
   io.start();
 
