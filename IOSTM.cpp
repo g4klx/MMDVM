@@ -164,6 +164,76 @@ EXT_CLK  PA15   input
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1
 
+#elif defined(STM32F722_PI)
+/*
+Pin definitions for STM32F722 Pi Board:
+
+PTT      PB13   output
+COSLED   PB14   output
+LED      PB15   output
+COS      PC0    input
+
+DSTAR    PC7    output
+DMR      PC8    output
+YSF      PA8    output
+P25      PC9    output
+
+RX       PA0    analog input
+RSSI     PA7    analog input
+TX       PA4    analog output
+
+EXT_CLK  PA15   input
+*/
+
+#define PIN_COS           GPIO_Pin_0
+#define PORT_COS          GPIOC
+#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
+
+#define PIN_PTT           GPIO_Pin_13
+#define PORT_PTT          GPIOB
+#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
+
+#define PIN_COSLED        GPIO_Pin_14
+#define PORT_COSLED       GPIOB
+#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
+
+#define PIN_LED           GPIO_Pin_15
+#define PORT_LED          GPIOB
+#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
+
+#define PIN_P25           GPIO_Pin_9
+#define PORT_P25          GPIOC
+#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
+
+#define PIN_DSTAR         GPIO_Pin_7
+#define PORT_DSTAR        GPIOC
+#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOC
+
+#define PIN_DMR           GPIO_Pin_8
+#define PORT_DMR          GPIOC
+#define RCC_Per_DMR       RCC_AHB1Periph_GPIOC
+
+#define PIN_YSF           GPIO_Pin_8
+#define PORT_YSF          GPIOA
+#define RCC_Per_YSF       RCC_AHB1Periph_GPIOA
+
+#define PIN_EXT_CLK       GPIO_Pin_15
+#define SRC_EXT_CLK       GPIO_PinSource15
+#define PORT_EXT_CLK      GPIOA
+
+#define PIN_RX            GPIO_Pin_0
+#define PIN_RX_CH         ADC_Channel_0
+#define PORT_RX           GPIOA
+#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
+
+#define PIN_RSSI          GPIO_Pin_7
+#define PIN_RSSI_CH       ADC_Channel_7
+#define PORT_RSSI         GPIOA
+#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
+
+#define PIN_TX            GPIO_Pin_4
+#define PIN_TX_CH         DAC_Channel_1
+
 #elif defined(STM32F4_F4M)
 /*
 Pin definitions for MMDVM-F4M Pi-Hat F0DEI board:
@@ -497,7 +567,7 @@ EXT_CLK  PA15   input            CN11 Pin17
 #define PIN_TX_CH         DAC_Channel_1
 
 #else
-#error "Either STM32F4_DISCOVERY, STM32F4_PI, STM32F4_F4M, STM32F4_NUCLEO or STM32F7_NUCLEO need to be defined"
+#error "Either STM32F4_DISCOVERY, STM32F4_PI, STM32F722_PI, STM32F4_F4M, STM32F4_NUCLEO or STM32F7_NUCLEO need to be defined"
 #endif
 
 const uint16_t DC_OFFSET = 2048U;
@@ -698,7 +768,7 @@ void CIO::startInt()
    // Init the timer
    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
-#if defined(EXTERNAL_OSC) && !defined(STM32F4_PI)
+#if defined(EXTERNAL_OSC) && !(defined(STM32F4_PI) || defined(STM32F722_PI))
    // Configure a GPIO as external TIM2 clock source
    GPIO_PinAFConfig(PORT_EXT_CLK, SRC_EXT_CLK, GPIO_AF_TIM2);
    GPIO_InitStruct.GPIO_Pin = PIN_EXT_CLK;
@@ -710,7 +780,7 @@ void CIO::startInt()
    TIM_TimeBaseStructInit (&timerInitStructure);
 
    // TIM2 output frequency
-#if defined(EXTERNAL_OSC) && !defined(STM32F4_PI)
+#if defined(EXTERNAL_OSC) && !(defined(STM32F4_PI) || defined(STM32F722_PI))
    timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/(2*SAMP_FREQ)) - 1);
    timerInitStructure.TIM_Period = 1;
 #else
@@ -723,7 +793,7 @@ void CIO::startInt()
    timerInitStructure.TIM_RepetitionCounter = 0;
    TIM_TimeBaseInit(TIM2, &timerInitStructure);
 
-#if defined(EXTERNAL_OSC) && !defined(STM32F4_PI)
+#if defined(EXTERNAL_OSC) && !(defined(STM32F4_PI) || defined(STM32F722_PI))
    // Enable external clock
    TIM_ETRClockMode2Config(TIM2, TIM_ExtTRGPSC_OFF, TIM_ExtTRGPolarity_NonInverted, 0x00);
 #else

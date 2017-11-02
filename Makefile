@@ -122,6 +122,8 @@ DEFS_F4M=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_F4M -DHSE_VA
 DEFS_NUCLEO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # STM32F7 Nucleo-144 F767ZI board:
 DEFS_NUCLEO_F767=-DUSE_HAL_DRIVER -DSTM32F767xx -DSTM32F7XX -DSTM32F7_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# MMDVM-Pi F722 board:
+DEFS_PI_F722=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
 # Build compiler flags
 CFLAGS_F4=-c $(MCFLAGS_F4) $(INCLUDES_F4)
@@ -139,7 +141,7 @@ CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -f
 LDFLAGS=-Os --specs=nano.specs
 
 # Build Rules
-.PHONY: all release dis pi f4m nucleo f767 clean
+.PHONY: all release dis pi pi_f722 f4m nucleo f767 clean
 
 # Default target: Nucleo-64 F446RE board
 all: nucleo
@@ -149,6 +151,12 @@ pi: CFLAGS+=$(CFLAGS_F4) $(DEFS_PI)
 pi: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_PI)
 pi: LDFLAGS+=$(LDFLAGS_F4)
 pi: release_f4
+
+pi-f722: GitVersion.h
+pi-f722: CFLAGS+=$(CFLAGS_F7) $(DEFS_PI_F722)
+pi-f722: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_PI_F722)
+pi-f722: LDFLAGS+=$(LDFLAGS_F7)
+pi-f722: release_f7
 
 f4m: GitVersion.h
 f4m: CFLAGS+=$(CFLAGS_F4) $(DEFS_F4M)
@@ -294,6 +302,19 @@ ifneq ($(wildcard /usr/bin/stm32flash),)
 endif
 
 deploy-f4m: deploy-pi
+
+deploy-pi-f7:
+ifneq ($(wildcard /usr/local/bin/stm32flash),)
+	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
+	-/usr/local/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F7)
+	/usr/local/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
+endif
+
+ifneq ($(wildcard /usr/bin/stm32flash),)
+	-/usr/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
+	-/usr/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F7)
+	/usr/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
+endif
 
 # Export the current git version if the index file exists, else 000...
 GitVersion.h:
