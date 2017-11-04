@@ -91,6 +91,8 @@ endif
 ifndef $(OSC)
 	ifeq ($(MAKECMDGOALS),pi)
 		OSC=$(CLK_MMDVM_PI)
+	else ifeq ($(MAKECMDGOALS),pi-f722)
+		OSC=$(CLK_MMDVM_PI)
 	else
 		OSC=$(CLK_NUCLEO)
 	endif
@@ -133,7 +135,8 @@ CXXFLAGS_F7=-c $(MCFLAGS_F7) $(INCLUDES_F7)
 
 # Linker flags
 LDFLAGS_F4 =-T stm32f4xx_link.ld $(MCFLAGS_F4) --specs=nosys.specs $(INCLUDES_LIBS_F4)
-LDFLAGS_F7 =-T stm32f7xx_link.ld $(MCFLAGS_F7) --specs=nosys.specs $(INCLUDES_LIBS_F7)
+LDFLAGS_F767 =-T stm32f767_link.ld $(MCFLAGS_F7) --specs=nosys.specs $(INCLUDES_LIBS_F7)
+LDFLAGS_F722 =-T stm32f722_link.ld $(MCFLAGS_F7) --specs=nosys.specs $(INCLUDES_LIBS_F7)
 
 # Common flags
 CFLAGS=-Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
@@ -155,7 +158,7 @@ pi: release_f4
 pi-f722: GitVersion.h
 pi-f722: CFLAGS+=$(CFLAGS_F7) $(DEFS_PI_F722)
 pi-f722: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_PI_F722)
-pi-f722: LDFLAGS+=$(LDFLAGS_F7)
+pi-f722: LDFLAGS+=$(LDFLAGS_F722)
 pi-f722: release_f7
 
 f4m: GitVersion.h
@@ -179,7 +182,7 @@ dis: release_f4
 f767: GitVersion.h
 f767: CFLAGS+=$(CFLAGS_F7) $(DEFS_NUCLEO_F767)
 f767: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_NUCLEO_F767)
-f767: LDFLAGS+=$(LDFLAGS_F7)
+f767: LDFLAGS+=$(LDFLAGS_F767)
 f767: release_f7
 
 release_f4: $(BINDIR)
