@@ -909,7 +909,7 @@ void CIO::setP25Int(bool on)
 // Example from: http://thehackerworkshop.com/?p=1209
 void CIO::delayInt(unsigned int dly)
 {
-#if defined(STM32F7_NUCLEO)
+#if defined(STM32F7XX)
   unsigned int loopsPerMillisecond = (SystemCoreClock/1000);
 #else
   unsigned int loopsPerMillisecond = (SystemCoreClock/1000) / 3;
