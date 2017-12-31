@@ -93,7 +93,7 @@ void loop()
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();
 
-  if (m_modemState == STATE_DMRCAL)
+  if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL)
     calDMR.process();
 
 	if (m_modemState == STATE_IDLE)

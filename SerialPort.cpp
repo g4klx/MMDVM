@@ -243,7 +243,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   MMDVM_STATE modemState = MMDVM_STATE(data[3U]);
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !dstarEnable)
     return 4U;
@@ -309,7 +309,7 @@ uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
   if (modemState == m_modemState)
     return 0U;
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !m_dstarEnable)
     return 4U;
@@ -384,6 +384,16 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       break;
     case STATE_RSSICAL:
       DEBUG1("Mode set to RSSI Calibrate");
+      dmrIdleRX.reset();
+      dmrDMORX.reset();
+      dmrRX.reset();
+      dstarRX.reset();
+      ysfRX.reset();
+      p25RX.reset();
+      cwIdTX.reset();
+      break;
+    case STATE_LFCAL:
+      DEBUG1("Mode set to 80 Hz Calibrate");
       dmrIdleRX.reset();
       dmrDMORX.reset();
       dmrRX.reset();
@@ -473,7 +483,7 @@ void CSerialPort::process()
           case MMDVM_CAL_DATA:
             if (m_modemState == STATE_DSTARCAL)
               err = calDStarTX.write(m_buffer + 3U, m_len - 3U);
-            if (m_modemState == STATE_DMRCAL)
+            if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL)
               err = calDMR.write(m_buffer + 3U, m_len - 3U);
             if (err == 0U) {
               sendACK();
