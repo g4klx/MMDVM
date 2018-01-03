@@ -23,16 +23,32 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
+enum DMR1KCAL {
+  DMR1KCAL_IDLE,
+  DMR1KCAL_DATALC,
+  DMR1KCAL_V0,
+  DMR1KCAL_V1,
+  DMR1KCAL_V2,
+  DMR1KCAL_V3,
+  DMR1KCAL_V4,
+  DMR1KCAL_V5,
+  DMR1KCAL_TERMLC,
+  DMR1KCAL_WAIT
+};
+
 class CCalDMR {
 public:
   CCalDMR();
 
   void process();
+  void dmr1kcal();
 
   uint8_t write(const uint8_t* data, uint8_t length);
 
 private:
-  bool m_transmit;
+  bool      m_transmit;
+  DMR1KCAL  m_state;
+  uint32_t  m_frame_start;
 };
 
 #endif

@@ -74,7 +74,7 @@ void loop()
   if (m_dstarEnable && m_modemState == STATE_DSTAR)
     dstarTX.process();
 
-  if (m_dmrEnable && m_modemState == STATE_DMR) {
+  if ((m_dmrEnable && m_modemState == STATE_DMR) || m_modemState == STATE_DMR1KCAL) {
     if (m_duplex)
       dmrTX.process();
     else
@@ -90,7 +90,7 @@ void loop()
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();
 
-  if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL)
+  if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMR1KCAL)
     calDMR.process();
 
   if (m_modemState == STATE_IDLE)
