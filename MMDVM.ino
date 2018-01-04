@@ -74,7 +74,7 @@ void loop()
   if (m_dstarEnable && m_modemState == STATE_DSTAR)
     dstarTX.process();
 
-  if ((m_dmrEnable && m_modemState == STATE_DMR) || m_modemState == STATE_DMR1KCAL) {
+  if (m_dmrEnable && m_modemState == STATE_DMR) {
     if (m_duplex)
       dmrTX.process();
     else

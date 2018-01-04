@@ -26,12 +26,7 @@
 enum DMR1KCAL {
   DMR1KCAL_IDLE,
   DMR1KCAL_DATALC,
-  DMR1KCAL_V0,
-  DMR1KCAL_V1,
-  DMR1KCAL_V2,
-  DMR1KCAL_V3,
-  DMR1KCAL_V4,
-  DMR1KCAL_V5,
+  DMR1KCAL_VOICE,
   DMR1KCAL_TERMLC,
   DMR1KCAL_WAIT
 };
@@ -42,6 +37,7 @@ public:
 
   void process();
   void dmr1kcal();
+  void createData1k(uint8_t n);
 
   uint8_t write(const uint8_t* data, uint8_t length);
 
@@ -49,6 +45,8 @@ private:
   bool      m_transmit;
   DMR1KCAL  m_state;
   uint32_t  m_frame_start;
+  uint8_t   m_dmr1k[DMR_FRAME_LENGTH_BYTES + 1U];
+  uint8_t   m_rfN;
 };
 
 #endif
