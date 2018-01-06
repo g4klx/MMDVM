@@ -23,16 +23,30 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
+enum DMR1KCAL {
+  DMR1KCAL_IDLE,
+  DMR1KCAL_VH,
+  DMR1KCAL_VOICE,
+  DMR1KCAL_VT,
+  DMR1KCAL_WAIT
+};
+
 class CCalDMR {
 public:
   CCalDMR();
 
   void process();
+  void dmr1kcal();
+  void createData1k(uint8_t n);
 
   uint8_t write(const uint8_t* data, uint8_t length);
 
 private:
-  bool m_transmit;
+  bool      m_transmit;
+  DMR1KCAL  m_state;
+  uint32_t  m_frame_start;
+  uint8_t   m_dmr1k[DMR_FRAME_LENGTH_BYTES + 1U];
+  uint8_t   m_audioSeq;
 };
 
 #endif
