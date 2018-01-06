@@ -25,9 +25,9 @@
 
 enum DMR1KCAL {
   DMR1KCAL_IDLE,
-  DMR1KCAL_DATALC,
+  DMR1KCAL_VH,
   DMR1KCAL_VOICE,
-  DMR1KCAL_TERMLC,
+  DMR1KCAL_VT,
   DMR1KCAL_WAIT
 };
 
@@ -46,7 +46,7 @@ private:
   DMR1KCAL  m_state;
   uint32_t  m_frame_start;
   uint8_t   m_dmr1k[DMR_FRAME_LENGTH_BYTES + 1U];
-  uint8_t   m_rfN;
+  uint8_t   m_audioSeq;
 };
 
 #endif
