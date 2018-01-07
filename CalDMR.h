@@ -23,12 +23,12 @@
 #include "Config.h"
 #include "DMRDefines.h"
 
-enum DMR1KCAL {
-  DMR1KCAL_IDLE,
-  DMR1KCAL_VH,
-  DMR1KCAL_VOICE,
-  DMR1KCAL_VT,
-  DMR1KCAL_WAIT
+enum DMRCAL1K {
+  DMRCAL1K_IDLE,
+  DMRCAL1K_VH,
+  DMRCAL1K_VOICE,
+  DMRCAL1K_VT,
+  DMRCAL1K_WAIT
 };
 
 class CCalDMR {
@@ -43,7 +43,7 @@ public:
 
 private:
   bool      m_transmit;
-  DMR1KCAL  m_state;
+  DMRCAL1K  m_state;
   uint32_t  m_frame_start;
   uint8_t   m_dmr1k[DMR_FRAME_LENGTH_BYTES + 1U];
   uint8_t   m_audioSeq;

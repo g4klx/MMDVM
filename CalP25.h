@@ -20,6 +20,7 @@
 #define  CALP25_H
 
 #include "Config.h"
+#include "P25Defines.h"
 
 enum P25CAL1K {
   P25CAL1K_IDLE,
