@@ -55,7 +55,7 @@ const uint8_t SHORTLC_1K[] = {0x33U, 0x3AU, 0xA0U, 0x30U, 0x00U, 0x55U, 0xA6U, 0
 
 CCalDMR::CCalDMR() :
 m_transmit(false),
-m_state(DMR1KCAL_IDLE),
+m_state(DMRCAL1K_IDLE),
 m_frame_start(0U),
 m_dmr1k(),
 m_audioSeq(0)
@@ -75,7 +75,7 @@ void CCalDMR::process()
         dmrTX.setCal(false);
       }
       break;
-    case STATE_DMR1KCAL:
+    case STATE_DMRCAL1K:
       dmr1kcal();
       break;
     default:
@@ -103,38 +103,38 @@ void CCalDMR::dmr1kcal()
     return;
 
   switch (m_state) {
-    case DMR1KCAL_VH:
+    case DMRCAL1K_VH:
       dmrTX.setColorCode(1U);
       dmrTX.writeShortLC(SHORTLC_1K, 9U);
       dmrTX.writeData2(VH_1K, DMR_FRAME_LENGTH_BYTES + 1U);
       dmrTX.setStart(true);
-      m_state = DMR1KCAL_VOICE;
+      m_state = DMRCAL1K_VOICE;
       break;
-    case DMR1KCAL_VOICE:
+    case DMRCAL1K_VOICE:
       createData1k(m_audioSeq);
       dmrTX.writeData2(m_dmr1k, DMR_FRAME_LENGTH_BYTES + 1U);
       if(m_audioSeq == 5U) {
         m_audioSeq = 0U;
         if(!m_transmit)
-          m_state = DMR1KCAL_VT;
+          m_state = DMRCAL1K_VT;
       } else
         m_audioSeq++;
       break;
-    case DMR1KCAL_VT:
+    case DMRCAL1K_VT:
       dmrTX.writeData2(VT_1K, DMR_FRAME_LENGTH_BYTES + 1U);
       m_frame_start = dmrTX.getFrameCount();
-      m_state = DMR1KCAL_WAIT;
+      m_state = DMRCAL1K_WAIT;
       break;
-    case DMR1KCAL_WAIT:
+    case DMRCAL1K_WAIT:
       if (dmrTX.getFrameCount() > (m_frame_start + 30U)) {
         dmrTX.setStart(false);
         dmrTX.resetFifo2();
         m_audioSeq = 0U;
-        m_state = DMR1KCAL_IDLE;
+        m_state = DMRCAL1K_IDLE;
       }
       break;
     default:
-        m_state = DMR1KCAL_IDLE;
+        m_state = DMRCAL1K_IDLE;
       break;
   }
 }
@@ -146,8 +146,8 @@ uint8_t CCalDMR::write(const uint8_t* data, uint8_t length)
 
   m_transmit = data[0U] == 1U;
 
-  if(m_transmit && m_state == DMR1KCAL_IDLE && m_modemState == STATE_DMR1KCAL)
-    m_state = DMR1KCAL_VH;
+  if(m_transmit && m_state == DMRCAL1K_IDLE && m_modemState == STATE_DMRCAL1K)
+    m_state = DMRCAL1K_VH;
 
   return 0U;
 }
