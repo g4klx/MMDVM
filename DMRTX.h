@@ -48,7 +48,11 @@ public:
   void setCal(bool start);
 
   void process();
-
+  
+  void resetFifo1();
+  void resetFifo2();
+  uint32_t getFrameCount();
+  
   uint8_t getSpace1() const;
   uint8_t getSpace2() const;
 

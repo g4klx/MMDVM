@@ -395,3 +395,17 @@ void CDMRTX::setColorCode(uint8_t colorCode)
   slotType.encode(colorCode, DT_IDLE, m_idle);
 }
 
+void CDMRTX::resetFifo1()
+{
+  m_fifo[0U].reset();
+}
+
+void CDMRTX::resetFifo2()
+{
+  m_fifo[1U].reset();
+}
+
+uint32_t CDMRTX::getFrameCount()
+{
+  return m_frameCount;
+}
