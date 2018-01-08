@@ -1,6 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
- *   Copyright (C) 2016 by Colin Durbridge G4EML
+ *   Copyright (C) 2018 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,36 +16,29 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(CALDMR_H)
-#define  CALDMR_H
+#if !defined(CALP25_H)
+#define  CALP25_H
 
 #include "Config.h"
-#include "DMRDefines.h"
+#include "P25Defines.h"
 
-enum DMRCAL1K {
-  DMRCAL1K_IDLE,
-  DMRCAL1K_VH,
-  DMRCAL1K_VOICE,
-  DMRCAL1K_VT,
-  DMRCAL1K_WAIT
+enum P25CAL1K {
+  P25CAL1K_IDLE,
+  P25CAL1K_LDU1,
+  P25CAL1K_LDU2
 };
 
-class CCalDMR {
+class CCalP25 {
 public:
-  CCalDMR();
+  CCalP25();
 
   void process();
-  void dmr1kcal();
-  void createData1k(uint8_t n);
 
   uint8_t write(const uint8_t* data, uint8_t length);
 
 private:
   bool      m_transmit;
-  DMRCAL1K  m_state;
-  uint32_t  m_frame_start;
-  uint8_t   m_dmr1k[DMR_FRAME_LENGTH_BYTES + 1U];
-  uint8_t   m_audioSeq;
+  P25CAL1K  m_state;
 };
 
 #endif

@@ -290,6 +290,9 @@ static inline void ADCInit()
   
   // Trigger first conversion
   ADC1->CR2 |= ADC_CR2_ADON;
+#if defined(SEND_RSSI_DATA)
+  ADC2->CR2 |= ADC_CR2_ADON;
+#endif
 }
 
 
@@ -355,10 +358,16 @@ void CIO::interrupt()
   uint16_t rawRSSI = 0U;
   bitband_t eoc = (bitband_t)BITBAND_PERIPH(&ADC1->SR, ADC_SR_EOS_Pos);
   bitband_t adon = (bitband_t)BITBAND_PERIPH(&ADC1->CR2, ADC_CR2_ADON_Pos);
+#if defined(SEND_RSSI_DATA)
+  bitband_t rssi_adon = (bitband_t)BITBAND_PERIPH(&ADC2->CR2, ADC_CR2_ADON_Pos);
+#endif
 
   if (*eoc) {
     // trigger next conversion
     *adon = 1;
+#if defined(SEND_RSSI_DATA)
+    *rssi_adon = 1;
+#endif
     
     m_txBuffer.get(sample, control);
     DAC->DHR12R1 = sample;  // Send the value to the DAC
