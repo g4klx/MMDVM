@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #define PIN_DMR                10
 #define PIN_YSF                11
 #define PIN_P25                12
+#define PIN_NXDN               8
 #define PIN_ADC                5        // A0,  Pin 14
 #define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
 
@@ -63,6 +64,7 @@ void CIO::initInt()
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
+  pinMode(PIN_NXDN,   OUTPUT);
 #endif
 }
 
@@ -208,6 +210,11 @@ void CIO::setYSFInt(bool on)
 void CIO::setP25Int(bool on) 
 {
   digitalWrite(PIN_P25, on ? HIGH : LOW);
+}
+
+void CIO::setNXDNInt(bool on) 
+{
+  digitalWrite(PIN_NXDN, on ? HIGH : LOW);
 }
 
 void CIO::delayInt(unsigned int dly)

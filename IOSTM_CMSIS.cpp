@@ -1,7 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016, 2017 by Andy Uribe CA6JAU
- *   Copyright (C) 2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017,2018 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Wojciech Krutnik N0CALL
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@ DSTAR    PB7    output
 DMR      PB6    output
 YSF      PB8    output
 P25      PB9    output
+NXDN     PB10   output
 
 RX       PB0    analog input (ADC1_8)
 RSSI     PB1    analog input (ADC2_9)
@@ -76,6 +77,9 @@ USART1_RXD PA10  input (AF)
 #define PIN_P25           9
 #define PORT_P25          GPIOB
 #define BB_P25            *((bitband_t)BITBAND_PERIPH(&PORT_P25->ODR, PIN_P25))
+#define PIN_NXDN          10
+#define PORT_NXDN         GPIOB
+#define BB_NXDN           *((bitband_t)BITBAND_PERIPH(&PORT_NXDN->ODR, PIN_NXDN))
 
 #define PIN_RX            0
 #define PIN_RX_ADC_CH     8
@@ -214,6 +218,7 @@ static inline void GPIOInit()
   GPIOConfigPin(PORT_DMR, PIN_DMR, GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_YSF, PIN_YSF, GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_P25, PIN_P25, GPIO_CRL_MODE0_1);
+  GPIOConfigPin(PORT_NXDN, PIN_NXDN, GPIO_CRL_MODE0_1);
   
   GPIOConfigPin(PORT_RX, PIN_RX, 0);
 #if defined(SEND_RSSI_DATA)
@@ -422,6 +427,11 @@ void CIO::setYSFInt(bool on)
 void CIO::setP25Int(bool on)
 {
   BB_P25 = !!on;
+}
+
+void CIO::setNXDNInt(bool on)
+{
+  BB_NXDN = !!on;
 }
 
 void CIO::delayInt(unsigned int dly)

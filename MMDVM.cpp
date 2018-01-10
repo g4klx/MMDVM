@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -30,6 +30,7 @@ bool m_dstarEnable = true;
 bool m_dmrEnable   = true;
 bool m_ysfEnable   = true;
 bool m_p25Enable   = true;
+bool m_nxdnEnable  = true;
 
 bool m_duplex = true;
 
@@ -51,6 +52,9 @@ CYSFTX     ysfTX;
 
 CP25RX     p25RX;
 CP25TX     p25TX;
+
+CNXDNRX    nxdnRX;
+CNXDNTX    nxdnTX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
@@ -91,6 +95,9 @@ void loop()
   if (m_p25Enable && m_modemState == STATE_P25)
     p25TX.process();
 
+  if (m_nxdnEnable && m_modemState == STATE_NXDN)
+    nxdnTX.process();
+
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();
 
@@ -113,4 +120,3 @@ int main()
 }
 
 #endif
-

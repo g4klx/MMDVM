@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -62,6 +62,7 @@ m_dstarTXLevel(128 * 128),
 m_dmrTXLevel(128 * 128),
 m_ysfTXLevel(128 * 128),
 m_p25TXLevel(128 * 128),
+m_nxdnTXLevel(128 * 128),
 m_rxDCOffset(DC_OFFSET),
 m_txDCOffset(DC_OFFSET),
 m_ledCount(0U),
@@ -114,6 +115,7 @@ void CIO::selfTest()
     setDMRInt(ledValue);
     setYSFInt(ledValue);
     setP25Int(ledValue);
+    setNXDNInt(ledValue);
 #endif
     delayInt(250);
   }
@@ -123,6 +125,7 @@ void CIO::selfTest()
   setDMRInt(false);
   setYSFInt(false);
   setP25Int(false);
+  setNXDNInt(false);
 
   delayInt(250);
 
@@ -130,6 +133,7 @@ void CIO::selfTest()
   setDMRInt(true);
   setYSFInt(false);
   setP25Int(false);
+  setNXDNInt(false);
 
   delayInt(250);
 
@@ -137,6 +141,7 @@ void CIO::selfTest()
   setDMRInt(true);
   setYSFInt(true);
   setP25Int(false);
+  setNXDNInt(false);
   
   delayInt(250);
 
@@ -144,6 +149,23 @@ void CIO::selfTest()
   setDMRInt(true);
   setYSFInt(true);
   setP25Int(true);
+  setNXDNInt(false);
+  
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(true);
+  setNXDNInt(true);
+  
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(true);
+  setNXDNInt(false);
 
   delayInt(250);
   
@@ -151,6 +173,7 @@ void CIO::selfTest()
   setDMRInt(true);
   setYSFInt(true);
   setP25Int(false);
+  setNXDNInt(false);
 
   delayInt(250);
 
@@ -158,6 +181,7 @@ void CIO::selfTest()
   setDMRInt(true);
   setYSFInt(false);
   setP25Int(false);
+  setNXDNInt(false);
 
   delayInt(250);
   
@@ -165,6 +189,7 @@ void CIO::selfTest()
   setDMRInt(false);
   setYSFInt(false);
   setP25Int(false);
+  setNXDNInt(false);
 
   delayInt(250);
 
@@ -172,6 +197,7 @@ void CIO::selfTest()
   setDMRInt(false);
   setYSFInt(false);
   setP25Int(false);
+  setNXDNInt(false);
 #endif
 }
 
@@ -193,7 +219,7 @@ void CIO::process()
   if (m_started) {
     // Two seconds timeout
     if (m_watchdog >= 48000U) {
-      if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF) {
+      if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF || m_modemState == STATE_P25 || m_modemState == STATE_NXDN) {
         if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
         m_modemState = STATE_IDLE;
@@ -282,7 +308,7 @@ void CIO::process()
       }
 
       // XXX YSF should use dcSamples, but DMR not
-      if (m_dmrEnable || m_ysfEnable) {
+      if (m_dmrEnable || m_ysfEnable || m_nxdnEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
 
@@ -295,6 +321,9 @@ void CIO::process()
 
         if (m_ysfEnable)
           ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+
+        if (m_nxdnEnable)
+          nxdnRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -331,6 +360,13 @@ void CIO::process()
         ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, P25Vals, RX_BLOCK_SIZE);
 
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
+      }
+    } else if (m_modemState == STATE_NXDN) {
+      if (m_nxdnEnable) {
+        q15_t C4FSKVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_rrcFilter, dcSamples, C4FSKVals, RX_BLOCK_SIZE);
+
+        nxdnRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
@@ -370,6 +406,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
       break;
     case STATE_P25:
       txLevel = m_p25TXLevel;
+      break;
+    case STATE_NXDN:
+      txLevel = m_nxdnTXLevel;
       break;
     default:
       txLevel = m_cwIdTXLevel;
@@ -417,10 +456,11 @@ void CIO::setMode()
   setDMRInt(m_modemState   == STATE_DMR);
   setYSFInt(m_modemState   == STATE_YSF);
   setP25Int(m_modemState   == STATE_P25);
+  setNXDNInt(m_modemState  == STATE_NXDN);
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, int16_t txDCOffset, int16_t rxDCOffset)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, int16_t txDCOffset, int16_t rxDCOffset)
 {
   m_pttInvert = pttInvert;
 
@@ -430,6 +470,7 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
   m_dmrTXLevel   = q15_t(dmrTXLevel * 128);
   m_ysfTXLevel   = q15_t(ysfTXLevel * 128);
   m_p25TXLevel   = q15_t(p25TXLevel * 128);
+  m_nxdnTXLevel  = q15_t(nxdnTXLevel * 128);
 
   m_rxDCOffset   = DC_OFFSET + rxDCOffset;
   m_txDCOffset   = DC_OFFSET + txDCOffset;
@@ -442,6 +483,7 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
     m_dmrTXLevel   = -m_dmrTXLevel;
     m_ysfTXLevel   = -m_ysfTXLevel;
     m_p25TXLevel   = -m_p25TXLevel;
+    m_nxdnTXLevel  = -m_nxdnTXLevel;
   }
 }
 
