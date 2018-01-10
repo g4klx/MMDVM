@@ -23,10 +23,10 @@
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_BIT_START_ERRS = 2U;
-const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 4U;
+const uint8_t MAX_FSW_BIT_START_ERRS = 2U;
+const uint8_t MAX_FSW_BIT_RUN_ERRS   = 4U;
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 3U;
+const uint8_t MAX_FSW_SYMBOLS_ERRS = 3U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -36,7 +36,7 @@ const uint8_t NOAVEPTR = 99U;
 
 const uint16_t NOENDPTR = 9999U;
 
-const unsigned int MAX_SYNC_FRAMES = 4U + 1U;
+const unsigned int MAX_FSW_FRAMES = 4U + 1U;
 
 CNXDNRX::CNXDNRX() :
 m_state(NXDNRXS_NONE),
@@ -46,9 +46,9 @@ m_bitPtr(0U),
 m_dataPtr(0U),
 m_startPtr(NOENDPTR),
 m_endPtr(NOENDPTR),
-m_syncPtr(NOENDPTR),
-m_minSyncPtr(NOENDPTR),
-m_maxSyncPtr(NOENDPTR),
+m_fswPtr(NOENDPTR),
+m_minFSWPtr(NOENDPTR),
+m_maxFSWPtr(NOENDPTR),
 m_maxCorr(0),
 m_lostCount(0U),
 m_countdown(0U),
@@ -71,9 +71,9 @@ void CNXDNRX::reset()
   m_averagePtr   = NOAVEPTR;
   m_startPtr     = NOENDPTR;
   m_endPtr       = NOENDPTR;
-  m_syncPtr      = NOENDPTR;
-  m_minSyncPtr   = NOENDPTR;
-  m_maxSyncPtr   = NOENDPTR;
+  m_fswPtr       = NOENDPTR;
+  m_minFSWPtr    = NOENDPTR;
+  m_maxFSWPtr    = NOENDPTR;
   m_centreVal    = 0;
   m_thresholdVal = 0;
   m_lostCount    = 0U;
@@ -117,7 +117,7 @@ void CNXDNRX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
 
 void CNXDNRX::processNone(q15_t sample)
 {
-  bool ret = correlateSync();
+  bool ret = correlateFSW();
   if (ret) {
     // On the first sync, start the countdown to the state change
     if (m_countdown == 0U) {
@@ -137,13 +137,13 @@ void CNXDNRX::processNone(q15_t sample)
     m_countdown--;
 
   if (m_countdown == 1U) {
-    m_minSyncPtr = m_syncPtr + NXDN_FRAME_LENGTH_SAMPLES - 1U;
-    if (m_minSyncPtr >= NXDN_FRAME_LENGTH_SAMPLES)
-      m_minSyncPtr -= NXDN_FRAME_LENGTH_SAMPLES;
+    m_minFSWPtr = m_fswPtr + NXDN_FRAME_LENGTH_SAMPLES - 1U;
+    if (m_minFSWPtr >= NXDN_FRAME_LENGTH_SAMPLES)
+      m_minFSWPtr -= NXDN_FRAME_LENGTH_SAMPLES;
 
-    m_maxSyncPtr = m_syncPtr + 1U;
-    if (m_maxSyncPtr >= NXDN_FRAME_LENGTH_SAMPLES)
-      m_maxSyncPtr -= NXDN_FRAME_LENGTH_SAMPLES;
+    m_maxFSWPtr = m_fswPtr + 1U;
+    if (m_maxFSWPtr >= NXDN_FRAME_LENGTH_SAMPLES)
+      m_maxFSWPtr -= NXDN_FRAME_LENGTH_SAMPLES;
 
     m_state      = NXDNRXS_DATA;
     m_countdown  = 0U;
@@ -152,29 +152,29 @@ void CNXDNRX::processNone(q15_t sample)
 
 void CNXDNRX::processData(q15_t sample)
 {
-  if (m_minSyncPtr < m_maxSyncPtr) {
-    if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-      correlateSync();
+  if (m_minFSWPtr < m_maxFSWPtr) {
+    if (m_dataPtr >= m_minFSWPtr && m_dataPtr <= m_maxFSWPtr)
+      correlateFSW();
   } else {
-    if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-      correlateSync();
+    if (m_dataPtr >= m_minFSWPtr || m_dataPtr <= m_maxFSWPtr)
+      correlateFSW();
   }
 
   if (m_dataPtr == m_endPtr) {
     // Only update the centre and threshold if they are from a good sync
-    if (m_lostCount == MAX_SYNC_FRAMES) {
-      m_minSyncPtr = m_syncPtr + NXDN_FRAME_LENGTH_SAMPLES - 1U;
-      if (m_minSyncPtr >= NXDN_FRAME_LENGTH_SAMPLES)
-        m_minSyncPtr -= NXDN_FRAME_LENGTH_SAMPLES;
+    if (m_lostCount == MAX_FSW_FRAMES) {
+      m_minFSWPtr = m_fswPtr + NXDN_FRAME_LENGTH_SAMPLES - 1U;
+      if (m_minFSWPtr >= NXDN_FRAME_LENGTH_SAMPLES)
+        m_minFSWPtr -= NXDN_FRAME_LENGTH_SAMPLES;
 
-      m_maxSyncPtr = m_syncPtr + 1U;
-      if (m_maxSyncPtr >= NXDN_FRAME_LENGTH_SAMPLES)
-        m_maxSyncPtr -= NXDN_FRAME_LENGTH_SAMPLES;
+      m_maxFSWPtr = m_fswPtr + 1U;
+      if (m_maxFSWPtr >= NXDN_FRAME_LENGTH_SAMPLES)
+        m_maxFSWPtr -= NXDN_FRAME_LENGTH_SAMPLES;
     }
 
     calculateLevels(m_startPtr, NXDN_FRAME_LENGTH_SYMBOLS);
 
-    DEBUG4("NXDNRX: sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+    DEBUG4("NXDNRX: sync found pos/centre/threshold", m_fswPtr, m_centreVal, m_thresholdVal);
 
     uint8_t frame[NXDN_FRAME_LENGTH_BYTES + 3U];
     samplesToBits(m_startPtr, NXDN_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
@@ -195,17 +195,17 @@ void CNXDNRX::processData(q15_t sample)
       m_countdown  = 0U;
       m_maxCorr    = 0;
     } else {
-      frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+      frame[0U] = m_lostCount == (MAX_FSW_FRAMES - 1U) ? 0x01U : 0x00U;
       writeRSSIData(frame);
       m_maxCorr = 0;
     }
   }
 }
 
-bool CNXDNRX::correlateSync()
+bool CNXDNRX::correlateFSW()
 {
-  if (countBits32((m_bitBuffer[m_bitPtr] & NXDN_SYNC_SYMBOLS_MASK) ^ NXDN_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS) {
-    uint16_t ptr = m_dataPtr + NXDN_FRAME_LENGTH_SAMPLES - NXDN_SYNC_LENGTH_SAMPLES + NXDN_RADIO_SYMBOL_LENGTH;
+  if (countBits32((m_bitBuffer[m_bitPtr] & NXDN_FSW_SYMBOLS_MASK) ^ NXDN_FSW_SYMBOLS) <= MAX_FSW_SYMBOLS_ERRS) {
+    uint16_t ptr = m_dataPtr + NXDN_FRAME_LENGTH_SAMPLES - NXDN_FSW_LENGTH_SAMPLES + NXDN_RADIO_SYMBOL_LENGTH;
     if (ptr >= NXDN_FRAME_LENGTH_SAMPLES)
       ptr -= NXDN_FRAME_LENGTH_SAMPLES;
 
@@ -213,7 +213,7 @@ bool CNXDNRX::correlateSync()
     q15_t min =  16000;
     q15_t max = -16000;
 
-    for (uint8_t i = 0U; i < NXDN_SYNC_LENGTH_SYMBOLS; i++) {
+    for (uint8_t i = 0U; i < NXDN_FSW_LENGTH_SYMBOLS; i++) {
       q15_t val = m_buffer[ptr];
 
       if (val > max)
@@ -221,7 +221,7 @@ bool CNXDNRX::correlateSync()
       if (val < min)
         min = val;
 
-      switch (NXDN_SYNC_SYMBOLS_VALUES[i]) {
+      switch (NXDN_FSW_SYMBOLS_VALUES[i]) {
       case +3:
         corr -= (val + val + val);
         break;
@@ -249,31 +249,31 @@ bool CNXDNRX::correlateSync()
         m_thresholdVal = q15_t(v1 >> 15);
       }
 
-      uint16_t startPtr = m_dataPtr + NXDN_FRAME_LENGTH_SAMPLES - NXDN_SYNC_LENGTH_SAMPLES + NXDN_RADIO_SYMBOL_LENGTH;
+      uint16_t startPtr = m_dataPtr + NXDN_FRAME_LENGTH_SAMPLES - NXDN_FSW_LENGTH_SAMPLES + NXDN_RADIO_SYMBOL_LENGTH;
       if (startPtr >= NXDN_FRAME_LENGTH_SAMPLES)
         startPtr -= NXDN_FRAME_LENGTH_SAMPLES;
 
-      uint8_t sync[NXDN_SYNC_BYTES_LENGTH];
-      samplesToBits(startPtr, NXDN_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+      uint8_t sync[NXDN_FSW_BYTES_LENGTH];
+      samplesToBits(startPtr, NXDN_FSW_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
 
       uint8_t maxErrs;
       if (m_state == NXDNRXS_NONE)
-        maxErrs = MAX_SYNC_BIT_START_ERRS;
+        maxErrs = MAX_FSW_BIT_START_ERRS;
       else
-        maxErrs = MAX_SYNC_BIT_RUN_ERRS;
+        maxErrs = MAX_FSW_BIT_RUN_ERRS;
 
       uint8_t errs = 0U;
-      for (uint8_t i = 0U; i < NXDN_SYNC_BYTES_LENGTH; i++)
-        errs += countBits8(sync[i] ^ NXDN_SYNC_BYTES[i]);
+      for (uint8_t i = 0U; i < NXDN_FSW_BYTES_LENGTH; i++)
+        errs += countBits8((sync[i] & NXDN_FSW_BYTES_MASK[i]) ^ NXDN_FSW_BYTES[i]);
 
       if (errs <= maxErrs) {
         m_maxCorr   = corr;
-        m_lostCount = MAX_SYNC_FRAMES;
-        m_syncPtr   = m_dataPtr;
+        m_lostCount = MAX_FSW_FRAMES;
+        m_fswPtr    = m_dataPtr;
 
         m_startPtr = startPtr;
 
-        m_endPtr = m_dataPtr + NXDN_FRAME_LENGTH_SAMPLES - NXDN_SYNC_LENGTH_SAMPLES - 1U;
+        m_endPtr = m_dataPtr + NXDN_FRAME_LENGTH_SAMPLES - NXDN_FSW_LENGTH_SAMPLES - 1U;
         if (m_endPtr >= NXDN_FRAME_LENGTH_SAMPLES)
           m_endPtr -= NXDN_FRAME_LENGTH_SAMPLES;
 

@@ -29,10 +29,10 @@ static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172
                                  -4544, -1431, 1447, 3073, 3120, 1927, 237, -1172, -1795, -1548, -720, 219, 850}; // numTaps = 45, L = 5
 const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t NXDN_LEVELA =  1893;
-const q15_t NXDN_LEVELB =  631;
-const q15_t NXDN_LEVELC = -631;
-const q15_t NXDN_LEVELD = -1893;
+const q15_t NXDN_LEVELA =  1683;
+const q15_t NXDN_LEVELB =  561;
+const q15_t NXDN_LEVELC = -561;
+const q15_t NXDN_LEVELD = -1683;
 
 const uint8_t NXDN_START_SYNC = 0x77U;
 const uint8_t NXDN_END_SYNC   = 0xFFU;

@@ -37,15 +37,15 @@ public:
 
 private:
   NXDNRX_STATE m_state;
-  uint32_t     m_bitBuffer[NXDN_RADIO_SYMBOL_LENGTH];
+  uint16_t     m_bitBuffer[NXDN_RADIO_SYMBOL_LENGTH];
   q15_t        m_buffer[NXDN_FRAME_LENGTH_SAMPLES];
   uint16_t     m_bitPtr;
   uint16_t     m_dataPtr;
   uint16_t     m_startPtr;
   uint16_t     m_endPtr;
-  uint16_t     m_syncPtr;
-  uint16_t     m_minSyncPtr;
-  uint16_t     m_maxSyncPtr;
+  uint16_t     m_fswPtr;
+  uint16_t     m_minFSWPtr;
+  uint16_t     m_maxFSWPtr;
   q31_t        m_maxCorr;
   uint16_t     m_lostCount;
   uint8_t      m_countdown;
@@ -59,7 +59,7 @@ private:
 
   void processNone(q15_t sample);
   void processData(q15_t sample);
-  bool correlateSync();
+  bool correlateFSW();
   void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSIData(uint8_t* data);
