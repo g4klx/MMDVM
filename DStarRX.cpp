@@ -43,7 +43,7 @@ const uint8_t  DATA_SYNC_ERRS = 2U;
 // D-Star bit order version of 0x55 0x55 0xC8 0x7A
 const uint32_t END_SYNC_DATA = 0xAAAA135EU;
 const uint32_t END_SYNC_MASK = 0xFFFFFFFFU;
-const uint8_t  END_SYNC_ERRS = 3U;
+const uint8_t  END_SYNC_ERRS = 1U;
 
 const uint8_t BIT_MASK_TABLE0[] = {0x7FU, 0xBFU, 0xDFU, 0xEFU, 0xF7U, 0xFBU, 0xFDU, 0xFEU};
 const uint8_t BIT_MASK_TABLE1[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
