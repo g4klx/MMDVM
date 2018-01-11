@@ -1,6 +1,6 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
- *   Copyright (C) 2016, 2017 by Andy Uribe CA6JAU
+ *   Copyright (C) 2016,2017,2018 by Andy Uribe CA6JAU
  *   Copyright (C) 2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -112,7 +112,7 @@ DSTAR    PC7    output
 DMR      PC8    output
 YSF      PA8    output
 P25      PC9    output
-P25      PC10   output
+NXDN     PB1    output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -141,9 +141,9 @@ EXT_CLK  PA15   input
 #define PORT_P25          GPIOC
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOC
 
-#define PIN_P25           GPIO_Pin_10
-#define PORT_P25          GPIOC
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
+#define PIN_NXDN          GPIO_Pin_1
+#define PORT_NXDN         GPIOB
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
 #define PORT_DSTAR        GPIOC
@@ -187,7 +187,7 @@ DSTAR    PC7    output
 DMR      PC8    output
 YSF      PA8    output
 P25      PC9    output
-NXDN     PC10   output
+NXDN     PB1    output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -216,9 +216,9 @@ EXT_CLK  PA15   input
 #define PORT_P25          GPIOC
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOC
 
-#define PIN_NXDN          GPIO_Pin_10
-#define PORT_NXDN         GPIOC
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
+#define PIN_NXDN          GPIO_Pin_1
+#define PORT_NXDN         GPIOB
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
 #define PORT_DSTAR        GPIOC
@@ -262,7 +262,7 @@ DSTAR    PC7    output
 DMR      PC8    output
 YSF      PA8    output
 P25      PC9    output
-NXDN     PC10   output
+NXDN     PB1    output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -291,9 +291,9 @@ EXT_CLK  PA15   input
 #define PORT_P25          GPIOC
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOC
 
-#define PIN_NXDN          GPIO_Pin_10
-#define PORT_NXDN         GPIOC
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
+#define PIN_NXDN          GPIO_Pin_1
+#define PORT_NXDN         GPIOB
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
 #define PORT_DSTAR        GPIOC
@@ -339,13 +339,13 @@ DSTAR    PB10   output           CN10 Pin25
 DMR      PB4    output           CN10 Pin27
 YSF      PB5    output           CN10 Pin29
 P25      PB3    output           CN10 Pin31
-NXDN     PB2    output           CN10 Pin32
+NXDN     PA10   output           CN10 Pin33
 
 MDSTAR   PC4    output           CN10 Pin34
 MDMR     PC5    output           CN10 Pin6
 MYSF     PC2    output           CN7 Pin35
 MP25     PC3    output           CN7 Pin37
-MNXDN    PC6    output           CN10 Pin??
+MNXDN    PC6    output           CN10 Pin4
 
 RX       PA0    analog input     CN7 Pin28
 RSSI     PA1    analog input     CN7 Pin30
@@ -374,9 +374,9 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PORT_P25          GPIOB
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOB
 
-#define PIN_NXDN          GPIO_Pin_2
-#define PORT_NXDN         GPIOB
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+#define PIN_NXDN          GPIO_Pin_10
+#define PORT_NXDN         GPIOA
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
 
 #define PIN_DSTAR         GPIO_Pin_10
 #define PORT_DSTAR        GPIOB
@@ -395,7 +395,7 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PORT_MP25         GPIOC
 #define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
 
-#define PIN_MNXDN         GPIO_Pin_1
+#define PIN_MNXDN         GPIO_Pin_6
 #define PORT_MNXDN        GPIOC
 #define RCC_Per_MNXDN     RCC_AHB1Periph_GPIOC
 
@@ -442,7 +442,7 @@ DSTAR    PA1    output           CN8 Pin2
 DMR      PA4    output           CN8 Pin3
 YSF      PB0    output           CN8 Pin4
 P25      PC1    output           CN8 Pin5
-NXDN     PC?    output           CN8 Pin6
+NXDN     PC0    output           CN8 Pin6
 
 RX       PA0    analog input     CN8 Pin1
 RSSI     PC0    analog input     CN8 Pin6
@@ -471,7 +471,7 @@ EXT_CLK  PB8    input            CN5 Pin10
 #define PORT_P25          GPIOC
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOC
 
-#define PIN_NXDN          GPIO_Pin_6
+#define PIN_NXDN          GPIO_Pin_0
 #define PORT_NXDN         GPIOC
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
 
@@ -521,13 +521,13 @@ DSTAR    PB10   output           CN12 Pin25
 DMR      PB4    output           CN12 Pin27
 YSF      PB5    output           CN12 Pin29
 P25      PB3    output           CN12 Pin31
-NXDN     PB2    output           CN12 Pin32
+NXDN     PA10   output           CN12 Pin33
 
 MDSTAR   PC4    output           CN12 Pin34
 MDMR     PC5    output           CN12 Pin6
 MYSF     PC2    output           CN11 Pin35
 MP25     PC3    output           CN11 Pin37
-MNXDN    PC6    output           CN11 Pin??
+MNXDN    PC6    output           CN12 Pin4
 
 RX       PA0    analog input     CN11 Pin28
 RSSI     PA1    analog input     CN11 Pin30
@@ -556,9 +556,9 @@ EXT_CLK  PA15   input            CN11 Pin17
 #define PORT_P25          GPIOB
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOB
 
-#define PIN_NXDN          GPIO_Pin_2
-#define PORT_NXDN         GPIOB
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+#define PIN_NXDN          GPIO_Pin_10
+#define PORT_NXDN         GPIOA
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
 
 #define PIN_DSTAR         GPIO_Pin_10
 #define PORT_DSTAR        GPIOB
