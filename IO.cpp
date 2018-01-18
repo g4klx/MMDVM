@@ -300,15 +300,19 @@ void CIO::process()
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
 
-      if (m_p25Enable) {
-        q15_t P25Vals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, P25Vals, RX_BLOCK_SIZE);
+      if (m_p25Enable || m_nxdnEnable) {
+        q15_t C4FSKVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, C4FSKVals, RX_BLOCK_SIZE);
 
-        p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
+        if (m_p25Enable)
+          p25RX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+
+        if (m_nxdnEnable)
+          nxdnRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
       }
 
       // XXX YSF should use dcSamples, but DMR not
-      if (m_dmrEnable || m_ysfEnable || m_nxdnEnable) {
+      if (m_dmrEnable || m_ysfEnable) {
         q15_t C4FSKVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_rrcFilter, samples, C4FSKVals, RX_BLOCK_SIZE);
 
@@ -321,9 +325,6 @@ void CIO::process()
 
         if (m_ysfEnable)
           ysfRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
-
-        if (m_nxdnEnable)
-          nxdnRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -363,10 +364,10 @@ void CIO::process()
       }
     } else if (m_modemState == STATE_NXDN) {
       if (m_nxdnEnable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_rrcFilter, dcSamples, C4FSKVals, RX_BLOCK_SIZE);
+        q15_t NXDNVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, NXDNVals, RX_BLOCK_SIZE);
 
-        nxdnRX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+        nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];

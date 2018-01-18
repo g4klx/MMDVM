@@ -23,7 +23,7 @@
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_FSW_BIT_ERRS = 2U;
+const uint8_t MAX_FSW_BIT_ERRS = 1U;
 
 const uint8_t MAX_FSW_SYMBOLS_ERRS = 1U;
 
