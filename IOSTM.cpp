@@ -912,7 +912,7 @@ void CIO::interrupt()
 
 bool CIO::getCOSInt()
 {
-   return GPIO_ReadOutputDataBit(PORT_COS, PIN_COS) == Bit_SET;
+   return GPIO_ReadInputDataBit(PORT_COS, PIN_COS) == Bit_SET;
 }
 
 void CIO::setLEDInt(bool on)
