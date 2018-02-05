@@ -23,10 +23,9 @@
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_FSW_BIT_START_ERRS = 2U;
-const uint8_t MAX_FSW_BIT_RUN_ERRS   = 4U;
+const uint8_t MAX_FSW_BIT_ERRS = 1U;
 
-const uint8_t MAX_FSW_SYMBOLS_ERRS = 3U;
+const uint8_t MAX_FSW_SYMBOLS_ERRS = 1U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -36,7 +35,7 @@ const uint8_t NOAVEPTR = 99U;
 
 const uint16_t NOENDPTR = 9999U;
 
-const unsigned int MAX_FSW_FRAMES = 4U + 1U;
+const unsigned int MAX_FSW_FRAMES = 5U + 1U;
 
 CNXDNRX::CNXDNRX() :
 m_state(NXDNRXS_NONE),
@@ -256,17 +255,11 @@ bool CNXDNRX::correlateFSW()
       uint8_t sync[NXDN_FSW_BYTES_LENGTH];
       samplesToBits(startPtr, NXDN_FSW_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
 
-      uint8_t maxErrs;
-      if (m_state == NXDNRXS_NONE)
-        maxErrs = MAX_FSW_BIT_START_ERRS;
-      else
-        maxErrs = MAX_FSW_BIT_RUN_ERRS;
-
       uint8_t errs = 0U;
       for (uint8_t i = 0U; i < NXDN_FSW_BYTES_LENGTH; i++)
         errs += countBits8((sync[i] & NXDN_FSW_BYTES_MASK[i]) ^ NXDN_FSW_BYTES[i]);
 
-      if (errs <= maxErrs) {
+      if (errs <= MAX_FSW_BIT_ERRS) {
         m_maxCorr   = corr;
         m_lostCount = MAX_FSW_FRAMES;
         m_fswPtr    = m_dataPtr;
@@ -388,8 +381,8 @@ void CNXDNRX::writeRSSIData(uint8_t* data)
   if (m_rssiCount > 0U) {
     uint16_t rssi = m_rssiAccum / m_rssiCount;
 
-    data[121U] = (rssi >> 8) & 0xFFU;
-    data[122U] = (rssi >> 0) & 0xFFU;
+    data[49U] = (rssi >> 8) & 0xFFU;
+    data[50U] = (rssi >> 0) & 0xFFU;
 
     serial.writeNXDNData(data, NXDN_FRAME_LENGTH_BYTES + 3U);
   } else {

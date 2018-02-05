@@ -29,13 +29,13 @@ static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172
                                  -4544, -1431, 1447, 3073, 3120, 1927, 237, -1172, -1795, -1548, -720, 219, 850}; // numTaps = 45, L = 5
 const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t NXDN_LEVELA =  1683;
-const q15_t NXDN_LEVELB =  561;
-const q15_t NXDN_LEVELC = -561;
-const q15_t NXDN_LEVELD = -1683;
+const q15_t NXDN_LEVELA =  1680;
+const q15_t NXDN_LEVELB =  560;
+const q15_t NXDN_LEVELC = -560;
+const q15_t NXDN_LEVELD = -1680;
 
-const uint8_t NXDN_START_SYNC = 0x77U;
-const uint8_t NXDN_END_SYNC   = 0xFFU;
+const uint8_t NXDN_PREAMBLE[] = {0x57U, 0x75U, 0xFDU};
+const uint8_t NXDN_SYNC = 0x5FU;
 
 CNXDNTX::CNXDNTX() :
 m_buffer(1500U),
@@ -62,7 +62,10 @@ void CNXDNTX::process()
   if (m_poLen == 0U) {
     if (!m_tx) {
       for (uint16_t i = 0U; i < m_txDelay; i++)
-        m_poBuffer[m_poLen++] = NXDN_START_SYNC;
+        m_poBuffer[m_poLen++] = NXDN_SYNC;
+      m_poBuffer[m_poLen++] = NXDN_PREAMBLE[0U];
+      m_poBuffer[m_poLen++] = NXDN_PREAMBLE[1U];
+      m_poBuffer[m_poLen++] = NXDN_PREAMBLE[2U];
     } else {
       for (uint8_t i = 0U; i < NXDN_FRAME_LENGTH_BYTES; i++) {
         uint8_t c = m_buffer.get();
