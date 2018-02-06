@@ -70,7 +70,7 @@ m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
 m_frameCount(0U),
-m_abortCount(0U),
+m_abortCount(),
 m_abort()
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
@@ -85,6 +85,9 @@ m_abort()
 
   m_abort[0U] = false;
   m_abort[1U] = false;
+
+  m_abortCount[0U] = 0U;
+  m_abortCount[1U] = 0U;
 }
 
 void CDMRTX::process()
@@ -212,12 +215,12 @@ uint8_t CDMRTX::writeAbort(const uint8_t* data, uint8_t length)
 
   switch (data[0U]) {
     case 1U:
-      m_abortCount = 0U;
+      m_abortCount[0U] = 0U;
       m_abort[0U] = true;
       return 0U;
 
     case 2U:
-      m_abortCount = 0U;
+      m_abortCount[1U] = 0U;
       m_abort[1U] = true;
       return 0U;
 
@@ -231,7 +234,8 @@ void CDMRTX::setStart(bool start)
   m_state = start ? DMRTXSTATE_SLOT1 : DMRTXSTATE_IDLE;
 
   m_frameCount = 0U;
-  m_abortCount = 0U;
+  m_abortCount[0U] = 0U;
+  m_abortCount[1U] = 0U;
 
   m_abort[0U] = false;
   m_abort[1U] = false;
@@ -287,7 +291,7 @@ uint8_t CDMRTX::getSpace2() const
 
 void CDMRTX::createData(uint8_t slotIndex)
 {
-  if (m_fifo[slotIndex].getData() > 0U && m_frameCount >= STARTUP_COUNT && m_abortCount >= ABORT_COUNT) {
+  if (m_fifo[slotIndex].getData() > 0U && m_frameCount >= STARTUP_COUNT && m_abortCount[slotIndex] >= ABORT_COUNT) {
     for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
       m_poBuffer[i]   = m_fifo[slotIndex].get();
       m_markBuffer[i] = MARK_NONE;
@@ -340,7 +344,8 @@ void CDMRTX::createCal()
 void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
 {
   m_frameCount++;
-  m_abortCount++;
+  m_abortCount[0U]++;
+  m_abortCount[1U]++;
 
   if (m_cachPtr >= 12U)
     m_cachPtr = 0U;
