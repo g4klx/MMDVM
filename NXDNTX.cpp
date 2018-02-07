@@ -23,16 +23,19 @@
 
 #include "NXDNDefines.h"
 
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172, 237, 1927, 3120, 3073, 1447, -1431, -4544, -6442,
-                                 -5735, -1633, 5651, 14822, 23810, 30367, 32767, 30367, 23810, 14822, 5651, -1633, -5735, -6442,
-                                 -4544, -1431, 1447, 3073, 3120, 1927, 237, -1172, -1795, -1548, -720, 219, 850}; // numTaps = 45, L = 5
+// Generated using rcosdesign(0.2, 8, 10, 'sqrt') in MATLAB
+static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 850, 592, 219, -234, -720, -1179, -1548, -1769, -1795, -1597, -1172,
+                                 -544, 237, 1092, 1927, 2637, 3120, 3286, 3073, 2454, 1447, 116, -1431, -3043, -4544, -5739, -6442,
+                                 -6483, -5735, -4121, -1633, 1669, 5651, 10118, 14822, 19484, 23810, 27520, 30367, 32156, 32767,
+                                 32156, 30367, 27520, 23810, 19484, 14822, 10118, 5651, 1669, -1633, -4121, -5735, -6483, -6442,
+                                 -5739, -4544, -3043, -1431, 116, 1447, 2454, 3073, 3286, 3120, 2637, 1927, 1092, 237, -544, -1172,
+                                 -1597, -1795, -1769, -1548, -1179, -720, -234, 219, 592, 850}; // numTaps = 90, L = 10
 const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t NXDN_LEVELA =  1680;
-const q15_t NXDN_LEVELB =  560;
-const q15_t NXDN_LEVELC = -560;
-const q15_t NXDN_LEVELD = -1680;
+const q15_t NXDN_LEVELA =  840;
+const q15_t NXDN_LEVELB =  280;
+const q15_t NXDN_LEVELC = -280;
+const q15_t NXDN_LEVELD = -840;
 
 const uint8_t NXDN_PREAMBLE[] = {0x57U, 0x75U, 0xFDU};
 const uint8_t NXDN_SYNC = 0x5FU;
@@ -148,6 +151,6 @@ void CNXDNTX::setTXDelay(uint8_t delay)
 
 uint8_t CNXDNTX::getSpace() const
 {
-  return m_buffer.getSpace() / YSF_FRAME_LENGTH_BYTES;
+  return m_buffer.getSpace() / NXDN_FRAME_LENGTH_BYTES;
 }
 
