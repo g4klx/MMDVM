@@ -19,7 +19,7 @@
 #if !defined(NXDNDEFINES_H)
 #define  NXDNDEFINES_H
 
-const unsigned int NXDN_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
+const unsigned int NXDN_RADIO_SYMBOL_LENGTH = 10U;      // At 24 kHz sample rate
 
 const unsigned int NXDN_FRAME_LENGTH_BITS    = 384U;
 const unsigned int NXDN_FRAME_LENGTH_BYTES   = NXDN_FRAME_LENGTH_BITS / 8U;
