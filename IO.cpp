@@ -40,6 +40,10 @@ static q15_t NXDN_0_2_FILTER[] = {284, 198, 73, -78, -240, -393, -517, -590, -59
                                   -517, -393, -240, -78, 73, 198, 284, 0};
 const uint16_t NXDN_0_2_FILTER_LEN = 82U;
 
+static q15_t NXDN_ISINC_FILTER[] = {790, -1085, -1073, -553, 747, 2341, 3156, 2152, -893, -4915, -7834, -7536, -3102, 4441, 12354, 17394, 17394,
+                                   12354, 4441, -3102, -7536, -7834, -4915, -893, 2152, 3156, 2341, 747, -553, -1073, -1085, 790};
+const uint16_t NXDN_ISINC_FILTER_LEN = 32U;
+
 // Generated using gaussfir(0.5, 4, 5) in MATLAB
 static q15_t   GAUSSIAN_0_5_FILTER[] = {8, 104, 760, 3158, 7421, 9866, 7421, 3158, 760, 104, 8, 0};
 const uint16_t GAUSSIAN_0_5_FILTER_LEN = 12U;
@@ -61,11 +65,13 @@ m_dmrFilter(),
 m_gaussianFilter(),
 m_boxcarFilter(),
 m_nxdnFilter(),
+m_nxdnISincFilter(),
 m_ysfFilter(),
 m_dmrState(),
 m_gaussianState(),
 m_boxcarState(),
 m_nxdnState(),
+m_nxdnISincState(),
 m_ysfState(),
 m_pttInvert(false),
 m_rxLevel(128 * 128),
@@ -89,6 +95,7 @@ m_lockout(false)
   ::memset(m_gaussianState, 0x00U,  40U * sizeof(q15_t));
   ::memset(m_boxcarState,   0x00U,  30U * sizeof(q15_t));
   ::memset(m_nxdnState,     0x00U, 110U * sizeof(q15_t));
+  ::memset(m_nxdnISincState, 0x00U, 60U * sizeof(q15_t));
   ::memset(m_ysfState,      0x00U,  70U * sizeof(q15_t));
   ::memset(m_dcState,       0x00U,   4U * sizeof(q31_t));
 
@@ -112,6 +119,10 @@ m_lockout(false)
   m_nxdnFilter.numTaps = NXDN_0_2_FILTER_LEN;
   m_nxdnFilter.pState  = m_nxdnState;
   m_nxdnFilter.pCoeffs = NXDN_0_2_FILTER;
+  
+  m_nxdnISincFilter.numTaps = NXDN_ISINC_FILTER_LEN;
+  m_nxdnISincFilter.pState  = m_nxdnISincState;
+  m_nxdnISincFilter.pCoeffs = NXDN_ISINC_FILTER;
 
   m_ysfFilter.numTaps = RRC_0_2_FILTER_LEN;
   m_ysfFilter.pState  = m_ysfState;
@@ -331,7 +342,9 @@ void CIO::process()
 
       if (m_nxdnEnable) {
         q15_t NXDNVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, NXDNVals, RX_BLOCK_SIZE);
+        q15_t NXDNValsTmp[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, NXDNValsTmp, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_nxdnISincFilter, NXDNValsTmp, NXDNVals, RX_BLOCK_SIZE);
 
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
@@ -391,7 +404,9 @@ void CIO::process()
     } else if (m_modemState == STATE_NXDN) {
       if (m_nxdnEnable) {
         q15_t NXDNVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, NXDNVals, RX_BLOCK_SIZE);
+        q15_t NXDNValsTmp[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, NXDNValsTmp, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_nxdnISincFilter, NXDNValsTmp, NXDNVals, RX_BLOCK_SIZE);
 
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
