@@ -334,10 +334,10 @@ void CIO::process()
       }
 
       if (m_p25Enable) {
-        q15_t C4FSKVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, C4FSKVals, RX_BLOCK_SIZE);
+        q15_t P25Vals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, P25Vals, RX_BLOCK_SIZE);
 
-        p25RX.samples(C4FSKVals, rssi, RX_BLOCK_SIZE);
+        p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
 
       if (m_nxdnEnable) {
