@@ -32,10 +32,14 @@ static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 850, 592, 219, -234,
                                  -1597, -1795, -1769, -1548, -1179, -720, -234, 219, 592, 850}; // numTaps = 90, L = 10
 const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t NXDN_LEVELA =  840;
-const q15_t NXDN_LEVELB =  280;
-const q15_t NXDN_LEVELC = -280;
-const q15_t NXDN_LEVELD = -840;
+static q15_t NXDN_SINC_FILTER[] = {572, -1003, -253, 254, 740, 1290, 1902, 2527, 3090, 3517, 3747, 3747, 3517, 3090, 2527, 1902,
+                                   1290, 740, 254, -253, -1003, 572};
+const uint16_t NXDN_SINC_FILTER_LEN = 22U;
+
+const q15_t NXDN_LEVELA =  735;
+const q15_t NXDN_LEVELB =  245;
+const q15_t NXDN_LEVELC = -245;
+const q15_t NXDN_LEVELD = -735;
 
 const uint8_t NXDN_PREAMBLE[] = {0x57U, 0x75U, 0xFDU};
 const uint8_t NXDN_SYNC = 0x5FU;
@@ -43,18 +47,25 @@ const uint8_t NXDN_SYNC = 0x5FU;
 CNXDNTX::CNXDNTX() :
 m_buffer(1500U),
 m_modFilter(),
+m_sincFilter(),
 m_modState(),
+m_sincState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(240U)      // 200ms
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
+  ::memset(m_sincState,  0x00U, 70U * sizeof(q15_t));
 
   m_modFilter.L           = NXDN_RADIO_SYMBOL_LENGTH;
   m_modFilter.phaseLength = RRC_0_2_FILTER_PHASE_LEN;
   m_modFilter.pCoeffs     = RRC_0_2_FILTER;
   m_modFilter.pState      = m_modState;
+
+  m_sincFilter.numTaps = NXDN_SINC_FILTER_LEN;
+  m_sincFilter.pState  = m_sincState;
+  m_sincFilter.pCoeffs = NXDN_SINC_FILTER;
 }
 
 void CNXDNTX::process()
@@ -115,6 +126,7 @@ uint8_t CNXDNTX::writeData(const uint8_t* data, uint8_t length)
 void CNXDNTX::writeByte(uint8_t c)
 {
   q15_t inBuffer[4U];
+  q15_t intBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
   q15_t outBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
@@ -136,7 +148,9 @@ void CNXDNTX::writeByte(uint8_t c)
     }
   }
 
-  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, intBuffer, 4U);
+
+  ::arm_fir_fast_q15(&m_sincFilter, intBuffer, outBuffer, NXDN_RADIO_SYMBOL_LENGTH * 4U);
 
   io.write(STATE_NXDN, outBuffer, NXDN_RADIO_SYMBOL_LENGTH * 4U);
 }
