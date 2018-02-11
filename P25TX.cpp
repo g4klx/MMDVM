@@ -30,12 +30,10 @@ static q15_t RC_0_2_FILTER[] = {-897, -1636, -1840, -1278, 0, 1613, 2936, 3310, 
                                -3011, 0, 2315, 3310, 2936, 1613, 0, -1278, -1840, -1636, -897, 0}; // numTaps = 40, L = 5
 const uint16_t RC_0_2_FILTER_PHASE_LEN = 8U; // phaseLength = numTaps/L
 
-// Generated in MATLAB using the following commands, and then normalised for unity gain
-// shape2 = 'Inverse-sinc Lowpass';
-// d2 = fdesign.interpolator(1, shape2);  
-// h2 = design(d2, 'SystemObject', true);
-static q15_t LOWPASS_FILTER[] = {1294, -2251, 4312, -8402, 20999, 20999, -8402, 4312, -2251, 1294};
-const uint16_t LOWPASS_FILTER_LEN = 10U;
+static q15_t LOWPASS_FILTER[] = {124, -188, -682, 1262, 556, -621, -1912, -911, 2058, 3855, 1234, -4592, -7692, -2799,
+                                8556, 18133, 18133, 8556, -2799, -7692, -4592, 1234, 3855, 2058, -911, -1912, -621,
+                                556, 1262, -682, -188, 124};
+const uint16_t LOWPASS_FILTER_LEN = 32U;
 
 const q15_t P25_LEVELA =  1260;
 const q15_t P25_LEVELB =   420;
@@ -56,7 +54,7 @@ m_poPtr(0U),
 m_txDelay(240U)       // 200ms
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
-  ::memset(m_lpState,  0x00U, 70U * sizeof(q15_t));
+  ::memset(m_lpState,  0x00U, 60U * sizeof(q15_t));
 
   m_modFilter.L           = P25_RADIO_SYMBOL_LENGTH;
   m_modFilter.phaseLength = RC_0_2_FILTER_PHASE_LEN;
