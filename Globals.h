@@ -51,6 +51,7 @@ enum MMDVM_STATE {
   STATE_NXDN      = 5,
 
   // Dummy states start at 90
+  STATE_NXDNCAL1K = 91,
   STATE_DMRDMO1K  = 92,
   STATE_P25CAL1K  = 93,
   STATE_DMRCAL1K  = 94,
@@ -79,6 +80,7 @@ enum MMDVM_STATE {
 #include "CalDStarTX.h"
 #include "CalDMR.h"
 #include "CalP25.h"
+#include "CalNXDN.h"
 #include "CalRSSI.h"
 #include "CWIdTX.h"
 #include "Debug.h"
@@ -132,6 +134,7 @@ extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
 extern CCalDMR     calDMR;
 extern CCalP25     calP25;
+extern CCalNXDN    calNXDN;
 extern CCalRSSI    calRSSI;
 
 extern CCWIdTX cwIdTX;

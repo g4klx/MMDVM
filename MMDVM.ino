@@ -57,6 +57,7 @@ CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
 CCalDMR     calDMR;
 CCalP25     calP25;
+CCalNXDN    calNXDN;
 CCalRSSI    calRSSI;
 
 CCWIdTX cwIdTX;
@@ -103,6 +104,9 @@ void loop()
 
   if (m_modemState == STATE_P25CAL1K)
     calP25.process();
+
+  if (m_modemState == STATE_NXDNCAL1K)
+    calNXDN.process();
 
   if (m_modemState == STATE_IDLE)
     cwIdTX.process();
