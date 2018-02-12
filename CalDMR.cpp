@@ -21,16 +21,28 @@
 #include "Globals.h"
 #include "CalDMR.h"
 
-// Voice LC Header, CC: 1, srcID: 1, dstID: TG9
+// Voice LC BS Header, CC: 1, srcID: 1, dstID: TG9
 const uint8_t VH_1K[] = {0x00U,
          0x00U, 0x20U, 0x08U, 0x08U, 0x02U, 0x38U, 0x15U, 0x00U, 0x2CU, 0xA0U, 0x14U,
          0x60U, 0x84U, 0x6DU, 0xFFU, 0x57U, 0xD7U, 0x5DU, 0xF5U, 0xDEU, 0x30U, 0x30U,
          0x01U, 0x10U, 0x01U, 0x40U, 0x03U, 0xC0U, 0x13U, 0xC1U, 0x1EU, 0x80U, 0x6FU};
 
-// Voice Term with LC, CC: 1, srcID: 1, dstID: TG9
+// Voice Term BS with LC, CC: 1, srcID: 1, dstID: TG9
 const uint8_t VT_1K[] = {0x00U,
          0x00U, 0x4FU, 0x08U, 0xDCU, 0x02U, 0x88U, 0x15U, 0x78U, 0x2CU, 0xD0U, 0x14U,
          0xC0U, 0x84U, 0xADU, 0xFFU, 0x57U, 0xD7U, 0x5DU, 0xF5U, 0xD9U, 0x65U, 0x24U,
+         0x02U, 0x28U, 0x06U, 0x20U, 0x0FU, 0x80U, 0x1BU, 0xC1U, 0x07U, 0x80U, 0x5CU};
+
+// Voice LC MS Header, CC: 1, srcID: 1, dstID: TG9
+const uint8_t VH_DMO1K[] = {0x00U,
+         0x00U, 0x20U, 0x08U, 0x08U, 0x02U, 0x38U, 0x15U, 0x00U, 0x2CU, 0xA0U, 0x14U,
+         0x60U, 0x84U, 0x6DU, 0x5DU, 0x7FU, 0x77U, 0xFDU, 0x75U, 0x7EU, 0x30U, 0x30U,
+         0x01U, 0x10U, 0x01U, 0x40U, 0x03U, 0xC0U, 0x13U, 0xC1U, 0x1EU, 0x80U, 0x6FU};
+
+// Voice Term MS with LC, CC: 1, srcID: 1, dstID: TG9
+const uint8_t VT_DMO1K[] = {0x00U,
+         0x00U, 0x4FU, 0x08U, 0xDCU, 0x02U, 0x88U, 0x15U, 0x78U, 0x2CU, 0xD0U, 0x14U,
+         0xC0U, 0x84U, 0xADU, 0x5DU, 0x7FU, 0x77U, 0xFDU, 0x75U, 0x79U, 0x65U, 0x24U,
          0x02U, 0x28U, 0x06U, 0x20U, 0x0FU, 0x80U, 0x1BU, 0xC1U, 0x07U, 0x80U, 0x5CU};
 
 // Voice coding data + FEC, 1031 Hz Test Pattern
@@ -39,9 +51,18 @@ const uint8_t VOICE_1K[] = {0x00U,
          0xFEU, 0x83U, 0xA0U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x0CU, 0xC4U, 0x58U, 
          0x20U, 0x0AU, 0xCEU, 0xA8U, 0xFEU, 0x83U, 0xACU, 0xC4U, 0x58U, 0x20U, 0x0AU};
 
-// Embedded LC: CC: 1, srcID: 1, dstID: TG9
+// Embedded LC BS: CC: 1, srcID: 1, dstID: TG9
 const uint8_t SYNCEMB_1K[6][7] = {
          {0x07U, 0x55U, 0xFDU, 0x7DU, 0xF7U, 0x5FU, 0x70U},   // BS VOICE SYNC      (audio seq 0)
+         {0x01U, 0x30U, 0x00U, 0x00U, 0x90U, 0x09U, 0x10U},   // EMB + Embedded LC1 (audio seq 1)
+         {0x01U, 0x70U, 0x00U, 0x90U, 0x00U, 0x07U, 0x40U},   // EMB + Embedded LC2 (audio seq 2)
+         {0x01U, 0x70U, 0x00U, 0x31U, 0x40U, 0x07U, 0x40U},   // EMB + Embedded LC3 (audio seq 3)
+         {0x01U, 0x50U, 0xA1U, 0x71U, 0xD1U, 0x70U, 0x70U},   // EMB + Embedded LC4 (audio seq 4)
+         {0x01U, 0x10U, 0x00U, 0x00U, 0x00U, 0x0EU, 0x20U}};  // EMB                (audio seq 5)
+
+// Embedded LC MS: CC: 1, srcID: 1, dstID: TG9
+const uint8_t SYNCEMB_DMO1K[6][7] = {
+         {0x07U, 0xF7U, 0xD5U, 0xDDU, 0x57U, 0xDFU, 0xD0U},   // MS VOICE SYNC      (audio seq 0)
          {0x01U, 0x30U, 0x00U, 0x00U, 0x90U, 0x09U, 0x10U},   // EMB + Embedded LC1 (audio seq 1)
          {0x01U, 0x70U, 0x00U, 0x90U, 0x00U, 0x07U, 0x40U},   // EMB + Embedded LC2 (audio seq 2)
          {0x01U, 0x70U, 0x00U, 0x31U, 0x40U, 0x07U, 0x40U},   // EMB + Embedded LC3 (audio seq 3)
@@ -78,6 +99,9 @@ void CCalDMR::process()
     case STATE_DMRCAL1K:
       dmr1kcal();
       break;
+    case STATE_DMRDMO1K:
+      dmrdmo1k();
+      break;
     default:
       break;
   }
@@ -92,6 +116,17 @@ void CCalDMR::createData1k(uint8_t n)
   m_dmr1k[20U] &= 0x0FU;
   m_dmr1k[14U] |= SYNCEMB_1K[n][0] & 0x0FU;
   m_dmr1k[20U] |= SYNCEMB_1K[n][6] & 0xF0U;
+}
+
+void CCalDMR::createDataDMO1k(uint8_t n)
+{
+  for(uint8_t i = 0; i < 5U; i++)
+    m_dmr1k[i + 15U] = SYNCEMB_DMO1K[n][i + 1U];
+
+  m_dmr1k[14U] &= 0xF0U;
+  m_dmr1k[20U] &= 0x0FU;
+  m_dmr1k[14U] |= SYNCEMB_DMO1K[n][0] & 0x0FU;
+  m_dmr1k[20U] |= SYNCEMB_DMO1K[n][6] & 0xF0U;
 }
 
 void CCalDMR::dmr1kcal()
@@ -139,6 +174,40 @@ void CCalDMR::dmr1kcal()
   }
 }
 
+void CCalDMR::dmrdmo1k()
+{
+  dmrDMOTX.process();
+
+  uint16_t space = dmrDMOTX.getSpace();
+  if (space < 1U)
+    return;
+
+  switch (m_state) {
+    case DMRCAL1K_VH:
+      dmrDMOTX.writeData(VH_DMO1K, DMR_FRAME_LENGTH_BYTES + 1U);
+      m_state = DMRCAL1K_VOICE;
+      break;
+    case DMRCAL1K_VOICE:
+      createDataDMO1k(m_audioSeq);
+      dmrDMOTX.writeData(m_dmr1k, DMR_FRAME_LENGTH_BYTES + 1U);
+      if(m_audioSeq == 5U) {
+        m_audioSeq = 0U;
+        if(!m_transmit)
+          m_state = DMRCAL1K_VT;
+      } else
+        m_audioSeq++;
+      break;
+    case DMRCAL1K_VT:
+      dmrDMOTX.writeData(VT_DMO1K, DMR_FRAME_LENGTH_BYTES + 1U);
+      m_state = DMRCAL1K_IDLE;
+      break;
+    default:
+        m_state = DMRCAL1K_IDLE;
+        m_audioSeq = 0U;
+      break;
+  }
+}
+
 uint8_t CCalDMR::write(const uint8_t* data, uint8_t length)
 {
   if (length != 1U)
@@ -146,7 +215,7 @@ uint8_t CCalDMR::write(const uint8_t* data, uint8_t length)
 
   m_transmit = data[0U] == 1U;
 
-  if(m_transmit && m_state == DMRCAL1K_IDLE && m_modemState == STATE_DMRCAL1K)
+  if(m_transmit && m_state == DMRCAL1K_IDLE && (m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K))
     m_state = DMRCAL1K_VH;
 
   return 0U;
