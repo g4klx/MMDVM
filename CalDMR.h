@@ -37,7 +37,9 @@ public:
 
   void process();
   void dmr1kcal();
+  void dmrdmo1k();
   void createData1k(uint8_t n);
+  void createDataDMO1k(uint8_t n);
 
   uint8_t write(const uint8_t* data, uint8_t length);
 

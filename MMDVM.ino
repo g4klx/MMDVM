@@ -98,7 +98,7 @@ void loop()
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();
 
-  if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K)
+  if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
     calDMR.process();
 
   if (m_modemState == STATE_P25CAL1K)

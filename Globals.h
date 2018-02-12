@@ -51,6 +51,7 @@ enum MMDVM_STATE {
   STATE_NXDN      = 5,
 
   // Dummy states start at 90
+  STATE_DMRDMO1K  = 92,
   STATE_P25CAL1K  = 93,
   STATE_DMRCAL1K  = 94,
   STATE_LFCAL     = 95,
