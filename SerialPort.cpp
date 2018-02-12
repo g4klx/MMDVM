@@ -243,7 +243,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   MMDVM_STATE modemState = MMDVM_STATE(data[3U]);
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K)
     return 4U;
   if (modemState == STATE_DSTAR && !dstarEnable)
     return 4U;
@@ -309,7 +309,7 @@ uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
   if (modemState == m_modemState)
     return 0U;
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K)
     return 4U;
   if (modemState == STATE_DSTAR && !m_dstarEnable)
     return 4U;
@@ -403,7 +403,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       cwIdTX.reset();
       break;
     case STATE_DMRCAL1K:
-      DEBUG1("Mode set to DMR 1031 Hz Calibrate");
+      DEBUG1("Mode set to DMR BS 1031 Hz Calibrate");
       dmrIdleRX.reset();
       dmrDMORX.reset();
       dmrRX.reset();
@@ -414,6 +414,16 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       break;
     case STATE_P25CAL1K:
       DEBUG1("Mode set to P25 1011 Hz Calibrate");
+      dmrIdleRX.reset();
+      dmrDMORX.reset();
+      dmrRX.reset();
+      dstarRX.reset();
+      ysfRX.reset();
+      p25RX.reset();
+      cwIdTX.reset();
+      break;
+    case STATE_DMRDMO1K:
+      DEBUG1("Mode set to DMR MS 1031 Hz Calibrate");
       dmrIdleRX.reset();
       dmrDMORX.reset();
       dmrRX.reset();
@@ -503,7 +513,7 @@ void CSerialPort::process()
           case MMDVM_CAL_DATA:
             if (m_modemState == STATE_DSTARCAL)
               err = calDStarTX.write(m_buffer + 3U, m_len - 3U);
-            if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K)
+            if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
               err = calDMR.write(m_buffer + 3U, m_len - 3U);
             if (m_modemState == STATE_P25CAL1K)
               err = calP25.write(m_buffer + 3U, m_len - 3U);
