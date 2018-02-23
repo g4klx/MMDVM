@@ -76,9 +76,9 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
 
 #if defined(EXTERNAL_OSC)
-#define DESCRIPTION              "MMDVM 20170501 TCXO (D-Star/DMR/System Fusion/P25/NXDN/RSSI/CW Id)"
+#define DESCRIPTION              "MMDVM 20180223 TCXO (D-Star/DMR/System Fusion/P25/NXDN/RSSI/CW Id)"
 #else
-#define DESCRIPTION              "MMDVM 20170501 (D-Star/DMR/System Fusion/P25/NXDN/RSSI/CW Id)"
+#define DESCRIPTION              "MMDVM 20180223 (D-Star/DMR/System Fusion/P25/NXDN/RSSI/CW Id)"
 #endif
 
 #if defined(GITVERSION)
