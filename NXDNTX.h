@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,16 +16,16 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(P25TX_H)
-#define  P25TX_H
+#if !defined(NXDNTX_H)
+#define  NXDNTX_H
 
 #include "Config.h"
 
 #include "SerialRB.h"
 
-class CP25TX {
+class CNXDNTX {
 public:
-  CP25TX();
+  CNXDNTX();
 
   uint8_t writeData(const uint8_t* data, uint8_t length);
 
@@ -38,9 +38,9 @@ public:
 private:
   CSerialRB                        m_buffer;
   arm_fir_interpolate_instance_q15 m_modFilter;
-  arm_fir_instance_q15             m_lpFilter;
+  arm_fir_instance_q15             m_sincFilter;
   q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
-  q15_t                            m_lpState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
+  q15_t                            m_sincState[70U];   // NoTaps + BlockSize - 1, 22 + 40 - 1 plus some spare
   uint8_t                          m_poBuffer[1200U];
   uint16_t                         m_poLen;
   uint16_t                         m_poPtr;

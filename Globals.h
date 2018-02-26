@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -48,8 +48,11 @@ enum MMDVM_STATE {
   STATE_DMR       = 2,
   STATE_YSF       = 3,
   STATE_P25       = 4,
+  STATE_NXDN      = 5,
 
   // Dummy states start at 90
+  STATE_NXDNCAL1K = 91,
+  STATE_DMRDMO1K  = 92,
   STATE_P25CAL1K  = 93,
   STATE_DMRCAL1K  = 94,
   STATE_LFCAL     = 95,
@@ -71,10 +74,13 @@ enum MMDVM_STATE {
 #include "YSFTX.h"
 #include "P25RX.h"
 #include "P25TX.h"
+#include "NXDNRX.h"
+#include "NXDNTX.h"
 #include "CalDStarRX.h"
 #include "CalDStarTX.h"
 #include "CalDMR.h"
 #include "CalP25.h"
+#include "CalNXDN.h"
 #include "CalRSSI.h"
 #include "CWIdTX.h"
 #include "Debug.h"
@@ -95,6 +101,7 @@ extern bool m_dstarEnable;
 extern bool m_dmrEnable;
 extern bool m_ysfEnable;
 extern bool m_p25Enable;
+extern bool m_nxdnEnable;
 
 extern bool m_duplex;
 
@@ -120,10 +127,14 @@ extern CYSFTX ysfTX;
 extern CP25RX p25RX;
 extern CP25TX p25TX;
 
+extern CNXDNRX nxdnRX;
+extern CNXDNTX nxdnTX;
+
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
 extern CCalDMR     calDMR;
 extern CCalP25     calP25;
+extern CCalNXDN    calNXDN;
 extern CCalRSSI    calRSSI;
 
 extern CCWIdTX cwIdTX;

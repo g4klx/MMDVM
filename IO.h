@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, int16_t txDCOffset, int16_t rxDCOffset);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnLevel, int16_t txDCOffset, int16_t rxDCOffset);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -69,9 +69,13 @@ private:
   arm_fir_instance_q15 m_rrcFilter;
   arm_fir_instance_q15 m_gaussianFilter;
   arm_fir_instance_q15 m_boxcarFilter;
+  arm_fir_instance_q15 m_nxdnFilter;
+  arm_fir_instance_q15 m_nxdnISincFilter;
   q15_t                m_rrcState[70U];           // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
   q15_t                m_gaussianState[40U];      // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
   q15_t                m_boxcarState[30U];        // NoTaps + BlockSize - 1, 6 + 20 - 1 plus some spare
+  q15_t                m_nxdnState[110U];         // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
+  q15_t                m_nxdnISincState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;
@@ -80,6 +84,7 @@ private:
   q15_t                m_dmrTXLevel;
   q15_t                m_ysfTXLevel;
   q15_t                m_p25TXLevel;
+  q15_t                m_nxdnTXLevel;
 
   uint16_t             m_rxDCOffset;
   uint16_t             m_txDCOffset;
@@ -110,6 +115,7 @@ private:
   void setDMRInt(bool on);
   void setYSFInt(bool on);
   void setP25Int(bool on);
+  void setNXDNInt(bool on);
   
   void delayInt(unsigned int dly);
 };
