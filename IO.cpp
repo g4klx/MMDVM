@@ -301,13 +301,14 @@ void CIO::process()
     if (m_lockout)
       return;
 
-    q31_t dcLevel = 0;
-    q31_t dcValues[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
     q31_t q31Samples[RX_BLOCK_SIZE];
-
     ::arm_q15_to_q31(samples, q31Samples, RX_BLOCK_SIZE);
+
+    q31_t dcValues[RX_BLOCK_SIZE];
     ::arm_biquad_cascade_df1_q31(&m_dcFilter, q31Samples, dcValues, RX_BLOCK_SIZE);
 
+    q31_t dcLevel = 0;
     for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
       dcLevel += dcValues[i];
     dcLevel /= RX_BLOCK_SIZE;
@@ -317,26 +318,37 @@ void CIO::process()
     q15_t dcSamples[RX_BLOCK_SIZE];
     for (uint8_t i = 0U; i < RX_BLOCK_SIZE; i++)
       dcSamples[i] = samples[i] - offset;
+#endif
 
     if (m_modemState == STATE_IDLE) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
         ::arm_fir_fast_q15(&m_gaussianFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
-
+#else
+        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+#endif
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
 
       if (m_p25Enable) {
         q15_t P25Vals[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
         ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, P25Vals, RX_BLOCK_SIZE);
-
+#else
+        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
+#endif
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
 
       if (m_nxdnEnable) {
-        q15_t NXDNVals[RX_BLOCK_SIZE];
         q15_t NXDNValsTmp[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
         ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, NXDNValsTmp, RX_BLOCK_SIZE);
+#else
+        ::arm_fir_fast_q15(&m_nxdnFilter, samples, NXDNValsTmp, RX_BLOCK_SIZE);
+#endif
+        q15_t NXDNVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_nxdnISincFilter, NXDNValsTmp, NXDNVals, RX_BLOCK_SIZE);
 
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
@@ -359,8 +371,11 @@ void CIO::process()
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
         ::arm_fir_fast_q15(&m_gaussianFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
-
+#else
+        ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+#endif
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DMR) {
@@ -381,22 +396,32 @@ void CIO::process()
     } else if (m_modemState == STATE_YSF) {
       if (m_ysfEnable) {
         q15_t YSFVals[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
         ::arm_fir_fast_q15(&m_rrcFilter, dcSamples, YSFVals, RX_BLOCK_SIZE);
-
+#else
+        ::arm_fir_fast_q15(&m_rrcFilter, samples, YSFVals, RX_BLOCK_SIZE);
+#endif
         ysfRX.samples(YSFVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_P25) {
       if (m_p25Enable) {
         q15_t P25Vals[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
         ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, P25Vals, RX_BLOCK_SIZE);
-
+#else
+        ::arm_fir_fast_q15(&m_boxcarFilter, samples, P25Vals, RX_BLOCK_SIZE);
+#endif
         p25RX.samples(P25Vals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_NXDN) {
       if (m_nxdnEnable) {
-        q15_t NXDNVals[RX_BLOCK_SIZE];
         q15_t NXDNValsTmp[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
         ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, NXDNValsTmp, RX_BLOCK_SIZE);
+#else
+        ::arm_fir_fast_q15(&m_nxdnFilter, samples, NXDNValsTmp, RX_BLOCK_SIZE);
+#endif
+        q15_t NXDNVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_nxdnISincFilter, NXDNValsTmp, NXDNVals, RX_BLOCK_SIZE);
 
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
