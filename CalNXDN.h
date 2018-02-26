@@ -1,6 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
- *   Copyright (C) 2016 by Colin Durbridge G4EML
+ *   Copyright (C) 2018 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,37 +16,27 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(CALDMR_H)
-#define  CALDMR_H
+#if !defined(CALNXDN_H)
+#define  CALNXDN_H
 
 #include "Config.h"
-#include "DMRDefines.h"
 
-enum DMRCAL1K {
-  DMRCAL1K_IDLE,
-  DMRCAL1K_VH,
-  DMRCAL1K_VOICE,
-  DMRCAL1K_VT,
-  DMRCAL1K_WAIT
+enum NXDNCAL1K {
+  NXDNCAL1K_IDLE,
+  NXDNCAL1K_TX
 };
 
-class CCalDMR {
+class CCalNXDN {
 public:
-  CCalDMR();
+  CCalNXDN();
 
   void process();
-  void dmr1kcal();
-  void dmrdmo1k();
-  void createData1k(uint8_t n);
-  void createDataDMO1k(uint8_t n);
 
   uint8_t write(const uint8_t* data, uint8_t length);
 
 private:
   bool      m_transmit;
-  DMRCAL1K  m_state;
-  uint32_t  m_frame_start;
-  uint8_t   m_dmr1k[DMR_FRAME_LENGTH_BYTES + 1U];
+  NXDNCAL1K m_state;
   uint8_t   m_audioSeq;
 };
 
