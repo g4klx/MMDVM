@@ -442,7 +442,7 @@ DSTAR    PA1    output           CN8 Pin2
 DMR      PA4    output           CN8 Pin3
 YSF      PB0    output           CN8 Pin4
 P25      PC1    output           CN8 Pin5
-NXDN     PC0    output           CN8 Pin6
+NXDN     PA3    output           CN9 Pin1
 
 RX       PA0    analog input     CN8 Pin1
 RSSI     PC0    analog input     CN8 Pin6
@@ -471,9 +471,9 @@ EXT_CLK  PB8    input            CN5 Pin10
 #define PORT_P25          GPIOC
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOC
 
-#define PIN_NXDN          GPIO_Pin_0
-#define PORT_NXDN         GPIOC
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
+#define PIN_NXDN          GPIO_Pin_3
+#define PORT_NXDN         GPIOA
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
 
 #define PIN_DSTAR         GPIO_Pin_1
 #define PORT_DSTAR        GPIOA
