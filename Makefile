@@ -1,4 +1,4 @@
-#  Copyright (C) 2016,2017 by Andy Uribe CA6JAU
+#  Copyright (C) 2016,2017,2018 by Andy Uribe CA6JAU
 #  Copyright (C) 2016 by Jim McLaughlin KI6ZUM
 
 #  This program is free software; you can redistribute it and/or modify
@@ -126,6 +126,8 @@ DEFS_NUCLEO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_NUCLEO -D
 DEFS_NUCLEO_F767=-DUSE_HAL_DRIVER -DSTM32F767xx -DSTM32F7XX -DSTM32F7_NUCLEO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # MMDVM-Pi F722 board:
 DEFS_PI_F722=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# MMDVM-F7M F0DEI board:
+DEFS_F7M=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_F7M -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
 # Build compiler flags
 CFLAGS_F4=-c $(MCFLAGS_F4) $(INCLUDES_F4)
@@ -166,6 +168,12 @@ f4m: CFLAGS+=$(CFLAGS_F4) $(DEFS_F4M)
 f4m: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_F4M)
 f4m: LDFLAGS+=$(LDFLAGS_F4)
 f4m: release_f4
+
+f7m: GitVersion.h
+f7m: CFLAGS+=$(CFLAGS_F7) $(DEFS_F7M)
+f7m: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_F7M)
+f7m: LDFLAGS+=$(LDFLAGS_F722)
+f7m: release_f7
 
 nucleo: GitVersion.h
 nucleo: CFLAGS+=$(CFLAGS_F4) $(DEFS_NUCLEO)
@@ -318,6 +326,8 @@ ifneq ($(wildcard /usr/bin/stm32flash),)
 	-/usr/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F7)
 	/usr/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
 endif
+
+deploy-f7m: deploy-pi-f7
 
 # Export the current git version if the index file exists, else 000...
 GitVersion.h:
