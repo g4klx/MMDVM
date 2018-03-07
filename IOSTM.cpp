@@ -324,6 +324,81 @@ EXT_CLK  PA15   input
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1
 
+#elif defined(STM32F722_F7M)
+/*
+Pin definitions for MMDVM-F7M Pi-Hat F0DEI board:
+
+PTT      PB13   output
+COSLED   PB14   output
+LED      PB15   output
+COS      PC0    input
+
+DSTAR    PC7    output
+DMR      PC8    output
+YSF      PA8    output
+P25      PC9    output
+NXDN     PB1    output
+
+RX       PA0    analog input
+RSSI     PA7    analog input
+TX       PA4    analog output
+
+EXT_CLK  PA15   input
+*/
+
+#define PIN_COS           GPIO_Pin_0
+#define PORT_COS          GPIOC
+#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
+
+#define PIN_PTT           GPIO_Pin_13
+#define PORT_PTT          GPIOB
+#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
+
+#define PIN_COSLED        GPIO_Pin_14
+#define PORT_COSLED       GPIOB
+#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
+
+#define PIN_LED           GPIO_Pin_15
+#define PORT_LED          GPIOB
+#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
+
+#define PIN_P25           GPIO_Pin_9
+#define PORT_P25          GPIOC
+#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
+
+#define PIN_NXDN          GPIO_Pin_1
+#define PORT_NXDN         GPIOB
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+
+#define PIN_DSTAR         GPIO_Pin_7
+#define PORT_DSTAR        GPIOC
+#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOC
+
+#define PIN_DMR           GPIO_Pin_8
+#define PORT_DMR          GPIOC
+#define RCC_Per_DMR       RCC_AHB1Periph_GPIOC
+
+#define PIN_YSF           GPIO_Pin_8
+#define PORT_YSF          GPIOA
+#define RCC_Per_YSF       RCC_AHB1Periph_GPIOA
+
+#define PIN_EXT_CLK       GPIO_Pin_15
+#define SRC_EXT_CLK       GPIO_PinSource15
+#define PORT_EXT_CLK      GPIOA
+
+#define PIN_RX            GPIO_Pin_0
+#define PIN_RX_CH         ADC_Channel_0
+#define PORT_RX           GPIOA
+#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
+
+#define PIN_RSSI          GPIO_Pin_7
+#define PIN_RSSI_CH       ADC_Channel_7
+#define PORT_RSSI         GPIOA
+#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
+
+#define PIN_TX            GPIO_Pin_4
+#define PIN_TX_CH         DAC_Channel_1
+
 #elif defined(STM32F4_NUCLEO)
 
 #if defined(STM32F4_NUCLEO_MORPHO_HEADER)
@@ -442,7 +517,7 @@ DSTAR    PA1    output           CN8 Pin2
 DMR      PA4    output           CN8 Pin3
 YSF      PB0    output           CN8 Pin4
 P25      PC1    output           CN8 Pin5
-NXDN     PC0    output           CN8 Pin6
+NXDN     PA3    output           CN9 Pin1
 
 RX       PA0    analog input     CN8 Pin1
 RSSI     PC0    analog input     CN8 Pin6
@@ -471,9 +546,9 @@ EXT_CLK  PB8    input            CN5 Pin10
 #define PORT_P25          GPIOC
 #define RCC_Per_P25       RCC_AHB1Periph_GPIOC
 
-#define PIN_NXDN          GPIO_Pin_0
-#define PORT_NXDN         GPIOC
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
+#define PIN_NXDN          GPIO_Pin_3
+#define PORT_NXDN         GPIOA
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
 
 #define PIN_DSTAR         GPIO_Pin_1
 #define PORT_DSTAR        GPIOA
@@ -612,7 +687,7 @@ EXT_CLK  PA15   input            CN11 Pin17
 #define PIN_TX_CH         DAC_Channel_1
 
 #else
-#error "Either STM32F4_DISCOVERY, STM32F4_PI, STM32F722_PI, STM32F4_F4M, STM32F4_NUCLEO or STM32F7_NUCLEO need to be defined"
+#error "Either STM32F4_DISCOVERY, STM32F4_PI, STM32F722_PI, STM32F4_F4M, STM32F722_F7M, STM32F4_NUCLEO or STM32F7_NUCLEO need to be defined"
 #endif
 
 const uint16_t DC_OFFSET = 2048U;

@@ -34,7 +34,11 @@
 #define PIN_DMR                10
 #define PIN_YSF                11
 #define PIN_P25                12
-#define PIN_NXDN               8
+#if defined(__MK20DX256__)
+#define PIN_NXDN               2
+#else
+#define PIN_NXDN               24
+#endif
 #define PIN_ADC                5        // A0,  Pin 14
 #define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
 
