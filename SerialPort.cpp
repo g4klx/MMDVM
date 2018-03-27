@@ -76,12 +76,7 @@ const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
-
-#if defined(EXTERNAL_OSC)
-#define DESCRIPTION              "MMDVM 20180223 TCXO (D-Star/DMR/System Fusion/P25/NXDN/RSSI/CW Id)"
-#else
-#define DESCRIPTION              "MMDVM 20180223 (D-Star/DMR/System Fusion/P25/NXDN/RSSI/CW Id)"
-#endif
+#define DESCRIPTION              "MMDVM 20180327 (D-Star/DMR/System Fusion/P25/NXDN)"
 
 #if defined(GITVERSION)
 #define concat(a, b) a " GitID #" b ""
