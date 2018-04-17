@@ -22,7 +22,6 @@ Boston, MA  02110-1301, USA.
 
 CSerialRB::CSerialRB(uint16_t length) :
 m_length(length),
-m_buffer(NULL),
 m_head(0U),
 m_tail(0U),
 m_full(false)
