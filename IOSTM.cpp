@@ -686,8 +686,84 @@ EXT_CLK  PA15   input            CN11 Pin17
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1
 
+#elif defined(STM32F4_DVM)
+/*
+Pin definitions for STM32F4 STM32-DVM rev 3 Board:
+
+COS      PB13   input
+PTT      PB12   output
+COSLED   PB5    output
+LED      PB4    output
+
+P25      PB9    output
+NXDN     PB10   output
+DSTAR    PB7    output
+DMR      PB6    output
+YSF      PB8    output
+
+RX       PB0    analog input
+RSSI     PB1    analog input
+TX       PA4    analog output
+
+EXT_CLK  PA15   input
+*/
+
+#define PIN_COS           GPIO_Pin_13
+#define PORT_COS          GPIOB
+#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
+
+
+#define PIN_PTT           GPIO_Pin_12
+#define PORT_PTT          GPIOB
+#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
+
+#define PIN_COSLED        GPIO_Pin_4
+#define PORT_COSLED       GPIOB
+#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
+
+#define PIN_LED           GPIO_Pin_3
+#define PORT_LED          GPIOB
+#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
+
+#define PIN_P25           GPIO_Pin_8
+#define PORT_P25          GPIOB
+#define RCC_Per_P25       RCC_AHB1Periph_GPIOB
+
+#define PIN_NXDN          GPIO_Pin_9
+#define PORT_NXDN         GPIOB
+#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+
+#define PIN_DSTAR         GPIO_Pin_6
+#define PORT_DSTAR        GPIOB
+#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOB
+
+#define PIN_DMR           GPIO_Pin_5
+#define PORT_DMR          GPIOB
+#define RCC_Per_DMR       RCC_AHB1Periph_GPIOB
+
+#define PIN_YSF           GPIO_Pin_7
+#define PORT_YSF          GPIOB
+#define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
+
+#define PIN_EXT_CLK       GPIO_Pin_15
+#define SRC_EXT_CLK       GPIO_PinSource15
+#define PORT_EXT_CLK      GPIOA
+
+#define PIN_RX            GPIO_Pin_0
+#define PIN_RX_CH         ADC_Channel_8
+#define PORT_RX           GPIOB
+#define RCC_Per_RX        RCC_AHB1Periph_GPIOB
+
+#define PIN_RSSI          GPIO_Pin_1
+#define PIN_RSSI_CH       ADC_Channel_9
+#define PORT_RSSI         GPIOB
+#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOB
+
+#define PIN_TX            GPIO_Pin_4
+#define PIN_TX_CH         DAC_Channel_1
+
 #else
-#error "Either STM32F4_DISCOVERY, STM32F4_PI, STM32F722_PI, STM32F4_F4M, STM32F722_F7M, STM32F4_NUCLEO or STM32F7_NUCLEO need to be defined"
+#error "Either STM32F4_DISCOVERY, STM32F4_PI, STM32F722_PI, STM32F4_F4M, STM32F722_F7M, STM32F4_DVM, STM32F4_NUCLEO or STM32F7_NUCLEO need to be defined"
 #endif
 
 const uint16_t DC_OFFSET = 2048U;
