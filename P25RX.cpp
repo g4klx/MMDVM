@@ -143,7 +143,7 @@ void CP25RX::processNone(q15_t sample)
 
       m_averagePtr = NOAVEPTR;
 
-      m_countdown = CORRELATION_COUNTDOWN;
+      m_countdown = 5U;
     }
   }
 
@@ -179,13 +179,13 @@ void CP25RX::processHdr(q15_t sample)
     uint16_t nidStartPtr = m_hdrStartPtr + P25_SYNC_LENGTH_SAMPLES;
     if (nidStartPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
         nidStartPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
-    
+
     uint8_t nid[2U];
     samplesToBits(nidStartPtr, (2U * 4U), nid, 0U, m_centreVal, m_thresholdVal);
     // DEBUG3("P25RX: nid (b0 - b1)", nid[0U], nid[1U]);
 
     m_duid = nid[1U] & 0x0F;
-      
+
     switch (m_duid) {
         case P25_DUID_HDU: {
                 calculateLevels(m_hdrStartPtr, P25_HDR_FRAME_LENGTH_SYMBOLS);

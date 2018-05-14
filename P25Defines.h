@@ -43,8 +43,8 @@ const unsigned int P25_TERM_FRAME_LENGTH_SYMBOLS   = P25_TERM_FRAME_LENGTH_BYTES
 const unsigned int P25_TERM_FRAME_LENGTH_SAMPLES   = P25_TERM_FRAME_LENGTH_SYMBOLS * P25_RADIO_SYMBOL_LENGTH;
 
 const unsigned int P25_TSDU_FRAME_LENGTH_BYTES     = 45U;
-const unsigned int P25_TSDU_FRAME_LENGTH_BITS      = P25_TSDU_FRAME_LENGTH_BYTES * 8U;
-const unsigned int P25_TSDU_FRAME_LENGTH_SYMBOLS   = P25_TSDU_FRAME_LENGTH_BYTES * 4U;
+const unsigned int P25_TSDU_FRAME_LENGTH_BITS      = P25_TSDU_FRAME_LENGTH_BYTES * 8U; 
+const unsigned int P25_TSDU_FRAME_LENGTH_SYMBOLS   = P25_TSDU_FRAME_LENGTH_BYTES * 4U; 
 const unsigned int P25_TSDU_FRAME_LENGTH_SAMPLES   = P25_TSDU_FRAME_LENGTH_SYMBOLS * P25_RADIO_SYMBOL_LENGTH;
 
 const unsigned int P25_SYNC_LENGTH_BYTES   = 6U;
@@ -54,7 +54,7 @@ const unsigned int P25_SYNC_LENGTH_SAMPLES = P25_SYNC_LENGTH_SYMBOLS * P25_RADIO
 
 const unsigned int P25_NID_LENGTH_BYTES    = 8U;
 const unsigned int P25_NID_LENGTH_BITS     = P25_NID_LENGTH_BYTES * 8U;
-const unsigned int P25_NID_LENGTH_SYMBOLS  = P25_NID_LENGTH_BYTES * 4U;
+const unsigned int P25_NID_LENGTH_SYMBOLS  = P25_NID_LENGTH_BYTES * 4U; 
 const unsigned int P25_NID_LENGTH_SAMPLES  = P25_NID_LENGTH_SYMBOLS * P25_RADIO_SYMBOL_LENGTH;
 
 const uint8_t P25_SYNC_BYTES[] = {0x55U, 0x75U, 0xF5U, 0xFFU, 0x77U, 0xFFU};
@@ -72,13 +72,13 @@ const int8_t P25_SYNC_SYMBOLS_VALUES[] = {+3, +3, +3, +3, +3, -3, +3, +3, -3, -3
 const uint32_t P25_SYNC_SYMBOLS      = 0x00FB30A0U;
 const uint32_t P25_SYNC_SYMBOLS_MASK = 0x00FFFFFFU;
 
-const uint8_t P25_DUID_HDU = 0x00U;				// Header Data Unit
-const uint8_t P25_DUID_TDU = 0x03U;				// Simple Terminator Data Unit
-const uint8_t P25_DUID_LDU1 = 0x05U;			// Logical Link Data Unit 1
-const uint8_t P25_DUID_TSDU = 0x07U;			// Trunking System Data Unit
-const uint8_t P25_DUID_LDU2 = 0x0AU;			// Logical Link Data Unit 2
-const uint8_t P25_DUID_PDU = 0x0CU;				// Packet Data Unit 
-const uint8_t P25_DUID_TDULC = 0x0FU;			// Terminator Data Unit with Link Control
+const uint8_t P25_DUID_HDU = 0x00U;             // Header Data Unit
+const uint8_t P25_DUID_TDU = 0x03U;             // Simple Terminator Data Unit
+const uint8_t P25_DUID_LDU1 = 0x05U;            // Logical Link Data Unit 1
+const uint8_t P25_DUID_TSDU = 0x07U;            // Trunking System Data Unit
+const uint8_t P25_DUID_LDU2 = 0x0AU;            // Logical Link Data Unit 2
+const uint8_t P25_DUID_PDU = 0x0CU;             // Packet Data Unit 
+const uint8_t P25_DUID_TDULC = 0x0FU;           // Terminator Data Unit with Link Control
 
 #endif
 
