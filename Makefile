@@ -128,6 +128,8 @@ DEFS_NUCLEO_F767=-DUSE_HAL_DRIVER -DSTM32F767xx -DSTM32F7XX -DSTM32F7_NUCLEO -DH
 DEFS_PI_F722=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # MMDVM-F7M F0DEI board:
 DEFS_F7M=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_F7M -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# STM32F4 DVM board:
+DEFS_DVM=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_DVM -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
 # Build compiler flags
 CFLAGS_F4=-c $(MCFLAGS_F4) $(INCLUDES_F4)
@@ -146,7 +148,7 @@ CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -f
 LDFLAGS=-Os --specs=nano.specs
 
 # Build Rules
-.PHONY: all release dis pi pi_f722 f4m nucleo f767 clean
+.PHONY: all release dis pi pi_f722 f4m nucleo f767 dvm clean
 
 # Default target: Nucleo-64 F446RE board
 all: nucleo
@@ -192,6 +194,12 @@ f767: CFLAGS+=$(CFLAGS_F7) $(DEFS_NUCLEO_F767)
 f767: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_NUCLEO_F767)
 f767: LDFLAGS+=$(LDFLAGS_F767)
 f767: release_f7
+
+dvm: GitVersion.h
+dvm: CFLAGS+=$(CFLAGS_F4) $(DEFS_DVM)
+dvm: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DVM)
+dvm: LDFLAGS+=$(LDFLAGS_F4)
+dvm: release_f4
 
 release_f4: $(BINDIR)
 release_f4: $(OBJDIR_F4)
@@ -313,6 +321,7 @@ ifneq ($(wildcard /usr/bin/stm32flash),)
 endif
 
 deploy-f4m: deploy-pi
+deploy-dvm: deploy-pi
 
 deploy-pi-f7:
 ifneq ($(wildcard /usr/local/bin/stm32flash),)
