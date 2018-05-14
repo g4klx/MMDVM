@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2018 by Bryan Biedenkapp <gatekeep@gmail.com>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,6 +23,8 @@
 #include "Utils.h"
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.57)
+
+const uint8_t CORRELATION_COUNTDOWN = 10U;//5U;
 
 const uint8_t MAX_SYNC_BIT_START_ERRS = 2U;
 const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 4U;
@@ -60,7 +63,8 @@ m_threshold(),
 m_thresholdVal(0),
 m_averagePtr(NOAVEPTR),
 m_rssiAccum(0U),
-m_rssiCount(0U)
+m_rssiCount(0U),
+m_duid(0U)
 {
 }
 
@@ -84,6 +88,7 @@ void CP25RX::reset()
   m_countdown     = 0U;
   m_rssiAccum     = 0U;
   m_rssiCount     = 0U;
+  m_duid          = 0U;
 }
 
 void CP25RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
@@ -113,8 +118,10 @@ void CP25RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
     }
 
     m_dataPtr++;
-    if (m_dataPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+    if (m_dataPtr >= P25_LDU_FRAME_LENGTH_SAMPLES) {
       m_dataPtr = 0U;
+      m_duid = 0U;
+    }
 
     m_bitPtr++;
     if (m_bitPtr >= P25_RADIO_SYMBOL_LENGTH)
@@ -169,16 +176,67 @@ void CP25RX::processHdr(q15_t sample)
   }
 
   if (m_dataPtr == m_maxSyncPtr) {
-    if (m_hdrSyncPtr != m_lduSyncPtr) {
-      calculateLevels(m_hdrStartPtr, P25_HDR_FRAME_LENGTH_SYMBOLS);
+    uint16_t nidStartPtr = m_hdrStartPtr + P25_SYNC_LENGTH_SAMPLES;
+    if (nidStartPtr >= P25_LDU_FRAME_LENGTH_SAMPLES)
+        nidStartPtr -= P25_LDU_FRAME_LENGTH_SAMPLES;
 
-      DEBUG4("P25RX: sync found in Hdr pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
+    uint8_t nid[2U];
+    samplesToBits(nidStartPtr, (2U * 4U), nid, 0U, m_centreVal, m_thresholdVal);
+    // DEBUG3("P25RX: nid (b0 - b1)", nid[0U], nid[1U]);
 
-      uint8_t frame[P25_HDR_FRAME_LENGTH_BYTES + 1U];
-      samplesToBits(m_hdrStartPtr, P25_HDR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+    m_duid = nid[1U] & 0x0F;
 
-      frame[0U] = 0x01U;
-      serial.writeP25Hdr(frame, P25_HDR_FRAME_LENGTH_BYTES + 1U);
+    switch (m_duid) {
+        case P25_DUID_HDU: {
+                calculateLevels(m_hdrStartPtr, P25_HDR_FRAME_LENGTH_SYMBOLS);
+
+                DEBUG4("P25RX: sync found in Hdr pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
+
+                uint8_t frame[P25_HDR_FRAME_LENGTH_BYTES + 1U];
+                samplesToBits(m_hdrStartPtr, P25_HDR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+
+                frame[0U] = 0x01U;
+                serial.writeP25Hdr(frame, P25_HDR_FRAME_LENGTH_BYTES + 1U);
+            }
+            break;
+        case P25_DUID_TSDU: {
+                calculateLevels(m_hdrStartPtr, P25_TSDU_FRAME_LENGTH_SYMBOLS);
+
+                DEBUG4("P25RX: sync found in TSDU pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
+
+                uint8_t frame[P25_TSDU_FRAME_LENGTH_BYTES + 1U];
+                samplesToBits(m_hdrStartPtr, P25_TSDU_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+
+                frame[0U] = 0x01U;
+                serial.writeP25Hdr(frame, P25_TSDU_FRAME_LENGTH_BYTES + 1U);
+            }
+            break;
+        case P25_DUID_TDU: {
+                calculateLevels(m_hdrStartPtr, P25_TERM_FRAME_LENGTH_SYMBOLS);
+
+                DEBUG4("P25RX: sync found in TDU pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
+
+                uint8_t frame[P25_TERM_FRAME_LENGTH_BYTES + 1U];
+                samplesToBits(m_hdrStartPtr, P25_TERM_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+
+                frame[0U] = 0x01U;
+                serial.writeP25Hdr(frame, P25_TERM_FRAME_LENGTH_BYTES + 1U);
+            }
+            break;
+        case P25_DUID_TDULC: {
+                calculateLevels(m_hdrStartPtr, P25_TERMLC_FRAME_LENGTH_SYMBOLS);
+
+                DEBUG4("P25RX: sync found in TDULC pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
+
+                uint8_t frame[P25_TERMLC_FRAME_LENGTH_BYTES + 1U];
+                samplesToBits(m_hdrStartPtr, P25_TERMLC_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+
+                frame[0U] = 0x01U;
+                serial.writeP25Hdr(frame, P25_TERMLC_FRAME_LENGTH_BYTES + 1U);
+            }
+            break;
+        default:
+            break;
     }
 
     m_minSyncPtr = m_lduSyncPtr + P25_LDU_FRAME_LENGTH_SAMPLES - 1U;
@@ -238,6 +296,7 @@ void CP25RX::processLdu(q15_t sample)
       m_averagePtr = NOAVEPTR;
       m_countdown  = 0U;
       m_maxCorr    = 0;
+      m_duid       = 0U;
 		} else {
       frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
       writeRSSILdu(frame);
