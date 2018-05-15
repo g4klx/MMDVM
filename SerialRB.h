@@ -32,7 +32,7 @@ Boston, MA  02110-1301, USA.
 #include <Arduino.h>
 #endif
 
-const uint16_t SERIAL_RINGBUFFER_SIZE = 370U;
+const uint16_t SERIAL_RINGBUFFER_SIZE = 2000U;
 
 class CSerialRB {
 public:
