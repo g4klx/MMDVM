@@ -692,14 +692,14 @@ Pin definitions for STM32F4 STM32-DVM rev 3 Board:
 
 COS      PB13   input
 PTT      PB12   output
-COSLED   PB5    output
-LED      PB4    output
+COSLED   PB4    output
+LED      PB3    output
 
-P25      PB9    output
-NXDN     PB10   output
-DSTAR    PB7    output
-DMR      PB6    output
-YSF      PB8    output
+P25      PB8    output
+NXDN     PB9    output
+DSTAR    PB6    output
+DMR      PB5    output
+YSF      PB7    output
 
 RX       PB0    analog input
 RSSI     PB1    analog input
