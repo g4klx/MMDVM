@@ -143,7 +143,7 @@ void CP25RX::processNone(q15_t sample)
 
       m_averagePtr = NOAVEPTR;
 
-      m_countdown = 5U;
+      m_countdown = CORRELATION_COUNTDOWN;
     }
   }
 
