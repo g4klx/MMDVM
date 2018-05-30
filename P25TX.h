@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,19 +33,18 @@ public:
 
   void setTXDelay(uint8_t delay);
 
-  uint16_t getSpace() const;
+  uint8_t getSpace() const;
 
 private:
-  CSerialRB            m_buffer;
-  arm_fir_instance_q15 m_modFilter;
-  arm_fir_instance_q15 m_lpFilter;
-  q15_t                m_modState[90U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  q15_t                m_lpState[90U];     // NoTaps + BlockSize - 1, 44 + 20 - 1 plus some spare
-  uint8_t              m_poBuffer[920U];
-  uint16_t             m_poLen;
-  uint16_t             m_poPtr;
-  uint16_t             m_txDelay;
-  uint32_t             m_count;
+  CSerialRB                        m_buffer;
+  arm_fir_interpolate_instance_q15 m_modFilter;
+  arm_fir_instance_q15             m_lpFilter;
+  q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
+  q15_t                            m_lpState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
+  uint8_t                          m_poBuffer[1200U];
+  uint16_t                         m_poLen;
+  uint16_t                         m_poPtr;
+  uint16_t                         m_txDelay;
 
   void writeByte(uint8_t c);
 };

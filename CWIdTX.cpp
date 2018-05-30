@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -17,8 +17,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "CWIdTX.h"
@@ -26,7 +24,6 @@
 q15_t TONE[] = {
     0, 261, 518, 765, 1000, 1218, 1414, 1587, 1732, 1848, 1932, 1983, 2000, 1983, 1932, 1848, 1732, 1587, 1414, 1218, 1000, 765, 518, 261, 0, -261, -518, -765, -1000, -1218, -1414,
     -1587, -1732, -1848, -1932, -1983, -2000, -1983, -1932, -1848, -1732, -1587, -1414, -1218, -1000, -765, -518, -261};
-
 q15_t SILENCE[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -78,6 +75,8 @@ const struct {
   {'/', 0xEAE80000U, 16U},
   {'?', 0xAEEA0000U, 18U},
   {',', 0xEEAEE000U, 22U},
+  {'-', 0xEAAE0000U, 18U},
+  {'=', 0xEAB80000U, 16U},
   {' ', 0x00000000U, 4U},
   {0U,  0x00000000U, 0U}
 };

@@ -22,7 +22,6 @@ Boston, MA  02110-1301, USA.
 
 CRSSIRB::CRSSIRB(uint16_t length) :
 m_length(length),
-m_rssi(NULL),
 m_head(0U),
 m_tail(0U),
 m_full(false),
@@ -101,4 +100,3 @@ bool CRSSIRB::hasOverflowed()
 
   return overflow;
 }
-

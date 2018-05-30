@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -33,6 +33,7 @@
 #define PIN_DMR                17
 #define PIN_YSF                18
 #define PIN_P25                19
+#define PIN_NXDN               20
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -46,6 +47,7 @@
 #define PIN_DMR                8
 #define PIN_YSF                7
 #define PIN_P25                6
+#define PIN_NXDN               5
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -61,6 +63,7 @@
 #define PIN_DMR                8
 #define PIN_YSF                7
 #define PIN_P25                6
+#define PIN_NXDN               5
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -77,7 +80,7 @@ const uint16_t DC_OFFSET = 2048U;
 extern "C" {
   void ADC_Handler()
   {
-    io.interrupt(0U);
+    io.interrupt();
   }
 }
 
@@ -95,13 +98,14 @@ void CIO::initInt()
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
+  pinMode(PIN_NXDN,   OUTPUT);
 #endif
 }
 
 void CIO::startInt()
 {
   if (ADC->ADC_ISR & ADC_ISR_EOC_Chan)        // Ensure there was an End-of-Conversion and we read the ISR reg
-    io.interrupt(0U);
+    io.interrupt();
 
   // Set up the ADC
   NVIC_EnableIRQ(ADC_IRQn);                   // Enable ADC interrupt vector
@@ -164,7 +168,7 @@ void CIO::startInt()
   digitalWrite(PIN_LED,    HIGH);
 }
 
-void CIO::interrupt(uint8_t source)
+void CIO::interrupt()
 {
   if ((ADC->ADC_ISR & ADC_ISR_EOC_Chan) == ADC_ISR_EOC_Chan) {    // Ensure there was an End-of-Conversion and we read the ISR reg
     uint8_t control = MARK_NONE;
@@ -211,7 +215,7 @@ void CIO::setDStarInt(bool on)
   digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
 }
 
-void CIO::setDMRInt(bool on) 
+void CIO::setDMRInt(bool on)
 {
   digitalWrite(PIN_DMR, on ? HIGH : LOW);
 }
@@ -221,9 +225,19 @@ void CIO::setYSFInt(bool on)
   digitalWrite(PIN_YSF, on ? HIGH : LOW);
 }
 
-void CIO::setP25Int(bool on) 
+void CIO::setP25Int(bool on)
 {
   digitalWrite(PIN_P25, on ? HIGH : LOW);
+}
+
+void CIO::setNXDNInt(bool on)
+{
+  digitalWrite(PIN_NXDN, on ? HIGH : LOW);
+}
+
+void CIO::delayInt(unsigned int dly)
+{
+  delay(dly);
 }
 
 #endif

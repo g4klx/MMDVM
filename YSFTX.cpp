@@ -1,5 +1,6 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,42 +17,53 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "YSFTX.h"
 
 #include "YSFDefines.h"
 
-// Generated using rcosdesign(0.2, 4, 10, 'sqrt') in MATLAB
-static q15_t   YSF_C4FSK_FILTER[] = {486, 39, -480, -1022, -1526, -1928, -2164, -2178, -1927, -1384, -548, 561, 1898, 3399, 4980, 6546, 7999, 9246, 10202, 10803, 11008, 10803, 10202, 9246,
-                                 7999, 6546, 4980, 3399, 1898, 561, -548, -1384, -1927, -2178, -2164, -1928, -1526, -1022, -480, 39, 486, 0};
-const uint16_t YSF_C4FSK_FILTER_LEN = 42U;
+// Generated using rcosdesign(0.2, 8, 10, 'sqrt') in MATLAB
+static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 850, 592, 219, -234, -720, -1179,
+                                -1548, -1769, -1795, -1597, -1172, -544, 237, 1092, 1927, 2637,
+                                3120, 3286, 3073, 2454, 1447, 116, -1431, -3043, -4544, -5739,
+                                -6442, -6483, -5735, -4121, -1633, 1669, 5651, 10118, 14822,
+                                19484, 23810, 27520, 30367, 32156, 32767, 32156, 30367, 27520,
+                                23810, 19484, 14822, 10118, 5651, 1669, -1633, -4121, -5735,
+                                -6483, -6442, -5739, -4544, -3043, -1431, 116, 1447, 2454,
+                                3073, 3286, 3120, 2637, 1927, 1092, 237, -544, -1172, -1597,
+                                -1795, -1769, -1548, -1179, -720, -234, 219, 592, 850}; // numTaps = 90, L = 10
+const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t YSF_LEVELA[] = { 499,  499,  499,  499,  499,  499,  499,  499,  499,  499};
-const q15_t YSF_LEVELB[] = { 166,  166,  166,  166,  166,  166,  166,  166,  166,  166};
-const q15_t YSF_LEVELC[] = {-166, -166, -166, -166, -166, -166, -166, -166, -166, -166};
-const q15_t YSF_LEVELD[] = {-499, -499, -499, -499, -499, -499, -499, -499, -499, -499};
+const q15_t YSF_LEVELA_HI =  1893;
+const q15_t YSF_LEVELB_HI =  631;
+const q15_t YSF_LEVELC_HI = -631;
+const q15_t YSF_LEVELD_HI = -1893;
+
+const q15_t YSF_LEVELA_LO =  948;
+const q15_t YSF_LEVELB_LO =  316;
+const q15_t YSF_LEVELC_LO = -316;
+const q15_t YSF_LEVELD_LO = -948;
 
 const uint8_t YSF_START_SYNC = 0x77U;
 const uint8_t YSF_END_SYNC   = 0xFFU;
 
 CYSFTX::CYSFTX() :
-m_buffer(1500U),
+m_buffer(4000U),
 m_modFilter(),
 m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(240U),      // 200ms
-m_count(0U)
+m_loDev(false)
 {
-  ::memset(m_modState, 0x00U, 90U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
 
-  m_modFilter.numTaps = YSF_C4FSK_FILTER_LEN;
-  m_modFilter.pState  = m_modState;
-  m_modFilter.pCoeffs = YSF_C4FSK_FILTER;
+  m_modFilter.L           = YSF_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = RRC_0_2_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = RRC_0_2_FILTER;
+  m_modFilter.pState      = m_modState;
 }
 
 void CYSFTX::process()
@@ -61,8 +73,6 @@ void CYSFTX::process()
 
   if (m_poLen == 0U) {
     if (!m_tx) {
-      m_count = 0U;
-
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = YSF_START_SYNC;
     } else {
@@ -110,59 +120,48 @@ uint8_t CYSFTX::writeData(const uint8_t* data, uint8_t length)
 
 void CYSFTX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t outBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t inBuffer[4U];
+  q15_t outBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
-  q15_t* p = inBuffer;
-  for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += YSF_RADIO_SYMBOL_LENGTH) {
+  for (uint8_t i = 0U; i < 4U; i++, c <<= 2) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, YSF_LEVELA, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = m_loDev ? YSF_LEVELA_LO : YSF_LEVELA_HI;
         break;
       case 0x80U:
-        ::memcpy(p, YSF_LEVELB, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = m_loDev ? YSF_LEVELB_LO : YSF_LEVELB_HI;
         break;
       case 0x00U:
-        ::memcpy(p, YSF_LEVELC, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = m_loDev ? YSF_LEVELC_LO : YSF_LEVELC_HI;
         break;
       default:
-        ::memcpy(p, YSF_LEVELD, YSF_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = m_loDev ? YSF_LEVELD_LO : YSF_LEVELD_HI;
         break;
     }
   }
 
-  uint16_t blockSize = YSF_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
 
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += YSF_RADIO_SYMBOL_LENGTH * 4U;
-
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[YSF_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        blockSize++;
-      } else {
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
-
-  io.write(STATE_YSF, outBuffer, blockSize);
+  io.write(STATE_YSF, outBuffer, YSF_RADIO_SYMBOL_LENGTH * 4U);
 }
 
 void CYSFTX::setTXDelay(uint8_t delay)
 {
   m_txDelay = 600U + uint16_t(delay) * 12U;        // 500ms + tx delay
+
+  if (m_txDelay > 1200U)
+    m_txDelay = 1200U;
 }
 
-uint16_t CYSFTX::getSpace() const
+uint8_t CYSFTX::getSpace() const
 {
   return m_buffer.getSpace() / YSF_FRAME_LENGTH_BYTES;
+}
+
+void CYSFTX::setLoDev(bool on)
+{
+  m_loDev = on;
 }
 
