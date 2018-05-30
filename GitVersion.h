@@ -1,0 +1,1 @@
+#define GITVERSION "0000000"

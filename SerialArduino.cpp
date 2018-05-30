@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -49,6 +49,20 @@ int CSerialPort::availableInt(uint8_t n)
       return Serial2.available();
     case 3U:
       return Serial3.available();
+    default:
+      return false;
+  }
+}
+
+int CSerialPort::availableForWriteInt(uint8_t n)
+{
+  switch (n) {
+    case 1U:
+      return Serial.availableForWrite();
+    case 2U:
+      return Serial2.availableForWrite();
+    case 3U:
+      return Serial3.availableForWrite();
     default:
       return false;
   }

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "DMRSlotRX.h"
@@ -29,10 +27,10 @@ const uint16_t SCAN_END   = 920U;
 
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
-const uint8_t MAX_SYNC_BYTES_ERRS   = 3U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 4U;
+const uint8_t MAX_SYNC_BYTES_ERRS   = 6U;
 
-const uint8_t MAX_SYNC_LOST_FRAMES  = 13U;
+const uint8_t MAX_SYNC_LOST_FRAMES  = 26U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -65,8 +63,7 @@ m_delay(0U),
 m_state(DMRRXS_NONE),
 m_n(0U),
 m_type(0U),
-m_rssiCount(0U),
-m_rssi(0U)
+m_rssi()
 {
 }
 
@@ -91,7 +88,6 @@ void CDMRSlotRX::reset()
   m_state     = DMRRXS_NONE;
   m_startPtr  = 0U;
   m_endPtr    = NOENDPTR;
-  m_rssiCount = 0U;
 }
 
 bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
@@ -105,7 +101,8 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     return m_state != DMRRXS_NONE;
 
   m_buffer[m_dataPtr] = sample;
-
+  m_rssi[m_dataPtr] = rssi;
+  
   m_bitBuffer[m_bitPtr] <<= 1;
   if (sample < 0)
     m_bitBuffer[m_bitPtr] |= 0x01U;
@@ -114,9 +111,6 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     if (m_dataPtr >= SCAN_START && m_dataPtr <= SCAN_END)
       correlateSync(true);
   } else {
-    // Grab the RSSI data during the frame
-    if (m_state == DMRRXS_VOICE && m_dataPtr == m_syncPtr)
-      m_rssi = rssi;
 
     uint16_t min = m_syncPtr - 1U;
     uint16_t max = m_syncPtr + 1U;
@@ -151,7 +145,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
         switch (dataType) {
           case DT_DATA_HEADER:
             DEBUG5("DMRSlotRX: data header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
-            serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            writeRSSIData(frame);
             m_state = DMRRXS_DATA;
             m_type  = 0x00U;
             break;
@@ -160,33 +154,33 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
           case DT_RATE_1_DATA:
             if (m_state == DMRRXS_DATA) {
               DEBUG5("DMRSlotRX: data payload found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
-              serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+              writeRSSIData(frame);
               m_type = dataType;
             }
             break;
           case DT_VOICE_LC_HEADER:
             DEBUG5("DMRSlotRX: voice header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
-            serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            writeRSSIData(frame);
             m_state = DMRRXS_VOICE;
             break;
           case DT_VOICE_PI_HEADER:
             if (m_state == DMRRXS_VOICE) {
               DEBUG5("DMRSlotRX: voice pi header found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
-              serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+              writeRSSIData(frame);
             }
             m_state = DMRRXS_VOICE;
             break;
           case DT_TERMINATOR_WITH_LC:
             if (m_state == DMRRXS_VOICE) {
               DEBUG5("DMRSlotRX: voice terminator found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
-              serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+              writeRSSIData(frame);
               m_state  = DMRRXS_NONE;
               m_endPtr = NOENDPTR;
             }
             break;
           default:    // DT_CSBK
             DEBUG5("DMRSlotRX: csbk found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
-            serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            writeRSSIData(frame);
             m_state  = DMRRXS_NONE;
             m_endPtr = NOENDPTR;
             break;
@@ -195,22 +189,7 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
       DEBUG5("DMRSlotRX: voice sync found slot/pos/centre/threshold", m_slot ? 2U : 1U, m_syncPtr, centre, threshold);
-#if defined(SEND_RSSI_DATA)
-      // Send RSSI data approximately every second
-      if (m_rssiCount == 2U) {
-        frame[34U] = (m_rssi >> 8) & 0xFFU;
-        frame[35U] = (m_rssi >> 0) & 0xFFU;
-        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
-      } else {
-        serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-      }
-
-      m_rssiCount++;
-      if (m_rssiCount >= 16U)
-        m_rssiCount = 0U;
-#else
-      serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-#endif
+      writeRSSIData(frame);
       m_state     = DMRRXS_VOICE;
       m_syncCount = 0U;
       m_n         = 0U;
@@ -231,26 +210,12 @@ bool CDMRSlotRX::processSample(q15_t sample, uint16_t rssi)
         } else {
           frame[0U] = ++m_n;
         }
-#if defined(SEND_RSSI_DATA)
-        // Send RSSI data approximately every second
-        if (m_rssiCount == 2U) {
-          frame[34U] = (m_rssi >> 8) & 0xFFU;
-          frame[35U] = (m_rssi >> 0) & 0xFFU;
-          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
-        } else {
-          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-        }
 
-        m_rssiCount++;
-        if (m_rssiCount >= 16U)
-          m_rssiCount = 0U;
-#else
         serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-#endif
       } else if (m_state == DMRRXS_DATA) {
         if (m_type != 0x00U) {
           frame[0U] = CONTROL_DATA | m_type;
-          serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+          writeRSSIData(frame);
         }
       }
     }
@@ -280,19 +245,34 @@ void CDMRSlotRX::correlateSync(bool first)
     q15_t min =  16000;
     q15_t max = -16000;
 
-    uint32_t mask = 0x00800000U;
-    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
 
+      int8_t corrVal;
       if (data)
-        corr += b ? -m_buffer[ptr] : m_buffer[ptr];
-      else  // if (voice)
-        corr += b ? m_buffer[ptr] : -m_buffer[ptr];
+        corrVal = DMR_MS_DATA_SYNC_SYMBOLS_VALUES[i];
+      else
+        corrVal = DMR_MS_VOICE_SYNC_SYMBOLS_VALUES[i];
+
+      switch (corrVal) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += DMR_RADIO_SYMBOL_LENGTH;
     }
@@ -317,7 +297,6 @@ void CDMRSlotRX::correlateSync(bool first)
             m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
             m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
-            m_rssiCount     = 0U;
           } else {
             m_threshold[m_averagePtr] = threshold;
             m_centre[m_averagePtr]    = centre;
@@ -343,7 +322,6 @@ void CDMRSlotRX::correlateSync(bool first)
             m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
             m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
-            m_rssiCount     = 0U;
           } else {
             m_threshold[m_averagePtr] = threshold;
             m_centre[m_averagePtr]    = centre;
@@ -403,3 +381,22 @@ void CDMRSlotRX::setDelay(uint8_t delay)
   m_delay = delay;
 }
 
+void CDMRSlotRX::writeRSSIData(uint8_t* frame)
+{
+#if defined(SEND_RSSI_DATA)
+  // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
+  uint16_t start = m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U;
+
+  uint32_t accum = 0U;
+  for (uint16_t i = 0U; i < (DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES); i++)
+    accum += m_rssi[start++];
+
+  uint16_t avg = accum / (DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
+  frame[34U] = (avg >> 8) & 0xFFU;
+  frame[35U] = (avg >> 0) & 0xFFU;
+
+  serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
+#else
+  serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+#endif
+}

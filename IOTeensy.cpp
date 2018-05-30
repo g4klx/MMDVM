@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -34,6 +34,11 @@
 #define PIN_DMR                10
 #define PIN_YSF                11
 #define PIN_P25                12
+#if defined(__MK20DX256__)
+#define PIN_NXDN               2
+#else
+#define PIN_NXDN               24
+#endif
 #define PIN_ADC                5        // A0,  Pin 14
 #define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
 
@@ -45,15 +50,8 @@ const uint16_t DC_OFFSET = 2048U;
 extern "C" {
   void adc0_isr()
   {
-    io.interrupt(0U);
+    io.interrupt();
   }
-
-#if defined(SEND_RSSI_DATA)
-  void adc1_isr()
-  {
-    io.interrupt(1U);
-  }
-#endif
 }
 
 void CIO::initInt()
@@ -70,6 +68,7 @@ void CIO::initInt()
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
+  pinMode(PIN_NXDN,   OUTPUT);
 #endif
 }
 
@@ -116,7 +115,6 @@ void CIO::startInt()
                   ADC1_CLP2 + ADC1_CLP1 + ADC1_CLP0;
   sum1 = (sum1 / 2U) | 0x8000U;
   ADC1_PG    = sum1;
-
 #endif
 
 #if defined(EXTERNAL_OSC)
@@ -149,42 +147,33 @@ void CIO::startInt()
   digitalWrite(PIN_LED,    HIGH);
 }
 
-void CIO::interrupt(uint8_t source)
+void CIO::interrupt()
 {
-  if (source == 0U) {  // ADC0
-    uint8_t control = MARK_NONE;
-    uint16_t sample = DC_OFFSET;
+  uint8_t control = MARK_NONE;
+  uint16_t sample = DC_OFFSET;
 
-    m_txBuffer.get(sample, control);
-    *(int16_t *)&(DAC0_DAT0L) = sample;
+  m_txBuffer.get(sample, control);
+  *(int16_t *)&(DAC0_DAT0L) = sample;
 
-    if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
-      sample = ADC0_RA;
-      m_rxBuffer.put(sample, control);
-    }
+  if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
+    sample = ADC0_RA;
+    m_rxBuffer.put(sample, control);
+  }
     
 #if defined(SEND_RSSI_DATA)
- 
-    if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
-      uint16_t rssi = ADC1_RA;
-      m_rssiBuffer.put(rssi);
-    }
-    else {
-      m_rssiBuffer.put(0U);
-    }
-    ADC1_SC1A  = ADC_SC1_AIEN | PIN_RSSI;             //start the next RSSI conversion
-
-#else
-      m_rssiBuffer.put(0U);
-#endif
-  
-
-    m_watchdog++;
+  if ((ADC1_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
+    uint16_t rssi = ADC1_RA;
+    m_rssiBuffer.put(rssi);
+  } else {
+    m_rssiBuffer.put(0U);
   }
 
+  ADC1_SC1A  = PIN_RSSI;         				    // Start the next RSSI conversion
+#else
+  m_rssiBuffer.put(0U);
+#endif
 
-
-
+  m_watchdog++;
 }
 
 bool CIO::getCOSInt()
@@ -225,6 +214,16 @@ void CIO::setYSFInt(bool on)
 void CIO::setP25Int(bool on) 
 {
   digitalWrite(PIN_P25, on ? HIGH : LOW);
+}
+
+void CIO::setNXDNInt(bool on) 
+{
+  digitalWrite(PIN_NXDN, on ? HIGH : LOW);
+}
+
+void CIO::delayInt(unsigned int dly)
+{
+  delay(dly);
 }
 
 #endif

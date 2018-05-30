@@ -1,5 +1,6 @@
 /*
- *   Copyright (C) 2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,37 +17,39 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-// #define WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "P25TX.h"
 
 #include "P25Defines.h"
 
-// Generated using rcosdesign(0.2, 4, 10, 'sqrt') in MATLAB
-static q15_t   P25_C4FSK_FILTER[] = {486, 39, -480, -1022, -1526, -1928, -2164, -2178, -1927, -1384, -548, 561, 1898, 3399, 4980, 6546, 7999, 9246, 10202, 10803, 11008, 10803, 10202, 9246,
-                                 7999, 6546, 4980, 3399, 1898, 561, -548, -1384, -1927, -2178, -2164, -1928, -1526, -1022, -480, 39, 486, 0};
-const uint16_t P25_C4FSK_FILTER_LEN = 42U;
+// Generated using rcosdesign(0.2, 8, 10, 'normal') in MATLAB
+static q15_t RC_0_2_FILTER[] = {-444, -897, -1311, -1636, -1825, -1840, -1659, -1278, -712, 0,
+                               800, 1613, 2354, 2936, 3277, 3310, 2994, 2315, 1296, 0, -1478,
+                               -3011, -4448, -5627, -6386, -6580, -6090, -4839, -2800, 0, 3474,
+                               7482, 11835, 16311, 20666, 24651, 28032, 30607, 32219, 32767,
+                               32219, 30607, 28032, 24651, 20666, 16311, 11835, 7482, 3474, 0,
+                               -2800, -4839, -6090, -6580, -6386, -5627, -4448, -3011, -1478,
+                               0, 1296, 2315, 2994, 3310, 3277, 2936, 2354, 1613, 800, 0, -712,
+                               -1278, -1659, -1840, -1825, -1636, -1311, -897, -444, 0}; // numTaps = 80, L = 10
+const uint16_t RC_0_2_FILTER_PHASE_LEN = 8U; // phaseLength = numTaps/L
 
 // Generated in MATLAB using the following commands, and then normalised for unity gain
 // shape2 = 'Inverse-sinc Lowpass';
-// d2 = fdesign.interpolator(2, shape2);  
+// d2 = fdesign.interpolator(1, shape2);  
 // h2 = design(d2, 'SystemObject', true);
-static q15_t P25_LP_FILTER[] = {170, 401, 340, -203, -715, -478, 281, 419, -440, -1002, -103, 1114, 528, -1389, -1520, 1108, 2674, -388, -4662,
-                                -2132, 9168, 20241, 20241, 9168, -2132, -4662, -388, 2674, 1108, -1520, -1389, 528, 1114, -103, -1002, -440, 419,
-                                281, -478, -715, -203, 340, 401, 170};
-const uint16_t P25_LP_FILTER_LEN = 44U;
+static q15_t LOWPASS_FILTER[] = {1294, -2251, 4312, -8402, 20999, 20999, -8402, 4312, -2251, 1294};
+const uint16_t LOWPASS_FILTER_LEN = 10U;
 
-const q15_t P25_LEVELA[] = { 305,  305,  305,  305,  305,  305,  305,  305,  305,  305};
-const q15_t P25_LEVELB[] = { 102,  102,  102,  102,  102,  102,  102,  102,  102,  102};
-const q15_t P25_LEVELC[] = {-102, -102, -102, -102, -102, -102, -102, -102, -102, -102};
-const q15_t P25_LEVELD[] = {-305, -305, -305, -305, -305, -305, -305, -305, -305, -305};
+const q15_t P25_LEVELA =  1260;
+const q15_t P25_LEVELB =   420;
+const q15_t P25_LEVELC =  -420;
+const q15_t P25_LEVELD = -1260;
 
 const uint8_t P25_START_SYNC = 0x77U;
 
 CP25TX::CP25TX() :
-m_buffer(1500U),
+m_buffer(4000U),
 m_modFilter(),
 m_lpFilter(),
 m_modState(),
@@ -54,19 +57,19 @@ m_lpState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(240U),      // 200ms
-m_count(0U)
+m_txDelay(240U)       // 200ms
 {
-  ::memset(m_modState, 0x00U, 90U * sizeof(q15_t));
-  ::memset(m_lpState,  0x00U, 90U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
+  ::memset(m_lpState,  0x00U, 60U * sizeof(q15_t));
 
-  m_modFilter.numTaps = P25_C4FSK_FILTER_LEN;
-  m_modFilter.pState  = m_modState;
-  m_modFilter.pCoeffs = P25_C4FSK_FILTER;
+  m_modFilter.L           = P25_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = RC_0_2_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = RC_0_2_FILTER;
+  m_modFilter.pState      = m_modState;
 
-  m_lpFilter.numTaps = P25_LP_FILTER_LEN;
+  m_lpFilter.numTaps = LOWPASS_FILTER_LEN;
   m_lpFilter.pState  = m_lpState;
-  m_lpFilter.pCoeffs = P25_LP_FILTER;
+  m_lpFilter.pCoeffs = LOWPASS_FILTER;
 }
 
 void CP25TX::process()
@@ -76,8 +79,6 @@ void CP25TX::process()
 
   if (m_poLen == 0U) {
     if (!m_tx) {
-      m_count = 0U;
-
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = P25_START_SYNC;
     } else {
@@ -127,61 +128,45 @@ uint8_t CP25TX::writeData(const uint8_t* data, uint8_t length)
 
 void CP25TX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t intBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
-  q15_t outBuffer[P25_RADIO_SYMBOL_LENGTH * 4U + 1U];
+  q15_t inBuffer[4U];
+  q15_t intBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t outBuffer[P25_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
 
-  q15_t* p = inBuffer;
-  for (uint8_t i = 0U; i < 4U; i++, c <<= 2, p += P25_RADIO_SYMBOL_LENGTH) {
+  for (uint8_t i = 0U; i < 4U; i++, c <<= 2) {
     switch (c & MASK) {
       case 0xC0U:
-        ::memcpy(p, P25_LEVELA, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELA;
         break;
       case 0x80U:
-        ::memcpy(p, P25_LEVELB, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELB;
         break;
       case 0x00U:
-        ::memcpy(p, P25_LEVELC, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELC;
         break;
       default:
-        ::memcpy(p, P25_LEVELD, P25_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        inBuffer[i] = P25_LEVELD;
         break;
     }
   }
 
-  uint16_t blockSize = P25_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, intBuffer, 4U);
 
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += P25_RADIO_SYMBOL_LENGTH * 4U;
+  ::arm_fir_fast_q15(&m_lpFilter, intBuffer, outBuffer, P25_RADIO_SYMBOL_LENGTH * 4U);
 
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U] = inBuffer[P25_RADIO_SYMBOL_LENGTH * 4U - 1U];
-        blockSize++;
-      } else {
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, intBuffer, blockSize);
-
-  ::arm_fir_fast_q15(&m_lpFilter, intBuffer, outBuffer, blockSize);
-
-  io.write(STATE_P25, outBuffer, blockSize);
+  io.write(STATE_P25, outBuffer, P25_RADIO_SYMBOL_LENGTH * 4U);
 }
 
 void CP25TX::setTXDelay(uint8_t delay)
 {
   m_txDelay = 600U + uint16_t(delay) * 12U;        // 500ms + tx delay
+
+  if (m_txDelay > 1200U)
+    m_txDelay = 1200U;
 }
 
-uint16_t CP25TX::getSpace() const
+uint8_t CP25TX::getSpace() const
 {
   return m_buffer.getSpace() / P25_LDU_FRAME_LENGTH_BYTES;
 }

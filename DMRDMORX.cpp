@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "DMRDMORX.h"
@@ -26,10 +24,10 @@
 
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
-const uint8_t MAX_SYNC_BYTES_ERRS   = 3U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 4U;
+const uint8_t MAX_SYNC_BYTES_ERRS   = 6U;
 
-const uint8_t MAX_SYNC_LOST_FRAMES  = 13U;
+const uint8_t MAX_SYNC_LOST_FRAMES  = 26U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -59,8 +57,7 @@ m_colorCode(0U),
 m_state(DMORXS_NONE),
 m_n(0U),
 m_type(0U),
-m_rssiCount(0U),
-m_rssi(0U)
+m_rssi()
 {
 }
 
@@ -73,7 +70,6 @@ void CDMRDMORX::reset()
   m_state     = DMORXS_NONE;
   m_startPtr  = 0U;
   m_endPtr    = NOENDPTR;
-  m_rssiCount = 0U;
 }
 
 void CDMRDMORX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t length)
@@ -89,6 +85,7 @@ void CDMRDMORX::samples(const q15_t* samples, const uint16_t* rssi, uint8_t leng
 bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
 {
   m_buffer[m_dataPtr] = sample;
+  m_rssi[m_dataPtr] = rssi;
 
   m_bitBuffer[m_bitPtr] <<= 1;
   if (sample < 0)
@@ -97,9 +94,6 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
   if (m_state == DMORXS_NONE) {
     correlateSync(true);
   } else {
-    // Grab the RSSI data during the frame
-    if (m_state == DMORXS_VOICE && m_dataPtr == m_syncPtr)
-      m_rssi = rssi;
 
     uint16_t min  = m_syncPtr + DMO_BUFFER_LENGTH_SAMPLES - 1U;
     uint16_t max  = m_syncPtr + 1U;
@@ -148,7 +142,7 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
         switch (dataType) {
           case DT_DATA_HEADER:
             DEBUG4("DMRDMORX: data header found pos/centre/threshold", m_syncPtr, centre, threshold);
-            serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            writeRSSIData(frame);
             m_state = DMORXS_DATA;
             m_type  = 0x00U;
             break;
@@ -157,32 +151,32 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
           case DT_RATE_1_DATA:
             if (m_state == DMORXS_DATA) {
               DEBUG4("DMRDMORX: data payload found pos/centre/threshold", m_syncPtr, centre, threshold);
-              serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+              writeRSSIData(frame);
               m_type = dataType;
             }
             break;
           case DT_VOICE_LC_HEADER:
             DEBUG4("DMRDMORX: voice header found pos/centre/threshold", m_syncPtr, centre, threshold);
-            serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            writeRSSIData(frame);
             m_state = DMORXS_VOICE;
             break;
           case DT_VOICE_PI_HEADER:
             if (m_state == DMORXS_VOICE) {
               DEBUG4("DMRDMORX: voice pi header found pos/centre/threshold", m_syncPtr, centre, threshold);
-              serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+              writeRSSIData(frame);
             }
             m_state = DMORXS_VOICE;
             break;
           case DT_TERMINATOR_WITH_LC:
             if (m_state == DMORXS_VOICE) {
               DEBUG4("DMRDMORX: voice terminator found pos/centre/threshold", m_syncPtr, centre, threshold);
-              serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+              writeRSSIData(frame);
               reset();
             }
             break;
           default:    // DT_CSBK
             DEBUG4("DMRDMORX: csbk found pos/centre/threshold", m_syncPtr, centre, threshold);
-            serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+            writeRSSIData(frame);
             reset();
             break;
         }
@@ -190,22 +184,7 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
     } else if (m_control == CONTROL_VOICE) {
       // Voice sync
       DEBUG4("DMRDMORX: voice sync found pos/centre/threshold", m_syncPtr, centre, threshold);
-#if defined(SEND_RSSI_DATA)
-      // Send RSSI data approximately every second
-      if (m_rssiCount == 2U) {
-        frame[34U] = (m_rssi >> 8) & 0xFFU;
-        frame[35U] = (m_rssi >> 0) & 0xFFU;
-        serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 3U);
-      } else {
-        serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-      }
-
-      m_rssiCount++;
-      if (m_rssiCount >= 16U)
-        m_rssiCount = 0U;
-#else
-      serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-#endif
+	    writeRSSIData(frame);
       m_state     = DMORXS_VOICE;
       m_syncCount = 0U;
       m_n         = 0U;
@@ -225,26 +204,12 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
         } else {
           frame[0U] = ++m_n;
         }
-#if defined(SEND_RSSI_DATA)
-        // Send RSSI data approximately every second
-        if (m_rssiCount == 2U) {
-          frame[34U] = (m_rssi >> 8) & 0xFFU;
-          frame[35U] = (m_rssi >> 0) & 0xFFU;
-          serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 3U);
-        } else {
-          serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-        }
 
-        m_rssiCount++;
-        if (m_rssiCount >= 16U)
-          m_rssiCount = 0U;
-#else
         serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
-#endif
       } else if (m_state == DMORXS_DATA) {
         if (m_type != 0x00U) {
           frame[0U] = CONTROL_DATA | m_type;
-          serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+          writeRSSIData(frame);
         }
       }
     }
@@ -267,16 +232,13 @@ bool CDMRDMORX::processSample(q15_t sample, uint16_t rssi)
 
 void CDMRDMORX::correlateSync(bool first)
 {
-  uint8_t errs1 = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_S2_DATA_SYNC_SYMBOLS);
-  uint8_t errs2 = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_MS_DATA_SYNC_SYMBOLS);
+  uint8_t errs = countBits32((m_bitBuffer[m_bitPtr] & DMR_SYNC_SYMBOLS_MASK) ^ DMR_MS_DATA_SYNC_SYMBOLS);
 
   // The voice sync is the complement of the data sync
-  bool data1  = (errs1 <= MAX_SYNC_SYMBOLS_ERRS);
-  bool data2  = (errs2 <= MAX_SYNC_SYMBOLS_ERRS);
-  bool voice1 = (errs1 >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
-  bool voice2 = (errs2 >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
+  bool data  = (errs <= MAX_SYNC_SYMBOLS_ERRS);
+  bool voice = (errs >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_SYMBOLS_ERRS));
 
-  if (data1 || data2 || voice1 || voice2) {
+  if (data || voice) {
     uint16_t ptr = m_dataPtr + DMO_BUFFER_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES + DMR_RADIO_SYMBOL_LENGTH;
     if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
       ptr -= DMO_BUFFER_LENGTH_SAMPLES;
@@ -285,23 +247,34 @@ void CDMRDMORX::correlateSync(bool first)
     q15_t min =  16000;
     q15_t max = -16000;
 
-    uint32_t mask = 0x00800000U;
-    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b;
-      if (data1 || voice1)
-        b = (DMR_S2_DATA_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
+
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
+
+      int8_t corrVal;
+      if (data)
+        corrVal = DMR_MS_DATA_SYNC_SYMBOLS_VALUES[i];
       else
-        b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
+        corrVal = DMR_MS_VOICE_SYNC_SYMBOLS_VALUES[i];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
-
-      if (data1 || data2)
-        corr += b ? -m_buffer[ptr] : m_buffer[ptr];
-      else  // if (voice)
-        corr += b ? m_buffer[ptr] : -m_buffer[ptr];
+      switch (corrVal) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += DMR_RADIO_SYMBOL_LENGTH;
       if (ptr >= DMO_BUFFER_LENGTH_SAMPLES)
@@ -321,21 +294,16 @@ void CDMRDMORX::correlateSync(bool first)
 
       samplesToBits(ptr, DMR_SYNC_LENGTH_SYMBOLS, sync, 4U, centre, threshold);
 
-      if (data1 || data2) {
+      if (data) {
         uint8_t errs = 0U;
-        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++) {
-          if (data1)
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_DATA_SYNC_BYTES[i]);
-          else
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
-        }
-
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
+          errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
+ 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
             m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
             m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
-            m_rssiCount     = 0U;
           } else {
             m_threshold[m_averagePtr] = threshold;
             m_centre[m_averagePtr]    = centre;
@@ -359,19 +327,14 @@ void CDMRDMORX::correlateSync(bool first)
         }
       } else {  // if (voice1 || voice2)
         uint8_t errs = 0U;
-        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++) {
-          if (voice1)
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_S2_VOICE_SYNC_BYTES[i]);
-          else
-            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
-        }
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
+          errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
         if (errs <= MAX_SYNC_BYTES_ERRS) {
           if (first) {
             m_threshold[0U] = m_threshold[1U] = m_threshold[2U] = m_threshold[3U] = threshold;
             m_centre[0U]    = m_centre[1U]    = m_centre[2U]    = m_centre[3U]    = centre;
             m_averagePtr    = 0U;
-            m_rssiCount     = 0U;
           } else {
             m_threshold[m_averagePtr] = threshold;
             m_centre[m_averagePtr]    = centre;
@@ -436,3 +399,27 @@ void CDMRDMORX::setColorCode(uint8_t colorCode)
   m_colorCode = colorCode;
 }
 
+void CDMRDMORX::writeRSSIData(uint8_t* frame)
+{
+#if defined(SEND_RSSI_DATA)
+  // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
+  uint16_t start = m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U;
+
+  uint32_t accum = 0U;
+  for (uint16_t i = 0U; i < (DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES); i++) {
+    accum += m_rssi[start];
+	
+	start++;
+    if (start >= DMO_BUFFER_LENGTH_SAMPLES)
+      start -= DMO_BUFFER_LENGTH_SAMPLES;
+  }
+
+  uint16_t avg = accum / (DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
+  frame[34U] = (avg >> 8) & 0xFFU;
+  frame[35U] = (avg >> 0) & 0xFFU;
+
+  serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 3U);
+#else
+  serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
+#endif
+}

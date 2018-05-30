@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -48,27 +48,32 @@ public:
   void setCal(bool start);
 
   void process();
-
-  uint16_t getSpace1() const;
-  uint16_t getSpace2() const;
+  
+  void resetFifo1();
+  void resetFifo2();
+  uint32_t getFrameCount();
+  
+  uint8_t getSpace1() const;
+  uint8_t getSpace2() const;
 
   void setColorCode(uint8_t colorCode);
 
 private:
-  CSerialRB            m_fifo[2U];
-  arm_fir_instance_q15 m_modFilter;
-  q15_t                m_modState[90U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  DMRTXSTATE           m_state;
-  uint8_t              m_idle[DMR_FRAME_LENGTH_BYTES];
-  uint8_t              m_cachPtr;
-  uint8_t              m_shortLC[12U];
-  uint8_t              m_newShortLC[12U];
-  uint8_t              m_markBuffer[40U];
-  uint8_t              m_poBuffer[40U];
-  uint16_t             m_poLen;
-  uint16_t             m_poPtr;
-  uint32_t             m_count;
-  bool                 m_abort[2U];
+  CSerialRB                        m_fifo[2U];
+  arm_fir_interpolate_instance_q15 m_modFilter;
+  q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
+  DMRTXSTATE                       m_state;
+  uint8_t                          m_idle[DMR_FRAME_LENGTH_BYTES];
+  uint8_t                          m_cachPtr;
+  uint8_t                          m_shortLC[12U];
+  uint8_t                          m_newShortLC[12U];
+  uint8_t                          m_markBuffer[40U];
+  uint8_t                          m_poBuffer[40U];
+  uint16_t                         m_poLen;
+  uint16_t                         m_poPtr;
+  uint32_t                         m_frameCount;
+  uint32_t                         m_abortCount[2U];
+  bool                             m_abort[2U];
 
   void createData(uint8_t slotIndex);
   void createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex);

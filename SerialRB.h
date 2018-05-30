@@ -21,14 +21,18 @@ Boston, MA  02110-1301, USA.
 #if !defined(SERIALRB_H)
 #define  SERIALRB_H
 
-#if defined(STM32F4XX) || defined(STM32F4)
+#if defined(STM32F4XX)
 #include "stm32f4xx.h"
+#elif defined(STM32F7XX)
+#include "stm32f7xx.h"
+#elif defined(STM32F105xC)
+#include "stm32f1xx.h"
 #include <cstddef>
 #else
 #include <Arduino.h>
 #endif
 
-const uint16_t SERIAL_RINGBUFFER_SIZE = 370U;
+const uint16_t SERIAL_RINGBUFFER_SIZE = 2000U;
 
 class CSerialRB {
 public:

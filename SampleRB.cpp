@@ -22,8 +22,6 @@ Boston, MA  02110-1301, USA.
 
 CSampleRB::CSampleRB(uint16_t length) :
 m_length(length),
-m_samples(NULL),
-m_control(NULL),
 m_head(0U),
 m_tail(0U),
 m_full(false),

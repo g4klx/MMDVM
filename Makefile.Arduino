@@ -1,0 +1,189 @@
+#!/usr/bin/make
+# makefile for the arduino due (works with arduino IDE 1.6.11)
+#
+# The original file can be found at https://github.com/pauldreik/arduino-due-makefile
+#
+# USAGE: put this file in the same dir as your .ino file is.
+# configure the PORT variable and ADIR at the top of the file
+# to match your local configuration.
+# Type make upload to compile and upload.
+#
+
+#user specific settings:
+#where to find the IDE
+ADIR:=$(HOME)/.arduino15
+#which serial port to use (add a file with SUBSYSTEMS=="usb",
+#ATTRS{product}=="Arduino Due Prog. Port", ATTRS{idProduct}=="003d",
+#ATTRS{idVendor}=="2341", SYMLINK+="arduino_due" in /etc/udev/rules.d/
+#to get this working). Do not prefix the port with /dev/, just take
+#the basename.
+PORT:=ttyACM0
+#if you want to verify the bossac upload, define this to -v
+VERIFY:=-v
+
+
+#end of user configuration.
+
+
+#then some general settings. They should not be necessary to modify.
+#CXX:=$(ADIR)/tools/g++_arm_none_eabi/bin/arm-none-eabi-g++
+CXX:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-g++
+#CC:=$(ADIR)/tools/g++_arm_none_eabi/bin/arm-none-eabi-gcc
+CC:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-gcc
+OBJCOPY:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-objcopy
+
+C:=$(CC)
+#SAM:=arduino/sam/
+SAM:=$(ADIR)/packages/arduino/hardware/sam/1.6.11
+#CMSIS:=arduino/sam/system/CMSIS/
+#LIBSAM:=arduino/sam/system/libsam
+TMPDIR:=$(PWD)/build
+AR:=$(ADIR)/tools/g++_arm_none_eabi/bin/arm-none-eabi-ar 
+AR:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-ar
+
+
+#all these values are hard coded and should maybe be configured somehow else,
+#like olikraus does in his makefile.
+DEFINES:=-Dprintf=iprintf -DF_CPU=84000000  -DARDUINO=10611 -D__SAM3X8E__ -DUSB_PID=0x003e -DUSB_VID=0x2341 -DUSBCON \
+         -DARDUINO_SAM_DUE -DARDUINO_ARCH_SAM '-DUSB_MANUFACTURER="Arduino LLC"' '-DUSB_PRODUCT="Arduino Due"' \
+         -DMADEBYMAKEFILE
+
+INCLUDES:=-I$(SAM)/system/libsam -I$(SAM)/system/CMSIS/CMSIS/Include/ \
+          -I$(SAM)/system/CMSIS/Device/ATMEL/ -I$(SAM)/cores/arduino \
+          -I$(SAM)/variants/arduino_due_x
+
+#also include the current dir for convenience
+INCLUDES += -I.
+
+#compilation flags common to both c and c++ 
+COMMON_FLAGS:=-g -Os -w -ffunction-sections -fdata-sections -nostdlib \
+              --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb \
+               -fno-threadsafe-statics
+#for compiling c (do not warn, this is not our code)
+CFLAGS:=$(COMMON_FLAGS) -std=gnu11
+#for compiling c++
+CXXFLAGS:=$(COMMON_FLAGS) -fno-rtti -fno-exceptions -std=gnu++11 -Wall -Wextra
+
+#let the results be named after the project
+PROJNAME:=$(shell basename *.ino .ino)
+
+#we will make a new mainfile from the ino file.
+NEWMAINFILE:=$(TMPDIR)/$(PROJNAME).ino.cpp
+
+#our own sourcefiles is the (converted) ino file and any local cpp files
+MYSRCFILES:=$(NEWMAINFILE) $(shell ls *.cpp 2>/dev/null)
+MYOBJFILES:=$(addsuffix .o,$(addprefix $(TMPDIR)/,$(notdir $(MYSRCFILES))))
+
+#These source files are the ones forming core.a
+CORESRCXX:=$(shell ls ${SAM}/cores/arduino/*.cpp ${SAM}/cores/arduino/USB/*.cpp  ${SAM}/variants/arduino_due_x/variant.cpp)
+CORESRC:=$(shell ls ${SAM}/cores/arduino/*.c)
+
+#hey this one is needed too: $(SAM)/cores/arduino/wiring_pulse_asm.S" add -x assembler-with-cpp
+#and this one: /1.6.11/cores/arduino/avr/dtostrf.c but it seems to work
+#anyway, probably because I do not use that functionality.
+
+#convert the core source files to object files. assume no clashes.
+COREOBJSXX:=$(addprefix $(TMPDIR)/core/,$(notdir $(CORESRCXX)) )
+COREOBJSXX:=$(addsuffix .o,$(COREOBJSXX))
+COREOBJS:=$(addprefix $(TMPDIR)/core/,$(notdir $(CORESRC)) )
+COREOBJS:=$(addsuffix .o,$(COREOBJS))
+
+default:
+	@echo default rule, does nothing. Try make compile or make upload.
+
+#This rule is good to just make sure stuff compiles, without having to wait
+#for bossac.
+compile: GitVersion.h $(TMPDIR)/$(PROJNAME).elf $(TMPDIR)/$(PROJNAME).bin
+
+#This is a make rule template to create object files from the source files.
+# arg 1=src file
+# arg 2=object file
+# arg 3= XX if c++, empty if c
+define OBJ_template
+$(2): $(1)
+	$(C$(3)) -MD -c $(C$(3)FLAGS) $(DEFINES) $(INCLUDES) $(1) -o $(2)
+endef
+#now invoke the template both for c++ sources
+$(foreach src,$(CORESRCXX), $(eval $(call OBJ_template,$(src),$(addsuffix .o,$(addprefix $(TMPDIR)/core/,$(notdir $(src)))),XX) ) )
+#...and for c sources:
+$(foreach src,$(CORESRC), $(eval $(call OBJ_template,$(src),$(addsuffix .o,$(addprefix $(TMPDIR)/core/,$(notdir $(src)))),) ) )
+
+#and our own c++ sources
+$(foreach src,$(MYSRCFILES), $(eval $(call OBJ_template,$(src),$(addsuffix .o,$(addprefix $(TMPDIR)/,$(notdir $(src)))),XX) ) )
+
+
+clean:
+	test ! -d $(TMPDIR) || rm -rf $(TMPDIR)
+	$(RM) GitVersion.h
+
+.PHONY: .FORCE upload default
+
+$(TMPDIR):
+	mkdir -p $(TMPDIR)
+
+$(TMPDIR)/core:
+	mkdir -p $(TMPDIR)/core
+
+#creates the cpp file from the .ino file
+$(NEWMAINFILE): $(PROJNAME).ino
+	cat $(SAM)/cores/arduino/main.cpp > $(NEWMAINFILE)
+	cat $(PROJNAME).ino >> $(NEWMAINFILE)
+	echo 'extern "C" void __cxa_pure_virtual() {while (true);}' >> $(NEWMAINFILE)
+
+#include the dependencies for our own files
+-include $(MYOBJFILES:.o=.d)
+
+#create the core library from the core objects. Do this EXACTLY as the
+#arduino IDE does it, seems *really* picky about this.
+#Sorry for the hard coding.
+$(TMPDIR)/core.a: $(TMPDIR)/core $(COREOBJS) $(COREOBJSXX)
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/wiring_shift.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/wiring_analog.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/itoa.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/cortex_handlers.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/hooks.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/wiring.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/WInterrupts.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/syscalls_sam3.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/iar_calls_sam3.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/wiring_digital.c.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/Print.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/USARTClass.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/WString.cpp.o
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/PluggableUSB.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/USBCore.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/CDC.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/wiring_pulse.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/UARTClass.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/main.cpp.o
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/new.cpp.o
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/watchdog.cpp.o
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/Stream.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/RingBuffer.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/IPAddress.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/Reset.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/WMath.cpp.o 
+	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/variant.cpp.o
+
+#link our own object files with core to form the elf file
+$(TMPDIR)/$(PROJNAME).elf: $(TMPDIR)/core.a $(TMPDIR)/core/syscalls_sam3.c.o $(MYOBJFILES) 
+	$(CC) -mcpu=cortex-m3 -mthumb -Os -Wl,--gc-sections -T$(SAM)/variants/arduino_due_x/linker_scripts/gcc/flash.ld -Wl,-Map,$(NEWMAINFILE).map -o $@ -L$(TMPDIR) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--start-group -u _sbrk -u link -u _close -u _fstat -u _isatty -u _lseek -u _read -u _write -u _exit -u kill -u _getpid $(MYOBJFILES) $(TMPDIR)/core/variant.cpp.o $(SAM)/variants/arduino_due_x/libsam_sam3x8e_gcc_rel.a $(SAM)/system/CMSIS/CMSIS/Lib/GCC/libarm_cortexM3l_math.a $(TMPDIR)/core.a -Wl,--end-group -lm -gcc
+
+#copy from the hex to our bin file (why?)
+$(TMPDIR)/$(PROJNAME).bin: $(TMPDIR)/$(PROJNAME).elf 
+	$(OBJCOPY) -O binary $< $@
+
+#upload to the arduino by first resetting it (stty) and the running bossac
+upload: compile
+	stty -F /dev/$(PORT) cs8 1200 hupcl
+	$(ADIR)/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i --port=$(PORT) -U false -e -w $(VERIFY) -b $(TMPDIR)/$(PROJNAME).bin -R
+
+# Export the current git version if the index file exists, else 000...
+GitVersion.h: .FORCE
+ifneq ("$(wildcard .git/index)","")
+	echo "#define GITVERSION \"$(shell git rev-parse --short HEAD)\"" > $@
+else
+	echo "#define GITVERSION \"0000000\"" > $@
+endif
+
+.FORCE:

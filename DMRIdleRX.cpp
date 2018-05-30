@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define  WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "DMRIdleRX.h"
@@ -26,8 +24,8 @@
 
 const q15_t SCALING_FACTOR = 19505;      // Q15(0.60)
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
-const uint8_t MAX_SYNC_BYTES_ERRS   = 3U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 4U;
+const uint8_t MAX_SYNC_BYTES_ERRS   = 6U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -84,16 +82,28 @@ void CDMRIdleRX::processSample(q15_t sample)
     q15_t max = -16000;
     q15_t min =  16000;
 
-    uint32_t mask = 0x00800000U;
-    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++, mask >>= 1) {
-      bool b = (DMR_MS_DATA_SYNC_SYMBOLS & mask) == mask;
+    for (uint8_t i = 0U; i < DMR_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
 
-      if (m_buffer[ptr] > max)
-        max = m_buffer[ptr];
-      if (m_buffer[ptr] < min)
-        min = m_buffer[ptr];
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
 
-      corr += b ? -m_buffer[ptr] : m_buffer[ptr];
+      switch (DMR_MS_DATA_SYNC_SYMBOLS_VALUES[i]) {
+      case +3:
+        corr -= (val + val + val);
+        break;
+      case +1:
+        corr -= val;
+        break;
+      case -1:
+        corr += val;
+        break;
+      default:  // -3
+        corr += (val + val + val);
+        break;
+      }
 
       ptr += DMR_RADIO_SYMBOL_LENGTH;
       if (ptr >= DMR_FRAME_LENGTH_SAMPLES)
@@ -150,7 +160,7 @@ void CDMRIdleRX::processSample(q15_t sample)
     }
 
     m_endPtr  = NOENDPTR;
-    m_maxCorr = 0U;
+    m_maxCorr = 0;
   }
 
   m_dataPtr++;
@@ -199,4 +209,3 @@ void CDMRIdleRX::setColorCode(uint8_t colorCode)
 {
   m_colorCode = colorCode;
 }
-

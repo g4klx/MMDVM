@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -40,9 +40,9 @@ public:
   void setADCDetection(bool detect);
   void setMode();
   
-  void interrupt(uint8_t source);
+  void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnLevel, int16_t txDCOffset, int16_t rxDCOffset);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -52,6 +52,9 @@ public:
   bool hasLockout() const;
 
   void resetWatchdog();
+  uint32_t getWatchdog();
+  
+  void selfTest();
 
 private:
   bool                 m_started;
@@ -60,10 +63,19 @@ private:
   CSampleRB            m_txBuffer;
   CRSSIRB              m_rssiBuffer;
 
-  arm_fir_instance_q15 m_C4FSKFilter;
-  arm_fir_instance_q15 m_GMSKFilter;
-  q15_t                m_C4FSKState[70U];    // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  q15_t                m_GMSKState[80U];     // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
+  arm_biquad_casd_df1_inst_q31 m_dcFilter;
+  q31_t                        m_dcState[4];
+
+  arm_fir_instance_q15 m_rrcFilter;
+  //arm_fir_instance_q15 m_gaussianFilter;
+  arm_fir_instance_q15 m_boxcarFilter;
+  arm_fir_instance_q15 m_nxdnFilter;
+  arm_fir_instance_q15 m_nxdnISincFilter;
+  q15_t                m_rrcState[140U];          // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
+  //q15_t                m_gaussianState[80U];      // NoTaps + BlockSize - 1, 24 + 20 - 1 plus some spare
+  q15_t                m_boxcarState[60U];        // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
+  q15_t                m_nxdnState[220U];         // NoTaps + BlockSize - 1, 162 + 20 - 1 plus some spare
+  q15_t                m_nxdnISincState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;
@@ -72,6 +84,10 @@ private:
   q15_t                m_dmrTXLevel;
   q15_t                m_ysfTXLevel;
   q15_t                m_p25TXLevel;
+  q15_t                m_nxdnTXLevel;
+
+  uint16_t             m_rxDCOffset;
+  uint16_t             m_txDCOffset;
 
   uint32_t             m_ledCount;
   bool                 m_ledValue;
@@ -80,8 +96,6 @@ private:
 
   uint16_t             m_adcOverflow;
   uint16_t             m_dacOverflow;
-
-  uint32_t             m_count;
 
   volatile uint32_t    m_watchdog;
 
@@ -101,6 +115,9 @@ private:
   void setDMRInt(bool on);
   void setYSFInt(bool on);
   void setP25Int(bool on);
+  void setNXDNInt(bool on);
+  
+  void delayInt(unsigned int dly);
 };
 
 #endif

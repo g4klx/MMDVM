@@ -1,5 +1,6 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,8 +17,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define WANT_DEBUG
-
 #include "Config.h"
 #include "Globals.h"
 #include "DStarTX.h"
@@ -28,12 +27,14 @@ const uint8_t BIT_SYNC = 0xAAU;
 
 const uint8_t FRAME_SYNC[] = {0xEAU, 0xA6U, 0x00U};
 
-// Generated using gaussfir(0.5, 4, 10) in MATLAB
-static q15_t   DSTAR_GMSK_FILTER[] = {1, 4, 15, 52, 151, 380, 832, 1579, 2599, 3710, 4594, 4933, 4594, 3710, 2599, 1579, 832, 380, 151, 52, 15, 4, 1, 0};
-const uint16_t DSTAR_GMSK_FILTER_LEN = 24U;
+// Generated using gaussfir(0.35, 1, 10) in MATLAB
+static q15_t GAUSSIAN_0_35_FILTER[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1001, 1942, 3514, 5930,
+                                      9333, 13699, 18751, 23938, 28499, 31644, 32767, 31644,
+                                      28499, 23938, 18751, 13699, 9333, 5930, 3514, 1942, 1001}; // numTaps = 30, L = 10
+const uint16_t GAUSSIAN_0_35_FILTER_PHASE_LEN = 3U; // phaseLength = numTaps/L
 
-const q15_t DSTAR_LEVEL0[] = {-808, -808, -808, -808, -808, -808, -808, -808, -808, -808};
-const q15_t DSTAR_LEVEL1[] = { 808,  808,  808,  808,  808,  808,  808,  808,  808,  808};
+const q15_t DSTAR_LEVEL0 = -841;
+const q15_t DSTAR_LEVEL1 =  841;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -195,14 +196,14 @@ m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(60U),      // 100ms
-m_count(0U)
+m_txDelay(60U)       // 100ms
 {
-  ::memset(m_modState, 0x00U, 80U * sizeof(q15_t));
+  ::memset(m_modState, 0x00U, 15U * sizeof(q15_t));
 
-  m_modFilter.numTaps = DSTAR_GMSK_FILTER_LEN;
-  m_modFilter.pState  = m_modState;
-  m_modFilter.pCoeffs = DSTAR_GMSK_FILTER;
+  m_modFilter.L           = DSTAR_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = GAUSSIAN_0_35_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = GAUSSIAN_0_35_FILTER;
+  m_modFilter.pState      = m_modState;
 }
 
 void CDStarTX::process()
@@ -214,8 +215,6 @@ void CDStarTX::process()
 
   if (type == DSTAR_HEADER && m_poLen == 0U) {
     if (!m_tx) {
-      m_count = 0U;
-
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = BIT_SYNC;
     } else {
@@ -241,9 +240,6 @@ void CDStarTX::process()
   }
  
   if (type == DSTAR_DATA && m_poLen == 0U) {
-    if (!m_tx)
-      m_count = 0U;
-
     // Pop the type byte off
     m_buffer.get();
 
@@ -258,8 +254,8 @@ void CDStarTX::process()
     m_buffer.get();
 
     for (uint8_t j = 0U; j < 3U; j++) {
-      for (uint8_t i = 0U; i < DSTAR_EOT_LENGTH_BYTES; i++)
-        m_poBuffer[m_poLen++] = DSTAR_EOT_BYTES[i];
+      for (uint8_t i = 0U; i < DSTAR_END_SYNC_LENGTH_BYTES; i++)
+        m_poBuffer[m_poLen++] = DSTAR_END_SYNC_BYTES[i];
     }
      
     m_poPtr = 0U;
@@ -268,11 +264,11 @@ void CDStarTX::process()
   if (m_poLen > 0U) {
     uint16_t space = io.getSpace();
     
-    while (space > (8U * DSTAR_RADIO_BIT_LENGTH)) {
+    while (space > (8U * DSTAR_RADIO_SYMBOL_LENGTH)) {
       uint8_t c = m_poBuffer[m_poPtr++];
       writeByte(c);
 
-      space -= 8U * DSTAR_RADIO_BIT_LENGTH;
+      space -= 8U * DSTAR_RADIO_SYMBOL_LENGTH;
       
       if (m_poPtr >= m_poLen) {
         m_poPtr = 0U;
@@ -417,50 +413,34 @@ void CDStarTX::txHeader(const uint8_t* in, uint8_t* out) const
 
 void CDStarTX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U + 1U];
-  q15_t outBuffer[DSTAR_RADIO_BIT_LENGTH * 8U + 1U];
+  q15_t inBuffer[8U];
+  q15_t outBuffer[DSTAR_RADIO_SYMBOL_LENGTH * 8U];
 
   uint8_t mask = 0x01U;
 
-  q15_t* p = inBuffer;
-  for (uint8_t i = 0U; i < 8U; i++, p += DSTAR_RADIO_BIT_LENGTH) {
+  for (uint8_t i = 0U; i < 8U; i++) {
     if ((c & mask) == mask)
-      ::memcpy(p, DSTAR_LEVEL0, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
+      inBuffer[i] = DSTAR_LEVEL0;
     else
-      ::memcpy(p, DSTAR_LEVEL1, DSTAR_RADIO_BIT_LENGTH * sizeof(q15_t));
+      inBuffer[i] = DSTAR_LEVEL1;
 
     mask <<= 1;
   }
 
-  uint16_t blockSize = DSTAR_RADIO_BIT_LENGTH * 8U;
-
-  // Handle the case of the oscillator not being accurate enough
-  if (m_sampleCount > 0U) {
-    m_count += DSTAR_RADIO_BIT_LENGTH * 8U;
-
-    if (m_count >= m_sampleCount) {
-      if (m_sampleInsert) {
-        inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U] = inBuffer[DSTAR_RADIO_BIT_LENGTH * 8U - 1U];
-        blockSize++;
-      } else {
-        blockSize--;
-      }
-
-      m_count -= m_sampleCount;
-    }
-  }
-
-  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, blockSize);
-
-  io.write(STATE_DSTAR, outBuffer, blockSize);
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 8U);
+  
+  io.write(STATE_DSTAR, outBuffer, DSTAR_RADIO_SYMBOL_LENGTH * 8U);
 }
 
 void CDStarTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = 150U + uint16_t(delay) * 6U;        // 250ms + tx delay
+  m_txDelay = 300U + uint16_t(delay) * 6U;        // 250ms + tx delay
+
+  if (m_txDelay > 600U)
+    m_txDelay = 600U;
 }
 
-uint16_t CDStarTX::getSpace() const
+uint8_t CDStarTX::getSpace() const
 {
   return m_buffer.getSpace() / (DSTAR_DATA_LENGTH_BYTES + 1U);
 }

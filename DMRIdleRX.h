@@ -43,8 +43,8 @@ private:
   q15_t    m_threshold;
   uint8_t  m_colorCode;
 
-  void    processSample(q15_t sample);
-  void    samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void processSample(q15_t sample);
+  void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
 };
 
 #endif
