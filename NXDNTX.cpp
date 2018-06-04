@@ -23,20 +23,20 @@
 
 #include "NXDNDefines.h"
 
-// Generated using rcosdesign(0.2, 8, 20, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 201, 174, 140, 99, 52, 0, -55, -112, -170, -226, -278, -325, -365, -397, -417, -427, -424, -407, -377, -333, -277, -208,
-		  -128, -40, 56, 156, 258, 358, 455, 544, 622, 687, 736, 766, 775, 762, 725, 664, 579, 471, 342, 193, 27, -151, -338, -528,
-		  -718, -901, -1072, -1225, -1354, -1454, -1520, -1547, -1530, -1466, -1353, -1189, -972, -704, -385, -18, 394, 846, 1333,
-		  1850, 2388, 2940, 3498, 4053, 4598, 5122, 5619, 6079, 6494, 6859, 7166, 7410, 7588, 7696, 7732, 7696, 7588, 7410, 7166,
-		  6859, 6494, 6079, 5619, 5122, 4598, 4053, 3498, 2940, 2388, 1850, 1333, 846, 394, -18, -385, -704, -972, -1189, -1353,
-		  -1466, -1530, -1547, -1520, -1454, -1354, -1225, -1072, -901, -718, -528, -338, -151, 27, 193, 342, 471, 579, 664, 725,
-		  762, 775, 766, 736, 687, 622, 544, 455, 358, 258, 156, 56, -40, -128, -208, -277, -333, -377, -407, -424, -427, -417, -397,
-		  -365, -325, -278, -226, -170, -112, -55, 0, 52, 99, 140, 174, 201}; // numTaps = 180, L = 20
+// NXDN RRC filter + SINC filter
+static q15_t RRC_0_2_FILTER[] = {51, 71, 92, 112, 129, 141, 144, 138, 120, 87, 39, -26, -107, -204, -314, -437, -567, -702, -835,
+                               -932,-1066, -1176, -1257, -1304, -1314, -1284, -1213, -1099, -944, -749, -519, -257, 30, 335, 651,
+                               968, 1277, 1569, 1832, 2058, 2237, 2360, 2420, 2412, 2329, 2170, 1935, 1623, 1239, 790, 283, -271,
+                               -858, -1466, -2076, -2671, -3233, -3742, -4178, -4521, -4754, -4857, -4815, -4614, -4242, -3690,
+                               -2952, -2025, -912, 385, 1855, 3488, 5266, 7172, 9183, 11274, 13418, 15585, 17746, 19869, 21923,
+                               23876, 25700, 27364, 28844, 30116, 31159, 31956, 32495, 32767, 32767, 32495, 31956, 31159, 30116,
+                               28844, 27364, 25700, 23876, 21923, 19869, 17746, 15585, 13418, 11274, 9183, 7172, 5266, 3488, 1855,
+                               385, -912, -2025, -2952, -3690, -4242, -4614, -4815, -4857, -4754, -4521, -4178, -3742, -3233, -2671,
+                               -2076, -1466, -858, -271, 283, 790, 1239, 1623, 1935, 2170, 2329, 2412, 2420, 2360, 2237, 2058, 1832,
+                               1569, 1277, 968, 651, 335, 30, -257, -519, -749, -944, -1099, -1213, -1284, -1314, -1304, -1257, 
+                               -1176, -1066, -932, -835, -702, -567, -437, -314, -204, -107, -26, 39, 87, 120, 138, 144, 141, 129,
+                               112, 92, 71, 51}; // numTaps = 180, L = 20
 const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
-
-static q15_t NXDN_SINC_FILTER[] = {572, -1003, -253, 254, 740, 1290, 1902, 2527, 3090, 3517, 3747, 3747, 3517, 3090, 2527, 1902,
-                                   1290, 740, 254, -253, -1003, 572};
-const uint16_t NXDN_SINC_FILTER_LEN = 22U;
 
 const q15_t NXDN_LEVELA =  735;
 const q15_t NXDN_LEVELB =  245;
@@ -49,25 +49,18 @@ const uint8_t NXDN_SYNC = 0x5FU;
 CNXDNTX::CNXDNTX() :
 m_buffer(4000U),
 m_modFilter(),
-m_sincFilter(),
 m_modState(),
-m_sincState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(240U)      // 200ms
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
-  ::memset(m_sincState,  0x00U, 70U * sizeof(q15_t));
 
   m_modFilter.L           = NXDN_RADIO_SYMBOL_LENGTH;
   m_modFilter.phaseLength = RRC_0_2_FILTER_PHASE_LEN;
   m_modFilter.pCoeffs     = RRC_0_2_FILTER;
   m_modFilter.pState      = m_modState;
-
-  m_sincFilter.numTaps = NXDN_SINC_FILTER_LEN;
-  m_sincFilter.pState  = m_sincState;
-  m_sincFilter.pCoeffs = NXDN_SINC_FILTER;
 }
 
 void CNXDNTX::process()
@@ -128,7 +121,6 @@ uint8_t CNXDNTX::writeData(const uint8_t* data, uint8_t length)
 void CNXDNTX::writeByte(uint8_t c)
 {
   q15_t inBuffer[4U];
-  q15_t intBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
   q15_t outBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
 
   const uint8_t MASK = 0xC0U;
@@ -150,9 +142,7 @@ void CNXDNTX::writeByte(uint8_t c)
     }
   }
 
-  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, intBuffer, 4U);
-
-  ::arm_fir_fast_q15(&m_sincFilter, intBuffer, outBuffer, NXDN_RADIO_SYMBOL_LENGTH * 4U);
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
 
   io.write(STATE_NXDN, outBuffer, NXDN_RADIO_SYMBOL_LENGTH * 4U);
 }
