@@ -38,6 +38,13 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
+// PR FILL pattern
+const uint8_t PR_FILL[] =
+        {0x63U, 0xEAU, 0x00U, 0x76U, 0x6CU, 0x76U, 0xC4U, 0x52U, 0xC8U, 0x78U,
+         0x09U, 0x2DU, 0xB8U, 0x79U, 0x27U, 0x57U, 0x9BU, 0x31U, 0xBCU, 0x3EU,
+         0xEAU, 0x45U, 0xC3U, 0x30U, 0x49U, 0x17U, 0x93U, 0xAEU, 0x8BU, 0x6DU,
+         0xA4U, 0xA5U, 0xADU, 0xA2U, 0xF1U, 0x35U, 0xB5U, 0x3CU, 0x1EU};
+
 const uint8_t DMR_SYNC = 0x5FU;
 
 CDMRDMOTX::CDMRDMOTX() :
@@ -66,11 +73,11 @@ void CDMRDMOTX::process()
 
       m_poLen = m_txDelay;
     } else {
-      for (unsigned int i = 0U; i < 72U; i++)
-        m_poBuffer[i] = DMR_SYNC;
-
       for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
-        m_poBuffer[i + 39U] = m_fifo.get();
+        m_poBuffer[i] = m_fifo.get();
+
+      for (unsigned int i = 0U; i < 39U; i++)
+        m_poBuffer[i + DMR_FRAME_LENGTH_BYTES] = PR_FILL[i];
 
       m_poLen = 72U;
     }
