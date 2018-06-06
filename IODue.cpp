@@ -235,6 +235,10 @@ void CIO::setNXDNInt(bool on)
   digitalWrite(PIN_NXDN, on ? HIGH : LOW);
 }
 
+void CIO::setPOCSAGInt(bool on)
+{
+}
+
 void CIO::delayInt(unsigned int dly)
 {
   delay(dly);

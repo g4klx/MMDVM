@@ -1121,6 +1121,10 @@ void CIO::setNXDNInt(bool on)
 #endif
 }
 
+void CIO::setPOCSAGInt(bool on)
+{
+}
+
 // Simple delay function for STM32
 // Example from: http://thehackerworkshop.com/?p=1209
 void CIO::delayInt(unsigned int dly)

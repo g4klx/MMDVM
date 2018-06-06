@@ -434,6 +434,10 @@ void CIO::setNXDNInt(bool on)
   BB_NXDN = !!on;
 }
 
+void CIO::setPOCSAGInt(bool on)
+{
+}
+
 void CIO::delayInt(unsigned int dly)
 {
   delay(dly);

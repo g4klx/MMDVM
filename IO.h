@@ -42,7 +42,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnLevel, int16_t txDCOffset, int16_t rxDCOffset);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, int16_t txDCOffset, int16_t rxDCOffset);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -85,6 +85,7 @@ private:
   q15_t                m_ysfTXLevel;
   q15_t                m_p25TXLevel;
   q15_t                m_nxdnTXLevel;
+  q15_t                m_pocsagTXLevel;
 
   uint16_t             m_rxDCOffset;
   uint16_t             m_txDCOffset;
@@ -116,6 +117,7 @@ private:
   void setYSFInt(bool on);
   void setP25Int(bool on);
   void setNXDNInt(bool on);
+  void setPOCSAGInt(bool on);
   
   void delayInt(unsigned int dly);
 };
