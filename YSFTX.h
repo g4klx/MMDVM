@@ -35,7 +35,7 @@ public:
 
   uint8_t getSpace() const;
 
-  void setLoDev(bool on);
+  void setParams(bool on, uint8_t txHang);
 
 private:
   CSerialRB                        m_buffer;
@@ -46,8 +46,11 @@ private:
   uint16_t                         m_poPtr;
   uint16_t                         m_txDelay;
   bool                             m_loDev;
+  uint32_t                         m_txHang;
+  uint32_t                         m_txCount;
 
   void writeByte(uint8_t c);
+  void writeSilence();
 };
 
 #endif
