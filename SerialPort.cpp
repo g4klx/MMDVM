@@ -86,7 +86,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define TCXO "19.2000"
 #endif
 
-#define DESCRIPTION              "MMDVM 20180607 (D-Star/DMR/System Fusion/P25/NXDN)"
+#define DESCRIPTION              "MMDVM 20180607 48Khz(D-Star/DMR/System Fusion/P25/NXDN)"
 
 #if defined(GITVERSION)
 #define concat(a, b, c) a " " b "MHz GitID #" c ""
