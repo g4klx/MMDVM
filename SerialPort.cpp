@@ -84,6 +84,8 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define TCXO "14.4000"
 #elif EXTERNAL_OSC == 19200000
 #define TCXO "19.2000"
+#else
+#define TCXO "NO TCXO"
 #endif
 
 #define DESCRIPTION              "MMDVM 20180327 (D-Star/DMR/System Fusion/P25/NXDN)"
