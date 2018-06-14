@@ -77,22 +77,22 @@ const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
 #if EXTERNAL_OSC == 12000000
-#define TCXO "12.0000"
+#define TCXO "12.0000 MHz"
 #elif EXTERNAL_OSC == 12288000
-#define TCXO "12.2880"
+#define TCXO "12.2880 MHz"
 #elif EXTERNAL_OSC == 14400000
-#define TCXO "14.4000"
+#define TCXO "14.4000 MHz"
 #elif EXTERNAL_OSC == 19200000
-#define TCXO "19.2000"
+#define TCXO "19.2000 MHz"
 #endif
 
 #define DESCRIPTION              "MMDVM 20180327 (D-Star/DMR/System Fusion/P25/NXDN)"
 
 #if defined(GITVERSION)
-#define concat(a, b, c) a " " b "MHz GitID #" c ""
+#define concat(a, b, c) a " " b " GitID #" c ""
 const char HARDWARE[] = concat(DESCRIPTION, TCXO, GITVERSION);
 #else
-#define concat(a, b, c, d) a " " b "MHz (Build: " c " " d ")"
+#define concat(a, b, c, d) a " " b " (Build: " c " " d ")"
 const char HARDWARE[] = concat(DESCRIPTION, TCXO, __TIME__, __DATE__);
 #endif
 
