@@ -67,12 +67,16 @@ private:
   q31_t                        m_dcState[4];
 
   arm_fir_instance_q15 m_rrcFilter;
-  //arm_fir_instance_q15 m_gaussianFilter;
+#if !defined (DSTARBOXCAR)
+  arm_fir_instance_q15 m_gaussianFilter;
+#endif
   arm_fir_instance_q15 m_boxcarFilter;
   arm_fir_instance_q15 m_nxdnFilter;
   arm_fir_instance_q15 m_nxdnISincFilter;
   q15_t                m_rrcState[140U];          // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
-  //q15_t                m_gaussianState[80U];      // NoTaps + BlockSize - 1, 24 + 20 - 1 plus some spare
+#if !defined (DSTARBOXCAR)
+  q15_t                m_gaussianState[80U];      // NoTaps + BlockSize - 1, 24 + 20 - 1 plus some spare
+#endif
   q15_t                m_boxcarState[60U];        // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
   q15_t                m_nxdnState[220U];         // NoTaps + BlockSize - 1, 162 + 20 - 1 plus some spare
   q15_t                m_nxdnISincState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare

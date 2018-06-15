@@ -166,4 +166,3 @@ void CDMRDMOTX::setTXDelay(uint8_t delay)
   if (m_txDelay > 1200U)
     m_txDelay = 1200U;
 }
-

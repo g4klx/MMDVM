@@ -67,10 +67,12 @@
 // #define SERIAL_REPEATER
 
 // To reduce CPU load, you can remove the DC blocker by commenting out the next line
-// #define USE_DCBLOCKER
+#define USE_DCBLOCKER
 
 // Constant Service LED once repeater is running 
 // Do not use if employing an external hardware watchdog 
 // #define CONSTANT_SRV_LED
+
+// #define DSTARBOXCAR
 
 #endif
