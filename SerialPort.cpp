@@ -230,7 +230,7 @@ void CSerialPort::getStatus()
 
 void CSerialPort::getVersion()
 {
-  uint8_t reply[100U];
+  uint8_t reply[150U];
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
