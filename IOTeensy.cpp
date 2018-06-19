@@ -62,7 +62,7 @@ void CIO::initInt()
   pinMode(PIN_LED,    OUTPUT);
   pinMode(PIN_COS,    INPUT);
 
-#if defined(ARDUINO_MODE_PINS)
+#if defined(MODE_PINS)
   // Set up the mode output pins
   pinMode(PIN_DSTAR,  OUTPUT);
   pinMode(PIN_DMR,    OUTPUT);

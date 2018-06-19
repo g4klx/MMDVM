@@ -97,7 +97,7 @@
           <Define name="STM32F446xx"/>
           <Define name="HSE_VALUE=12000000"/>
           <Define name="STM32F4_PI"/>
-          <Define name="ARDUINO_MODE_PINS"/>
+          <Define name="MODE_PINS"/>
         </DefinedSymbols>
       </Compile>
       <Link useDefault="0">

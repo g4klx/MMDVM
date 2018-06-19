@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode
-// #define ARDUINO_MODE_PINS
+// #define MODE_PINS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
