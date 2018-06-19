@@ -34,6 +34,7 @@
 #define PIN_YSF                18
 #define PIN_P25                19
 #define PIN_NXDN               20
+#define PIN_POCSAG             4
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -48,6 +49,7 @@
 #define PIN_YSF                7
 #define PIN_P25                6
 #define PIN_NXDN               5
+#define PIN_POCSAG             4
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -64,6 +66,7 @@
 #define PIN_YSF                7
 #define PIN_P25                6
 #define PIN_NXDN               5
+#define PIN_POCSAG             4
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -99,6 +102,7 @@ void CIO::initInt()
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
   pinMode(PIN_NXDN,   OUTPUT);
+  pinMode(PIN_POCSAG, OUTPUT);
 #endif
 }
 
@@ -237,6 +241,7 @@ void CIO::setNXDNInt(bool on)
 
 void CIO::setPOCSAGInt(bool on)
 {
+  digitalWrite(PIN_POCSAG, on ? HIGH : LOW);
 }
 
 void CIO::delayInt(unsigned int dly)

@@ -36,8 +36,10 @@
 #define PIN_P25                12
 #if defined(__MK20DX256__)
 #define PIN_NXDN               2
+#define PIN_POCSAG             3
 #else
 #define PIN_NXDN               24
+#define PIN_POCSAG             25
 #endif
 #define PIN_ADC                5        // A0,  Pin 14
 #define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
@@ -69,6 +71,7 @@ void CIO::initInt()
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
   pinMode(PIN_NXDN,   OUTPUT);
+  pinMode(PIN_POCSAG, OUTPUT);
 #endif
 }
 
@@ -223,6 +226,7 @@ void CIO::setNXDNInt(bool on)
 
 void CIO::setPOCSAGInt(bool on)
 {
+  digitalWrite(PIN_POCSAG, on ? HIGH : LOW);
 }
 
 void CIO::delayInt(unsigned int dly)
