@@ -73,6 +73,7 @@
 // Do not use if employing an external hardware watchdog 
 // #define CONSTANT_SRV_LED
 
+//Select BOXCAR Filter into D-Star
 // #define DSTARBOXCAR
 
 #endif
