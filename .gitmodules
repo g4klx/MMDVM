@@ -1,0 +1,6 @@
+[submodule "STM32F4XX_Lib"]
+	path = STM32F4XX_Lib
+	url = https://github.com/juribeparada/STM32F4XX_Lib.git
+[submodule "STM32F7XX_Lib"]
+	path = STM32F7XX_Lib
+	url = https://github.com/juribeparada/STM32F7XX_Lib.git

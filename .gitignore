@@ -1,7 +1,5 @@
 *.o
 obj/
 bin/
-STM32F4XX_Lib/
-STM32F7XX_Lib/
 GitVersion.h
 build/
