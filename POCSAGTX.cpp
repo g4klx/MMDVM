@@ -29,15 +29,25 @@ const uint16_t POCSAG_RADIO_SYMBOL_LENGTH = 20U;
 const q15_t POCSAG_LEVEL1[] = { 1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700,  1700};
 const q15_t POCSAG_LEVEL0[] = {-1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700, -1700};
 
+static q15_t SHAPING_FILTER[] = {5461, 5461, 5461, 5461, 5461, 5461};
+const uint16_t SHAPING_FILTER_LEN = 6U;
+
 const uint8_t POCSAG_SYNC = 0xAAU;
 
 CPOCSAGTX::CPOCSAGTX() :
 m_buffer(4000U),
+m_modFilter(),
+m_modState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(POCSAG_PREAMBLE_LENGTH_BYTES)
 {
+  ::memset(m_modState, 0x00U, 170U * sizeof(q15_t));
+
+  m_modFilter.numTaps = SHAPING_FILTER_LEN;
+  m_modFilter.pState  = m_modState;
+  m_modFilter.pCoeffs = SHAPING_FILTER;
 }
 
 void CPOCSAGTX::process()
@@ -94,7 +104,8 @@ uint8_t CPOCSAGTX::writeData(const uint8_t* data, uint8_t length)
 
 void CPOCSAGTX::writeByte(uint8_t c)
 {
-  q15_t buffer[POCSAG_RADIO_SYMBOL_LENGTH * 8U];
+  q15_t inBuffer[POCSAG_RADIO_SYMBOL_LENGTH * 8U];
+  q15_t outBuffer[POCSAG_RADIO_SYMBOL_LENGTH * 8U];
 
   const uint8_t MASK = 0x80U;
 
@@ -102,15 +113,17 @@ void CPOCSAGTX::writeByte(uint8_t c)
   for (uint8_t i = 0U; i < 8U; i++, c <<= 1, n += POCSAG_RADIO_SYMBOL_LENGTH) {
     switch (c & MASK) {
       case 0x80U:
-        ::memcpy(buffer + n, POCSAG_LEVEL1, POCSAG_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(inBuffer + n, POCSAG_LEVEL1, POCSAG_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
       default:
-        ::memcpy(buffer + n, POCSAG_LEVEL0, POCSAG_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
+        ::memcpy(inBuffer + n, POCSAG_LEVEL0, POCSAG_RADIO_SYMBOL_LENGTH * sizeof(q15_t));
         break;
     }
   }
 
-  io.write(STATE_POCSAG, buffer, POCSAG_RADIO_SYMBOL_LENGTH * 8U);
+  ::arm_fir_fast_q15(&m_modFilter, inBuffer, outBuffer, POCSAG_RADIO_SYMBOL_LENGTH * 8U);
+
+  io.write(STATE_POCSAG, outBuffer, POCSAG_RADIO_SYMBOL_LENGTH * 8U);
 }
 
 void CPOCSAGTX::setTXDelay(uint8_t delay)

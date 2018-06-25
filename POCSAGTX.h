@@ -36,11 +36,13 @@ public:
   uint8_t getSpace() const;
 
 private:
-  CSerialRB                        m_buffer;
-  uint8_t                          m_poBuffer[1200U];
-  uint16_t                         m_poLen;
-  uint16_t                         m_poPtr;
-  uint16_t                         m_txDelay;
+  CSerialRB            m_buffer;
+  arm_fir_instance_q15 m_modFilter;
+  q15_t                m_modState[170U];     // NoTaps + BlockSize - 1, 6 + 160 - 1 plus some spare
+  uint8_t              m_poBuffer[1200U];
+  uint16_t             m_poLen;
+  uint16_t             m_poPtr;
+  uint16_t             m_txDelay;
 
   void writeByte(uint8_t c);
 };
