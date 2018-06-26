@@ -20,9 +20,9 @@
 #include "Globals.h"
 #include "POCSAGTX.h"
 
-const uint16_t POCSAG_PREAMBLE_LENGTH_BYTES = 576U / 8U;
-
 const uint16_t POCSAG_FRAME_LENGTH_BYTES = 17U * sizeof(uint32_t);
+
+const uint16_t POCSAG_PREAMBLE_LENGTH_BYTES = 18U * sizeof(uint32_t);
 
 const uint16_t POCSAG_RADIO_SYMBOL_LENGTH = 20U;
 
@@ -128,10 +128,10 @@ void CPOCSAGTX::writeByte(uint8_t c)
 
 void CPOCSAGTX::setTXDelay(uint8_t delay)
 {
-  m_txDelay = POCSAG_PREAMBLE_LENGTH_BYTES + uint16_t(delay);
+  m_txDelay = POCSAG_PREAMBLE_LENGTH_BYTES + (delay * 3U) / 2U;
 
-  if (m_txDelay > 1200U)
-    m_txDelay = 1200U;
+  if (m_txDelay > 150U)
+    m_txDelay = 150U;
 }
 
 uint8_t CPOCSAGTX::getSpace() const
