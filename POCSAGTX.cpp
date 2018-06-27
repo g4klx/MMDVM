@@ -57,9 +57,11 @@ void CPOCSAGTX::process()
 
   if (m_poLen == 0U) {
     if (!m_tx) {
+      DEBUG1("MMDVM, sending preamble");
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = POCSAG_SYNC;
     } else {
+      DEBUG2("MMDVM, sending", m_buffer.get());
       for (uint8_t i = 0U; i < POCSAG_FRAME_LENGTH_BYTES; i++) {
         uint8_t c = m_buffer.get();
         m_poBuffer[m_poLen++] = c;
@@ -89,14 +91,16 @@ void CPOCSAGTX::process()
 
 uint8_t CPOCSAGTX::writeData(const uint8_t* data, uint8_t length)
 {
-  if (length != POCSAG_FRAME_LENGTH_BYTES)
+  if (length != (POCSAG_FRAME_LENGTH_BYTES + 1U))
     return 4U;
 
   uint16_t space = m_buffer.getSpace();
-  if (space < POCSAG_FRAME_LENGTH_BYTES)
+  if (space < (POCSAG_FRAME_LENGTH_BYTES + 1U))
     return 5U;
 
-  for (uint8_t i = 0U; i < POCSAG_FRAME_LENGTH_BYTES; i++)
+  DEBUG2("MMDVM, queueing", data[0U]);
+
+  for (uint8_t i = 0U; i < (POCSAG_FRAME_LENGTH_BYTES + 1U); i++)
     m_buffer.put(data[i]);
 
   return 0U;
