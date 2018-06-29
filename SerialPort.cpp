@@ -90,12 +90,12 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 
 #define DESCRIPTION              "MMDVM 20180615 48Khz(D-Star/DMR/System Fusion/P25/NXDN)"
 
- #if defined(GITVERSION)
- #define concat(a, b, c) a " " b " GitID #" c ""
- const char HARDWARE[] = concat(DESCRIPTION, TCXO, GITVERSION);
- #else
- #define concat(a, b, c, d) a " " b " (Build: " c " " d ")"
- const char HARDWARE[] = concat(DESCRIPTION, TCXO, __TIME__, __DATE__);
+#if defined(GITVERSION)
+#define concat(a, b, c) a " " b " GitID #" c ""
+const char HARDWARE[] = concat(DESCRIPTION, TCXO, GITVERSION);
+#else
+#define concat(a, b, c, d) a " " b " (Build: " c " " d ")"
+const char HARDWARE[] = concat(DESCRIPTION, TCXO, __TIME__, __DATE__);
 #endif
 
 const uint8_t PROTOCOL_VERSION   = 1U;
