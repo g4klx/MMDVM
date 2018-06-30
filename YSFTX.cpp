@@ -69,7 +69,6 @@ m_txCount(0U)
   m_modFilter.pState      = m_modState;
 }
 
-
 void CYSFTX::process()
 {
   if (m_buffer.getData() == 0U && m_poLen == 0U && m_txCount == 0U)
@@ -93,7 +92,7 @@ void CYSFTX::process()
   if (m_poLen > 0U) {
     // Transmit YSF data.
     uint16_t space = io.getSpace();
-
+    
     while (space > (4U * YSF_RADIO_SYMBOL_LENGTH)) {
       uint8_t c = m_poBuffer[m_poPtr++];
       writeByte(c);

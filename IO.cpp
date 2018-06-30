@@ -460,18 +460,10 @@ void CIO::process()
       }
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
-#if defined(USE_DCBLOCKER)
-	#if !defined (DSTARBOXCAR)
-        ::arm_fir_fast_q15(&m_gaussianFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
-    #else
-        ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
-	#endif
-#else
-	#if !defined (DSTARBOXCAR)
+#if !defined (DSTARBOXCAR)
     	::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
-	#else
+#else
     	::arm_fir_fast_q15(&m_boxcarFilter, samples, GMSKVals, RX_BLOCK_SIZE);
-	#endif
 #endif
       calDStarRX.samples(GMSKVals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_RSSICAL) {
