@@ -344,7 +344,8 @@ ifneq ($(wildcard /usr/bin/stm32flash),)
 	/usr/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
 endif
 
-deploy-f7m: deploy-pi-f7
+deploy-f7m:   deploy-pi-f7
+deploy-f7hat: deploy-pi-f7
 
 # Export the current git version if the index file exists, else 000...
 GitVersion.h:
