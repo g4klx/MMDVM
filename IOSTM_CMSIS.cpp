@@ -436,12 +436,22 @@ void CIO::setP25Int(bool on)
 
 void CIO::setNXDNInt(bool on)
 {
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+  BB_YSF = !!on;
+  BB_P25 = !!on;
+#else
   BB_NXDN = !!on;
+#endif
 }
 
 void CIO::setPOCSAGInt(bool on)
 {
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+  BB_DSTAR = !!on;
+  BB_DMR   = !!on;
+#else
   BB_POCSAG = !!on;
+#endif
 }
 
 void CIO::delayInt(unsigned int dly)

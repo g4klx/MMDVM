@@ -236,12 +236,22 @@ void CIO::setP25Int(bool on)
 
 void CIO::setNXDNInt(bool on)
 {
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+  digitalWrite(PIN_YSF, on ? HIGH : LOW);
+  digitalWrite(PIN_P25, on ? HIGH : LOW);
+#else
   digitalWrite(PIN_NXDN, on ? HIGH : LOW);
+#endif
 }
 
 void CIO::setPOCSAGInt(bool on)
 {
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+  digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+  digitalWrite(PIN_DMR,   on ? HIGH : LOW);
+#else
   digitalWrite(PIN_POCSAG, on ? HIGH : LOW);
+#endif
 }
 
 void CIO::delayInt(unsigned int dly)

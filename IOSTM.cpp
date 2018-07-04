@@ -1115,14 +1115,31 @@ void CIO::setP25Int(bool on)
 
 void CIO::setNXDNInt(bool on)
 {
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+   GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+   GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
+#endif
+#else
    GPIO_WriteBit(PORT_NXDN, PIN_NXDN, on ? Bit_SET : Bit_RESET);
 #if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MNXDN, PIN_MNXDN, on ? Bit_SET : Bit_RESET);
+#endif
 #endif
 }
 
 void CIO::setPOCSAGInt(bool on)
 {
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+   GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_DMR, PIN_DMR,     on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+   GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_MDMR,   PIN_MDMR,   on ? Bit_SET : Bit_RESET);
+#endif
+#endif
 }
 
 // Simple delay function for STM32
