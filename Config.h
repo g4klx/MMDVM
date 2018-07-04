@@ -73,4 +73,11 @@
 // Do not use if employing an external hardware watchdog 
 // #define CONSTANT_SRV_LED
 
+// Use the YSF and P25 LEDs for NXDN
+// #define USE_ALTERNATE_NXDN_LEDS
+
+// Use the D-Star and DMR LEDs for POCSAG
+// #define USE_ALTERNATE_POCSAG_LEDS
+
 #endif
+
