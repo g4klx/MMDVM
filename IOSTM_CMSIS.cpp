@@ -222,9 +222,13 @@ static inline void GPIOInit()
   GPIOConfigPin(PORT_DMR,    PIN_DMR,    GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_YSF,    PIN_YSF,    GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_P25,    PIN_P25,    GPIO_CRL_MODE0_1);
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
   GPIOConfigPin(PORT_NXDN,   PIN_NXDN,   GPIO_CRL_MODE0_1);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
   GPIOConfigPin(PORT_POCSAG, PIN_POCSAG, GPIO_CRL_MODE0_1);
-  
+#endif
+
   GPIOConfigPin(PORT_RX, PIN_RX, 0);
 #if defined(SEND_RSSI_DATA)
   GPIOConfigPin(PORT_RSSI, PIN_RSSI, 0);

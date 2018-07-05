@@ -70,8 +70,12 @@ void CIO::initInt()
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
   pinMode(PIN_NXDN,   OUTPUT);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
   pinMode(PIN_POCSAG, OUTPUT);
+#endif
 #endif
 }
 
