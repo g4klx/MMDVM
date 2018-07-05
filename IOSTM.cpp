@@ -338,6 +338,7 @@ DMR      PC8    output
 YSF      PA8    output
 P25      PC9    output
 NXDN     PB1    output
+POCSAG   PB12   output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -369,6 +370,10 @@ EXT_CLK  PA15   input
 #define PIN_NXDN          GPIO_Pin_1
 #define PORT_NXDN         GPIOB
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_NXDN         GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
 #define PORT_DSTAR        GPIOC
@@ -812,7 +817,7 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_IN;
    GPIO_Init(PORT_COS, &GPIO_InitStruct);
 
-#if defined(ARDUINO_MODE_PINS)
+#if defined(MODE_PINS)
    // DSTAR pin
    RCC_AHB1PeriphClockCmd(RCC_Per_DSTAR, ENABLE);
    GPIO_InitStruct.GPIO_Pin   = PIN_DSTAR;
@@ -837,11 +842,21 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_P25, &GPIO_InitStruct);
 
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
    // NXDN pin
    RCC_AHB1PeriphClockCmd(RCC_Per_NXDN, ENABLE);
    GPIO_InitStruct.GPIO_Pin   = PIN_NXDN;
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_NXDN, &GPIO_InitStruct);
+#endif
+
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
+   // POCSAG pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_POCSAG, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_POCSAG;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_POCSAG, &GPIO_InitStruct);
+#endif
 #endif
 
 #if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
@@ -869,11 +884,21 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_MP25, &GPIO_InitStruct);
 
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
    // NXDN mode pin
    RCC_AHB1PeriphClockCmd(RCC_Per_MNXDN, ENABLE);
    GPIO_InitStruct.GPIO_Pin   = PIN_MNXDN;
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_MNXDN, &GPIO_InitStruct);
+#endif
+
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
+   // POCSAG mode pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_MPOCSAG, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_MPOCSAG;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_MPOCSAG, &GPIO_InitStruct);
+#endif
 #endif
 }
 
@@ -1115,9 +1140,35 @@ void CIO::setP25Int(bool on)
 
 void CIO::setNXDNInt(bool on)
 {
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+   GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+   GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
+#endif
+#else
    GPIO_WriteBit(PORT_NXDN, PIN_NXDN, on ? Bit_SET : Bit_RESET);
 #if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MNXDN, PIN_MNXDN, on ? Bit_SET : Bit_RESET);
+#endif
+#endif
+}
+
+void CIO::setPOCSAGInt(bool on)
+{
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+   GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_DMR,   PIN_DMR,   on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+   GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_MDMR,   PIN_MDMR,   on ? Bit_SET : Bit_RESET);
+#endif
+#else
+   GPIO_WriteBit(PORT_POCSAG,  PIN_POCSAG, on ? Bit_SET : Bit_RESET);
+#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+   GPIO_WriteBit(PORT_MPOCSAG, PIN_MPOCSAG, on ? Bit_SET : Bit_RESET);
+#endif
 #endif
 }
 
