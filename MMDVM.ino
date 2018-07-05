@@ -23,11 +23,12 @@
 // Global variables
 MMDVM_STATE m_modemState = STATE_IDLE;
 
-bool m_dstarEnable = true;
-bool m_dmrEnable   = true;
-bool m_ysfEnable   = true;
-bool m_p25Enable   = true;
-bool m_nxdnEnable  = true;
+bool m_dstarEnable  = true;
+bool m_dmrEnable    = true;
+bool m_ysfEnable    = true;
+bool m_p25Enable    = true;
+bool m_nxdnEnable   = true;
+bool m_pocsagEnable = true;
 
 bool m_duplex = true;
 
@@ -52,6 +53,8 @@ CP25TX     p25TX;
 
 CNXDNRX    nxdnRX;
 CNXDNTX    nxdnTX;
+
+CPOCSAGTX  pocsagTX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
@@ -95,6 +98,9 @@ void loop()
 
   if (m_nxdnEnable && m_modemState == STATE_NXDN)
     nxdnTX.process();
+
+  if (m_pocsagEnable && m_modemState == STATE_POCSAG)
+    pocsagTX.process();
 
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();
