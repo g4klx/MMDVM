@@ -627,6 +627,7 @@ DMR      PB4    output           CN12 Pin27
 YSF      PB5    output           CN12 Pin29
 P25      PB3    output           CN12 Pin31
 NXDN     PA10   output           CN12 Pin33
+POCSAG   PB12   output           CN12 Pin16
 
 MDSTAR   PC4    output           CN12 Pin34
 MDMR     PC5    output           CN12 Pin6
@@ -664,6 +665,10 @@ EXT_CLK  PA15   input            CN11 Pin17
 #define PIN_NXDN          GPIO_Pin_10
 #define PORT_NXDN         GPIOA
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_10
 #define PORT_DSTAR        GPIOB
