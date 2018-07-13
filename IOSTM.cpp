@@ -113,6 +113,7 @@ DMR      PC8    output
 YSF      PA8    output
 P25      PC9    output
 NXDN     PB1    output
+POCSAG   PB12   output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -144,6 +145,10 @@ EXT_CLK  PA15   input
 #define PIN_NXDN          GPIO_Pin_1
 #define PORT_NXDN         GPIOB
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
 #define PORT_DSTAR        GPIOC
@@ -188,6 +193,7 @@ DMR      PC8    output
 YSF      PA8    output
 P25      PC9    output
 NXDN     PB1    output
+POCSAG   PB12   output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -219,6 +225,10 @@ EXT_CLK  PA15   input
 #define PIN_NXDN          GPIO_Pin_1
 #define PORT_NXDN         GPIOB
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
 #define PORT_DSTAR        GPIOC
@@ -263,6 +273,7 @@ DMR      PC8    output
 YSF      PA8    output
 P25      PC9    output
 NXDN     PB1    output
+POCSAG   PB12   output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -294,6 +305,10 @@ EXT_CLK  PA15   input
 #define PIN_NXDN          GPIO_Pin_1
 #define PORT_NXDN         GPIOB
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
 #define PORT_DSTAR        GPIOC
@@ -372,7 +387,7 @@ EXT_CLK  PA15   input
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
 
 #define PIN_POCSAG        GPIO_Pin_12
-#define PORT_NXDN         GPIOB
+#define PORT_POCSAG       GPIOB
 #define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_7
@@ -420,6 +435,7 @@ DMR      PB4    output           CN10 Pin27
 YSF      PB5    output           CN10 Pin29
 P25      PB3    output           CN10 Pin31
 NXDN     PA10   output           CN10 Pin33
+POCSAG   PB12   output
 
 MDSTAR   PC4    output           CN10 Pin34
 MDMR     PC5    output           CN10 Pin6
@@ -457,6 +473,10 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PIN_NXDN          GPIO_Pin_10
 #define PORT_NXDN         GPIOA
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_10
 #define PORT_DSTAR        GPIOB
@@ -523,6 +543,7 @@ DMR      PA4    output           CN8 Pin3
 YSF      PB0    output           CN8 Pin4
 P25      PC1    output           CN8 Pin5
 NXDN     PA3    output           CN9 Pin1
+POCSAG   PB12   output
 
 RX       PA0    analog input     CN8 Pin1
 RSSI     PC0    analog input     CN8 Pin6
@@ -554,6 +575,10 @@ EXT_CLK  PB8    input            CN5 Pin10
 #define PIN_NXDN          GPIO_Pin_3
 #define PORT_NXDN         GPIOA
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_1
 #define PORT_DSTAR        GPIOA
@@ -602,6 +627,7 @@ DMR      PB4    output           CN12 Pin27
 YSF      PB5    output           CN12 Pin29
 P25      PB3    output           CN12 Pin31
 NXDN     PA10   output           CN12 Pin33
+POCSAG   PB12   output           CN12 Pin16
 
 MDSTAR   PC4    output           CN12 Pin34
 MDMR     PC5    output           CN12 Pin6
@@ -639,6 +665,10 @@ EXT_CLK  PA15   input            CN11 Pin17
 #define PIN_NXDN          GPIO_Pin_10
 #define PORT_NXDN         GPIOA
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
+
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
 
 #define PIN_DSTAR         GPIO_Pin_10
 #define PORT_DSTAR        GPIOB
