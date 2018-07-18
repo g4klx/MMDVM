@@ -465,6 +465,10 @@ EXT_CLK  PA15   input
 #define PORT_NXDN         GPIOC
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
 
+#define PIN_POCSAG        GPIO_Pin_12
+#define PORT_POCSAG       GPIOB
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
+
 #define PIN_DSTAR         GPIO_Pin_15
 #define PORT_DSTAR        GPIOB
 #define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOB
