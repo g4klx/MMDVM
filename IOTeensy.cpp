@@ -36,8 +36,10 @@
 #define PIN_P25                12
 #if defined(__MK20DX256__)
 #define PIN_NXDN               2
+#define PIN_POCSAG             3
 #else
 #define PIN_NXDN               24
+#define PIN_POCSAG             25
 #endif
 #define PIN_ADC                5        // A0,  Pin 14
 #define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
@@ -62,13 +64,18 @@ void CIO::initInt()
   pinMode(PIN_LED,    OUTPUT);
   pinMode(PIN_COS,    INPUT);
 
-#if defined(ARDUINO_MODE_PINS)
+#if defined(MODE_PINS)
   // Set up the mode output pins
   pinMode(PIN_DSTAR,  OUTPUT);
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
   pinMode(PIN_NXDN,   OUTPUT);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
+  pinMode(PIN_POCSAG, OUTPUT);
+#endif
 #endif
 }
 
@@ -216,9 +223,24 @@ void CIO::setP25Int(bool on)
   digitalWrite(PIN_P25, on ? HIGH : LOW);
 }
 
-void CIO::setNXDNInt(bool on) 
+void CIO::setNXDNInt(bool on)
 {
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+  digitalWrite(PIN_YSF, on ? HIGH : LOW);
+  digitalWrite(PIN_P25, on ? HIGH : LOW);
+#else
   digitalWrite(PIN_NXDN, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setPOCSAGInt(bool on)
+{
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+  digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+  digitalWrite(PIN_DMR,   on ? HIGH : LOW);
+#else
+  digitalWrite(PIN_POCSAG, on ? HIGH : LOW);
+#endif
 }
 
 void CIO::delayInt(unsigned int dly)

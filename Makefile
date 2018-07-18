@@ -150,7 +150,7 @@ CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -f
 LDFLAGS=-Os --specs=nano.specs
 
 # Build Rules
-.PHONY: all release dis pi pi_f722 f4m nucleo f767 dvm clean
+.PHONY: all release dis pi pi-f722 f4m nucleo f767 dvm clean
 
 # Default target: Nucleo-64 F446RE board
 all: nucleo
