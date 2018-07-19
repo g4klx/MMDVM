@@ -45,7 +45,7 @@
 // #define ARDUINO_DUE_PAPA
 
 // For the ZUM V1.0 and V1.0.1 boards pin layout
-//#define ARDUINO_DUE_ZUM_V10
+#define ARDUINO_DUE_ZUM_V10
 
 // For the SQ6POG board
 // #define STM32F1_POG
@@ -61,7 +61,7 @@
 // #define STM32F4_NUCLEO_MODE_PINS
 
 // For the VK6MST Pi3 Shield communicating over i2c. i2c address & speed defined in i2cTeensy.cpp
-#define VK6MST_TEENSY_PI3_SHIELD_I2C
+// #define VK6MST_TEENSY_PI3_SHIELD_I2C
 
 // Pass RSSI information to the host
 // #define SEND_RSSI_DATA
