@@ -21,7 +21,10 @@
 
 #include "SerialPort.h"
 
-#if defined(__SAM3X8E__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
+#if defined(VK6MST_TEENSY_PI3_SHIELD_I2C)
+//it will load I2CTeensy.cpp
+
+#elif defined(__SAM3X8E__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 
 void CSerialPort::beginInt(uint8_t n, int speed)
 {
