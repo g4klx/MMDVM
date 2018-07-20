@@ -194,6 +194,16 @@ int CSerialPort::availableInt(uint8_t n)
   }
 }
 
+int CSerialPort::availableForWriteInt(uint8_t n)
+{
+  switch (n) {
+    case 3U:
+      return Serial3.availableForWrite();
+    default:
+      return false;
+  }
+}
+
 uint8_t CSerialPort::readInt(uint8_t n)
 {
   switch (n) {
