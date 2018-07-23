@@ -90,7 +90,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define TCXO "NO TCXO"
 #endif
 
-#define DESCRIPTION              "MMDVM 20180705 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
+#define DESCRIPTION              "MMDVM 20180723 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
 
 #if defined(GITVERSION)
 #define concat(a, b, c) a " " b " GitID #" c ""
