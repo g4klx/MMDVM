@@ -35,6 +35,8 @@ public:
 
   uint8_t getSpace() const;
 
+  bool busy();
+
 private:
   CSerialRB            m_buffer;
   arm_fir_instance_q15 m_modFilter;

@@ -87,6 +87,14 @@ void CPOCSAGTX::process()
   }
 }
 
+bool CPOCSAGTX::busy()
+{
+  if (m_poLen > 0U || m_buffer.getData() > 0U)
+    return true;
+  else
+    return false;
+}
+
 uint8_t CPOCSAGTX::writeData(const uint8_t* data, uint8_t length)
 {
   if (length != POCSAG_FRAME_LENGTH_BYTES)
