@@ -433,6 +433,7 @@ DMR      PC6    output
 YSF      PC7    output
 P25      PC8    output
 NXDN     PC9    output
+POCSAG   PA8    output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -465,9 +466,9 @@ EXT_CLK  PA15   input
 #define PORT_NXDN         GPIOC
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
 
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
+#define PIN_POCSAG        GPIO_Pin_8
+#define PORT_POCSAG       GPIOA
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOA
 
 #define PIN_DSTAR         GPIO_Pin_15
 #define PORT_DSTAR        GPIOB
