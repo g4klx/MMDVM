@@ -436,7 +436,7 @@ NXDN     PC9    output
 POCSAG   PA8    output
 
 MDSTAR   PC10   output
-MDMR     PC12   output
+MDMR     PC4    output
 MYSF     PC13   output
 MP25     PC14   output
 MNXDN    PC15   output
@@ -502,7 +502,7 @@ EXT_CLK  PA15   input
 #define PORT_MDSTAR       GPIOC
 #define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
 
-#define PIN_MDMR          GPIO_Pin_12
+#define PIN_MDMR          GPIO_Pin_4
 #define PORT_MDMR         GPIOC
 #define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
 
