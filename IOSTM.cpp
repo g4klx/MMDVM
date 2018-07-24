@@ -815,6 +815,7 @@ NXDN     PB9    output
 DSTAR    PB6    output
 DMR      PB5    output
 YSF      PB7    output
+POCSAG   PC10   output
 
 RX       PB0    analog input
 RSSI     PB1    analog input
@@ -859,6 +860,10 @@ EXT_CLK  PA15   input
 #define PIN_YSF           GPIO_Pin_7
 #define PORT_YSF          GPIOB
 #define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
+
+#define PIN_POCSAG        GPIO_Pin_10
+#define PORT_POCSAG       GPIOC
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOC
 
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
