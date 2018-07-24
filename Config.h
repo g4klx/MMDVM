@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode
-// #define ARDUINO_MODE_PINS
+// #define MODE_PINS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
@@ -60,6 +60,9 @@
 // Use separate mode pins to switch external filters/bandwidth for example
 // #define STM32F4_NUCLEO_MODE_PINS
 
+// For the VK6MST Pi3 Shield communicating over i2c. i2c address & speed defined in i2cTeensy.cpp
+// #define VK6MST_TEENSY_PI3_SHIELD_I2C
+
 // Pass RSSI information to the host
 #define SEND_RSSI_DATA
 
@@ -73,7 +76,13 @@
 // Do not use if employing an external hardware watchdog 
 // #define CONSTANT_SRV_LED
 
-//Select BOXCAR Filter into D-Star
+// Use the YSF and P25 LEDs for NXDN
+// #define USE_ALTERNATE_NXDN_LEDS
+
+// Use the D-Star and DMR LEDs for POCSAG
+// #define USE_ALTERNATE_POCSAG_LEDS
+
+// Select BOXCAR Filter into D-Star
 // #define DSTARBOXCAR
 
 #endif

@@ -34,6 +34,7 @@
 #define PIN_YSF                18
 #define PIN_P25                19
 #define PIN_NXDN               20
+#define PIN_POCSAG             4
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -48,6 +49,7 @@
 #define PIN_YSF                7
 #define PIN_P25                6
 #define PIN_NXDN               5
+#define PIN_POCSAG             4
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -64,6 +66,7 @@
 #define PIN_YSF                7
 #define PIN_P25                6
 #define PIN_NXDN               5
+#define PIN_POCSAG             4
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -92,13 +95,18 @@ void CIO::initInt()
   pinMode(PIN_LED,    OUTPUT);
   pinMode(PIN_COS,    INPUT);
 
-#if defined(ARDUINO_MODE_PINS)
+#if defined(MODE_PINS)
   // Set up the mode output pins
   pinMode(PIN_DSTAR,  OUTPUT);
   pinMode(PIN_DMR,    OUTPUT);
   pinMode(PIN_YSF,    OUTPUT);
   pinMode(PIN_P25,    OUTPUT);
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
   pinMode(PIN_NXDN,   OUTPUT);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
+  pinMode(PIN_POCSAG, OUTPUT);
+#endif
 #endif
 }
 
@@ -232,7 +240,22 @@ void CIO::setP25Int(bool on)
 
 void CIO::setNXDNInt(bool on)
 {
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+  digitalWrite(PIN_YSF, on ? HIGH : LOW);
+  digitalWrite(PIN_P25, on ? HIGH : LOW);
+#else
   digitalWrite(PIN_NXDN, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setPOCSAGInt(bool on)
+{
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+  digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+  digitalWrite(PIN_DMR,   on ? HIGH : LOW);
+#else
+  digitalWrite(PIN_POCSAG, on ? HIGH : LOW);
+#endif
 }
 
 void CIO::delayInt(unsigned int dly)

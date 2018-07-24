@@ -247,9 +247,10 @@
     <File name="CalNXDN.cpp" path="CalNXDN.cpp" type="1"/>
     <File name="NXDNTX.cpp" path="NXDNTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cm4.h" path="STM32F4XX_Lib/CMSIS/Include/core_cm4.h" type="1"/>
-    <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" type="1"/>
+    <File name="I2CTeensy.cpp" path="I2CTeensy.cpp" type="1"/>
     <File name="YSFRX.h" path="YSFRX.h" type="1"/>
     <File name="DMRSlotRX.h" path="DMRSlotRX.h" type="1"/>
+    <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include" path="" type="2"/>
     <File name="NXDNRX.cpp" path="NXDNRX.cpp" type="1"/>
     <File name="DMRDMORX.cpp" path="DMRDMORX.cpp" type="1"/>
@@ -271,18 +272,21 @@
     <File name="DMRRX.h" path="DMRRX.h" type="1"/>
     <File name="MMDVM.cpp" path="MMDVM.cpp" type="1"/>
     <File name="IOTeensy.cpp" path="IOTeensy.cpp" type="1"/>
+    <File name="POCSAGTX.cpp" path="POCSAGTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cmSimd.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmSimd.h" type="1"/>
     <File name="DMRDMORX.h" path="DMRDMORX.h" type="1"/>
+    <File name="GitVersion.h" path="GitVersion.h" type="1"/>
     <File name="SerialPort.h" path="SerialPort.h" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_dac.h" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_dac.h" type="1"/>
-    <File name="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" type="1"/>
     <File name="STM32F4XX_Lib/Device/system_stm32f4xx.h" path="STM32F4XX_Lib/Device/system_stm32f4xx.h" type="1"/>
+    <File name="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" type="1"/>
     <File name="CWIdTX.h" path="CWIdTX.h" type="1"/>
     <File name="CalDStarTX.cpp" path="CalDStarTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source" path="" type="2"/>
     <File name="DMRDMOTX.h" path="DMRDMOTX.h" type="1"/>
-    <File name="IODue.cpp" path="IODue.cpp" type="1"/>
     <File name="CalDMR.h" path="CalDMR.h" type="1"/>
+    <File name="POCSAGTX.h" path="POCSAGTX.h" type="1"/>
+    <File name="IODue.cpp" path="IODue.cpp" type="1"/>
     <File name="DMRTX.cpp" path="DMRTX.cpp" type="1"/>
     <File name="P25RX.cpp" path="P25RX.cpp" type="1"/>
     <File name="CalRSSI.h" path="CalRSSI.h" type="1"/>

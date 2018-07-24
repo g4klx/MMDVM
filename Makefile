@@ -128,6 +128,8 @@ DEFS_NUCLEO_F767=-DUSE_HAL_DRIVER -DSTM32F767xx -DSTM32F7XX -DSTM32F7_NUCLEO -DH
 DEFS_PI_F722=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # MMDVM-F7M F0DEI board:
 DEFS_F7M=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_F7M -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# MMDVM-F7-Hat F0DEI, DB9MAT, DF2ET board:
+DEFS_F7HAT=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_F7HAT -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # STM32F4 DVM board:
 DEFS_DVM=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_DVM -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
@@ -148,7 +150,7 @@ CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -f
 LDFLAGS=-Os --specs=nano.specs
 
 # Build Rules
-.PHONY: all release dis pi pi_f722 f4m nucleo f767 dvm clean
+.PHONY: all release dis pi pi-f722 f4m nucleo f767 dvm clean
 
 # Default target: Nucleo-64 F446RE board
 all: nucleo
@@ -176,6 +178,12 @@ f7m: CFLAGS+=$(CFLAGS_F7) $(DEFS_F7M)
 f7m: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_F7M)
 f7m: LDFLAGS+=$(LDFLAGS_F722)
 f7m: release_f7
+
+f7hat: GitVersion.h
+f7hat: CFLAGS+=$(CFLAGS_F7) $(DEFS_F7HAT)
+f7hat: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_F7HAT)
+f7hat: LDFLAGS+=$(LDFLAGS_F722)
+f7hat: release_f7
 
 nucleo: GitVersion.h
 nucleo: CFLAGS+=$(CFLAGS_F4) $(DEFS_NUCLEO)
@@ -336,7 +344,8 @@ ifneq ($(wildcard /usr/bin/stm32flash),)
 	/usr/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
 endif
 
-deploy-f7m: deploy-pi-f7
+deploy-f7m:   deploy-pi-f7
+deploy-f7hat: deploy-pi-f7
 
 # Export the current git version if the index file exists, else 000...
 GitVersion.h:
