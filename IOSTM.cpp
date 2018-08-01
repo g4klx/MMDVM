@@ -932,7 +932,7 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_IN;
    GPIO_Init(PORT_COS, &GPIO_InitStruct);
 
-#if defined(MODE_PINS)
+#if defined(MODE_LEDS)
    // DSTAR pin
    RCC_AHB1PeriphClockCmd(RCC_Per_DSTAR, ENABLE);
    GPIO_InitStruct.GPIO_Pin   = PIN_DSTAR;
