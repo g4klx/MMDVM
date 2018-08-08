@@ -515,13 +515,14 @@ DMR      PB4    output           CN10 Pin27
 YSF      PB5    output           CN10 Pin29
 P25      PB3    output           CN10 Pin31
 NXDN     PA10   output           CN10 Pin33
-POCSAG   PB12   output
+POCSAG   PB12   output           CN10 Pin16
 
 MDSTAR   PC4    output           CN10 Pin34
 MDMR     PC5    output           CN10 Pin6
 MYSF     PC2    output           CN7 Pin35
 MP25     PC3    output           CN7 Pin37
 MNXDN    PC6    output           CN10 Pin4
+MPOCSAG  PC8    output           CN10 Pin2
 
 RX       PA0    analog input     CN7 Pin28
 RSSI     PA1    analog input     CN7 Pin30
@@ -590,6 +591,10 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PIN_MYSF          GPIO_Pin_2
 #define PORT_MYSF         GPIOC
 #define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
+
+#define PIN_MPOCSAG       GPIO_Pin_8
+#define PORT_MPOCSAG      GPIOC
+#define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
 #endif
 
 #define PIN_EXT_CLK       GPIO_Pin_15
