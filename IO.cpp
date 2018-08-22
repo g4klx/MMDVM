@@ -49,10 +49,11 @@ static q15_t NXDN_ISINC_FILTER[] = {7616, -1333, -1856, -2611, -3399, -4006, -42
                                     9665, 8832, 7276, 5200, 2867, 561, -1458, -2988, -3918, -4230, -4006, -3399, -2611, -1856, -1333, 7616};
 const uint16_t NXDN_ISINC_FILTER_LEN = 32U;
 
+#if !defined (DSTARBOXCAR)
 // Generated using gaussfir(0.5, 4, 10) in MATLAB
-//static q15_t   GAUSSIAN_0_5_FILTER[] = {1, 4, 15, 52, 151, 380, 832, 1579, 2599, 3710, 4594, 4933, 4594, 3710, 2599, 1579, 832, 380, 151, 52, 15, 4, 1, 0};
-//const uint16_t GAUSSIAN_0_5_FILTER_LEN = 24U;
-
+static q15_t   GAUSSIAN_0_5_FILTER[] = {1, 4, 15, 52, 151, 380, 832, 1579, 2599, 3710, 4594, 4933, 4594, 3710, 2599, 1579, 832, 380, 151, 52, 15, 4, 1, 0};
+const uint16_t GAUSSIAN_0_5_FILTER_LEN = 24U;
+#endif
 // One symbol boxcar filter
 static q15_t   BOXCAR_FILTER[] = {6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 0, 0};
 const uint16_t BOXCAR_FILTER_LEN = 12U;
@@ -67,12 +68,16 @@ m_rssiBuffer(RX_RINGBUFFER_SIZE),
 m_dcFilter(),
 m_dcState(),
 m_rrcFilter(),
-//m_gaussianFilter(),
+#if !defined (DSTARBOXCAR)
+m_gaussianFilter(),
+#endif
 m_boxcarFilter(),
 m_nxdnFilter(),
 m_nxdnISincFilter(),
 m_rrcState(),
-//m_gaussianState(),
+#if !defined (DSTARBOXCAR)
+m_gaussianState(),
+#endif
 m_boxcarState(),
 m_nxdnState(),
 m_nxdnISincState(),
@@ -84,6 +89,7 @@ m_dmrTXLevel(128 * 128),
 m_ysfTXLevel(128 * 128),
 m_p25TXLevel(128 * 128),
 m_nxdnTXLevel(128 * 128),
+m_pocsagTXLevel(128 * 128),
 m_rxDCOffset(DC_OFFSET),
 m_txDCOffset(DC_OFFSET),
 m_ledCount(0U),
@@ -95,7 +101,9 @@ m_watchdog(0U),
 m_lockout(false)
 {
   ::memset(m_rrcState,      	0x00U,  140U * sizeof(q15_t));
-//  ::memset(m_gaussianState, 	0x00U,   80U * sizeof(q15_t));
+#if !defined (DSTARBOXCAR)
+  ::memset(m_gaussianState, 	0x00U,   80U * sizeof(q15_t));
+#endif
   ::memset(m_boxcarState,   	0x00U,   60U * sizeof(q15_t));
   ::memset(m_nxdnState,     	0x00U, 	220U * sizeof(q15_t));
   ::memset(m_nxdnISincState, 	0x00U, 	 60U * sizeof(q15_t));
@@ -109,11 +117,11 @@ m_lockout(false)
   m_rrcFilter.numTaps = RRC_0_2_FILTER_LEN;
   m_rrcFilter.pState  = m_rrcState;
   m_rrcFilter.pCoeffs = RRC_0_2_FILTER;
-
-//  m_gaussianFilter.numTaps = GAUSSIAN_0_5_FILTER_LEN;
-//  m_gaussianFilter.pState  = m_gaussianState;
-//  m_gaussianFilter.pCoeffs = GAUSSIAN_0_5_FILTER;
-
+#if !defined (DSTARBOXCAR)
+  m_gaussianFilter.numTaps = GAUSSIAN_0_5_FILTER_LEN;
+  m_gaussianFilter.pState  = m_gaussianState;
+  m_gaussianFilter.pCoeffs = GAUSSIAN_0_5_FILTER;
+#endif
   m_boxcarFilter.numTaps = BOXCAR_FILTER_LEN;
   m_boxcarFilter.pState  = m_boxcarState;
   m_boxcarFilter.pCoeffs = BOXCAR_FILTER;
@@ -141,22 +149,24 @@ void CIO::selfTest()
     // We exclude PTT to avoid trigger the transmitter
     setLEDInt(ledValue);
     setCOSInt(ledValue);
-#if defined(ARDUINO_MODE_PINS)
+#if defined(MODE_PINS)
     setDStarInt(ledValue);
     setDMRInt(ledValue);
     setYSFInt(ledValue);
     setP25Int(ledValue);
     setNXDNInt(ledValue);
+    setPOCSAGInt(ledValue);
 #endif
     delayInt(250);
   }
 
-#if defined(ARDUINO_MODE_PINS)
+#if defined(MODE_PINS)
   setDStarInt(true);
   setDMRInt(false);
   setYSFInt(false);
   setP25Int(false);
   setNXDNInt(false);
+  setPOCSAGInt(false);
 
   delayInt(250);
 
@@ -165,6 +175,7 @@ void CIO::selfTest()
   setYSFInt(false);
   setP25Int(false);
   setNXDNInt(false);
+  setPOCSAGInt(false);
 
   delayInt(250);
 
@@ -173,6 +184,7 @@ void CIO::selfTest()
   setYSFInt(true);
   setP25Int(false);
   setNXDNInt(false);
+  setPOCSAGInt(false);
   
   delayInt(250);
 
@@ -181,6 +193,7 @@ void CIO::selfTest()
   setYSFInt(true);
   setP25Int(true);
   setNXDNInt(false);
+  setPOCSAGInt(false);
   
   delayInt(250);
 
@@ -189,6 +202,25 @@ void CIO::selfTest()
   setYSFInt(true);
   setP25Int(true);
   setNXDNInt(true);
+  setPOCSAGInt(false);
+  
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(true);
+  setNXDNInt(true);
+  setPOCSAGInt(true);
+  
+  delayInt(250);
+
+  setDStarInt(true);
+  setDMRInt(true);
+  setYSFInt(true);
+  setP25Int(true);
+  setNXDNInt(true);
+  setPOCSAGInt(false);
   
   delayInt(250);
 
@@ -197,6 +229,7 @@ void CIO::selfTest()
   setYSFInt(true);
   setP25Int(true);
   setNXDNInt(false);
+  setPOCSAGInt(false);
 
   delayInt(250);
   
@@ -205,6 +238,7 @@ void CIO::selfTest()
   setYSFInt(true);
   setP25Int(false);
   setNXDNInt(false);
+  setPOCSAGInt(false);
 
   delayInt(250);
 
@@ -213,6 +247,7 @@ void CIO::selfTest()
   setYSFInt(false);
   setP25Int(false);
   setNXDNInt(false);
+  setPOCSAGInt(false);
 
   delayInt(250);
   
@@ -221,6 +256,7 @@ void CIO::selfTest()
   setYSFInt(false);
   setP25Int(false);
   setNXDNInt(false);
+  setPOCSAGInt(false);
 
   delayInt(250);
 
@@ -229,6 +265,7 @@ void CIO::selfTest()
   setYSFInt(false);
   setP25Int(false);
   setNXDNInt(false);
+  setPOCSAGInt(false);
 #endif
 }
 
@@ -260,11 +297,15 @@ void CIO::process()
       m_watchdog = 0U;
     }
 
+#if defined(CONSTANT_SRV_LED)
+    setLEDInt(true);
+#else
     if (m_ledCount >= 48000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
       setLEDInt(m_ledValue);
     }
+#endif
   } else {
     if (m_ledCount >= 480000U) {
       m_ledCount = 0U;
@@ -329,9 +370,17 @@ void CIO::process()
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
+	#if !defined (DSTARBOXCAR)
+        ::arm_fir_fast_q15(&m_gaussianFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
+    #else
         ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
+	#endif
 #else
-        ::arm_fir_fast_q15(&m_boxcarFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+	#if !defined (DSTARBOXCAR)
+    	::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+	#else
+    	::arm_fir_fast_q15(&m_boxcarFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+	#endif
 #endif
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
@@ -377,9 +426,17 @@ void CIO::process()
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
+	#if !defined (DSTARBOXCAR)
+        ::arm_fir_fast_q15(&m_gaussianFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
+	#else
         ::arm_fir_fast_q15(&m_boxcarFilter, dcSamples, GMSKVals, RX_BLOCK_SIZE);
+	#endif
 #else
-        ::arm_fir_fast_q15(&m_boxcarFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+	#if !defined (DSTARBOXCAR)
+		::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+	#else
+		::arm_fir_fast_q15(&m_boxcarFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+	#endif
 #endif
         dstarRX.samples(GMSKVals, rssi, RX_BLOCK_SIZE);
       }
@@ -433,8 +490,11 @@ void CIO::process()
       }
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
-      ::arm_fir_fast_q15(&m_boxcarFilter, samples, GMSKVals, RX_BLOCK_SIZE);
-
+#if !defined (DSTARBOXCAR)
+    	::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+#else
+    	::arm_fir_fast_q15(&m_boxcarFilter, samples, GMSKVals, RX_BLOCK_SIZE);
+#endif
       calDStarRX.samples(GMSKVals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_RSSICAL) {
       calRSSI.samples(rssi, RX_BLOCK_SIZE);
@@ -472,6 +532,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
       break;
     case STATE_NXDN:
       txLevel = m_nxdnTXLevel;
+      break;
+    case STATE_POCSAG:
+      txLevel = m_pocsagTXLevel;
       break;
     default:
       txLevel = m_cwIdTXLevel;
@@ -514,26 +577,28 @@ void CIO::setADCDetection(bool detect)
 
 void CIO::setMode()
 {
-#if defined(ARDUINO_MODE_PINS)
+#if defined(MODE_PINS)
   setDStarInt(m_modemState == STATE_DSTAR);
   setDMRInt(m_modemState   == STATE_DMR);
   setYSFInt(m_modemState   == STATE_YSF);
   setP25Int(m_modemState   == STATE_P25);
   setNXDNInt(m_modemState  == STATE_NXDN);
+  setPOCSAGInt(m_modemState  == STATE_POCSAG);
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, int16_t txDCOffset, int16_t rxDCOffset)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, int16_t txDCOffset, int16_t rxDCOffset)
 {
   m_pttInvert = pttInvert;
 
-  m_rxLevel      = q15_t(rxLevel * 128);
-  m_cwIdTXLevel  = q15_t(cwIdTXLevel * 128);
-  m_dstarTXLevel = q15_t(dstarTXLevel * 128);
-  m_dmrTXLevel   = q15_t(dmrTXLevel * 128);
-  m_ysfTXLevel   = q15_t(ysfTXLevel * 128);
-  m_p25TXLevel   = q15_t(p25TXLevel * 128);
-  m_nxdnTXLevel  = q15_t(nxdnTXLevel * 128);
+  m_rxLevel       = q15_t(rxLevel * 128);
+  m_cwIdTXLevel   = q15_t(cwIdTXLevel * 128);
+  m_dstarTXLevel  = q15_t(dstarTXLevel * 128);
+  m_dmrTXLevel    = q15_t(dmrTXLevel * 128);
+  m_ysfTXLevel    = q15_t(ysfTXLevel * 128);
+  m_p25TXLevel    = q15_t(p25TXLevel * 128);
+  m_nxdnTXLevel   = q15_t(nxdnTXLevel * 128);
+  m_pocsagTXLevel = q15_t(pocsagTXLevel * 128);
 
   m_rxDCOffset   = DC_OFFSET + rxDCOffset;
   m_txDCOffset   = DC_OFFSET + txDCOffset;
@@ -542,11 +607,12 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
     m_rxLevel = -m_rxLevel;
   
   if (txInvert) {
-    m_dstarTXLevel = -m_dstarTXLevel;
-    m_dmrTXLevel   = -m_dmrTXLevel;
-    m_ysfTXLevel   = -m_ysfTXLevel;
-    m_p25TXLevel   = -m_p25TXLevel;
-    m_nxdnTXLevel  = -m_nxdnTXLevel;
+    m_dstarTXLevel  = -m_dstarTXLevel;
+    m_dmrTXLevel    = -m_dmrTXLevel;
+    m_ysfTXLevel    = -m_ysfTXLevel;
+    m_p25TXLevel    = -m_p25TXLevel;
+    m_nxdnTXLevel   = -m_nxdnTXLevel;
+    m_pocsagTXLevel = -m_pocsagTXLevel;
   }
 }
 

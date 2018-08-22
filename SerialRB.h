@@ -32,7 +32,11 @@ Boston, MA  02110-1301, USA.
 #include <Arduino.h>
 #endif
 
-const uint16_t SERIAL_RINGBUFFER_SIZE = 2000U;
+#if defined(STM32F105xC) || defined(__MK20DX256__) || defined(STM32F4XX)
+const uint16_t SERIAL_RINGBUFFER_SIZE = 370U;
+#else
+const uint16_t SERIAL_RINGBUFFER_SIZE = 1000U;
+#endif
 
 class CSerialRB {
 public:

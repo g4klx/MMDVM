@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -38,8 +38,8 @@
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT
 
-// Use pins to output the current mode
-// #define ARDUINO_MODE_PINS
+// Use pins to output the current mode via LEDs
+// #define MODE_LEDS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
@@ -57,8 +57,11 @@
 // #define STM32F4_NUCLEO_MORPHO_HEADER
 #define STM32F4_NUCLEO_ARDUINO_HEADER
 
-// Use separate mode pins to switch external filters/bandwidth for example
-// #define STM32F4_NUCLEO_MODE_PINS
+// Use separate mode pins to switch external channel/filters/bandwidth for example
+// #define MODE_PINS
+
+// For the VK6MST Pi3 Shield communicating over i2c. i2c address & speed defined in i2cTeensy.cpp
+// #define VK6MST_TEENSY_PI3_SHIELD_I2C
 
 // Pass RSSI information to the host
 #define SEND_RSSI_DATA
@@ -68,5 +71,18 @@
 
 // To reduce CPU load, you can remove the DC blocker by commenting out the next line
 // #define USE_DCBLOCKER
+
+// Constant Service LED once repeater is running 
+// Do not use if employing an external hardware watchdog 
+// #define CONSTANT_SRV_LED
+
+// Use the YSF and P25 LEDs for NXDN
+// #define USE_ALTERNATE_NXDN_LEDS
+
+// Use the D-Star and DMR LEDs for POCSAG
+// #define USE_ALTERNATE_POCSAG_LEDS
+
+// Select BOXCAR Filter into D-Star
+// #define DSTARBOXCAR
 
 #endif

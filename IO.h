@@ -42,7 +42,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnLevel, int16_t txDCOffset, int16_t rxDCOffset);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, int16_t txDCOffset, int16_t rxDCOffset);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -67,12 +67,16 @@ private:
   q31_t                        m_dcState[4];
 
   arm_fir_instance_q15 m_rrcFilter;
-  //arm_fir_instance_q15 m_gaussianFilter;
+#if !defined (DSTARBOXCAR)
+  arm_fir_instance_q15 m_gaussianFilter;
+#endif
   arm_fir_instance_q15 m_boxcarFilter;
   arm_fir_instance_q15 m_nxdnFilter;
   arm_fir_instance_q15 m_nxdnISincFilter;
   q15_t                m_rrcState[140U];          // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
-  //q15_t                m_gaussianState[80U];      // NoTaps + BlockSize - 1, 24 + 20 - 1 plus some spare
+#if !defined (DSTARBOXCAR)
+  q15_t                m_gaussianState[80U];      // NoTaps + BlockSize - 1, 24 + 20 - 1 plus some spare
+#endif
   q15_t                m_boxcarState[60U];        // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
   q15_t                m_nxdnState[220U];         // NoTaps + BlockSize - 1, 162 + 20 - 1 plus some spare
   q15_t                m_nxdnISincState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
@@ -85,6 +89,7 @@ private:
   q15_t                m_ysfTXLevel;
   q15_t                m_p25TXLevel;
   q15_t                m_nxdnTXLevel;
+  q15_t                m_pocsagTXLevel;
 
   uint16_t             m_rxDCOffset;
   uint16_t             m_txDCOffset;
@@ -116,6 +121,7 @@ private:
   void setYSFInt(bool on);
   void setP25Int(bool on);
   void setNXDNInt(bool on);
+  void setPOCSAGInt(bool on);
   
   void delayInt(unsigned int dly);
 };

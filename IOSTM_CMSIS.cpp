@@ -40,6 +40,7 @@ DMR      PB6    output
 YSF      PB8    output
 P25      PB9    output
 NXDN     PB10   output
+POCSAG   PB11   output
 
 RX       PB0    analog input (ADC1_8)
 RSSI     PB1    analog input (ADC2_9)
@@ -80,6 +81,9 @@ USART1_RXD PA10  input (AF)
 #define PIN_NXDN          10
 #define PORT_NXDN         GPIOB
 #define BB_NXDN           *((bitband_t)BITBAND_PERIPH(&PORT_NXDN->ODR, PIN_NXDN))
+#define PIN_POCSAG        11
+#define PORT_POCSAG       GPIOB
+#define BB_POCSAG         *((bitband_t)BITBAND_PERIPH(&PORT_POCSAG->ODR, PIN_POCSAG))
 
 #define PIN_RX            0
 #define PIN_RX_ADC_CH     8
@@ -209,17 +213,22 @@ static inline void GPIOInit()
 	GPIOD->ODR = 0;
   
   // configure ports
-  GPIOConfigPin(PORT_PTT, PIN_PTT, GPIO_CRL_MODE0_1);
+  GPIOConfigPin(PORT_PTT,    PIN_PTT,    GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_COSLED, PIN_COSLED, GPIO_CRL_MODE0_1);
-  GPIOConfigPin(PORT_LED, PIN_LED, GPIO_CRL_MODE0_1);
-  GPIOConfigPin(PORT_COS, PIN_COS, GPIO_CRL_CNF0_1);
+  GPIOConfigPin(PORT_LED,    PIN_LED,    GPIO_CRL_MODE0_1);
+  GPIOConfigPin(PORT_COS,    PIN_COS,    GPIO_CRL_CNF0_1);
   
-  GPIOConfigPin(PORT_DSTAR, PIN_DSTAR, GPIO_CRL_MODE0_1);
-  GPIOConfigPin(PORT_DMR, PIN_DMR, GPIO_CRL_MODE0_1);
-  GPIOConfigPin(PORT_YSF, PIN_YSF, GPIO_CRL_MODE0_1);
-  GPIOConfigPin(PORT_P25, PIN_P25, GPIO_CRL_MODE0_1);
-  GPIOConfigPin(PORT_NXDN, PIN_NXDN, GPIO_CRL_MODE0_1);
-  
+  GPIOConfigPin(PORT_DSTAR,  PIN_DSTAR,  GPIO_CRL_MODE0_1);
+  GPIOConfigPin(PORT_DMR,    PIN_DMR,    GPIO_CRL_MODE0_1);
+  GPIOConfigPin(PORT_YSF,    PIN_YSF,    GPIO_CRL_MODE0_1);
+  GPIOConfigPin(PORT_P25,    PIN_P25,    GPIO_CRL_MODE0_1);
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
+  GPIOConfigPin(PORT_NXDN,   PIN_NXDN,   GPIO_CRL_MODE0_1);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
+  GPIOConfigPin(PORT_POCSAG, PIN_POCSAG, GPIO_CRL_MODE0_1);
+#endif
+
   GPIOConfigPin(PORT_RX, PIN_RX, 0);
 #if defined(SEND_RSSI_DATA)
   GPIOConfigPin(PORT_RSSI, PIN_RSSI, 0);
@@ -431,7 +440,22 @@ void CIO::setP25Int(bool on)
 
 void CIO::setNXDNInt(bool on)
 {
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+  BB_YSF = !!on;
+  BB_P25 = !!on;
+#else
   BB_NXDN = !!on;
+#endif
+}
+
+void CIO::setPOCSAGInt(bool on)
+{
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+  BB_DSTAR = !!on;
+  BB_DMR   = !!on;
+#else
+  BB_POCSAG = !!on;
+#endif
 }
 
 void CIO::delayInt(unsigned int dly)
