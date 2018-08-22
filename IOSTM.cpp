@@ -433,6 +433,7 @@ DMR      PC6    output
 YSF      PC7    output
 P25      PC8    output
 NXDN     PC9    output
+POCSAG   PA8    output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -465,9 +466,9 @@ EXT_CLK  PA15   input
 #define PORT_NXDN         GPIOC
 #define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
 
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
+#define PIN_POCSAG        GPIO_Pin_8
+#define PORT_POCSAG       GPIOA
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOA
 
 #define PIN_DSTAR         GPIO_Pin_15
 #define PORT_DSTAR        GPIOB
@@ -514,13 +515,14 @@ DMR      PB4    output           CN10 Pin27
 YSF      PB5    output           CN10 Pin29
 P25      PB3    output           CN10 Pin31
 NXDN     PA10   output           CN10 Pin33
-POCSAG   PB12   output
+POCSAG   PB12   output           CN10 Pin16
 
 MDSTAR   PC4    output           CN10 Pin34
 MDMR     PC5    output           CN10 Pin6
 MYSF     PC2    output           CN7 Pin35
 MP25     PC3    output           CN7 Pin37
 MNXDN    PC6    output           CN10 Pin4
+MPOCSAG  PC8    output           CN10 Pin2
 
 RX       PA0    analog input     CN7 Pin28
 RSSI     PA1    analog input     CN7 Pin30
@@ -569,7 +571,7 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PORT_YSF          GPIOB
 #define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
 
-#if defined(STM32F4_NUCLEO_MODE_PINS)
+#if defined(MODE_PINS)
 #define PIN_MP25          GPIO_Pin_3
 #define PORT_MP25         GPIOC
 #define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
@@ -589,6 +591,10 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PIN_MYSF          GPIO_Pin_2
 #define PORT_MYSF         GPIOC
 #define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
+
+#define PIN_MPOCSAG       GPIO_Pin_8
+#define PORT_MPOCSAG      GPIOC
+#define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
 #endif
 
 #define PIN_EXT_CLK       GPIO_Pin_15
@@ -761,7 +767,7 @@ EXT_CLK  PA15   input            CN11 Pin17
 #define PORT_YSF          GPIOB
 #define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
 
-#if defined(STM32F4_NUCLEO_MODE_PINS)
+#if defined(MODE_PINS)
 #define PIN_MP25          GPIO_Pin_3
 #define PORT_MP25         GPIOC
 #define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
@@ -814,6 +820,7 @@ NXDN     PB9    output
 DSTAR    PB6    output
 DMR      PB5    output
 YSF      PB7    output
+POCSAG   PC10   output
 
 RX       PB0    analog input
 RSSI     PB1    analog input
@@ -858,6 +865,10 @@ EXT_CLK  PA15   input
 #define PIN_YSF           GPIO_Pin_7
 #define PORT_YSF          GPIOB
 #define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
+
+#define PIN_POCSAG        GPIO_Pin_10
+#define PORT_POCSAG       GPIOC
+#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOC
 
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
@@ -926,7 +937,7 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_IN;
    GPIO_Init(PORT_COS, &GPIO_InitStruct);
 
-#if defined(MODE_PINS)
+#if defined(MODE_LEDS)
    // DSTAR pin
    RCC_AHB1PeriphClockCmd(RCC_Per_DSTAR, ENABLE);
    GPIO_InitStruct.GPIO_Pin   = PIN_DSTAR;
@@ -968,7 +979,7 @@ void CIO::initInt()
 #endif
 #endif
 
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    // DSTAR mode pin
    RCC_AHB1PeriphClockCmd(RCC_Per_MDSTAR, ENABLE);
    GPIO_InitStruct.GPIO_Pin   = PIN_MDSTAR;
@@ -1218,7 +1229,7 @@ void CIO::setCOSInt(bool on)
 void CIO::setDStarInt(bool on)
 {
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
 #endif
 }
@@ -1226,7 +1237,7 @@ void CIO::setDStarInt(bool on)
 void CIO::setDMRInt(bool on)
 {
    GPIO_WriteBit(PORT_DMR, PIN_DMR, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MDMR, PIN_MDMR, on ? Bit_SET : Bit_RESET);
 #endif
 }
@@ -1234,7 +1245,7 @@ void CIO::setDMRInt(bool on)
 void CIO::setYSFInt(bool on)
 {
    GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
 #endif
 }
@@ -1242,7 +1253,7 @@ void CIO::setYSFInt(bool on)
 void CIO::setP25Int(bool on)
 {
    GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
 #endif
 }
@@ -1252,13 +1263,13 @@ void CIO::setNXDNInt(bool on)
 #if defined(USE_ALTERNATE_NXDN_LEDS)
    GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
 #endif
 #else
    GPIO_WriteBit(PORT_NXDN, PIN_NXDN, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MNXDN, PIN_MNXDN, on ? Bit_SET : Bit_RESET);
 #endif
 #endif
@@ -1269,13 +1280,13 @@ void CIO::setPOCSAGInt(bool on)
 #if defined(USE_ALTERNATE_POCSAG_LEDS)
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_DMR,   PIN_DMR,   on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_MDMR,   PIN_MDMR,   on ? Bit_SET : Bit_RESET);
 #endif
 #else
    GPIO_WriteBit(PORT_POCSAG,  PIN_POCSAG, on ? Bit_SET : Bit_RESET);
-#if defined(STM32F4_NUCLEO_MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && defined(STM32F4_NUCLEO)
    GPIO_WriteBit(PORT_MPOCSAG, PIN_MPOCSAG, on ? Bit_SET : Bit_RESET);
 #endif
 #endif

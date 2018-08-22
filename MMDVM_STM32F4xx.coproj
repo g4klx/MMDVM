@@ -248,13 +248,13 @@
     <File name="NXDNTX.cpp" path="NXDNTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cm4.h" path="STM32F4XX_Lib/CMSIS/Include/core_cm4.h" type="1"/>
     <File name="I2CTeensy.cpp" path="I2CTeensy.cpp" type="1"/>
-    <File name="YSFRX.h" path="YSFRX.h" type="1"/>
     <File name="DMRSlotRX.h" path="DMRSlotRX.h" type="1"/>
+    <File name="YSFRX.h" path="YSFRX.h" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_tim.c" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include" path="" type="2"/>
     <File name="NXDNRX.cpp" path="NXDNRX.cpp" type="1"/>
-    <File name="DMRDMORX.cpp" path="DMRDMORX.cpp" type="1"/>
     <File name="IO.cpp" path="IO.cpp" type="1"/>
+    <File name="DMRDMORX.cpp" path="DMRDMORX.cpp" type="1"/>
     <File name="P25RX.h" path="P25RX.h" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/misc.c" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/misc.c" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS" path="" type="2"/>
@@ -266,37 +266,37 @@
     <File name="IOSTM_CMSIS.cpp" path="IOSTM_CMSIS.cpp" type="1"/>
     <File name="DStarTX.cpp" path="DStarTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_usart.c" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source/stm32f4xx_usart.c" type="1"/>
-    <File name="SampleRB.h" path="SampleRB.h" type="1"/>
     <File name="YSFTX.h" path="YSFTX.h" type="1"/>
+    <File name="SampleRB.h" path="SampleRB.h" type="1"/>
     <File name="SerialSTM_CMSIS.cpp" path="SerialSTM_CMSIS.cpp" type="1"/>
     <File name="DMRRX.h" path="DMRRX.h" type="1"/>
-    <File name="MMDVM.cpp" path="MMDVM.cpp" type="1"/>
     <File name="IOTeensy.cpp" path="IOTeensy.cpp" type="1"/>
-    <File name="POCSAGTX.cpp" path="POCSAGTX.cpp" type="1"/>
+    <File name="MMDVM.cpp" path="MMDVM.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cmSimd.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmSimd.h" type="1"/>
+    <File name="POCSAGTX.cpp" path="POCSAGTX.cpp" type="1"/>
     <File name="DMRDMORX.h" path="DMRDMORX.h" type="1"/>
     <File name="GitVersion.h" path="GitVersion.h" type="1"/>
     <File name="SerialPort.h" path="SerialPort.h" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_dac.h" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_dac.h" type="1"/>
-    <File name="STM32F4XX_Lib/Device/system_stm32f4xx.h" path="STM32F4XX_Lib/Device/system_stm32f4xx.h" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmFunc.h" type="1"/>
+    <File name="STM32F4XX_Lib/Device/system_stm32f4xx.h" path="STM32F4XX_Lib/Device/system_stm32f4xx.h" type="1"/>
     <File name="CWIdTX.h" path="CWIdTX.h" type="1"/>
     <File name="CalDStarTX.cpp" path="CalDStarTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source" path="" type="2"/>
+    <File name="POCSAGTX.h" path="POCSAGTX.h" type="1"/>
     <File name="DMRDMOTX.h" path="DMRDMOTX.h" type="1"/>
     <File name="CalDMR.h" path="CalDMR.h" type="1"/>
-    <File name="POCSAGTX.h" path="POCSAGTX.h" type="1"/>
     <File name="IODue.cpp" path="IODue.cpp" type="1"/>
     <File name="DMRTX.cpp" path="DMRTX.cpp" type="1"/>
-    <File name="P25RX.cpp" path="P25RX.cpp" type="1"/>
     <File name="CalRSSI.h" path="CalRSSI.h" type="1"/>
+    <File name="P25RX.cpp" path="P25RX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Lib/GCC" path="" type="2"/>
     <File name="STM32F4XX_Lib" path="" type="2"/>
     <File name="STM32F4XX_Lib/CMSIS/Include/core_cmInstr.h" path="STM32F4XX_Lib/CMSIS/Include/core_cmInstr.h" type="1"/>
     <File name="DMRTX.h" path="DMRTX.h" type="1"/>
     <File name="STM32F4XX_Lib/Device/system_stm32f4xx.c" path="STM32F4XX_Lib/Device/system_stm32f4xx.c" type="1"/>
-    <File name="STM32F4XX_Lib/Device/startup/startup_stm32f4xx.c" path="STM32F4XX_Lib/Device/startup/startup_stm32f4xx.c" type="1"/>
     <File name="RSSIRB.h" path="RSSIRB.h" type="1"/>
+    <File name="STM32F4XX_Lib/Device/startup/startup_stm32f4xx.c" path="STM32F4XX_Lib/Device/startup/startup_stm32f4xx.c" type="1"/>
     <File name="STM32F4XX_Lib/Device/startup" path="" type="2"/>
     <File name="SerialRB.h" path="SerialRB.h" type="1"/>
     <File name="NXDNDefines.h" path="NXDNDefines.h" type="1"/>
@@ -344,8 +344,8 @@
     <File name="P25TX.h" path="P25TX.h" type="1"/>
     <File name="RSSIRB.cpp" path="RSSIRB.cpp" type="1"/>
     <File name="DStarRX.cpp" path="DStarRX.cpp" type="1"/>
-    <File name="DMRSlotRX.cpp" path="DMRSlotRX.cpp" type="1"/>
     <File name="IOSTM.cpp" path="IOSTM.cpp" type="1"/>
+    <File name="DMRSlotRX.cpp" path="DMRSlotRX.cpp" type="1"/>
     <File name="P25TX.cpp" path="P25TX.cpp" type="1"/>
     <File name="SerialRB.cpp" path="SerialRB.cpp" type="1"/>
     <File name="CWIdTX.cpp" path="CWIdTX.cpp" type="1"/>

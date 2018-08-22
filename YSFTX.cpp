@@ -50,7 +50,7 @@ const uint8_t YSF_END_SYNC   = 0xFFU;
 const uint8_t YSF_HANG       = 0x00U;
 
 CYSFTX::CYSFTX() :
-m_buffer(4000U),
+m_buffer(TX_BUFFER_LEN),
 m_modFilter(),
 m_modState(),
 m_poBuffer(),
@@ -68,6 +68,7 @@ m_txCount(0U)
   m_modFilter.pCoeffs     = RRC_0_2_FILTER;
   m_modFilter.pState      = m_modState;
 }
+
 
 void CYSFTX::process()
 {
@@ -92,7 +93,7 @@ void CYSFTX::process()
   if (m_poLen > 0U) {
     // Transmit YSF data.
     uint16_t space = io.getSpace();
-    
+
     while (space > (4U * YSF_RADIO_SYMBOL_LENGTH)) {
       uint8_t c = m_poBuffer[m_poPtr++];
       writeByte(c);
