@@ -435,6 +435,13 @@ P25      PC8    output
 NXDN     PC9    output
 POCSAG   PA8    output
 
+MDSTAR   PC1    output
+MDMR     PC2    output
+MYSF     PC3    output
+MP25     PC4    output
+MNXDN    PC10   output
+MPOCSAG  PC11   output
+
 RX       PA0    analog input
 RSSI     PA7    analog input
 TX       PA4    analog output
@@ -482,6 +489,31 @@ EXT_CLK  PA15   input
 #define PORT_YSF          GPIOC
 #define RCC_Per_YSF       RCC_AHB1Periph_GPIOC
 
+#if defined(MODE_PINS)
+#define PIN_MP25          GPIO_Pin_4
+#define PORT_MP25         GPIOC
+#define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
+
+#define PIN_MNXDN         GPIO_Pin_10
+#define PORT_MNXDN        GPIOC
+#define RCC_Per_MNXDN     RCC_AHB1Periph_GPIOC
+
+#define PIN_MDSTAR        GPIO_Pin_1
+#define PORT_MDSTAR       GPIOC
+#define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
+
+#define PIN_MDMR          GPIO_Pin_2
+#define PORT_MDMR         GPIOC
+#define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
+
+#define PIN_MYSF          GPIO_Pin_3
+#define PORT_MYSF         GPIOC
+#define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
+
+#define PIN_MPOCSAG       GPIO_Pin_11
+#define PORT_MPOCSAG      GPIOC
+#define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
+#endif
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
 #define PORT_EXT_CLK      GPIOA
