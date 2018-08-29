@@ -419,9 +419,9 @@ EXT_CLK  PA15   input
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1
 
-#elif defined(STM32F722_F7HAT)
+#elif defined(STM32F722_RPT_HAT)
 /*
-Pin definitions for MMDVM-F7Hat Pi-Hat F0DEI DB9MAT DF2ET board:
+Pin definitions for MMDVM_RPT_Hat Pi-Hat F0DEI DB9MAT DF2ET board:
 
 PTT      PB14   output
 COSLED   PB13   output
@@ -514,6 +514,7 @@ EXT_CLK  PA15   input
 #define PORT_MPOCSAG      GPIOC
 #define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
 #endif
+
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
 #define PORT_EXT_CLK      GPIOA
