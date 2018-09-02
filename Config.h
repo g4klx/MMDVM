@@ -38,8 +38,8 @@
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT
 
-// Use pins to output the current mode
-// #define MODE_PINS
+// Use pins to output the current mode via LEDs
+// #define MODE_LEDS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
@@ -57,8 +57,8 @@
 // #define STM32F4_NUCLEO_MORPHO_HEADER
 // #define STM32F4_NUCLEO_ARDUINO_HEADER
 
-// Use separate mode pins to switch external filters/bandwidth for example
-// #define STM32F4_NUCLEO_MODE_PINS
+// Use separate mode pins to switch external channel/filters/bandwidth for example
+// #define MODE_PINS
 
 // For the VK6MST Pi3 Shield communicating over i2c. i2c address & speed defined in i2cTeensy.cpp
 // #define VK6MST_TEENSY_PI3_SHIELD_I2C

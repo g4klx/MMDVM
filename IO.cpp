@@ -137,7 +137,7 @@ void CIO::selfTest()
     // We exclude PTT to avoid trigger the transmitter
     setLEDInt(ledValue);
     setCOSInt(ledValue);
-#if defined(MODE_PINS)
+#if defined(MODE_LEDS)
     setDStarInt(ledValue);
     setDMRInt(ledValue);
     setYSFInt(ledValue);
@@ -148,7 +148,7 @@ void CIO::selfTest()
     delayInt(250);
   }
 
-#if defined(MODE_PINS)
+#if defined(MODE_LEDS)
   setDStarInt(true);
   setDMRInt(false);
   setYSFInt(false);
@@ -546,7 +546,7 @@ void CIO::setADCDetection(bool detect)
 
 void CIO::setMode()
 {
-#if defined(MODE_PINS)
+#if defined(MODE_LEDS)
   setDStarInt(m_modemState == STATE_DSTAR);
   setDMRInt(m_modemState   == STATE_DMR);
   setYSFInt(m_modemState   == STATE_YSF);
