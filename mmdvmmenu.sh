@@ -83,7 +83,7 @@ EOF
     "3")  sed -e 's/\/\/ #define EXTERNAL_OSC 14400000/#define EXTERNAL_OSC 14400000/'     $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "14.400 MHz clock enabled";;
     "4")  sed -e 's/\/\/ #define EXTERNAL_OSC 19200000/#define EXTERNAL_OSC 19200000/'     $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "19.200 MHz clock enabled";;
     "5")  sed -e 's/\/\/ #define USE_COS_AS_LOCKOUT /#define USE_COS_AS_LOCKOUT/'          $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "COS as Lockout enabled";;
-    "6")  sed -e 's/\/\/ #define MODE_PINS/#define MODE_PINS/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode pins enabled";;
+    "6")  sed -e 's/\/\/ #define MODE_LEDS/#define MODE_LEDS/'             $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Mode pins enabled";;
     "7")  sed -e 's/\/\/ #define ARDUINO_DUE_PAPA/#define ARDUINO_DUE_PAPA/'               $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for the PAPA board enabled";;
     "8")  sed -e 's/\/\/ #define ARDUINO_DUE_ZUM_V10/#define ARDUINO_DUE_ZUM_V10/'         $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for ZUM V1.0 and V1.0.1 boards enabled";;
     "9")  sed -e 's/\/\/ #define ARDUINO_DUE_NTH/#define ARDUINO_DUE_NTH/'                 $conf > $conf.tmp && mv -f $conf.tmp $conf && echo "Layout for SP8NTH board enabled";;

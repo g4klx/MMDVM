@@ -97,6 +97,12 @@ const uint16_t RX_BLOCK_SIZE = 2U;
 const uint16_t TX_RINGBUFFER_SIZE = 500U;
 const uint16_t RX_RINGBUFFER_SIZE = 600U;
 
+#if defined(STM32F105xC) || defined(__MK20DX256__)
+const uint16_t TX_BUFFER_LEN = 2000U;
+#else
+const uint16_t TX_BUFFER_LEN = 4000U;
+#endif
+
 extern MMDVM_STATE m_modemState;
 
 extern bool m_dstarEnable;

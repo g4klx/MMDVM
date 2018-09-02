@@ -44,7 +44,7 @@ const uint8_t YSF_END_SYNC   = 0xFFU;
 const uint8_t YSF_HANG       = 0x00U;
 
 CYSFTX::CYSFTX() :
-m_buffer(4000U),
+m_buffer(TX_BUFFER_LEN),
 m_modFilter(),
 m_modState(),
 m_poBuffer(),
