@@ -388,7 +388,7 @@ void CDStarTX::txHeader(const uint8_t* in, uint8_t* out) const
     if (i < 660U) {
       if (d & 0x08U)
         out[INTERLEAVE_TABLE_TX[i * 2U]] |= (0x01U << INTERLEAVE_TABLE_TX[i * 2U + 1U]);
-        i++;
+      i++;
 
       if (d & 0x04U)
         out[INTERLEAVE_TABLE_TX[i * 2U]] |= (0x01U << INTERLEAVE_TABLE_TX[i * 2U + 1U]);

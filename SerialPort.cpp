@@ -90,13 +90,19 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define TCXO "NO TCXO"
 #endif
 
-#define DESCRIPTION              "MMDVM 20180723 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
+#if defined(STM32F4_RPT_HAT_TGO)
+#define HW_TYPE "MMDVM_RPT_HAT_TGO"
+#else
+#define HW_TYPE "MMDVM"
+#endif
+
+#define DESCRIPTION "20180723 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
 
 #if defined(GITVERSION)
-#define concat(a, b, c) a " " b " GitID #" c ""
-const char HARDWARE[] = concat(DESCRIPTION, TCXO, GITVERSION);
+#define concat(h, a, b, c) h " " a " " b " GitID #" c ""
+const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, GITVERSION);
 #else
-#define concat(a, b, c, d) a " " b " (Build: " c " " d ")"
+#define concat(h, a, b, c, d) h " " a " " b " (Build: " c " " d ")"
 const char HARDWARE[] = concat(DESCRIPTION, TCXO, __TIME__, __DATE__);
 #endif
 
