@@ -103,7 +103,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, GITVERSION);
 #else
 #define concat(h, a, b, c, d) h " " a " " b " (Build: " c " " d ")"
-const char HARDWARE[] = concat(DESCRIPTION, TCXO, __TIME__, __DATE__);
+const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, __TIME__, __DATE__);
 #endif
 
 const uint8_t PROTOCOL_VERSION   = 1U;
