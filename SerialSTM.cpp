@@ -28,13 +28,13 @@ Pin definitions:
 
 - Host communication:
 USART1 - TXD PA9  - RXD PA10 (MMDVM-Pi board, MMDVM-Pi F722 board, MMDVM-F4M board, STM32F722-F7M board, STM32F4-DVM board)
-USART2 - TXD PA2  - RXD PA3  (Nucleo64 F446RE board, Morpho or Arduino header)
+USART2 - TXD PA2  - RXD PA3  (Nucleo64 F446RE board, Morpho or Arduino header, MMDVM_RPT_Hat BG4TGO/BG5HHP board)
 USART3 - TXD PC10 - RXD PC11 (Discovery board)
 USART3 - TXD PD8  - RXD PD9  (Nucleo144 F767ZI board)
 
 - Serial repeater:
 USART1 - TXD PA9  - RXD PA10 (Nucleo with Arduino header)
-UART5  - TXD PC12 - RXD PD2 (Discovery, MMDVM-Pi, MMDVM-Pi F722 board, MMDVM-F4M board, STM32F722-F7M board, STM32F4-DVM board, Nucleo64 with Morpho header and Nucleo144 F767ZI)
+UART5  - TXD PC12 - RXD PD2 (Discovery, MMDVM-Pi, MMDVM-Pi F722 board, MMDVM-F4M board, STM32F722-F7M board, STM32F4-DVM board, Nucleo64 with Morpho header and Nucleo144 F767ZI, MMDVM_RPT_Hat BG4TGO/BG5HHP board)
 */
 
 #if defined(STM32F4XX) || defined(STM32F7XX)
@@ -241,7 +241,7 @@ void WriteUSART1(const uint8_t* data, uint16_t length)
 #endif
 
 /* ************* USART2 ***************** */
-#if defined(STM32F4_NUCLEO)
+#if defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
 
 volatile uint8_t  TXSerialfifo2[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo2[RX_SERIAL_FIFO_SIZE];
@@ -843,7 +843,7 @@ void CSerialPort::beginInt(uint8_t n, int speed)
          InitUSART3(speed);
          #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
          InitUSART1(speed);
-         #elif defined(STM32F4_NUCLEO)
+         #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          InitUSART2(speed);
          #endif
          break;
@@ -867,7 +867,7 @@ int CSerialPort::availableInt(uint8_t n)
          return AvailUSART3();
          #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
          return AvailUSART1();
-         #elif defined(STM32F4_NUCLEO)
+         #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return AvailUSART2();
          #endif
       case 3U:
@@ -889,7 +889,7 @@ int CSerialPort::availableForWriteInt(uint8_t n)
          return AvailForWriteUSART3();
          #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
          return AvailForWriteUSART1();
-         #elif defined(STM32F4_NUCLEO)
+         #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return AvailForWriteUSART2();
          #endif
       case 3U:
@@ -911,7 +911,7 @@ uint8_t CSerialPort::readInt(uint8_t n)
          return ReadUSART3();
          #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
          return ReadUSART1();
-         #elif defined(STM32F4_NUCLEO)
+         #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return ReadUSART2();
          #endif
       case 3U:
@@ -937,7 +937,7 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
          WriteUSART1(data, length);
          if (flush)
             TXSerialFlush1();
-         #elif defined(STM32F4_NUCLEO)
+         #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          WriteUSART2(data, length);
          if (flush)
             TXSerialFlush2();
