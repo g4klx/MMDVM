@@ -65,7 +65,7 @@ COMMON_FLAGS =-mthumb -mlittle-endian -mcpu=$(MCPU)
 COMMON_FLAGS+= -Wall
 COMMON_FLAGS+= -I. -I$(CMSISDIR)/Include -I$(CMSISDIR)/Device/ST/STM32F1xx/Include -I$(SYSDIR)
 COMMON_FLAGS+=  $(addprefix -I,$(INCDIR))
-COMMON_FLAGS+= -D$(MCU)
+COMMON_FLAGS+= -D$(MCU) -DMADEBYMAKEFILE
 COMMON_FLAGS+= -Os -flto -ffunction-sections -fdata-sections
 COMMON_FLAGS+= -g
 # Assembler flags
@@ -91,7 +91,7 @@ DEPENDS:=$(CSRC:%.c=$(OBJDIR)/%.d) $(CXXSRC:%.cpp=$(OBJDIR)/%.d)
 
 # Targets
 .PHONY: all
-all: $(DIS) $(HEX)
+all: GitVersion.h $(DIS) $(HEX)
 	$(SIZE) $(ELF)
 
 .PHONY: program
@@ -116,7 +116,7 @@ debug: $(ELF)
 
 .PHONY: clean
 clean:
-	$(RM) $(OBJ) $(HEX) $(ELF) $(DIS) $(MAP) $(DEPENDS)
+	$(RM) $(OBJ) $(HEX) $(ELF) $(DIS) $(MAP) $(DEPENDS) GitVersion.h
 
 # implicit rules
 .elf.hex:
@@ -149,3 +149,17 @@ $(DIS): $(ELF)
 
 # include dependecies
 -include $(DEPENDS)
+
+# Export the current git version if the index file exists, else 000...
+GitVersion.h:
+ifdef SYSTEMROOT
+	echo #define GITVERSION "0000000" > $@
+else ifdef SystemRoot
+	echo #define GITVERSION "0000000" > $@
+else
+ifneq ("$(wildcard .git/index)","")
+	echo "#define GITVERSION \"$(shell git rev-parse --short HEAD)\"" > $@
+else
+	echo "#define GITVERSION \"0000000\"" > $@
+endif
+endif
