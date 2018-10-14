@@ -369,7 +369,9 @@ void CIO::interrupt()
 {
   uint8_t control  = MARK_NONE;
   uint16_t sample  = DC_OFFSET;
+#if defined(SEND_RSSI_DATA)
   uint16_t rawRSSI = 0U;
+#endif
   bitband_t eoc = (bitband_t)BITBAND_PERIPH(&ADC1->SR, ADC_SR_EOS_Pos);
   bitband_t adon = (bitband_t)BITBAND_PERIPH(&ADC1->CR2, ADC_CR2_ADON_Pos);
 #if defined(SEND_RSSI_DATA)
