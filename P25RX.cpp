@@ -199,7 +199,19 @@ void CP25RX::processHdr(q15_t sample)
                 serial.writeP25Hdr(frame, P25_HDR_FRAME_LENGTH_BYTES + 1U);
             }
             break;
-        case P25_DUID_TSDU: {
+		case P25_DUID_PDU: {
+				calculateLevels(m_hdrSyncPtr, P25_PDU_HDR_FRAME_LENGTH_SYMBOLS);
+
+				DEBUG4("P25RX: sync found in PDU pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
+
+				uint8_t frame[P25_PDU_HDR_FRAME_LENGTH_BYTES + 1U];
+				samplesToBits(m_hdrSyncPtr, P25_PDU_HDR_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+
+				frame[0U] = 0x01U;
+				serial.writeP25Hdr(frame, P25_PDU_HDR_FRAME_LENGTH_BYTES + 1U);
+			}
+			break;
+		case P25_DUID_TSDU: {
                 calculateLevels(m_hdrStartPtr, P25_TSDU_FRAME_LENGTH_SYMBOLS);
 
                 DEBUG4("P25RX: sync found in TSDU pos/centre/threshold", m_hdrSyncPtr, m_centreVal, m_thresholdVal);
