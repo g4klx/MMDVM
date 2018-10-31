@@ -71,6 +71,7 @@ const uint8_t MMDVM_NAK          = 0x7FU;
 const uint8_t MMDVM_SERIAL       = 0x80U;
 
 const uint8_t MMDVM_TRANSPARENT  = 0x90U;
+const uint8_t MMDVM_QSO_INFO     = 0x91U;
 
 const uint8_t MMDVM_DEBUG1       = 0xF1U;
 const uint8_t MMDVM_DEBUG2       = 0xF2U;
@@ -820,6 +821,7 @@ void CSerialPort::process()
             break;
 
           case MMDVM_TRANSPARENT:
+          case MMDVM_QSO_INFO:
             // Do nothing on the MMDVM.
             break;
 
