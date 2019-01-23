@@ -45,8 +45,8 @@ void CCalPOCSAG::process()
 
   switch (m_state) {
     case POCSAGCAL_TX:
-      //pocsagTX.writeData(POCSAG_CAL[m_audioSeq], POCSAG_FRAME_LENGTH_BYTES + 1U);
-      m_audioSeq = (m_audioSeq + 1U) % 4U;
+      pocsagTX.writeData((uint8_t) &sine600Hz[m_audioSeq], 40U);
+      m_audioSeq++;
       if(!m_transmit)
         m_state = POCSAGCAL_IDLE;
       break;

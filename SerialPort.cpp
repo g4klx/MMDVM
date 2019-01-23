@@ -617,6 +617,8 @@ void CSerialPort::process()
               err = calP25.write(m_buffer + 3U, m_len - 3U);
             if (m_modemState == STATE_NXDNCAL1K)
               err = calNXDN.write(m_buffer + 3U, m_len - 3U);
+            if (m_modemState == STATE_POCSAGCAL)
+              err = calPOCSAG.write(m_buffer + 3U, m_len - 3U);
             if (err == 0U) {
               sendACK();
             } else {
