@@ -149,6 +149,7 @@ extern CCalDStarTX calDStarTX;
 extern CCalDMR     calDMR;
 extern CCalP25     calP25;
 extern CCalNXDN    calNXDN;
+extern CCalPOCSAG  calPOCSAG;
 extern CCalRSSI    calRSSI;
 
 extern CCWIdTX cwIdTX;
