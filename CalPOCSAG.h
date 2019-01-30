@@ -35,10 +35,8 @@ public:
   uint8_t write(const uint8_t* data, uint8_t length);
 
 private:
-  bool      m_transmit;
   POCSAGCAL m_state;
   uint8_t   m_audioSeq;
 };
 
 #endif
-

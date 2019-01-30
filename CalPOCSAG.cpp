@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2018 by Florian Wolters DF2ET
+ *   Copyright (C) 2019 by Florian Wolters DF2ET
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ const q15_t sine600Hz[] = {
          };
 
 CCalPOCSAG::CCalPOCSAG() :
-m_transmit(false),
 m_state(POCSAGCAL_IDLE),
 m_audioSeq(0U)
 {
@@ -37,24 +36,26 @@ m_audioSeq(0U)
 
 void CCalPOCSAG::process()
 {
-  pocsagTX.process();
-
-  uint16_t space = pocsagTX.getSpace();
-  if (space < 1U)
+  if (m_state == POCSAGCAL_IDLE)
     return;
 
-  switch (m_state) {
-    case POCSAGCAL_TX:
-      pocsagTX.writeData((uint8_t) &sine600Hz[m_audioSeq], 40U);
-      m_audioSeq++;
-      if(!m_transmit)
-        m_state = POCSAGCAL_IDLE;
-      break;
-    default:
-        m_state = POCSAGCAL_IDLE;
+  uint16_t space = io.getSpace();
+  if (space == 0U)
+    return;
+
+  q15_t samples[200U];
+  unt16_t length = 0U;
+
+  if (space > 200U)
+    space = 200U;
+
+  for (uint16_t i = 0U; i < space; i++, length++)
+      samples[i] = sine600Hz[m_audioSeq++];
+      if (m_audioSeq >= 40U)
         m_audioSeq = 0U;
-      break;
   }
+
+  io.write(MODE_POCSAG, samples, length);
 }
 
 uint8_t CCalPOCSAG::write(const uint8_t* data, uint8_t length)
@@ -62,11 +63,14 @@ uint8_t CCalPOCSAG::write(const uint8_t* data, uint8_t length)
   if (length != 1U)
     return 4U;
 
-  m_transmit = data[0U] == 1U;
+  bool on = data[0U] == 1U;
 
-  if(m_transmit && m_state == POCSAGCAL_IDLE)
+  if (on && m_state == POCSAGCAL_IDLE) {
     m_state = POCSAGCAL_TX;
+    m_audioSeq = 0U;
+  } else if (!on && m_state == POCSAGCAL_TX) {
+    m_state = POCSAGCAL_IDLE;
+  }
 
   return 0U;
 }
-
