@@ -21,11 +21,11 @@
 #include "CalPOCSAG.h"
 
 // POCSAG 600 Hz Test Pattern
-q15_t sine600Hz[] = {
-              0,   5125,  10125,  14875,  19259,  23169,  26509,  29195,  31163,  32363,
-          32767,  32363,  31163,  29195,  26509,  23169,  19259,  14875,  10125,   5125,
-              0,  -5126, -10126, -14876, -19260, -23170, -26510, -29196, -31164, -32364,
-         -32767, -32364, -31164, -29196, -26510, -23170, -19260, -14876, -10126,  -5126,
+q15_t squreHz[] = {
+          950,  950,  950,  950,  950,  950,  950,  950,  950,
+          950,  950,  950,  950,  950,  950,  950,  950,  950,
+         -950, -950, -950, -950, -950, -950, -950, -950, -950,
+         -950, -950, -950, -950, -950, -950, -950, -950, -950,
          };
 
 CCalPOCSAG::CCalPOCSAG() :
@@ -42,11 +42,11 @@ void CCalPOCSAG::process()
   if (space <= 205U)
     return;
 
-  io.write(STATE_POCSAG, sine600Hz, 40U);
-  io.write(STATE_POCSAG, sine600Hz, 40U);
-  io.write(STATE_POCSAG, sine600Hz, 40U);
-  io.write(STATE_POCSAG, sine600Hz, 40U);
-  io.write(STATE_POCSAG, sine600Hz, 40U);
+  io.write(STATE_POCSAG, squreHz, 40U);
+  io.write(STATE_POCSAG, squreHz, 40U);
+  io.write(STATE_POCSAG, squreHz, 40U);
+  io.write(STATE_POCSAG, squreHz, 40U);
+  io.write(STATE_POCSAG, squreHz, 40U);
 }
 
 uint8_t CCalPOCSAG::write(const uint8_t* data, uint8_t length)
