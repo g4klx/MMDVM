@@ -29,8 +29,7 @@ const q15_t sine600Hz[] = {
          };
 
 CCalPOCSAG::CCalPOCSAG() :
-m_state(POCSAGCAL_IDLE),
-m_audioSeq(0U)
+m_state(POCSAGCAL_IDLE)
 {
 }
 
@@ -40,22 +39,14 @@ void CCalPOCSAG::process()
     return;
 
   uint16_t space = io.getSpace();
-  if (space == 0U)
+  if (space <= 205U)
     return;
 
-  q15_t samples[200U];
-  uint16_t length = 0U;
-
-  if (space > 200U)
-    space = 200U;
-
-  for (uint16_t i = 0U; i < space; i++, length++) {
-      samples[i] = sine600Hz[m_audioSeq++];
-      if (m_audioSeq >= 40U)
-        m_audioSeq = 0U;
-  }
-
-  io.write(STATE_POCSAG, samples, length);
+  io.write(STATE_POCSAG, sine600Hz, 40U);
+  io.write(STATE_POCSAG, sine600Hz, 40U);
+  io.write(STATE_POCSAG, sine600Hz, 40U);
+  io.write(STATE_POCSAG, sine600Hz, 40U);
+  io.write(STATE_POCSAG, sine600Hz, 40U);
 }
 
 uint8_t CCalPOCSAG::write(const uint8_t* data, uint8_t length)
@@ -63,14 +54,7 @@ uint8_t CCalPOCSAG::write(const uint8_t* data, uint8_t length)
   if (length != 1U)
     return 4U;
 
-  bool on = data[0U] == 1U;
-
-  if (on && m_state == POCSAGCAL_IDLE) {
-    m_state = POCSAGCAL_TX;
-    m_audioSeq = 0U;
-  } else if (!on && m_state == POCSAGCAL_TX) {
-    m_state = POCSAGCAL_IDLE;
-  }
+  m_state = data[0U] == 1U ? POCSAGCAL_TX : POCSAGCAL_IDLE;
 
   return 0U;
 }

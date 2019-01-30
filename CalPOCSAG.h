@@ -36,7 +36,6 @@ public:
 
 private:
   POCSAGCAL m_state;
-  uint8_t   m_audioSeq;
 };
 
 #endif
