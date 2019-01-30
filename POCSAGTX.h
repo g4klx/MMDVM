@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015-2019 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@ public:
 
   uint8_t writeData(const uint8_t* data, uint8_t length);
 
+  void writeByte(uint8_t c);
+
   void process();
 
   void setTXDelay(uint8_t delay);
@@ -45,8 +47,6 @@ private:
   uint16_t             m_poLen;
   uint16_t             m_poPtr;
   uint16_t             m_txDelay;
-
-  void writeByte(uint8_t c);
 };
 
 #endif
