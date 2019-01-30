@@ -44,18 +44,18 @@ void CCalPOCSAG::process()
     return;
 
   q15_t samples[200U];
-  unt16_t length = 0U;
+  uint16_t length = 0U;
 
   if (space > 200U)
     space = 200U;
 
-  for (uint16_t i = 0U; i < space; i++, length++)
+  for (uint16_t i = 0U; i < space; i++, length++) {
       samples[i] = sine600Hz[m_audioSeq++];
       if (m_audioSeq >= 40U)
         m_audioSeq = 0U;
   }
 
-  io.write(MODE_POCSAG, samples, length);
+  io.write(STATE_POCSAG, samples, length);
 }
 
 uint8_t CCalPOCSAG::write(const uint8_t* data, uint8_t length)
