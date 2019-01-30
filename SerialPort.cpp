@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2013,2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2013,2015-2019 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -97,7 +97,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define HW_TYPE "MMDVM"
 #endif
 
-#define DESCRIPTION "20180723 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
+#define DESCRIPTION "20190130 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
