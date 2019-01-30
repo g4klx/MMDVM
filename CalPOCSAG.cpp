@@ -20,8 +20,8 @@
 #include "Globals.h"
 #include "CalPOCSAG.h"
 
-// POCSAG 600 Hz Test Pattern
-q15_t squreHz[] = {
+// POCSAG 600 Hz Square Wave Test Pattern
+q15_t square600Hz[] = {
           950,  950,  950,  950,  950,  950,  950,  950,  950,
           950,  950,  950,  950,  950,  950,  950,  950,  950,
          -950, -950, -950, -950, -950, -950, -950, -950, -950,
@@ -42,11 +42,11 @@ void CCalPOCSAG::process()
   if (space <= 205U)
     return;
 
-  io.write(STATE_POCSAG, squreHz, 40U);
-  io.write(STATE_POCSAG, squreHz, 40U);
-  io.write(STATE_POCSAG, squreHz, 40U);
-  io.write(STATE_POCSAG, squreHz, 40U);
-  io.write(STATE_POCSAG, squreHz, 40U);
+  io.write(STATE_POCSAG, square600Hz, 40U);
+  io.write(STATE_POCSAG, square600Hz, 40U);
+  io.write(STATE_POCSAG, square600Hz, 40U);
+  io.write(STATE_POCSAG, square600Hz, 40U);
+  io.write(STATE_POCSAG, square600Hz, 40U);
 }
 
 uint8_t CCalPOCSAG::write(const uint8_t* data, uint8_t length)
