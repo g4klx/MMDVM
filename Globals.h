@@ -60,7 +60,9 @@ enum MMDVM_STATE {
   STATE_RSSICAL   = 96,
   STATE_CWID      = 97,
   STATE_DMRCAL    = 98,
-  STATE_DSTARCAL  = 99
+  STATE_DSTARCAL  = 99,
+  STATE_INTCAL    = 100,
+  STATE_POCSAGCAL = 101
 };
 
 #include "SerialPort.h"
@@ -83,6 +85,7 @@ enum MMDVM_STATE {
 #include "CalDMR.h"
 #include "CalP25.h"
 #include "CalNXDN.h"
+#include "CalPOCSAG.h"
 #include "CalRSSI.h"
 #include "CWIdTX.h"
 #include "Debug.h"
@@ -146,6 +149,7 @@ extern CCalDStarTX calDStarTX;
 extern CCalDMR     calDMR;
 extern CCalP25     calP25;
 extern CCalNXDN    calNXDN;
+extern CCalPOCSAG  calPOCSAG;
 extern CCalRSSI    calRSSI;
 
 extern CCWIdTX cwIdTX;
