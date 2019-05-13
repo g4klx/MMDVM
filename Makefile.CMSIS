@@ -25,7 +25,7 @@ STARTUP:=$(SYSDIR)/startup_stm32f105xc.S
 STARTUP_DEFS=
 
 # Include directory for CMSIS
-CMSISDIR:=/opt/STM32Cube_FW_F1_V1.4.0/Drivers/CMSIS
+CMSISDIR:=STM32F10X_Lib/CMSIS
 
 # Libraries
 LIBDIR:=
