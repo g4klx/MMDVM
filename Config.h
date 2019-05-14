@@ -45,10 +45,10 @@
 // #define ARDUINO_DUE_PAPA
 
 // For the ZUM V1.0 and V1.0.1 boards pin layout
-// #define ARDUINO_DUE_ZUM_V10
+#define ARDUINO_DUE_ZUM_V10
 
 // For the SQ6POG board
-#define STM32F1_POG
+// #define STM32F1_POG
 
 // For the SP8NTH board
 // #define ARDUINO_DUE_NTH
@@ -64,7 +64,7 @@
 // #define VK6MST_TEENSY_PI3_SHIELD_I2C
 
 // Pass RSSI information to the host
-#define SEND_RSSI_DATA
+// #define SEND_RSSI_DATA
 
 // Use the modem as a serial repeater for Nextion displays
 // #define SERIAL_REPEATER
