@@ -65,7 +65,7 @@ COMMON_FLAGS =-mthumb -mlittle-endian -mcpu=$(MCPU)
 COMMON_FLAGS+= -Wall
 COMMON_FLAGS+= -I. -I$(CMSISDIR)/Include -I$(CMSISDIR)/Device/ST/STM32F1xx/Include -I$(SYSDIR)
 COMMON_FLAGS+=  $(addprefix -I,$(INCDIR))
-COMMON_FLAGS+= -D$(MCU) -DMADEBYMAKEFILE
+COMMON_FLAGS+= -D$(MCU) -DMADEBYMAKEFILE -DSTM32F1
 COMMON_FLAGS+= -Os -flto -ffunction-sections -fdata-sections
 COMMON_FLAGS+= -g
 # Assembler flags
