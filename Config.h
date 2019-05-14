@@ -44,11 +44,13 @@
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
 
+#if defined(STM32F1)
+// For the SQ6POG board
+#define STM32F1_POG
+#else
 // For the ZUM V1.0 and V1.0.1 boards pin layout
 #define ARDUINO_DUE_ZUM_V10
-
-// For the SQ6POG board
-// #define STM32F1_POG
+#endif
 
 // For the SP8NTH board
 // #define ARDUINO_DUE_NTH
