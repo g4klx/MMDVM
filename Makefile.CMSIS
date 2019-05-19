@@ -25,7 +25,7 @@ STARTUP:=$(SYSDIR)/startup_stm32f105xc.S
 STARTUP_DEFS=
 
 # Include directory for CMSIS
-CMSISDIR:=/opt/STM32Cube_FW_F1_V1.4.0/Drivers/CMSIS
+CMSISDIR:=STM32F10X_Lib/CMSIS
 
 # Libraries
 LIBDIR:=
@@ -65,7 +65,7 @@ COMMON_FLAGS =-mthumb -mlittle-endian -mcpu=$(MCPU)
 COMMON_FLAGS+= -Wall
 COMMON_FLAGS+= -I. -I$(CMSISDIR)/Include -I$(CMSISDIR)/Device/ST/STM32F1xx/Include -I$(SYSDIR)
 COMMON_FLAGS+=  $(addprefix -I,$(INCDIR))
-COMMON_FLAGS+= -D$(MCU) -DMADEBYMAKEFILE
+COMMON_FLAGS+= -D$(MCU) -DMADEBYMAKEFILE -DSTM32F1
 COMMON_FLAGS+= -Os -flto -ffunction-sections -fdata-sections
 COMMON_FLAGS+= -g
 # Assembler flags
