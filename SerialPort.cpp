@@ -92,7 +92,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #endif
 
 #if defined(STM32F4_RPT_HAT_TGO)
-#define HW_TYPE "MMDVM RPT_HAT_TGO"
+#define HW_TYPE "MMDVM_RPT_HAT_TGO"
 #else
 #define HW_TYPE "MMDVM"
 #endif
@@ -109,7 +109,6 @@ const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, __TIME__, __DATE__);
 
 const uint8_t PROTOCOL_VERSION   = 1U;
 
-char UDID[] = "00000000000000000000000000000000";
 
 CSerialPort::CSerialPort() :
 m_buffer(),
@@ -238,7 +237,7 @@ void CSerialPort::getStatus()
 
 void CSerialPort::getVersion()
 {
-  uint8_t reply[192U];
+  uint8_t reply[150U];
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
@@ -249,10 +248,6 @@ void CSerialPort::getVersion()
   uint8_t count = 4U;
   for (uint8_t i = 0U; HARDWARE[i] != 0x00U; i++, count++)
     reply[count] = HARDWARE[i];
-
-  reply[count++] = '\0';
-  for (uint8_t i = 0U; UDID[i] != 0x00U; i++, count++)
-    reply[count] = UDID[i];
 
   reply[1U] = count;
 
