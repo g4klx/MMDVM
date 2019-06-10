@@ -106,9 +106,21 @@ RAMFUNC void USART1TxData(const uint8_t* data, uint16_t length)
 
 
 /////////////////////////////////////////////////////////////////
+extern char UDID[];
+extern "C" {
+  #include <stdio.h>
+}
 
 void CSerialPort::beginInt(uint8_t n, int speed)
 {
+#if defined(STM32F105xC)
+   uint16_t *id00 =  (uint16_t *) (0x1FFFF7E8);
+   uint16_t *id01 =  (uint16_t *) (0x1FFFF7E8 + 0x02);
+   uint32_t *id1 =  (uint32_t *) (0x1FFFF7E8 + 0x04);
+   uint32_t *id2 =  (uint32_t *) (0x1FFFF7E8 + 0x08);
+   ::sprintf(UDID, "%04X%04X%08lX%08lX", *id00,*id01,*id1,*id2);
+#endif
+
   switch (n) {
     case 1U:
       USART1Init(speed);

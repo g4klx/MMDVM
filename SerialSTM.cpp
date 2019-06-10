@@ -834,9 +834,30 @@ void WriteUART5(const uint8_t* data, uint16_t length)
 
 #endif
 /////////////////////////////////////////////////////////////////
+extern char UDID[];
+extern "C" {
+   #include <stdio.h>
+}
 
 void CSerialPort::beginInt(uint8_t n, int speed)
 {
+#if defined(STM32F4XX)
+   uint32_t *id0 =  (uint32_t *) (0x1FFF7A10);
+   uint32_t *id1 =  (uint32_t *) (0x1FFF7A10 + 0x04);
+   uint32_t *id2 =  (uint32_t *) (0x1FFF7A10 + 0x08);
+   ::sprintf(UDID, "%08X%08X%08X", *id0,*id1,*id2);
+#elif defined(STM32F722xx)
+   uint32_t *id0 =  (uint32_t *) (0x1FF07A10);
+   uint32_t *id1 =  (uint32_t *) (0x1FF07A10 + 0x04);
+   uint32_t *id2 =  (uint32_t *) (0x1FF07A10 + 0x08);
+   ::sprintf(UDID, "%08X%08X%08X", *id0,*id1,*id2);
+#elif defined(STM32F767xx)
+   uint32_t *id0 =  (uint32_t *) (0x1FF0F420);
+   uint32_t *id1 =  (uint32_t *) (0x1FF0F420 + 0x04);
+   uint32_t *id2 =  (uint32_t *) (0x1FF0F420 + 0x08);
+   ::sprintf(UDID, "%08X%08X%08X", *id0,*id1,*id2);
+#endif
+
    switch (n) {
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
