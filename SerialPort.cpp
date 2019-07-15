@@ -92,9 +92,9 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #endif
 
 #if defined(STM32F4_RPT_HAT_TGO)
-#define HW_TYPE "MMDVM_RPT_HAT_TGO"
+#define	HW_TYPE	"MMDVM RPT_HAT_TGO"
 #else
-#define HW_TYPE "MMDVM"
+#define	HW_TYPE	"MMDVM"
 #endif
 
 #define DESCRIPTION "20190130 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
