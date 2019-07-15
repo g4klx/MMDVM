@@ -26,29 +26,8 @@
 
 #elif defined(__SAM3X8E__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 
-
-#if defined(__SAM3X8E__)
-extern "C" {
-  #include <stdio.h>
-}
-
-extern char UDID[];
-
-#define FLASH_ACCESS_MODE_128     0
-#define EFC0                      (0x400E0A00U)
-#define EFC                       ((Efc*)EFC0)
-
-#endif
-
 void CSerialPort::beginInt(uint8_t n, int speed)
 {
-#if defined(__SAM3X8E__)
-  uint32_t _id[4];
-  if (0 == efc_init(EFC, FLASH_ACCESS_MODE_128, 4))
-    if (0 == efc_perform_read_sequence(EFC, EFC_FCMD_STUI, EFC_FCMD_SPUI, _id, 4))
-      ::sprintf(UDID,"%08X%08X%08X%08X",_id[0],_id[1],_id[2],_id[3]);
-#endif
-
   switch (n) {
     case 1U:
       Serial.begin(speed);
