@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2013,2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2013,2015-2019 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -92,12 +92,12 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #endif
 
 #if defined(STM32F4_RPT_HAT_TGO)
-#define HW_TYPE "MMDVM_RPT_HAT_TGO"
+#define	HW_TYPE	"MMDVM RPT_HAT_TGO"
 #else
-#define HW_TYPE "MMDVM"
+#define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20180723 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
+#define DESCRIPTION "20190130 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -280,7 +280,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   MMDVM_STATE modemState = MMDVM_STATE(data[3U]);
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_POCSAG && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_POCSAG && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K && modemState != STATE_POCSAGCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !dstarEnable)
     return 4U;
@@ -360,7 +360,7 @@ uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
   if (modemState == m_modemState)
     return 0U;
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_POCSAG && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_POCSAG && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K && modemState != STATE_POCSAGCAL)
     return 4U;
   if (modemState == STATE_DSTAR && !m_dstarEnable)
     return 4U;
@@ -385,156 +385,73 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
   switch (modemState) {
     case STATE_DMR:
       DEBUG1("Mode set to DMR");
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_DSTAR:
       DEBUG1("Mode set to D-Star");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_YSF:
       DEBUG1("Mode set to System Fusion");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_P25:
       DEBUG1("Mode set to P25");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_NXDN:
       DEBUG1("Mode set to NXDN");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      cwIdTX.reset();
       break;
     case STATE_POCSAG:
       DEBUG1("Mode set to POCSAG");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_DSTARCAL:
       DEBUG1("Mode set to D-Star Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_DMRCAL:
       DEBUG1("Mode set to DMR Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_RSSICAL:
       DEBUG1("Mode set to RSSI Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_LFCAL:
       DEBUG1("Mode set to 80 Hz Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_DMRCAL1K:
       DEBUG1("Mode set to DMR BS 1031 Hz Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_P25CAL1K:
       DEBUG1("Mode set to P25 1011 Hz Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_DMRDMO1K:
       DEBUG1("Mode set to DMR MS 1031 Hz Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
     case STATE_NXDNCAL1K:
       DEBUG1("Mode set to NXDN 1031 Hz Calibrate");
-      dmrIdleRX.reset();
-      dmrDMORX.reset();
-      dmrRX.reset();
-      dstarRX.reset();
-      ysfRX.reset();
-      p25RX.reset();
-      nxdnRX.reset();
-      cwIdTX.reset();
       break;
-    default:
+    case STATE_POCSAGCAL:
+      DEBUG1("Mode set to POCSAG Calibrate");
+      break;
+    default:        // STATE_IDLE
       DEBUG1("Mode set to Idle");
-      // STATE_IDLE
       break;
   }
+
+  if (modemState != STATE_DSTAR)
+    dstarRX.reset();
+
+  if (modemState != STATE_DMR) {
+    dmrIdleRX.reset();
+    dmrDMORX.reset();
+    dmrRX.reset();
+  }
+
+  if (modemState != STATE_YSF)
+    ysfRX.reset();
+
+  if (modemState != STATE_P25)
+    p25RX.reset();
+
+  if (modemState != STATE_NXDN)
+    nxdnRX.reset();
+
+  cwIdTX.reset();
 
   m_modemState = modemState;
 
@@ -617,6 +534,8 @@ void CSerialPort::process()
               err = calP25.write(m_buffer + 3U, m_len - 3U);
             if (m_modemState == STATE_NXDNCAL1K)
               err = calNXDN.write(m_buffer + 3U, m_len - 3U);
+            if (m_modemState == STATE_POCSAGCAL)
+              err = calPOCSAG.write(m_buffer + 3U, m_len - 3U);
             if (err == 0U) {
               sendACK();
             } else {
