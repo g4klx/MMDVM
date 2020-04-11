@@ -73,6 +73,9 @@ private:
   uint8_t setConfig(const uint8_t* data, uint8_t length);
   uint8_t setMode(const uint8_t* data, uint8_t length);
   void    setMode(MMDVM_STATE modemState);
+  uint8_t setFMParams1(const uint8_t* data, uint8_t length);
+  uint8_t setFMParams2(const uint8_t* data, uint8_t length);
+  uint8_t setFMParams3(const uint8_t* data, uint8_t length);
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);
@@ -83,4 +86,3 @@ private:
 };
 
 #endif
-

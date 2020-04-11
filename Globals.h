@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ enum MMDVM_STATE {
   STATE_P25       = 4,
   STATE_NXDN      = 5,
   STATE_POCSAG    = 6,
+  STATE_FM        = 10,
 
   // Dummy states start at 90
   STATE_NXDNCAL1K = 91,
@@ -90,6 +91,7 @@ enum MMDVM_STATE {
 #include "CWIdTX.h"
 #include "Debug.h"
 #include "IO.h"
+#include "FM.h"
 
 const uint8_t  MARK_SLOT1 = 0x08U;
 const uint8_t  MARK_SLOT2 = 0x04U;
@@ -114,6 +116,7 @@ extern bool m_ysfEnable;
 extern bool m_p25Enable;
 extern bool m_nxdnEnable;
 extern bool m_pocsagEnable;
+extern bool m_fmEnable;
 
 extern bool m_duplex;
 
@@ -144,6 +147,8 @@ extern CNXDNTX nxdnTX;
 
 extern CPOCSAGTX pocsagTX;
 
+extern CFM fm;
+
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
 extern CCalDMR     calDMR;
@@ -155,4 +160,3 @@ extern CCalRSSI    calRSSI;
 extern CCWIdTX cwIdTX;
 
 #endif
-
