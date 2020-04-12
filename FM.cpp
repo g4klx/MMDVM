@@ -35,3 +35,15 @@ void CFM::process()
 void CFM::reset()
 {
 }
+
+void CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callAtStart, bool callAtEnd)
+{
+}
+
+void CFM::setAck(const char* ack, uint8_t speed, uint16_t frequency, uint16_t delay, uint8_t level)
+{
+}
+
+void CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)
+{
+}

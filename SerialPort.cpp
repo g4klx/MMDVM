@@ -262,7 +262,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-  if (length < 18U)
+  if (length < 20U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -327,6 +327,9 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   uint8_t pocsagTXLevel = data[17U];
 
+  uint8_t fmTXLevel     = data[18U];
+  uint8_t fmRXLevel     = data[19U];
+
   m_modemState  = modemState;
 
   m_dstarEnable  = dstarEnable;
@@ -353,7 +356,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   ysfTX.setParams(ysfLoDev, ysfTXHang);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, txDCOffset, rxDCOffset);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, fmRXLevel, txDCOffset, rxDCOffset);
 
   io.start();
 
@@ -375,11 +378,13 @@ uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
   bool callAtStart = (data[6U] & 0x01U) == 0x01U;
   bool callAtEnd   = (data[6U] & 0x02U) == 0x02U;
 
-  char callsign;
+  char callsign[50U];
   uint8_t n = 0U;
   for (uint8_t i = 7U; i < length; i++, n++)
     callsign[n] = data[i];
   callsign[n] = '\0';
+
+  fm.setCallsign(callsign, speed, frequency, time, holdoff, highLevel, lowLevel, callAtStart, callAtEnd);
 
   return 0U;
 }
@@ -391,21 +396,23 @@ uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
 
   uint8_t  speed     = data[0U];
   uint16_t frequency = data[1U] * 10U;
-  uint8_t  delay     = data[2U] * 10U;
+  uint16_t delay     = data[2U] * 10U;
   uint8_t  level     = data[3U];
 
-  char ack;
+  char ack[50U];
   uint8_t n = 0U;
   for (uint8_t i = 4U; i < length; i++, n++)
     ack[n] = data[i];
   ack[n] = '\0';
+
+  fm.setAck(ack, speed, frequency, delay, level);
 
   return 0U;
 }
 
 uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
 {
-  if (length < 9U)
+  if (length < 7U)
     return 4U;
 
   uint16_t timeout        = data[0U] * 5U;
@@ -415,10 +422,10 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
   uint8_t  ctcssThreshold = data[3U];
   uint8_t  ctcssLevel     = data[4U];
 
-  uint8_t  inputLevel     = data[5U];
-  uint8_t  outputLevel    = data[6U];
-  uint8_t  kerchunkTime   = data[7U];
-  uint8_t  hangTime       = data[8U];
+  uint8_t  kerchunkTime   = data[5U];
+  uint8_t  hangTime       = data[6U];
+
+  fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
 
   return 0U;
 }
@@ -528,6 +535,9 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
 
   if (modemState != STATE_NXDN)
     nxdnRX.reset();
+
+  if (modemState != STATE_FM)
+    fm.reset();
 
   cwIdTX.reset();
 
