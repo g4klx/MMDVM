@@ -391,21 +391,22 @@ uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
 
 uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
 {
-  if (length < 4U)
+  if (length < 5U)
     return 4U;
 
   uint8_t  speed     = data[0U];
   uint16_t frequency = data[1U] * 10U;
-  uint16_t delay     = data[2U] * 10U;
-  uint8_t  level     = data[3U];
+  uint8_t  minTime   = data[2U];
+  uint16_t delay     = data[3U] * 10U;
+  uint8_t  level     = data[4U];
 
   char ack[50U];
   uint8_t n = 0U;
-  for (uint8_t i = 4U; i < length; i++, n++)
+  for (uint8_t i = 5U; i < length; i++, n++)
     ack[n] = data[i];
   ack[n] = '\0';
 
-  fm.setAck(ack, speed, frequency, delay, level);
+  fm.setAck(ack, speed, frequency, minTime, delay, level);
 
   return 0U;
 }
