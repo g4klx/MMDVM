@@ -40,7 +40,7 @@ void CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, u
 {
 }
 
-void CFM::setAck(const char* ack, uint8_t speed, uint16_t frequency, uint16_t delay, uint8_t level)
+void CFM::setAck(const char* ack, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
 {
 }
 
