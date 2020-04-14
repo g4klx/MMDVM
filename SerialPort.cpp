@@ -391,7 +391,7 @@ uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
 
 uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
 {
-  if (length < 5U)
+  if (length < 6U)
     return 4U;
 
   uint8_t  speed     = data[0U];
@@ -413,7 +413,7 @@ uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
 
 uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
 {
-  if (length < 7U)
+  if (length < 8U)
     return 4U;
 
   uint16_t timeout        = data[0U] * 5U;
@@ -426,7 +426,13 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
   uint8_t  kerchunkTime   = data[5U];
   uint8_t  hangTime       = data[6U];
 
-  fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
+  char ack[50U];
+  uint8_t n = 0U;
+  for (uint8_t i = 7U; i < length; i++, n++)
+    ack[n] = data[i];
+  ack[n] = '\0';
+
+  fm.setMisc(ack, timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
 
   return 0U;
 }

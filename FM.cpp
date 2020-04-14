@@ -40,10 +40,10 @@ void CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, u
 {
 }
 
-void CFM::setAck(const char* ack, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
+void CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
 {
 }
 
-void CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)
+void CFM::setMisc(const char* netAck, uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)
 {
 }
