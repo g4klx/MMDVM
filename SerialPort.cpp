@@ -432,7 +432,7 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
     ack[n] = data[i];
   ack[n] = '\0';
 
-  fm.setMisc(ack, timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
+  fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
 
   return 0U;
 }
