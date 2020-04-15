@@ -21,6 +21,12 @@
 
 #include "Config.h"
 
+struct CTCSS_TABLE {
+  uint8_t  m_frequency;
+  uint16_t m_length;
+  q15_t    m_values[360U];
+};
+
 class CFMCTCSSTX {
 public:
   CFMCTCSSTX();
@@ -30,7 +36,9 @@ public:
   void getAudio(q15_t* samples, uint8_t length);
 
 private:
-  q15_t m_level;
+  CTCSS_TABLE* m_entry;
+  q15_t        m_level;
+  uint16_t     m_n;
 };
 
 #endif
