@@ -20,9 +20,17 @@
 #include "Globals.h"
 #include "FMTimeout.h"
 
+// 400 Hz sine wave at 24000 Hz sample rate
+const q15_t BUSY_AUDIO[] = {0, 3426, 6813, 10126, 13328, 16384, 19261, 21926, 24351, 26510, 28378, 29935, 31164, 32052, 32588, 32768, 32588, 32052, 31164, 29935, 28378, 26510, 24351,
+                            21926, 19261, 16384, 13328, 10126, 6813, 3425, 0, -3425, -6813, -10126, -13328, -16384, -19261, -21926, -24351, -26510, -28378, -29935, -31164, -32052,
+                            -32588, -32768, -32588, -32052, -31164, -29935, -28378, -26510, -24351, -21926, -19261, -16384, -13328, -10126, -6813, -3425};
+const uint8_t BUSY_AUDIO_LEN = 60U;
+
 CFMTimeout::CFMTimeout() :
 m_level(128 * 128),
-m_running(false)
+m_running(false),
+m_pos(0U),
+m_n(0U)
 {
 }
 
@@ -33,11 +41,32 @@ void CFMTimeout::setParams(uint8_t level)
 
 void CFMTimeout::getAudio(q15_t* samples, uint8_t length)
 {
+  if (!m_running)
+    return;
+
+  for (uint8_t i = 0U; i < length; i++) {
+    if (m_pos > 12000U) {
+      q31_t sample = BUSY_AUDIO[m_n] * m_level;
+      samples[i] = q15_t(__SSAT((sample >> 15), 16));
+
+      m_n++;
+      if (m_n >= BUSY_AUDIO_LEN)
+        m_n = 0U;
+    } else {
+      samples[i] = 0;
+    }
+
+    m_pos++;
+    if (m_pos >= 24000U)
+      m_pos = 0U;
+  }
 }
 
 void CFMTimeout::start()
 {
   m_running = true;
+  m_pos = 0U;
+  m_n   = 0U;
 }
 
 void CFMTimeout::stop()

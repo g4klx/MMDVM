@@ -33,8 +33,10 @@ public:
   void getAudio(q15_t* samples, uint8_t length);
 
 private:
-  q15_t m_level;
-  bool  m_running;
+  q15_t    m_level;
+  bool     m_running;
+  uint32_t m_pos;
+  uint8_t  m_n;
 };
 
 #endif

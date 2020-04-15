@@ -56,11 +56,14 @@ void CFM::samples(q15_t* samples, uint8_t length)
       samples[i] = 0;
   }
 
-  m_rfAck.getAudio(samples, length);
+  if (!m_callsign.isRunning())
+    m_rfAck.getAudio(samples, length);
 
-  m_callsign.getAudio(samples, length);
+  if (!m_rfAck.isRunning())
+    m_callsign.getAudio(samples, length);
 
-  m_timeoutTone.getAudio(samples, length);
+  if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+    m_timeoutTone.getAudio(samples, length);
 
   // Band-pass filter
 
