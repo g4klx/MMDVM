@@ -27,10 +27,14 @@ public:
 
   void setParams(uint8_t level);
 
+  void start();
+  void stop();
+
   void getAudio(q15_t* samples, uint8_t length);
 
 private:
   q15_t m_level;
+  bool  m_running;
 };
 
 #endif

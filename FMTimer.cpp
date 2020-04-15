@@ -20,12 +20,19 @@
 #include "Globals.h"
 #include "FMTimer.h"
 
-CFMTimer::CFMTimer()
+CFMTimer::CFMTimer() :
+m_timeout(0U)
 {
 }
 
-void CFMTimer::setTimeout(uint16_t time)
+void CFMTimer::setTimeout(uint16_t timeout)
 {
+  m_timeout = timeout;
+}
+
+uint16_t CFMTimer::getTimeout() const
+{
+  return m_timeout;
 }
 
 void CFMTimer::start()

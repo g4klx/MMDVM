@@ -30,10 +30,10 @@
 enum FM_STATE {
   FS_LISTENING,
   FS_KERCHUNK,
-  FS_RELAYING_RF,
-  FS_RELAYING_WAIT_RF,
-  FS_TIMEOUT_RF,
-  FS_TIMEOUT_WAIT_RF,
+  FS_RELAYING,
+  FS_RELAYING_WAIT,
+  FS_TIMEOUT,
+  FS_TIMEOUT_WAIT,
   FS_HANG
 };
 
@@ -41,7 +41,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(bool cos, const q15_t* samples, uint8_t length);
+  void samples(bool cos, q15_t* samples, uint8_t length);
 
   void process();
 
@@ -67,6 +67,18 @@ private:
   CFMTimer    m_ackMinTimer;
   CFMTimer    m_ackDelayTimer;
   CFMTimer    m_hangTimer;
+
+  void stateMachine(bool validSignal);
+  void listeningState(bool validSignal);
+  void kerchunkState(bool validSignal);
+  void relayingState(bool validSignal);
+  void relayingWaitState(bool validSignal);
+  void timeoutState(bool validSignal);
+  void timeoutWaitState(bool validSignal);
+  void hangState(bool validSignal);
+
+  void sendCallsign();
+  void beginRelaying();
 };
 
 #endif

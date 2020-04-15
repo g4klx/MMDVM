@@ -39,8 +39,38 @@ m_hangTimer()
 {
 }
 
-void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
+  // De-emphasis
+
+  bool ctcss = m_goertzel.process(samples, length);
+
+  bool validSignal = ctcss && cos;
+
+  stateMachine(validSignal);
+
+  if (m_modemState != STATE_FM)
+    return;
+
+  // Only let audio through when relaying audio
+  if (m_state != FS_RELAYING) {
+    for (uint8_t i = 0U; i < length; i++)
+      samples[i] = 0;
+  }
+
+  m_rfAck.getAudio(samples, length);
+
+  m_callsign.getAudio(samples, length);
+
+  m_timeoutTone.getAudio(samples, length);
+
+  // Band-pass filter
+
+  m_ctcss.getAudio(samples, length);
+
+  // Pre-emphasis
+
+  io.write(STATE_FM, samples, length);
 }
 
 void CFM::process()
@@ -78,4 +108,208 @@ void CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency
   m_timeoutTimer.setTimeout(timeout);
   m_kerchunkTimer.setTimeout(kerchunkTime);
   m_hangTimer.setTimeout(hangTime);
+}
+
+void CFM::stateMachine(bool validSignal)
+{
+  m_callsignTimer.clock();
+  m_timeoutTimer.clock();
+  m_holdoffTimer.clock();
+  m_kerchunkTimer.clock();
+  m_ackMinTimer.clock();
+  m_ackDelayTimer.clock();
+  m_hangTimer.clock();
+
+  switch (m_state) {
+    case FS_LISTENING:
+      listeningState(validSignal);
+      break;
+    case FS_KERCHUNK:
+      kerchunkState(validSignal);
+      break;
+    case FS_RELAYING:
+      relayingState(validSignal);
+      break;
+    case FS_RELAYING_WAIT:
+      relayingWaitState(validSignal);
+      break;
+    case FS_TIMEOUT:
+      timeoutState(validSignal);
+      break;
+    case FS_TIMEOUT_WAIT:
+      timeoutWaitState(validSignal);
+      break;
+    case FS_HANG:
+      hangState(validSignal);
+      break;
+    default:
+      break;
+  }
+}
+
+void CFM::listeningState(bool validSignal)
+{
+  if (m_kerchunkTimer.getTimeout() > 0U) {
+    m_state = FS_KERCHUNK;
+    m_kerchunkTimer.start();
+  } else {
+    m_state = FS_RELAYING;
+    if (m_callsignAtStart)
+      sendCallsign();
+  }
+
+  beginRelaying();
+
+  m_callsignTimer.start();
+
+  m_modemState = STATE_FM;
+}
+
+void CFM::kerchunkState(bool validSignal)
+{
+  if (validSignal) {
+    if (m_kerchunkTimer.hasExpired()) {
+      m_state = FS_RELAYING;
+      m_kerchunkTimer.stop();
+    }
+  } else {
+    m_state = FS_LISTENING;
+    m_kerchunkTimer.stop();
+    m_timeoutTimer.stop();
+    m_ackMinTimer.stop();
+    m_callsignTimer.stop();
+    m_holdoffTimer.stop();
+    m_modemState = STATE_IDLE;
+  }
+}
+
+void CFM::relayingState(bool validSignal)
+{
+  if (validSignal) {
+    if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      m_state = FS_TIMEOUT;
+      m_ackMinTimer.stop();
+      m_timeoutTimer.stop();
+      m_timeoutTone.start();
+    }
+  } else {
+    m_state = FS_RELAYING_WAIT;
+    m_ackDelayTimer.start();
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::relayingWaitState(bool validSignal)
+{
+  if (validSignal) {
+    m_state = FS_RELAYING;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      m_state = FS_HANG;
+
+      if (m_ackMinTimer.isRunning()) {
+        if (m_ackMinTimer.hasExpired()) {
+          m_rfAck.start();
+          m_ackMinTimer.stop();
+        }
+      } else {
+          m_rfAck.start();
+          m_ackMinTimer.stop();
+      }
+
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+      m_hangTimer.start();
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::hangState(bool validSignal)
+{
+  if (validSignal) {
+    m_state = FS_RELAYING;
+    m_rfAck.stop();
+    beginRelaying();
+  } else {
+    if (m_hangTimer.isRunning() && m_hangTimer.hasExpired()) {
+      m_state = FS_LISTENING;
+      m_hangTimer.stop();
+
+      if (m_callsignAtEnd)
+        sendCallsign();
+
+      m_callsignTimer.stop();
+      m_holdoffTimer.stop();
+      m_modemState = STATE_IDLE;
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutState(bool validSignal)
+{
+  if (!validSignal) {
+    m_state = FS_TIMEOUT_WAIT;
+    m_ackDelayTimer.start();
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutWaitState(bool validSignal)
+{
+  if (validSignal) {
+    m_state = FS_TIMEOUT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      m_state = FS_HANG;
+      m_timeoutTone.stop();
+      m_rfAck.start();
+      m_ackDelayTimer.stop();
+      m_ackMinTimer.stop();
+      m_timeoutTimer.stop();
+      m_hangTimer.start();
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::sendCallsign()
+{
+  if (m_holdoffTimer.isRunning()) {
+    if (m_holdoffTimer.hasExpired()) {
+      m_callsign.start();
+      m_holdoffTimer.start();
+    }
+  } else {
+    m_callsign.start();
+  }
+}
+
+void CFM::beginRelaying()
+{
+  m_timeoutTimer.start();
+  m_ackMinTimer.start();
 }

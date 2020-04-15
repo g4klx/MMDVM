@@ -21,7 +21,8 @@
 #include "FMTimeout.h"
 
 CFMTimeout::CFMTimeout() :
-m_level(128 * 128)
+m_level(128 * 128),
+m_running(false)
 {
 }
 
@@ -32,4 +33,14 @@ void CFMTimeout::setParams(uint8_t level)
 
 void CFMTimeout::getAudio(q15_t* samples, uint8_t length)
 {
+}
+
+void CFMTimeout::start()
+{
+  m_running = true;
+}
+
+void CFMTimeout::stop()
+{
+  m_running = false;
 }

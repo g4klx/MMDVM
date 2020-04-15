@@ -25,7 +25,9 @@ class CFMTimer {
 public:
   CFMTimer();
 
-  void setTimeout(uint16_t time);
+  void setTimeout(uint16_t timeout);
+
+  uint16_t getTimeout() const;
 
   void start();
   
@@ -38,6 +40,7 @@ public:
   bool hasExpired() const;
 
 private:
+  uint16_t m_timeout;
 };
 
 #endif
