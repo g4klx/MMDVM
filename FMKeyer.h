@@ -35,9 +35,11 @@ public:
   bool isRunning() const;
 
 private:
-  q15_t m_level;
-  bool  m_wanted;
-  bool  m_running;
+  q15_t    m_level;
+  bool     m_wanted;
+  bool     m_running;
+  uint8_t  m_poBuffer[1000U];
+  uint16_t m_poLen;
 };
 
 #endif

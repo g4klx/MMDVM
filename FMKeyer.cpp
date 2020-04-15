@@ -21,7 +21,7 @@
 #include "FMKeyer.h"
 
 const struct {
-  uint8_t  c;
+  char     c;
   uint32_t pattern;
   uint8_t  length;
 } SYMBOL_LIST[] = {
@@ -78,17 +78,40 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 CFMKeyer::CFMKeyer() :
 m_level(128 * 128),
 m_wanted(false),
-m_running(false)
+m_running(false),
+m_poBuffer(),
+m_poLen(0U)
 {
 }
 
 void CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level)
 {
   m_level = q15_t(level * 128);
+
+  for (uint8_t i = 0U; text[i] != '\0'; i++) {
+    for (uint8_t j = 0U; SYMBOL_LIST[j].c != 0U; j++) {
+      if (SYMBOL_LIST[j].c == text[i]) {
+        uint32_t MASK = 0x80000000U;
+        for (uint8_t k = 0U; k < SYMBOL_LIST[j].length; k++, m_poLen++, MASK >>= 1) {
+          bool b = (SYMBOL_LIST[j].pattern & MASK) == MASK;
+          WRITE_BIT(m_poBuffer, m_poLen, b);
+
+          if (m_poLen >= 995U) {
+            m_poLen = 0U;
+            return;
+          }
+        }
+
+        break;
+      }
+    }
+  }
 }
 
 void CFMKeyer::getAudio(q15_t* samples, uint8_t length)
 {
+  if (!m_wanted && !m_running)
+    return;
 }
 
 void CFMKeyer::start()
@@ -98,6 +121,8 @@ void CFMKeyer::start()
 
 void CFMKeyer::stop()
 {
+  m_wanted  = false;
+  m_running = false;
 }
 
 bool CFMKeyer::isRunning() const

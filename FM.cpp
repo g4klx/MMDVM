@@ -89,7 +89,13 @@ void CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, u
   m_callsignAtStart = callsignAtStart;
   m_callsignAtEnd   = callsignAtEnd;
 
-  m_holdoffTimer.setTimeout(holdoff, 0U);
+  uint16_t holdoffTime  = 0U;
+  uint16_t callsignTime = time * 60U;
+  if (holdoff > 0U)
+    holdoffTime  = callsignTime / holdoff;
+
+  m_holdoffTimer.setTimeout(holdoffTime, 0U);
+  m_callsignTimer.setTimeout(callsignTime, 0U);
 }
 
 void CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
