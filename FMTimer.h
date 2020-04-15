@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009,2010,2015,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,22 +25,23 @@ class CFMTimer {
 public:
   CFMTimer();
 
-  void setTimeout(uint16_t timeout);
+  void setTimeout(uint16_t secs, uint32_t msecs);
 
-  uint16_t getTimeout() const;
+  uint32_t getTimeout() const;
 
   void start();
   
   void stop();
 
-  void clock();
+  void clock(uint8_t length);
 
   bool isRunning() const;
   
   bool hasExpired() const;
 
 private:
-  uint16_t m_timeout;
+  uint32_t m_timeout;
+  uint32_t m_timer;
 };
 
 #endif

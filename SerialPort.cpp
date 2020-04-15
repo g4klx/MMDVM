@@ -101,7 +101,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200411 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
+#define DESCRIPTION "20200415 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -413,7 +413,7 @@ uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
 
 uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
 {
-  if (length < 8U)
+  if (length < 7U)
     return 4U;
 
   uint16_t timeout        = data[0U] * 5U;
@@ -425,12 +425,6 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
 
   uint8_t  kerchunkTime   = data[5U];
   uint8_t  hangTime       = data[6U];
-
-  char ack[50U];
-  uint8_t n = 0U;
-  for (uint8_t i = 7U; i < length; i++, n++)
-    ack[n] = data[i];
-  ack[n] = '\0';
 
   fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
 

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009,2010,2015,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,36 +21,50 @@
 #include "FMTimer.h"
 
 CFMTimer::CFMTimer() :
-m_timeout(0U)
+m_timeout(0U),
+m_timer(0U)
 {
 }
 
-void CFMTimer::setTimeout(uint16_t timeout)
+void CFMTimer::setTimeout(uint16_t secs, uint32_t msecs)
 {
-  m_timeout = timeout;
+  m_timeout = (secs * 24000U) + (msecs * 24U);
 }
 
-uint16_t CFMTimer::getTimeout() const
+uint32_t CFMTimer::getTimeout() const
 {
-  return m_timeout;
+  return m_timeout / 24U;
 }
 
 void CFMTimer::start()
 {
+  if (m_timeout > 0U)
+    m_timer = 1U;
 }
 
 void CFMTimer::stop()
 {
+  m_timer = 0U;
 }
 
-void CFMTimer::clock()
+void CFMTimer::clock(uint8_t length)
 {
+  if (m_timer > 0U && m_timeout > 0U)
+    m_timer += length;
 }
 
 bool CFMTimer::isRunning() const
 {
+  return m_timer > 0U;
 }
 
 bool CFMTimer::hasExpired() const
 {
+  if (m_timeout == 0U || m_timer == 0U)
+    return false;
+
+  if (m_timer > m_timeout)
+    return true;
+
+  return false;
 }

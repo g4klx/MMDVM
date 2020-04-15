@@ -39,15 +39,13 @@ m_hangTimer()
 {
 }
 
-void CFM::samples(bool cos, q15_t* samples, uint8_t length)
+void CFM::samples(q15_t* samples, uint8_t length)
 {
   // De-emphasis
 
-  bool ctcss = m_goertzel.process(samples, length);
+  bool validSignal = m_goertzel.process(samples, length);
 
-  bool validSignal = ctcss && cos;
-
-  stateMachine(validSignal);
+  stateMachine(validSignal, length);
 
   if (m_modemState != STATE_FM)
     return;
@@ -88,15 +86,15 @@ void CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, u
   m_callsignAtStart = callsignAtStart;
   m_callsignAtEnd   = callsignAtEnd;
 
-  m_holdoffTimer.setTimeout(holdoff);
+  m_holdoffTimer.setTimeout(holdoff, 0U);
 }
 
 void CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
 {
   m_rfAck.setParams(rfAck, speed, frequency, level);
 
-  m_ackDelayTimer.setTimeout(delay);
-  m_ackMinTimer.setTimeout(minTime);
+  m_ackDelayTimer.setTimeout(0U, delay);
+  m_ackMinTimer.setTimeout(minTime, 0U);
 }
 
 void CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)
@@ -105,20 +103,20 @@ void CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency
   m_goertzel.setParams(ctcssFrequency, ctcssThreshold);
   m_ctcss.setParams(ctcssFrequency, ctcssLevel);
 
-  m_timeoutTimer.setTimeout(timeout);
-  m_kerchunkTimer.setTimeout(kerchunkTime);
-  m_hangTimer.setTimeout(hangTime);
+  m_timeoutTimer.setTimeout(timeout, 0U);
+  m_kerchunkTimer.setTimeout(kerchunkTime, 0U);
+  m_hangTimer.setTimeout(hangTime, 0U);
 }
 
-void CFM::stateMachine(bool validSignal)
+void CFM::stateMachine(bool validSignal, uint8_t length)
 {
-  m_callsignTimer.clock();
-  m_timeoutTimer.clock();
-  m_holdoffTimer.clock();
-  m_kerchunkTimer.clock();
-  m_ackMinTimer.clock();
-  m_ackDelayTimer.clock();
-  m_hangTimer.clock();
+  m_callsignTimer.clock(length);
+  m_timeoutTimer.clock(length);
+  m_holdoffTimer.clock(length);
+  m_kerchunkTimer.clock(length);
+  m_ackMinTimer.clock(length);
+  m_ackDelayTimer.clock(length);
+  m_hangTimer.clock(length);
 
   switch (m_state) {
     case FS_LISTENING:

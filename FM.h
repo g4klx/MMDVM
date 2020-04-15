@@ -41,7 +41,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(bool cos, q15_t* samples, uint8_t length);
+  void samples(q15_t* samples, uint8_t length);
 
   void process();
 
@@ -68,7 +68,7 @@ private:
   CFMTimer    m_ackDelayTimer;
   CFMTimer    m_hangTimer;
 
-  void stateMachine(bool validSignal);
+  void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);
   void kerchunkState(bool validSignal);
   void relayingState(bool validSignal);

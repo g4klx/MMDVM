@@ -348,7 +348,6 @@ void CIO::process()
       }
 
       if (m_fmEnable) {
-        bool cos = getCOSInt();
         q15_t FMVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
         for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
@@ -361,7 +360,7 @@ void CIO::process()
           FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
         }
 #endif
-        fm.samples(cos, FMVals, RX_BLOCK_SIZE);
+        fm.samples(FMVals, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -422,7 +421,6 @@ void CIO::process()
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_FM) {
-      bool cos = getCOSInt();
       q15_t FMVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
       for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
@@ -435,7 +433,7 @@ void CIO::process()
         FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
       }
 #endif
-      fm.samples(cos, FMVals, RX_BLOCK_SIZE);
+      fm.samples(FMVals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
       ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
