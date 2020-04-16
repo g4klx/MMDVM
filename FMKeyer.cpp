@@ -76,18 +76,20 @@ const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02
 #define READ_BIT(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
 CFMKeyer::CFMKeyer() :
-m_level(128 * 128),
 m_wanted(false),
-m_running(false),
 m_poBuffer(),
-m_poLen(0U)
+m_poLen(0U),
+m_poPos(0U),
+m_dotLen(0U),
+m_dotPos(0U),
+m_audio(NULL),
+m_audioLen(0U),
+m_audioPos(0U)
 {
 }
 
 uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level)
 {
-  m_level = q15_t(level * 128);
-
   for (uint8_t i = 0U; text[i] != '\0'; i++) {
     for (uint8_t j = 0U; SYMBOL_LIST[j].c != 0U; j++) {
       if (SYMBOL_LIST[j].c == text[i]) {
@@ -107,27 +109,66 @@ uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency,
     }
   }
 
+  q15_t value = q15_t(level * 128);
+
+  m_dotLen = 24000U / speed;   // In samples
+
+  m_audioLen = 24000U / frequency; // In samples
+
+  m_audio = new q15_t[m_audioLen];
+
+  for (uint16_t i = 0U; i < m_audioLen; i++) {
+    if (i < (m_audioLen / 2U))
+      m_audio[i] = value;
+    else
+      m_audio[i] = -value;
+  }
+
   return 0U;
 }
 
 void CFMKeyer::getAudio(q15_t* samples, uint8_t length)
 {
-  if (!m_wanted && !m_running)
+  if (!m_wanted)
     return;
+
+  for (uint8_t i = 0U; i < length; i++) {
+    bool b = READ_BIT(m_poBuffer, m_poPos);
+    if (b)
+      samples[i] += m_audio[m_audioPos];
+
+    m_audioPos++;
+    if (m_audioPos >= m_audioLen)
+      m_audioPos = 0U;
+    m_dotPos++;
+    if (m_dotPos >= m_dotLen) {
+      m_dotPos = 0U;
+      m_poPos++;
+      if (m_poPos >= m_poLen) {
+        stop();
+        return;
+      }
+    }
+  }
 }
 
 void CFMKeyer::start()
 {
-  m_wanted = true;
+  m_wanted   = true;
+  m_poPos    = 0U;
+  m_dotPos   = 0U;
+  m_audioPos = 0U;
 }
 
 void CFMKeyer::stop()
 {
-  m_wanted  = false;
-  m_running = false;
+  m_wanted   = false;
+  m_poPos    = 0U;
+  m_dotPos   = 0U;
+  m_audioPos = 0U;
 }
 
 bool CFMKeyer::isRunning() const
 {
-  return m_running;
+  return m_poPos > 0U || m_dotPos > 0U || m_audioPos > 0U;
 }

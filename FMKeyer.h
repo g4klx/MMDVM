@@ -35,11 +35,15 @@ public:
   bool isRunning() const;
 
 private:
-  q15_t    m_level;
   bool     m_wanted;
-  bool     m_running;
   uint8_t  m_poBuffer[1000U];
   uint16_t m_poLen;
+  uint16_t m_poPos;
+  uint16_t m_dotLen;
+  uint16_t m_dotPos;
+  q15_t*   m_audio;
+  uint16_t m_audioLen;
+  uint16_t m_audioPos;
 };
 
 #endif

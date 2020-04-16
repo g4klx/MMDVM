@@ -24,7 +24,7 @@ const struct CTCSS_TABLE {
   uint8_t  frequency;
   uint16_t length;
   q15_t    increment;
-} CTCSS_TABLE[] = {
+} CTCSS_TABLE_DATA[] = {
   { 67U, 358U,  92},
   { 69U, 346U,  95},
   { 71U, 334U,  99},
@@ -77,7 +77,7 @@ const struct CTCSS_TABLE {
   {254U,  94U, 347}
 };
 
-const uint8_t CTCSS_TABLE_LEN = 50U;
+const uint8_t CTCSS_TABLE_DATA_LEN = 50U;
 
 CFMCTCSSTX::CFMCTCSSTX() :
 m_values(NULL),
@@ -88,11 +88,11 @@ m_n(0U)
 
 uint8_t CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
 {
-  struct CTCSS_TABLE* entry = NULL;
+  const CTCSS_TABLE* entry = NULL;
 
-  for (uint8_t i = 0U; i < CTCSS_TABLE_LEN; i++) {
-    if (CTCSS_TABLE[i].frequency == frequency) {
-      entry = CTCSS_TABLE + i;
+  for (uint8_t i = 0U; i < CTCSS_TABLE_DATA_LEN; i++) {
+    if (CTCSS_TABLE_DATA[i].frequency == frequency) {
+      entry = CTCSS_TABLE_DATA + i;
       break;
     }
   }
