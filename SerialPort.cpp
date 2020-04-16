@@ -384,9 +384,7 @@ uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
     callsign[n] = data[i];
   callsign[n] = '\0';
 
-  fm.setCallsign(callsign, speed, frequency, time, holdoff, highLevel, lowLevel, callAtStart, callAtEnd);
-
-  return 0U;
+  return fm.setCallsign(callsign, speed, frequency, time, holdoff, highLevel, lowLevel, callAtStart, callAtEnd);
 }
 
 uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
@@ -406,9 +404,7 @@ uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
     ack[n] = data[i];
   ack[n] = '\0';
 
-  fm.setAck(ack, speed, frequency, minTime, delay, level);
-
-  return 0U;
+  return fm.setAck(ack, speed, frequency, minTime, delay, level);
 }
 
 uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
@@ -426,9 +422,7 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
   uint8_t  kerchunkTime   = data[5U];
   uint8_t  hangTime       = data[6U];
 
-  fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
-
-  return 0U;
+  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime);
 }
 
 uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)

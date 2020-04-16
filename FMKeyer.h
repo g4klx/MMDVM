@@ -25,7 +25,7 @@ class CFMKeyer {
 public:
   CFMKeyer();
 
-  void setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level);
+  uint8_t setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level);
 
   void getAudio(q15_t* samples, uint8_t length);
 

@@ -82,10 +82,8 @@ void CFM::reset()
 {
 }
 
-void CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd)
+uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd)
 {
-  m_callsign.setParams(callsign, speed, frequency, lowLevel);
-
   m_callsignAtStart = callsignAtStart;
   m_callsignAtEnd   = callsignAtEnd;
 
@@ -96,25 +94,29 @@ void CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, u
 
   m_holdoffTimer.setTimeout(holdoffTime, 0U);
   m_callsignTimer.setTimeout(callsignTime, 0U);
+
+  return m_callsign.setParams(callsign, speed, frequency, lowLevel);
 }
 
-void CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
+uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
 {
-  m_rfAck.setParams(rfAck, speed, frequency, level);
-
   m_ackDelayTimer.setTimeout(0U, delay);
   m_ackMinTimer.setTimeout(minTime, 0U);
+
+  return m_rfAck.setParams(rfAck, speed, frequency, level);
 }
 
-void CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)
 {
-  m_timeoutTone.setParams(timeoutLevel);
-  m_goertzel.setParams(ctcssFrequency, ctcssThreshold);
-  m_ctcss.setParams(ctcssFrequency, ctcssLevel);
-
   m_timeoutTimer.setTimeout(timeout, 0U);
   m_kerchunkTimer.setTimeout(kerchunkTime, 0U);
   m_hangTimer.setTimeout(hangTime, 0U);
+
+  m_timeoutTone.setParams(timeoutLevel);
+
+  m_goertzel.setParams(ctcssFrequency, ctcssThreshold);
+
+  return m_ctcss.setParams(ctcssFrequency, ctcssLevel);
 }
 
 void CFM::stateMachine(bool validSignal, uint8_t length)

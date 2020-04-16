@@ -84,7 +84,7 @@ m_poLen(0U)
 {
 }
 
-void CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level)
+uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level)
 {
   m_level = q15_t(level * 128);
 
@@ -98,7 +98,7 @@ void CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, ui
 
           if (m_poLen >= 995U) {
             m_poLen = 0U;
-            return;
+            return 4U;
           }
         }
 
@@ -106,6 +106,8 @@ void CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, ui
       }
     }
   }
+
+  return 0U;
 }
 
 void CFMKeyer::getAudio(q15_t* samples, uint8_t length)

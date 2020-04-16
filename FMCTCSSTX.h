@@ -31,7 +31,7 @@ class CFMCTCSSTX {
 public:
   CFMCTCSSTX();
 
-  void setParams(uint8_t frequency, uint8_t level);
+  uint8_t setParams(uint8_t frequency, uint8_t level);
 
   void getAudio(q15_t* samples, uint8_t length);
 

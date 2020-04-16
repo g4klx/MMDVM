@@ -81,7 +81,7 @@ m_n(0U)
 {
 }
 
-void CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
+uint8_t CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
 {
   for (uint8_t i = 0U; i < CTCSS_TABLE_LEN; i++) {
     if (CTCSS_TONES[i].m_frequency == frequency) {
@@ -91,6 +91,8 @@ void CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
   }
 
   m_level = q15_t(level * 128);
+
+  return m_entry == NULL ? 4U : 0U;
 }
 
 void CFMCTCSSTX::getAudio(q15_t* samples, uint8_t length)
