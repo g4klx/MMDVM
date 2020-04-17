@@ -179,17 +179,21 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning()) {
+      DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
+    }
   }
 }
 
 void CFM::listeningState(bool validSignal)
 {
   if (m_kerchunkTimer.getTimeout() > 0U) {
+    DEBUG1("State to KERCHUNK");
     m_state = FS_KERCHUNK;
     m_kerchunkTimer.start();
   } else {
+    DEBUG1("State to RELAYING");
     m_state = FS_RELAYING;
     if (m_callsignAtStart)
       sendCallsign();
@@ -199,6 +203,7 @@ void CFM::listeningState(bool validSignal)
 
   m_callsignTimer.start();
 
+  DEBUG1("Change to STATE_FM");
   m_modemState = STATE_FM;
 }
 
@@ -206,10 +211,12 @@ void CFM::kerchunkState(bool validSignal)
 {
   if (validSignal) {
     if (m_kerchunkTimer.hasExpired()) {
+      DEBUG1("State to RELAYING");
       m_state = FS_RELAYING;
       m_kerchunkTimer.stop();
     }
   } else {
+    DEBUG1("State to LISTENING");
     m_state = FS_LISTENING;
     m_kerchunkTimer.stop();
     m_timeoutTimer.stop();
@@ -223,12 +230,14 @@ void CFM::relayingState(bool validSignal)
 {
   if (validSignal) {
     if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      DEBUG1("State to TIMEOUT");
       m_state = FS_TIMEOUT;
       m_ackMinTimer.stop();
       m_timeoutTimer.stop();
       m_timeoutTone.start();
     }
   } else {
+    DEBUG1("State to RELAYING_WAIT");
     m_state = FS_RELAYING_WAIT;
     m_ackDelayTimer.start();
   }
@@ -242,18 +251,22 @@ void CFM::relayingState(bool validSignal)
 void CFM::relayingWaitState(bool validSignal)
 {
   if (validSignal) {
+    DEBUG1("State to RELAYING");
     m_state = FS_RELAYING;
     m_ackDelayTimer.stop();
   } else {
     if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to HANG");
       m_state = FS_HANG;
 
       if (m_ackMinTimer.isRunning()) {
         if (m_ackMinTimer.hasExpired()) {
+          DEBUG1("Send ack");
           m_rfAck.start();
           m_ackMinTimer.stop();
         }
       } else {
+          DEBUG1("Send ack");
           m_rfAck.start();
           m_ackMinTimer.stop();
       }
@@ -273,11 +286,14 @@ void CFM::relayingWaitState(bool validSignal)
 void CFM::hangState(bool validSignal)
 {
   if (validSignal) {
+    DEBUG1("State to RELAYING");
     m_state = FS_RELAYING;
+    DEBUG1("Stop ack");
     m_rfAck.stop();
     beginRelaying();
   } else {
     if (m_hangTimer.isRunning() && m_hangTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
       m_state = FS_LISTENING;
       m_hangTimer.stop();
 
@@ -298,6 +314,7 @@ void CFM::hangState(bool validSignal)
 void CFM::timeoutState(bool validSignal)
 {
   if (!validSignal) {
+    DEBUG1("State to TIMEOUT_WAIT");
     m_state = FS_TIMEOUT_WAIT;
     m_ackDelayTimer.start();
   }
@@ -311,12 +328,15 @@ void CFM::timeoutState(bool validSignal)
 void CFM::timeoutWaitState(bool validSignal)
 {
   if (validSignal) {
+    DEBUG1("State to TIMEOUT");
     m_state = FS_TIMEOUT;
     m_ackDelayTimer.stop();
   } else {
     if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to HANG");
       m_state = FS_HANG;
       m_timeoutTone.stop();
+      DEBUG1("Send ack");
       m_rfAck.start();
       m_ackDelayTimer.stop();
       m_ackMinTimer.stop();
@@ -335,10 +355,12 @@ void CFM::sendCallsign()
 {
   if (m_holdoffTimer.isRunning()) {
     if (m_holdoffTimer.hasExpired()) {
+      DEBUG1("Send callsign");
       m_callsign.start();
       m_holdoffTimer.start();
     }
   } else {
+    DEBUG1("Send callsign");
     m_callsign.start();
   }
 }
