@@ -154,6 +154,9 @@ void CFMKeyer::getAudio(q15_t* samples, uint8_t length)
 
 void CFMKeyer::start()
 {
+  if (isRunning())
+    return;
+
   m_wanted   = true;
   m_poPos    = 0U;
   m_dotPos   = 0U;

@@ -154,6 +154,11 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
     default:
       break;
   }
+
+  if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+      m_modemState = STATE_IDLE;
+  }
 }
 
 void CFM::listeningState(bool validSignal)
@@ -188,7 +193,6 @@ void CFM::kerchunkState(bool validSignal)
     m_ackMinTimer.stop();
     m_callsignTimer.stop();
     m_holdoffTimer.stop();
-    m_modemState = STATE_IDLE;
   }
 }
 
@@ -259,7 +263,6 @@ void CFM::hangState(bool validSignal)
 
       m_callsignTimer.stop();
       m_holdoffTimer.stop();
-      m_modemState = STATE_IDLE;
     }
   }
 
