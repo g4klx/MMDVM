@@ -20,7 +20,28 @@
 #include "Globals.h"
 #include "FM.h"
 
+q15_t FILTER_COEFFS[] = {
+     -4,     0,     1,    -2,    -9,   -15,   -16,    -11,    -2,     4,     6,     1,    -7,   -15,
+    -17,    -9,     3,    16,    21,    14,     0,    -12,   -14,    -1,    21,    43,    51,    41,
+     19,    -1,    -5,    14,    50,    85,    98,     81,    44,     9,     0,    28,    80,   130,
+    147,   120,    60,     2,   -17,    16,    88,    157,   178,   132,    39,   -52,   -90,   -49,
+     46,   140,   166,    96,   -42,  -182,  -245,   -195,   -63,    67,   106,     7,  -194,  -399,
+   -496,  -429,  -238,   -41,    26,  -106,  -396,   -697,  -843,  -743,  -444,  -121,    12,  -165,
+   -603, -1084, -1329, -1163,  -629,    -6,   320,     67,  -759, -1803, -2474, -2204,  -739,  1695,
+   4421,  6556,  7363,  6556,  4421,  1695,  -739,  -2204, -2474, -1803,  -759,    67,   320,    -6,
+   -629, -1163, -1329, -1084,  -603,  -165,    12,   -121,  -444,  -743,  -843,  -697,  -396,  -106,
+     26,   -41,  -238,  -429,  -496,  -399,  -194,      7,   106,    67,   -63,  -195,  -245,  -182,
+    -42,    96,   166,   140,    46,   -49,   -90,    -52,    39,   132,   178,   157,    88,    16,
+    -17,     2,    60,   120,   147,   130,    80,     28,     0,     9,    44,    81,    98,    85,
+     50,    14,    -5,    -1,    19,    41,    51,     43,    21,    -1,   -14,   -12,     0,    14,
+     21,    16,     3,    -9,   -17,   -15,    -7,      1,     6,     4,    -2,   -11,   -16,   -15,
+     -9,    -2,     1,     0,    -4};
+
+const uint16_t FILTER_COEFFS_LEN = 201U;
+
 CFM::CFM() :
+m_filter(),
+m_filterState(),
 m_callsign(),
 m_rfAck(),
 m_goertzel(),
@@ -37,12 +58,15 @@ m_ackMinTimer(),
 m_ackDelayTimer(),
 m_hangTimer()
 {
+  ::memset(m_filterState, 0x00U, 230U * sizeof(q15_t));
+
+  m_filter.numTaps = FILTER_COEFFS_LEN;
+  m_filter.pState  = m_filterState;
+  m_filter.pCoeffs = FILTER_COEFFS;
 }
 
 void CFM::samples(q15_t* samples, uint8_t length)
 {
-  // De-emphasis
-
   bool validSignal = m_goertzel.process(samples, length);
 
   stateMachine(validSignal, length);
@@ -65,13 +89,12 @@ void CFM::samples(q15_t* samples, uint8_t length)
   if (!m_callsign.isRunning() && !m_rfAck.isRunning())
     m_timeoutTone.getAudio(samples, length);
 
-  // Band-pass filter
+  q15_t output[RX_BLOCK_SIZE];
+  ::arm_fir_fast_q15(&m_filter, samples, output, length);
 
-  m_ctcss.getAudio(samples, length);
+  m_ctcss.getAudio(output, length);
 
-  // Pre-emphasis
-
-  io.write(STATE_FM, samples, length);
+  io.write(STATE_FM, output, length);
 }
 
 void CFM::process()

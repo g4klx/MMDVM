@@ -52,21 +52,23 @@ public:
   uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime);
 
 private:
-  CFMKeyer    m_callsign;
-  CFMKeyer    m_rfAck;
-  CFMGoertzel m_goertzel;
-  CFMCTCSSTX  m_ctcss;
-  CFMTimeout  m_timeoutTone;
-  FM_STATE    m_state;
-  bool        m_callsignAtStart;
-  bool        m_callsignAtEnd;
-  CFMTimer    m_callsignTimer;
-  CFMTimer    m_timeoutTimer;
-  CFMTimer    m_holdoffTimer;
-  CFMTimer    m_kerchunkTimer;
-  CFMTimer    m_ackMinTimer;
-  CFMTimer    m_ackDelayTimer;
-  CFMTimer    m_hangTimer;
+  arm_fir_instance_q15 m_filter;
+  q15_t                m_filterState[230U];           // NoTaps + BlockSize - 1, 201 + 20 - 1 plus some spare
+  CFMKeyer             m_callsign;
+  CFMKeyer             m_rfAck;
+  CFMGoertzel          m_goertzel;
+  CFMCTCSSTX           m_ctcss;
+  CFMTimeout           m_timeoutTone;
+  FM_STATE             m_state;
+  bool                 m_callsignAtStart;
+  bool                 m_callsignAtEnd;
+  CFMTimer             m_callsignTimer;
+  CFMTimer             m_timeoutTimer;
+  CFMTimer             m_holdoffTimer;
+  CFMTimer             m_kerchunkTimer;
+  CFMTimer             m_ackMinTimer;
+  CFMTimer             m_ackDelayTimer;
+  CFMTimer             m_hangTimer;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);
