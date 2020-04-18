@@ -105,7 +105,7 @@ void CFM::reset()
 {
 }
 
-uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd)
+uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t level, bool callsignAtStart, bool callsignAtEnd)
 {
   m_callsignAtStart = callsignAtStart;
   m_callsignAtEnd   = callsignAtEnd;
@@ -118,7 +118,7 @@ uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency
   m_holdoffTimer.setTimeout(holdoffTime, 0U);
   m_callsignTimer.setTimeout(callsignTime, 0U);
 
-  return m_callsign.setParams(callsign, speed, frequency, lowLevel);
+  return m_callsign.setParams(callsign, speed, frequency, level);
 }
 
 uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
