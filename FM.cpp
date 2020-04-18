@@ -184,6 +184,13 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
     if (!m_callsign.isRunning() && !m_rfAck.isRunning()) {
       DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
+      m_callsignTimer.stop();
+      m_timeoutTimer.stop();
+      m_holdoffTimer.stop();
+      m_kerchunkTimer.stop();
+      m_ackMinTimer.stop();
+      m_ackDelayTimer.stop();
+      m_hangTimer.stop();
     }
   }
 }
