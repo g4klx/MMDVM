@@ -30,6 +30,8 @@ public:
   bool process(const q15_t* samples, uint8_t length);
 
 private:
+ q31_t   m_coeffDivTwo;
+ uint8_t m_threshold;
 };
 
 #endif
