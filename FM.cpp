@@ -65,11 +65,11 @@ m_hangTimer()
   m_filter.pCoeffs = FILTER_COEFFS;
 }
 
-void CFM::samples(q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
-  bool validSignal = m_ctcssRX.process(samples, length);
+  bool validCTCSS = m_ctcssRX.process(samples, length);
 
-  stateMachine(validSignal, length);
+  stateMachine(validCTCSS && cos, length);
 
   if (m_modemState != STATE_FM)
     return;

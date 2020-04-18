@@ -370,7 +370,8 @@ void CIO::process()
           FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
         }
 #endif
-        fm.samples(FMVals, RX_BLOCK_SIZE);
+        bool cos = getCOSInt();
+        fm.samples(cos, FMVals, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -443,7 +444,8 @@ void CIO::process()
         FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
       }
 #endif
-      fm.samples(FMVals, RX_BLOCK_SIZE);
+      bool cos = getCOSInt();
+      fm.samples(cos, FMVals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
       ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);

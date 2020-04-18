@@ -41,7 +41,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(q15_t* samples, uint8_t length);
+  void samples(bool cos, q15_t* samples, uint8_t length);
 
   void process();
 
