@@ -44,8 +44,8 @@ m_filter(),
 m_filterState(),
 m_callsign(),
 m_rfAck(),
-m_goertzel(),
-m_ctcss(),
+m_ctcssRX(),
+m_ctcssTX(),
 m_timeoutTone(),
 m_state(FS_LISTENING),
 m_callsignAtStart(false),
@@ -67,7 +67,7 @@ m_hangTimer()
 
 void CFM::samples(q15_t* samples, uint8_t length)
 {
-  bool validSignal = m_goertzel.process(samples, length);
+  bool validSignal = m_ctcssRX.process(samples, length);
 
   stateMachine(validSignal, length);
 
@@ -92,7 +92,7 @@ void CFM::samples(q15_t* samples, uint8_t length)
   q15_t output[RX_BLOCK_SIZE];
   ::arm_fir_fast_q15(&m_filter, samples, output, length);
 
-  m_ctcss.getAudio(output, length);
+  m_ctcssTX.getAudio(output, length);
 
   io.write(STATE_FM, output, length);
 }
@@ -137,9 +137,11 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
 
   m_timeoutTone.setParams(timeoutLevel);
 
-  m_goertzel.setParams(ctcssFrequency, ctcssThreshold);
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold);
+  if (ret != 0U)
+    return ret;
 
-  return m_ctcss.setParams(ctcssFrequency, ctcssLevel);
+  return m_ctcssTX.setParams(ctcssFrequency, ctcssLevel);
 }
 
 void CFM::stateMachine(bool validSignal, uint8_t length)

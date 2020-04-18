@@ -18,16 +18,18 @@
 
 #include "Config.h"
 #include "Globals.h"
-#include "FMGoertzel.h"
+#include "FMCTCSSRX.h"
 
-CFMGoertzel::CFMGoertzel()
+CFMCTCSSRX::CFMCTCSSRX()
 {
 }
 
-void CFMGoertzel::setParams(uint8_t frequency, uint8_t threshold)
+uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
 {
+  return 0U;
 }
 
-bool CFMGoertzel::process(const q15_t* samples, uint8_t length)
+bool CFMCTCSSRX::process(const q15_t* samples, uint8_t length)
 {
+  return false;
 }

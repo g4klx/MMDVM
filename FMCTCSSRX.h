@@ -16,16 +16,16 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMGoertzel_H)
-#define  FMGoertzel_H
+#if !defined(FMCTCSSRX_H)
+#define  FMCTCSSRX_H
 
 #include "Config.h"
 
-class CFMGoertzel {
+class CFMCTCSSRX {
 public:
-  CFMGoertzel();
+  CFMCTCSSRX();
 
-  void setParams(uint8_t frequency, uint8_t threshold);
+  uint8_t setParams(uint8_t frequency, uint8_t threshold);
 
   bool process(const q15_t* samples, uint8_t length);
 

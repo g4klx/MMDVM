@@ -21,7 +21,7 @@
 
 #include "Config.h"
 
-#include "FMGoertzel.h"
+#include "FMCTCSSRX.h"
 #include "FMCTCSSTX.h"
 #include "FMTimeout.h"
 #include "FMKeyer.h"
@@ -56,8 +56,8 @@ private:
   q15_t                m_filterState[230U];           // NoTaps + BlockSize - 1, 201 + 20 - 1 plus some spare
   CFMKeyer             m_callsign;
   CFMKeyer             m_rfAck;
-  CFMGoertzel          m_goertzel;
-  CFMCTCSSTX           m_ctcss;
+  CFMCTCSSRX           m_ctcssRX;
+  CFMCTCSSTX           m_ctcssTX;
   CFMTimeout           m_timeoutTone;
   FM_STATE             m_state;
   bool                 m_callsignAtStart;
