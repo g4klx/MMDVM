@@ -103,6 +103,7 @@ void CFM::process()
 
 void CFM::reset()
 {
+  m_ctcssRX.reset();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t level, bool callsignAtStart, bool callsignAtEnd)
