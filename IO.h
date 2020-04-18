@@ -120,6 +120,7 @@ private:
   void setP25Int(bool on);
   void setNXDNInt(bool on);
   void setPOCSAGInt(bool on);
+  void setFMInt(bool on);
   
   void delayInt(unsigned int dly);
 };

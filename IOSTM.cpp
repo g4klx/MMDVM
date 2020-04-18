@@ -1,7 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016,2017,2018 by Andy Uribe CA6JAU
- *   Copyright (C) 2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017,2018,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -42,8 +42,8 @@ POCSAG   PB12   output           CN10 Pin16
 
 MDSTAR   PC4    output           CN10 Pin34
 MDMR     PC5    output           CN10 Pin6
-MYSF     PC2    output           CN7 Pin35
-MP25     PC3    output           CN7 Pin37
+MYSF     PC2    output           CN7  Pin35
+MP25     PC3    output           CN7  Pin37
 MNXDN    PC6    output           CN10 Pin4
 MPOCSAG  PC8    output           CN10 Pin2
 
@@ -1434,6 +1434,23 @@ void CIO::setPOCSAGInt(bool on)
    GPIO_WriteBit(PORT_POCSAG,  PIN_POCSAG, on ? Bit_SET : Bit_RESET);
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
    GPIO_WriteBit(PORT_MPOCSAG, PIN_MPOCSAG, on ? Bit_SET : Bit_RESET);
+#endif
+#endif
+}
+
+void CIO::setFMInt(bool on)
+{
+#if defined(USE_ALTERNATE_FM_LEDS)
+   GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_YSF,   PIN_YSF,   on ? Bit_SET : Bit_RESET);
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
+   GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_MYSF,   PIN_MYSF,   on ? Bit_SET : Bit_RESET);
+#endif
+#else
+   GPIO_WriteBit(PORT_FM,  PIN_FM, on ? Bit_SET : Bit_RESET);
+#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
+   GPIO_WriteBit(PORT_MFM, PIN_MFM, on ? Bit_SET : Bit_RESET);
 #endif
 #endif
 }

@@ -169,23 +169,33 @@ void CIO::selfTest()
   delayInt(250);
   setP25Int(true);
 
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
   delayInt(250);
   setNXDNInt(true);
+#endif
 
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
   delayInt(250);
   setPOCSAGInt(true);
+#endif
 
+#if !defined(USE_ALTERNATE_FM_LEDS)
   delayInt(250);
   setFMInt(true);
 
   delayInt(250);
   setFMInt(false);
+#endif
 
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
   delayInt(250);
   setPOCSAGInt(false);
+#endif
 
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
   delayInt(250);
   setNXDNInt(false);
+#endif
 
   delayInt(250);
   setP25Int(false);
