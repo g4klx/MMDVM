@@ -32,11 +32,11 @@ public:
   void reset();
 
 private:
- q31_t     m_coeff;
- uint16_t  m_threshold;
+ long      m_coeff;
+ long      m_thresholdSquared;
  uint16_t  m_count;
- q31_t     m_q0;
- q31_t     m_q1;
+ long      m_q0;
+ long      m_q1;
  bool      m_result;
 };
 
