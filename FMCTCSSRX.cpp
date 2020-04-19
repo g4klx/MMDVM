@@ -118,11 +118,8 @@ bool CFMCTCSSRX::process(const q15_t* samples, uint8_t length)
     q31_t t2 = __SSAT(t1 >> 32, 31);
     q31_t t3 = t2 * 2;
 
-    // Convert input data to Q31 from Q15
-    q31_t t4 = __SSAT(samples[i] << 16, 31);
-
     // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + samples[i]
-    m_q0 = t3 - q2 + t4;
+    m_q0 = t3 - q2 + samples[i];
 
     m_count++;
     if (m_count == N) {
