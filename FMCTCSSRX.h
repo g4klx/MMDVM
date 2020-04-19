@@ -27,16 +27,16 @@ public:
 
   uint8_t setParams(uint8_t frequency, uint8_t threshold);
 
-  bool process(const q15_t* samples, uint8_t length);
+  bool process(q15_t* samples, uint8_t length);
 
   void reset();
 
 private:
- q31_t     m_coeff;
- uint16_t  m_threshold;
+ float32_t m_coeff;
+ float32_t m_threshold;
  uint16_t  m_count;
- q31_t     m_q0;
- q31_t     m_q1;
+ float32_t m_q0;
+ float32_t m_q1;
  bool      m_result;
 };
 
