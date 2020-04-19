@@ -21,59 +21,59 @@
 #include "FMCTCSSRX.h"
 
 const struct CTCSS_TABLE {
-  uint8_t   frequency;
-  float32_t coeff;
+  uint8_t frequency;
+  q31_t   coeffDivTwo;
 } CTCSS_TABLE_DATA[] = {
-  { 67U, 1.999692},
-  { 69U, 1.999671},
-  { 71U, 1.999646},
-  { 74U, 1.999621},
-  { 77U, 1.999594},
-  { 79U, 1.999565},
-  { 82U, 1.999534},
-  { 85U, 1.999500},
-  { 88U, 1.999463},
-  { 91U, 1.999426},
-  { 94U, 1.999384},
-  { 97U, 1.999350},
-  {100U, 1.999315},
-  {103U, 1.999266},
-  {107U, 1.999212},
-  {110U, 1.999157},
-  {114U, 1.999097},
-  {118U, 1.999033},
-  {123U, 1.998963},
-  {127U, 1.998889},
-  {131U, 1.998810},
-  {136U, 1.998723},
-  {141U, 1.998632},
-  {146U, 1.998535},
-  {151U, 1.998429},
-  {156U, 1.998317},
-  {159U, 1.998250},
-  {162U, 1.998197},
-  {165U, 1.998123},
-  {167U, 1.998068},
-  {171U, 1.997989},
-  {173U, 1.997930},
-  {177U, 1.997846},
-  {179U, 1.997782},
-  {183U, 1.997693},
-  {186U, 1.997624},
-  {189U, 1.997529},
-  {192U, 1.997453},
-  {196U, 1.997351},
-  {199U, 1.997273},
-  {203U, 1.997162},
-  {206U, 1.997078},
-  {210U, 1.996958},
-  {218U, 1.996741},
-  {225U, 1.996510},
-  {229U, 1.996404},
-  {233U, 1.996261},
-  {241U, 1.995994},
-  {250U, 1.995708},
-  {254U, 1.995576}};
+  { 67U, 2147153298},
+  { 69U, 2147130228},
+  { 71U, 2147103212},
+  { 74U, 2147076297},
+  { 77U, 2147047330},
+  { 79U, 2147016195},
+  { 82U, 2146982775},
+  { 85U, 2146946945},
+  { 88U, 2146907275},
+  { 91U, 2146867538},
+  { 94U, 2146822298},
+  { 97U, 2146785526},
+  {100U, 2146747759},
+  {103U, 2146695349},
+  {107U, 2146637984},
+  {110U, 2146578604},
+  {114U, 2146513835},
+  {118U, 2146445080},
+  {123U, 2146370355},
+  {127U, 2146291161},
+  {131U, 2146205372},
+  {136U, 2146112589},
+  {141U, 2146014479},
+  {146U, 2145910829},
+  {151U, 2145796971},
+  {156U, 2145676831},
+  {159U, 2145604646},
+  {162U, 2145547790},
+  {165U, 2145468230},
+  {167U, 2145409363},
+  {171U, 2145324517},
+  {173U, 2145261046},
+  {177U, 2145170643},
+  {179U, 2145102321},
+  {183U, 2145006080},
+  {186U, 2144932648},
+  {189U, 2144830280},
+  {192U, 2144748638},
+  {196U, 2144639788},
+  {199U, 2144555290},
+  {203U, 2144436713},
+  {206U, 2144346237},
+  {210U, 2144217348},
+  {218U, 2143983951},
+  {225U, 2143735870},
+  {229U, 2143622139},
+  {233U, 2143469001},
+  {241U, 2143182299},
+  {250U, 2142874683},
+  {254U, 2142733729}};
 
 const uint8_t CTCSS_TABLE_DATA_LEN = 50U;
 
@@ -81,11 +81,11 @@ const uint8_t CTCSS_TABLE_DATA_LEN = 50U;
 const uint16_t N = 24000U / 4U;
 
 CFMCTCSSRX::CFMCTCSSRX() :
-m_coeff(0.0),
-m_threshold(0.0),
+m_coeffDivTwo(0),
+m_threshold(0U),
 m_count(0U),
-m_q0(0.0),
-m_q1(0.0),
+m_q0(0),
+m_q1(0),
 m_result(false)
 {
 }
@@ -94,36 +94,60 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
 {
   for (uint8_t i = 0U; i < CTCSS_TABLE_DATA_LEN; i++) {
     if (CTCSS_TABLE_DATA[i].frequency == frequency) {
-      m_coeff = CTCSS_TABLE_DATA[i].coeff;
+      m_coeffDivTwo = CTCSS_TABLE_DATA[i].coeffDivTwo;
       break;
     }
   }
 
-  if (m_coeff == 0.0)
+  if (m_coeffDivTwo == 0)
     return 4U;
 
-  m_threshold = float32_t(threshold * threshold);
+  m_threshold = threshold * threshold;
 
   return 0U;
 }
 
-bool CFMCTCSSRX::process(q15_t* samples, uint8_t length)
+bool CFMCTCSSRX::process(const q15_t* samples, uint8_t length)
 {
-  float32_t data[RX_BLOCK_SIZE];
-  ::arm_q15_to_float(samples, data, length);
-
   for (unsigned int i = 0U; i < length; i++) {
-    float32_t q2 = m_q1;
+    q31_t q2 = m_q1;
     m_q1 = m_q0;
-    m_q0 = m_coeff * m_q1 - q2 + data[i];
+
+    // Q31 multiplication, t3 = m_coeffDivTwo * 2 * m_q1
+    q63_t t1 = m_coeffDivTwo * m_q1;
+    q31_t t2 = __SSAT(t1 >> 32, 31);
+    q31_t t3 = t2 * 2;
+
+    // Convert input data to Q31 from Q15
+    q31_t t4 = __SSAT(samples[i] << 16, 31);
+
+    // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + samples[i]
+    m_q0 = t3 - q2 + t4;
 
     m_count++;
     if (m_count == N) {
-      float32_t value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeff;
+      // Q31 multiplication, t2 = m_q0 * m_q0
+      q63_t t1 = m_q0 * m_q0;
+      q31_t t2 = __SSAT(t1 >> 32, 31);
+
+      // Q31 multiplication, t4 = m_q0 * m_q0
+      q63_t t3 = m_q1 * m_q1;
+      q31_t t4 = __SSAT(t3 >> 32, 31);
+
+      // Q31 multiplication, t9 = m_q0 * m_q1 * m_coeffDivTwo * 2
+      q63_t t5 = m_q0 * m_q1;
+      q31_t t6 = __SSAT(t5 >> 32, 31);
+      q63_t t7 = t6 * m_coeffDivTwo;
+      q31_t t8 = __SSAT(t7 >> 32, 31);
+      q31_t t9  = t8 * 2;
+
+      // value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeffDivTwo * 2
+      q31_t value = t2 + t4 - t9;
+
       m_result = value >= m_threshold;
       m_count = 0U;
-      m_q0 = 0.0F;
-      m_q1 = 0.0F;
+      m_q0 = 0;
+      m_q1 = 0;
     }
   }
 
@@ -132,8 +156,8 @@ bool CFMCTCSSRX::process(q15_t* samples, uint8_t length)
 
 void CFMCTCSSRX::reset()
 {
-  m_q0 = 0.0;
-  m_q1 = 0.0;
+  m_q0 = 0;
+  m_q1 = 0;
   m_result = false;
   m_count  = 0U;
 }
