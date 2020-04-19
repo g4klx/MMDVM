@@ -22,58 +22,58 @@
 
 const struct CTCSS_TABLE {
   uint8_t frequency;
-  q31_t   coeffDivTwo;
+  q31_t   coeff;
 } CTCSS_TABLE_DATA[] = {
-  { 67U, 2147153298},
-  { 69U, 2147130228},
-  { 71U, 2147103212},
-  { 74U, 2147076297},
-  { 77U, 2147047330},
-  { 79U, 2147016195},
-  { 82U, 2146982775},
-  { 85U, 2146946945},
-  { 88U, 2146907275},
-  { 91U, 2146867538},
-  { 94U, 2146822298},
-  { 97U, 2146785526},
-  {100U, 2146747759},
-  {103U, 2146695349},
-  {107U, 2146637984},
-  {110U, 2146578604},
-  {114U, 2146513835},
-  {118U, 2146445080},
-  {123U, 2146370355},
-  {127U, 2146291161},
-  {131U, 2146205372},
-  {136U, 2146112589},
-  {141U, 2146014479},
-  {146U, 2145910829},
-  {151U, 2145796971},
-  {156U, 2145676831},
-  {159U, 2145604646},
-  {162U, 2145547790},
-  {165U, 2145468230},
-  {167U, 2145409363},
-  {171U, 2145324517},
-  {173U, 2145261046},
-  {177U, 2145170643},
-  {179U, 2145102321},
-  {183U, 2145006080},
-  {186U, 2144932648},
-  {189U, 2144830280},
-  {192U, 2144748638},
-  {196U, 2144639788},
-  {199U, 2144555290},
-  {203U, 2144436713},
-  {206U, 2144346237},
-  {210U, 2144217348},
-  {218U, 2143983951},
-  {225U, 2143735870},
-  {229U, 2143622139},
-  {233U, 2143469001},
-  {241U, 2143182299},
-  {250U, 2142874683},
-  {254U, 2142733729}};
+  { 67U, 131052},
+  { 69U, 131051},
+  { 71U, 131049},
+  { 74U, 131048},
+  { 77U, 131046},
+  { 79U, 131044},
+  { 82U, 131042},
+  { 85U, 131040},
+  { 88U, 131037},
+  { 91U, 131035},
+  { 94U, 131032},
+  { 97U, 131030},
+  {100U, 131028},
+  {103U, 131024},
+  {107U, 131021},
+  {110U, 131017},
+  {114U, 131013},
+  {118U, 131009},
+  {123U, 131005},
+  {127U, 131000},
+  {131U, 130994},
+  {136U, 130989},
+  {141U, 130983},
+  {146U, 130977},
+  {151U, 130970},
+  {156U, 130962},
+  {159U, 130958},
+  {162U, 130954},
+  {165U, 130949},
+  {167U, 130946},
+  {171U, 130941},
+  {173U, 130937},
+  {177U, 130931},
+  {179U, 130927},
+  {183U, 130921},
+  {186U, 130917},
+  {189U, 130911},
+  {192U, 130906},
+  {196U, 130899},
+  {199U, 130894},
+  {203U, 130887},
+  {206U, 130881},
+  {210U, 130873},
+  {218U, 130859},
+  {225U, 130844},
+  {229U, 130837},
+  {233U, 130827},
+  {241U, 130810},
+  {250U, 130791},
+  {254U, 130783}};
 
 const uint8_t CTCSS_TABLE_DATA_LEN = 50U;
 
@@ -81,7 +81,7 @@ const uint8_t CTCSS_TABLE_DATA_LEN = 50U;
 const uint16_t N = 24000U / 4U;
 
 CFMCTCSSRX::CFMCTCSSRX() :
-m_coeffDivTwo(0),
+m_coeff(0),
 m_threshold(0U),
 m_count(0U),
 m_q0(0),
@@ -94,12 +94,12 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
 {
   for (uint8_t i = 0U; i < CTCSS_TABLE_DATA_LEN; i++) {
     if (CTCSS_TABLE_DATA[i].frequency == frequency) {
-      m_coeffDivTwo = CTCSS_TABLE_DATA[i].coeffDivTwo;
+      m_coeff = CTCSS_TABLE_DATA[i].coeff;
       break;
     }
   }
 
-  if (m_coeffDivTwo == 0)
+  if (m_coeff == 0)
     return 4U;
 
   m_threshold = threshold * threshold;
@@ -113,13 +113,12 @@ bool CFMCTCSSRX::process(const q15_t* samples, uint8_t length)
     q31_t q2 = m_q1;
     m_q1 = m_q0;
 
-    // Q31 multiplication, t3 = m_coeffDivTwo * 2 * m_q1
-    q63_t t1 = m_coeffDivTwo * m_q1;
+    // Q31 multiplication, t2 = m_coeff * m_q1
+    q63_t t1 = m_coeff * m_q1;
     q31_t t2 = __SSAT(t1 >> 32, 31);
-    q31_t t3 = t2 * 2;
 
-    // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + samples[i]
-    m_q0 = t3 - q2 + samples[i];
+    // m_q0 = m_coeff * m_q1 - q2 + samples[i]
+    m_q0 = t2 - q2 + samples[i];
 
     m_count++;
     if (m_count == N) {
@@ -131,15 +130,14 @@ bool CFMCTCSSRX::process(const q15_t* samples, uint8_t length)
       q63_t t3 = m_q1 * m_q1;
       q31_t t4 = __SSAT(t3 >> 32, 31);
 
-      // Q31 multiplication, t9 = m_q0 * m_q1 * m_coeffDivTwo * 2
+      // Q31 multiplication, t8 = m_q0 * m_q1 * m_coeff
       q63_t t5 = m_q0 * m_q1;
       q31_t t6 = __SSAT(t5 >> 32, 31);
-      q63_t t7 = t6 * m_coeffDivTwo;
+      q63_t t7 = t6 * m_coeff;
       q31_t t8 = __SSAT(t7 >> 32, 31);
-      q31_t t9  = t8 * 2;
 
-      // value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeffDivTwo * 2
-      q31_t value = t2 + t4 - t9;
+      // value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeff
+      q31_t value = t2 + t4 - t8;
 
       m_result = value >= m_threshold;
       m_count = 0U;
