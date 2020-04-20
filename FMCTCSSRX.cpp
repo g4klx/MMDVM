@@ -102,7 +102,7 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
   if (m_coeff == 0.0F)
     return 4U;
 
-  m_threshold = float32_t(threshold * threshold);
+  m_threshold = float32_t(threshold);
 
   return 0U;
 }
