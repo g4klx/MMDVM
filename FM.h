@@ -26,6 +26,7 @@
 #include "FMTimeout.h"
 #include "FMKeyer.h"
 #include "FMTimer.h"
+#include "FMRB.h"
 
 enum FM_STATE {
   FS_LISTENING,
@@ -69,6 +70,7 @@ private:
   CFMTimer             m_ackMinTimer;
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
+  CFMRB                m_ringBuffer;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);

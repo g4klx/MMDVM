@@ -31,6 +31,8 @@ q15_t FILTER_COEFFS[] = {
 
 const uint16_t FILTER_COEFFS_LEN = 101U;
 
+const uint16_t OUTPUT_BUFFER_SIZE = 1000U;
+
 CFM::CFM() :
 m_filter(),
 m_filterState(),
@@ -48,7 +50,8 @@ m_holdoffTimer(),
 m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
-m_hangTimer()
+m_hangTimer(),
+m_ringBuffer(OUTPUT_BUFFER_SIZE)
 {
   ::memset(m_filterState, 0x00U, 230U * sizeof(q15_t));
 
@@ -86,11 +89,28 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
   m_ctcssTX.getAudio(output, length);
 
-  io.write(STATE_FM, output, length);
+  for (uint8_t i = 0U; i < length; i++) {
+    bool ret = m_ringBuffer.put(output[i]);
+    if (!ret) {
+      DEBUG1("Overflow in the FM ring buffer");
+      break;
+    }
+  }
 }
 
 void CFM::process()
 {
+  uint16_t space = io.getSpace();
+  uint16_t data  = m_ringBuffer.getData();
+  if (data < space)
+    space = data;
+
+  for (uint16_t i = 0U; i < space; i++) {
+    q15_t sample;
+    m_ringBuffer.get(sample);
+
+    io.write(STATE_FM, &sample, 1U);
+  }
 }
 
 void CFM::reset()
