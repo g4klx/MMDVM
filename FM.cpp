@@ -75,7 +75,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     return;
 
   // Only let audio through when relaying audio
-  if (m_state != FS_RELAYING) {
+  if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
     for (uint8_t i = 0U; i < length; i++)
       samples[i] = 0;
   }

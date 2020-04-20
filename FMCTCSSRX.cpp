@@ -21,77 +21,71 @@
 #include "FMCTCSSRX.h"
 
 const struct CTCSS_TABLE {
-  uint8_t frequency;
-  long   coeff;
+  uint8_t   frequency;
+  float32_t coeff;
 } CTCSS_TABLE_DATA[] = {
-  {67, 65527},
-{69, 65526},
-{71, 65525},
-{74, 65524},
-{77, 65523},
-{79, 65522},
-{82, 65521},
-{85, 65520},
-{88, 65519},
-{91, 65518},
-{94, 65517},
-{97, 65516},
-{100, 65514},
-{103, 65513},
-{107, 65511},
-{110, 65509},
-{114, 65507},
-{123, 65503},
-{127, 65501},
-{131, 65498},
-{136, 65495},
-{141, 65492},
-{146, 65489},
-{150, 65487},
-{151, 65486},
-{156, 65482},
-{159, 65480},
-{162, 65478},
-{165, 65476},
-{167, 65474},
-{171, 65472},
-{173, 65470},
-{177, 65467},
-{179, 65465},
-{183, 65462},
-{186, 65460},
-{188, 65458},
-{189, 65457},
-{192, 65454},
-{196, 65451},
-{199, 65448},
-{203, 65445},
-{206, 65442},
-{210, 65438},
-{213, 65435},
-{218, 65431},
-{221, 65428},
-{225, 65424},
-{229, 65420},
-{233, 65416},
-{237, 65412},
-{241, 65407},
-{245, 65403},
-{250, 65398},
-{254, 65393}
-};
+  { 67U, 1.999692F},
+  { 69U, 1.999671F},
+  { 71U, 1.999646F},
+  { 74U, 1.999621F},
+  { 77U, 1.999594F},
+  { 79U, 1.999565F},
+  { 82U, 1.999534F},
+  { 85U, 1.999500F},
+  { 88U, 1.999463F},
+  { 91U, 1.999426F},
+  { 94U, 1.999384F},
+  { 97U, 1.999350F},
+  {100U, 1.999315F},
+  {103U, 1.999266F},
+  {107U, 1.999212F},
+  {110U, 1.999157F},
+  {114U, 1.999097F},
+  {118U, 1.999033F},
+  {123U, 1.998963F},
+  {127U, 1.998889F},
+  {131U, 1.998810F},
+  {136U, 1.998723F},
+  {141U, 1.998632F},
+  {146U, 1.998535F},
+  {151U, 1.998429F},
+  {156U, 1.998317F},
+  {159U, 1.998250F},
+  {162U, 1.998197F},
+  {165U, 1.998123F},
+  {167U, 1.998068F},
+  {171U, 1.997989F},
+  {173U, 1.997930F},
+  {177U, 1.997846F},
+  {179U, 1.997782F},
+  {183U, 1.997693F},
+  {186U, 1.997624F},
+  {189U, 1.997529F},
+  {192U, 1.997453F},
+  {196U, 1.997351F},
+  {199U, 1.997273F},
+  {203U, 1.997162F},
+  {206U, 1.997078F},
+  {210U, 1.996958F},
+  {218U, 1.996741F},
+  {225U, 1.996510F},
+  {229U, 1.996404F},
+  {233U, 1.996261F},
+  {241U, 1.995994F},
+  {250U, 1.995708F},
+  {254U, 1.995576F}};
 
-const uint8_t CTCSS_TABLE_DATA_LEN = 55U;
+const uint8_t CTCSS_TABLE_DATA_LEN = 50U;
 
 // 4Hz bandwidth
 const uint16_t N = 24000U / 4U;
 
 CFMCTCSSRX::CFMCTCSSRX() :
-m_coeff(0),
-m_thresholdSquared(0U),
+m_coeff(0.0F),
+m_threshold(0.0F),
 m_count(0U),
-m_q0(0),
-m_q1(0),
+m_q0(0.0F),
+m_q1(0.0F),
 m_result(false)
 {
 }
@@ -105,35 +99,31 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
     }
   }
 
-  if (m_coeff == 0)
+  if (m_coeff == 0.0F)
     return 4U;
 
-  m_thresholdSquared = (long)(threshold * threshold);
+  m_threshold = float32_t(threshold * threshold);
 
   return 0U;
 }
 
-bool CFMCTCSSRX::process(const q15_t* samples, uint8_t length)
+bool CFMCTCSSRX::process(q15_t* samples, uint8_t length)
 {
+  float32_t data[RX_BLOCK_SIZE];
+  ::arm_q15_to_float(samples, data, length);
+
   for (unsigned int i = 0U; i < length; i++) {
-
-    long sampleLong = (long)samples[i];
-
-    long q2 = m_q1;
+    float32_t q2 = m_q1;
     m_q1 = m_q0;
-    m_q0 = m_coeff * m_q1 - q2 + sampleLong;
+    m_q0 = m_coeff * m_q1 - q2 + data[i];
 
     m_count++;
-    if(m_count == N) {
-      m_count = 0;
-      if(!m_result) {
-        long magnitudeSquared = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeff;
-        if(magnitudeSquared >= m_thresholdSquared) {
-          m_result = magnitudeSquared >= m_thresholdSquared;
-          m_q0 = 0;
-          m_q1 = 0;
-        }
-      }
+    if (m_count == N) {
+      float32_t value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeff;
+      m_result = value >= m_threshold;
+      m_count = 0U;
+      m_q0 = 0.0F;
+      m_q1 = 0.0F;
     }
   }
 
@@ -142,8 +132,8 @@ bool CFMCTCSSRX::process(const q15_t* samples, uint8_t length)
 
 void CFMCTCSSRX::reset()
 {
-  m_q0 = 0;
-  m_q1 = 0;
+  m_q0 = 0.0F;
+  m_q1 = 0.0F;
   m_result = false;
   m_count  = 0U;
 }
