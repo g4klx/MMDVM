@@ -53,7 +53,7 @@ public:
 
 private:
   arm_fir_instance_q15 m_filter;
-  q15_t                m_filterState[230U];           // NoTaps + BlockSize - 1, 201 + 20 - 1 plus some spare
+  q15_t                m_filterState[130U];           // NoTaps + BlockSize - 1, 101 + 20 - 1 plus some spare
   CFMKeyer             m_callsign;
   CFMKeyer             m_rfAck;
   CFMCTCSSRX           m_ctcssRX;
