@@ -191,23 +191,25 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
 
 void CFM::listeningState(bool validSignal)
 {
-  if (m_kerchunkTimer.getTimeout() > 0U) {
-    DEBUG1("State to KERCHUNK");
-    m_state = FS_KERCHUNK;
-    m_kerchunkTimer.start();
-  } else {
-    DEBUG1("State to RELAYING");
-    m_state = FS_RELAYING;
-    if (m_callsignAtStart)
-      sendCallsign();
+  if(validSignal) {
+    if (m_kerchunkTimer.getTimeout() > 0U) {
+      DEBUG1("State to KERCHUNK");
+      m_state = FS_KERCHUNK;
+      m_kerchunkTimer.start();
+    } else {
+      DEBUG1("State to RELAYING");
+      m_state = FS_RELAYING;
+      if (m_callsignAtStart)
+        sendCallsign();
+    }
+
+    beginRelaying();
+
+    m_callsignTimer.start();
+
+    DEBUG1("Change to STATE_FM");
+    m_modemState = STATE_FM;
   }
-
-  beginRelaying();
-
-  m_callsignTimer.start();
-
-  DEBUG1("Change to STATE_FM");
-  m_modemState = STATE_FM;
 }
 
 void CFM::kerchunkState(bool validSignal)
