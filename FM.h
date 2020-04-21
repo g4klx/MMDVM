@@ -26,7 +26,6 @@
 #include "FMTimeout.h"
 #include "FMKeyer.h"
 #include "FMTimer.h"
-#include "FMRB.h"
 
 enum FM_STATE {
   FS_LISTENING,
@@ -42,7 +41,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(bool cos, q15_t* samples, uint8_t length);
+  void samples(q15_t* samples, uint8_t length);
 
   void process();
 

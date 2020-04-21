@@ -58,28 +58,27 @@ m_hangTimer()
   m_filter.pCoeffs = FILTER_COEFFS;
 }
 
-void CFM::samples(bool cos, q15_t* samples, uint8_t length)
+void CFM::samples(q15_t* samples, uint8_t length)
 {
   bool validCTCSS = m_ctcssRX.process(samples, length);
 
-  stateMachine(validCTCSS /*&& cos*/, length);
+  stateMachine(validCTCSS, length);
 
   if (m_modemState != STATE_FM)
     return;
 
   q15_t currentSample;
-  for(uint8_t i = 0U; i < length; i++) {
+  for (uint8_t i = 0U; i < length; i++) {
     currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
     // Only let audio through when relaying audio
-    if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
+    if (m_state != FS_RELAYING && m_state != FS_KERCHUNK)
       currentSample = 0U;
-    }
 
-    if(!m_callsign.isRunning())
+    if (!m_callsign.isRunning())
       currentSample += m_rfAck.getAudio();
     
-    if(!m_rfAck.isRunning())
+    if (!m_rfAck.isRunning())
       currentSample += m_callsign.getAudio();
 
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
@@ -197,7 +196,7 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
 
 void CFM::listeningState(bool validSignal)
 {
-  if(validSignal) {
+  if (validSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
       DEBUG1("State to KERCHUNK");
       m_state = FS_KERCHUNK;
