@@ -70,7 +70,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   q15_t currentSample;
   for(uint8_t i = 0U; i < length; i++) {
     currentSample = samples[i];//save to a local variable to avoid indirection on every access
-    
+
     // Only let audio through when relaying audio
     if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
       currentSample = 0U;
@@ -84,6 +84,9 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
+
+    //ToDo Filtering
+    //::arm_fir_fast_q15(&m_filter, samples + i, &currentSample, 1);
 
     currentSample += m_ctcssTX.getAudio();
 
