@@ -152,15 +152,15 @@ void CFMKeyer::getAudio(q15_t* samples, uint8_t length)
   }
 }
 
-q15_t CFMKeyer::getAudio(q15_t sample)
+q15_t CFMKeyer::getAudio()
 {
+  q15_t output = 0U;
   if (!m_wanted)
-    return 0U; //TODO F4FXL, not sure what to do here
-
-  q15_t output;
+    return 0U; 
+    
   bool b = READ_BIT(m_poBuffer, m_poPos);
   if (b)
-    output = sample + m_audio[m_audioPos];
+    output = m_audio[m_audioPos];
 
   m_audioPos++;
   if (m_audioPos >= m_audioLen)
@@ -171,7 +171,7 @@ q15_t CFMKeyer::getAudio(q15_t sample)
     m_poPos++;
     if (m_poPos >= m_poLen) {
       stop();
-      return sample;
+      return output;
     }
   }
 

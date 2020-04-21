@@ -29,7 +29,7 @@ public:
 
   void getAudio(q15_t* samples, uint8_t length);
 
-  q15_t getAudio(q15_t sample);
+  q15_t getAudio();
 
   void start();
   void stop();

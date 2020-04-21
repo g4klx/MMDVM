@@ -75,16 +75,16 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
       currentSample = 0U;
     }
 
-    /*if(!m_callsign.isRunning())
-      currentSample = m_rfAck.getAudio(currentSample);
+    if(!m_callsign.isRunning())
+      currentSample += m_rfAck.getAudio();
     
     if(!m_rfAck.isRunning())
-      currentSample = m_rfAck.getAudio(currentSample);
+      currentSample += m_callsign.getAudio();
 
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
-      currentSample = m_timeoutTone.getAudio(currentSample);*/
+      currentSample += m_timeoutTone.getAudio();
 
-    currentSample = m_ctcssTX.getAudio(currentSample);
+    currentSample += m_ctcssTX.getAudio();
 
     samples[i] = currentSample;
   }

@@ -62,8 +62,12 @@ void CFMTimeout::getAudio(q15_t* samples, uint8_t length)
   }
 }
 
-q15_t CFMTimeout::getAudio(q15_t sample)
+q15_t CFMTimeout::getAudio()
 {
+  q15_t sample = 0U;
+  if (!m_running)
+    return sample;
+
   if (m_pos > 12000U) {
     q31_t sample = BUSY_AUDIO[m_n] * m_level;
     sample = q15_t(__SSAT((sample >> 15), 16));
@@ -79,7 +83,7 @@ q15_t CFMTimeout::getAudio(q15_t sample)
   if (m_pos >= 24000U)
     m_pos = 0U;
 
-    return sample;
+  return sample;
 }
 
 void CFMTimeout::start()
