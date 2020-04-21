@@ -31,7 +31,6 @@ q15_t FILTER_COEFFS[] = {
 
 const uint16_t FILTER_COEFFS_LEN = 101U;
 
-const uint16_t OUTPUT_BUFFER_SIZE = 1000U;
 
 CFM::CFM() :
 m_filter(),
@@ -50,8 +49,7 @@ m_holdoffTimer(),
 m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
-m_hangTimer(),
-m_ringBuffer(OUTPUT_BUFFER_SIZE)
+m_hangTimer()
 {
   ::memset(m_filterState, 0x00U, 230U * sizeof(q15_t));
 
@@ -64,53 +62,42 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
   bool validCTCSS = m_ctcssRX.process(samples, length);
 
-  stateMachine(validCTCSS && cos, length);
+  stateMachine(validCTCSS /*&& cos*/, length);
 
   if (m_modemState != STATE_FM)
     return;
 
-  // Only let audio through when relaying audio
-  if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
-    for (uint8_t i = 0U; i < length; i++)
-      samples[i] = 0;
-  }
+  q15_t currentSample;
+  for(uint8_t i = 0U; i < length; i++) {
+    currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
-  if (!m_callsign.isRunning())
-    m_rfAck.getAudio(samples, length);
-
-  if (!m_rfAck.isRunning())
-    m_callsign.getAudio(samples, length);
-
-  if (!m_callsign.isRunning() && !m_rfAck.isRunning())
-    m_timeoutTone.getAudio(samples, length);
-
-  q15_t output[RX_BLOCK_SIZE];
-  ::arm_fir_fast_q15(&m_filter, samples, output, length);
-
-  m_ctcssTX.getAudio(output, length);
-
-  for (uint8_t i = 0U; i < length; i++) {
-    bool ret = m_ringBuffer.put(output[i]);
-    if (!ret) {
-      DEBUG1("Overflow in the FM ring buffer");
-      break;
+    // Only let audio through when relaying audio
+    if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
+      currentSample = 0U;
     }
+
+    if(!m_callsign.isRunning())
+      currentSample += m_rfAck.getAudio();
+    
+    if(!m_rfAck.isRunning())
+      currentSample += m_callsign.getAudio();
+
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+      currentSample += m_timeoutTone.getAudio();
+
+    //ToDo Filtering
+    //::arm_fir_fast_q15(&m_filter, samples + i, &currentSample, 1);
+
+    currentSample += m_ctcssTX.getAudio();
+
+    samples[i] = currentSample;
   }
+
+  io.write(STATE_FM, samples, length);
 }
 
 void CFM::process()
 {
-  uint16_t space = io.getSpace();
-  uint16_t data  = m_ringBuffer.getData();
-  if (data < space)
-    space = data;
-
-  for (uint16_t i = 0U; i < space; i++) {
-    q15_t sample;
-    m_ringBuffer.get(sample);
-
-    io.write(STATE_FM, &sample, 1U);
-  }
 }
 
 void CFM::reset()
@@ -210,23 +197,25 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
 
 void CFM::listeningState(bool validSignal)
 {
-  if (m_kerchunkTimer.getTimeout() > 0U) {
-    DEBUG1("State to KERCHUNK");
-    m_state = FS_KERCHUNK;
-    m_kerchunkTimer.start();
-  } else {
-    DEBUG1("State to RELAYING");
-    m_state = FS_RELAYING;
-    if (m_callsignAtStart)
-      sendCallsign();
+  if(validSignal) {
+    if (m_kerchunkTimer.getTimeout() > 0U) {
+      DEBUG1("State to KERCHUNK");
+      m_state = FS_KERCHUNK;
+      m_kerchunkTimer.start();
+    } else {
+      DEBUG1("State to RELAYING");
+      m_state = FS_RELAYING;
+      if (m_callsignAtStart)
+        sendCallsign();
+    }
+
+    beginRelaying();
+
+    m_callsignTimer.start();
+
+    DEBUG1("Change to STATE_FM");
+    m_modemState = STATE_FM;
   }
-
-  beginRelaying();
-
-  m_callsignTimer.start();
-
-  DEBUG1("Change to STATE_FM");
-  m_modemState = STATE_FM;
 }
 
 void CFM::kerchunkState(bool validSignal)

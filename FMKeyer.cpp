@@ -152,6 +152,32 @@ void CFMKeyer::getAudio(q15_t* samples, uint8_t length)
   }
 }
 
+q15_t CFMKeyer::getAudio()
+{
+  q15_t output = 0U;
+  if (!m_wanted)
+    return 0U; 
+    
+  bool b = READ_BIT(m_poBuffer, m_poPos);
+  if (b)
+    output = m_audio[m_audioPos];
+
+  m_audioPos++;
+  if (m_audioPos >= m_audioLen)
+    m_audioPos = 0U;
+  m_dotPos++;
+  if (m_dotPos >= m_dotLen) {
+    m_dotPos = 0U;
+    m_poPos++;
+    if (m_poPos >= m_poLen) {
+      stop();
+      return output;
+    }
+  }
+
+  return output;
+}
+
 void CFMKeyer::start()
 {
   if (isRunning())
