@@ -28,7 +28,7 @@ public:
   uint8_t setParams(uint8_t frequency, uint8_t level);
 
   void getAudio(q15_t* samples, uint8_t length);
-  inline q15_t getAudio(q15_t sample);
+  q15_t getAudio(q15_t sample);
 
 private:
   q15_t*   m_values;
