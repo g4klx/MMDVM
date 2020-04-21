@@ -31,7 +31,6 @@ q15_t FILTER_COEFFS[] = {
 
 const uint16_t FILTER_COEFFS_LEN = 101U;
 
-const uint16_t OUTPUT_BUFFER_SIZE = 1000U;
 
 CFM::CFM() :
 m_filter(),
@@ -50,8 +49,7 @@ m_holdoffTimer(),
 m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
-m_hangTimer(),
-m_ringBuffer(OUTPUT_BUFFER_SIZE)
+m_hangTimer()
 {
   ::memset(m_filterState, 0x00U, 230U * sizeof(q15_t));
 
@@ -69,50 +67,31 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   if (m_modemState != STATE_FM)
     return;
 
-  // Only let audio through when relaying audio
-  // if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
-  //   for (uint8_t i = 0U; i < length; i++)
-  //     samples[i] = 0;
-  // }
+  q15_t currentSample;
+  for(uint8_t i = 0U; i < length; i++) {
+    // Only let audio through when relaying audio
+    currentSample = samples[i];//save to a local variable to avoid indirection on every access
+    if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
+      currentSample = 0U;
+    }
 
-  /*if (!m_callsign.isRunning())
-    m_rfAck.getAudio(samples, length);
+    if(!m_callsign.isRunning())
+      currentSample = m_rfAck.getAudio(currentSample);
+    
+    if(!m_rfAck.isRunning())
+      currentSample = m_rfAck.getAudio(currentSample);
 
-  if (!m_rfAck.isRunning())
-    m_callsign.getAudio(samples, length);
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+      currentSample = m_timeoutTone.getAudio(currentSample);
 
-  if (!m_callsign.isRunning() && !m_rfAck.isRunning())
-    m_timeoutTone.getAudio(samples, length);
-
-  q15_t output[RX_BLOCK_SIZE];
-  ::arm_fir_fast_q15(&m_filter, samples, output, length);
-
-  m_ctcssTX.getAudio(output, length);*/
+    samples[i] = currentSample;
+  }
 
   io.write(STATE_FM, samples, length);
-
-  // for (uint8_t i = 0U; i < length; i++) {
-  //   bool ret = m_ringBuffer.put(output[i]);
-  //   if (!ret) {
-  //     DEBUG1("Overflow in the FM ring buffer");
-  //     break;
-  //   }
-  // }
 }
 
 void CFM::process()
 {
-  // uint16_t space = io.getSpace();
-  // uint16_t data  = m_ringBuffer.getData();
-  // if (data < space)
-  //   space = data;
-
-  // for (uint16_t i = 0U; i < space; i++) {
-  //   q15_t sample;
-  //   m_ringBuffer.get(sample);
-
-  //   io.write(STATE_FM, &sample, 1U);
-  // }
 }
 
 void CFM::reset()

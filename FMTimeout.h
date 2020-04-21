@@ -32,6 +32,8 @@ public:
 
   void getAudio(q15_t* samples, uint8_t length);
 
+  q15_t getAudio(q15_t sample);
+
 private:
   q15_t    m_level;
   bool     m_running;

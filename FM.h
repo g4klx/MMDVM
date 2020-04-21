@@ -70,7 +70,6 @@ private:
   CFMTimer             m_ackMinTimer;
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
-  CFMRB                m_ringBuffer;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);

@@ -125,3 +125,12 @@ void CFMCTCSSTX::getAudio(q15_t* samples, uint8_t length)
       m_n = 0U;
   }
 }
+
+q15_t CFMCTCSSTX::getAudio(q15_t sample)
+{
+  sample += m_values[m_n++];
+  if(m_n >= m_length)
+    m_n = 0U;
+  
+  return sample;
+}
