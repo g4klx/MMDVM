@@ -69,8 +69,9 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
   q15_t currentSample;
   for(uint8_t i = 0U; i < length; i++) {
-    // Only let audio through when relaying audio
     currentSample = samples[i];//save to a local variable to avoid indirection on every access
+    
+    // Only let audio through when relaying audio
     if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
       currentSample = 0U;
     }
