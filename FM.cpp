@@ -64,18 +64,18 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
   bool validCTCSS = m_ctcssRX.process(samples, length);
 
-  stateMachine(validCTCSS && cos, length);
+  stateMachine(validCTCSS /*&& cos*/, length);
 
   if (m_modemState != STATE_FM)
     return;
 
   // Only let audio through when relaying audio
-  if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
-    for (uint8_t i = 0U; i < length; i++)
-      samples[i] = 0;
-  }
+  // if (m_state != FS_RELAYING && m_state != FS_KERCHUNK) {
+  //   for (uint8_t i = 0U; i < length; i++)
+  //     samples[i] = 0;
+  // }
 
-  if (!m_callsign.isRunning())
+  /*if (!m_callsign.isRunning())
     m_rfAck.getAudio(samples, length);
 
   if (!m_rfAck.isRunning())
@@ -87,30 +87,32 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   q15_t output[RX_BLOCK_SIZE];
   ::arm_fir_fast_q15(&m_filter, samples, output, length);
 
-  m_ctcssTX.getAudio(output, length);
+  m_ctcssTX.getAudio(output, length);*/
 
-  for (uint8_t i = 0U; i < length; i++) {
-    bool ret = m_ringBuffer.put(output[i]);
-    if (!ret) {
-      DEBUG1("Overflow in the FM ring buffer");
-      break;
-    }
-  }
+  io.write(STATE_FM, samples, length);
+
+  // for (uint8_t i = 0U; i < length; i++) {
+  //   bool ret = m_ringBuffer.put(output[i]);
+  //   if (!ret) {
+  //     DEBUG1("Overflow in the FM ring buffer");
+  //     break;
+  //   }
+  // }
 }
 
 void CFM::process()
 {
-  uint16_t space = io.getSpace();
-  uint16_t data  = m_ringBuffer.getData();
-  if (data < space)
-    space = data;
+  // uint16_t space = io.getSpace();
+  // uint16_t data  = m_ringBuffer.getData();
+  // if (data < space)
+  //   space = data;
 
-  for (uint16_t i = 0U; i < space; i++) {
-    q15_t sample;
-    m_ringBuffer.get(sample);
+  // for (uint16_t i = 0U; i < space; i++) {
+  //   q15_t sample;
+  //   m_ringBuffer.get(sample);
 
-    io.write(STATE_FM, &sample, 1U);
-  }
+  //   io.write(STATE_FM, &sample, 1U);
+  // }
 }
 
 void CFM::reset()
