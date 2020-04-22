@@ -62,11 +62,11 @@ public:
   void reset();
 
 private:
- float32_t   m_coeff;
- float32_t   m_threshold;
- uint16_t    m_count;
- float32_t   m_q0;
- float32_t   m_q1;
+ q31_t      m_coeffDivTwo;
+ q31_t      m_threshold;
+ uint16_t   m_count;
+ q31_t      m_q0;
+ q31_t      m_q1;
  CTCSSState m_result;
 };
 
