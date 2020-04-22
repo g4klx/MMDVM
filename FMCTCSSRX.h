@@ -21,23 +21,52 @@
 
 #include "Config.h"
 
+enum CTCSSState : uint8_t
+{
+  CTS_READY = 1,
+  CTS_VALID = 2,
+  CTS_READY_VALID = CTS_READY | CTS_VALID
+};
+
+inline CTCSSState operator|(CTCSSState a, CTCSSState b)
+{
+  return static_cast<CTCSSState>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
+}
+
+inline CTCSSState operator&(CTCSSState a, CTCSSState b)
+{
+  return static_cast<CTCSSState>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
+}
+
+inline CTCSSState operator~(CTCSSState a)
+{
+  return static_cast<CTCSSState>(~(static_cast<uint8_t>(a)));
+}
+
+#define CTCSS_READY(a) ((a & CTS_READY) != 0)
+#define CTCSS_NOT_READY(a) ((a & CTS_READY) == 0)
+#define CTCSS_VALID(a) ((a & CTS_VALID) != 0)
+#define CTCSS_NOT_VALID(a) ((a & CTS_VALID) == 0)
+
 class CFMCTCSSRX {
 public:
   CFMCTCSSRX();
 
   uint8_t setParams(uint8_t frequency, uint8_t threshold);
+  
+  CTCSSState process(q15_t samples);
 
-  bool process(q15_t* samples, uint8_t length);
+  CTCSSState getState();
 
   void reset();
 
 private:
- float32_t m_coeff;
- float32_t m_threshold;
- uint16_t  m_count;
- float32_t m_q0;
- float32_t m_q1;
- bool      m_result;
+ float32_t   m_coeff;
+ float32_t   m_threshold;
+ uint16_t    m_count;
+ float32_t   m_q0;
+ float32_t   m_q1;
+ CTCSSState m_result;
 };
 
 #endif
