@@ -52,8 +52,8 @@ public:
   uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime);
 
 private:
-  arm_fir_instance_q15 m_filter;
-  q15_t                m_filterState[130U];           // NoTaps + BlockSize - 1, 101 + 20 - 1 plus some spare
+  q15_t*               m_filterBuffer;
+  uint8_t              m_filterPosition;
   CFMKeyer             m_callsign;
   CFMKeyer             m_rfAck;
   CFMCTCSSRX           m_ctcssRX;
@@ -81,6 +81,8 @@ private:
 
   void sendCallsign();
   void beginRelaying();
+
+  q15_t filter(q15_t sample);
 };
 
 #endif

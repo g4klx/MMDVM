@@ -30,8 +30,8 @@ const uint16_t FILTER_COEFFS_LEN = 51U;
 
 
 CFM::CFM() :
-m_filter(),
-m_filterState(),
+m_filterBuffer(NULL),
+m_filterPosition(0U),
 m_callsign(),
 m_rfAck(),
 m_ctcssRX(),
@@ -48,11 +48,7 @@ m_ackMinTimer(),
 m_ackDelayTimer(),
 m_hangTimer()
 {
-  ::memset(m_filterState, 0x00U, 230U * sizeof(q15_t));
-
-  m_filter.numTaps = FILTER_COEFFS_LEN;
-  m_filter.pState  = m_filterState;
-  m_filter.pCoeffs = FILTER_COEFFS;
+  m_filterBuffer = new q15_t[FILTER_COEFFS_LEN];
 }
 
 void CFM::samples(q15_t* samples, uint8_t length)
@@ -98,8 +94,7 @@ void CFM::samples(q15_t* samples, uint8_t length)
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
-    //ToDo Filtering
-    //::arm_fir_fast_q15(&m_filter, samples + i, &currentSample, 1);
+    currentSample = filter(currentSample);
 
     currentSample += m_ctcssTX.getAudio();
 
@@ -394,4 +389,27 @@ void CFM::beginRelaying()
 {
   m_timeoutTimer.start();
   m_ackMinTimer.start();
+}
+
+q15_t CFM::filter(q15_t sample)
+{
+  q15_t output = 0;
+
+  m_filterBuffer[m_filterPosition] = sample;
+
+  uint8_t iTaps = 0U;
+
+  for (int8_t i = m_filterPosition; i >= 0; i--) {
+    q31_t temp = FILTER_COEFFS[iTaps++] * m_filterBuffer[i];
+    output += q15_t(__SSAT((temp >> 15), 16));
+  }
+
+  for (int8_t i = FILTER_COEFFS_LEN - 1; i >= m_filterPosition; i--) {
+    q31_t temp = FILTER_COEFFS[iTaps++] * m_filterBuffer[i];
+    output += q15_t(__SSAT((temp >> 15), 16));
+  }
+
+  m_filterPosition = (m_filterPosition + 1U) % FILTER_COEFFS_LEN;
+
+  return output;
 }
