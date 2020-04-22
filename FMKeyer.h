@@ -25,10 +25,10 @@ class CFMKeyer {
 public:
   CFMKeyer();
 
-  uint8_t setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level);
+  uint8_t setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t highLevel, uint8_t lowLevel);
 
-  void getAudio(q15_t* samples, uint8_t length);
-  q15_t getAudio();
+  q15_t getHighAudio();
+  q15_t getLowAudio();
 
   void start();
   void stop();
@@ -42,9 +42,11 @@ private:
   uint16_t m_poPos;
   uint16_t m_dotLen;
   uint16_t m_dotPos;
-  q15_t*   m_audio;
+  bool*    m_audio;
   uint16_t m_audioLen;
   uint16_t m_audioPos;
+  q15_t    m_highLevel;
+  q15_t    m_lowLevel;
 };
 
 #endif

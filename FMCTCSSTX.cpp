@@ -115,17 +115,6 @@ uint8_t CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
   return 0U;
 }
 
-void CFMCTCSSTX::getAudio(q15_t* samples, uint8_t length)
-{
-  for (uint8_t i = 0U; i < length; i++) {
-    samples[i] += m_values[m_n];
-
-    m_n++;
-    if (m_n >= m_length)
-      m_n = 0U;
-  }
-}
-
 q15_t CFMCTCSSTX::getAudio()
 {
   q15_t sample = m_values[m_n++];

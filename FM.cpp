@@ -86,10 +86,14 @@ void CFM::samples(q15_t* samples, uint8_t length)
       currentSample = 0U;
 
     if (!m_callsign.isRunning())
-      currentSample += m_rfAck.getAudio();
+      currentSample += m_rfAck.getHighAudio();
     
-    if (!m_rfAck.isRunning())
-      currentSample += m_callsign.getAudio();
+    if (!m_rfAck.isRunning()) {
+      if (m_state == FS_LISTENING)
+        currentSample += m_callsign.getHighAudio();
+      else
+        currentSample += m_callsign.getLowAudio();
+    }
 
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
@@ -114,7 +118,7 @@ void CFM::reset()
   m_ctcssRX.reset();
 }
 
-uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t level, bool callsignAtStart, bool callsignAtEnd)
+uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd)
 {
   m_callsignAtStart = callsignAtStart;
   m_callsignAtEnd   = callsignAtEnd;
@@ -127,7 +131,7 @@ uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency
   m_holdoffTimer.setTimeout(holdoffTime, 0U);
   m_callsignTimer.setTimeout(callsignTime, 0U);
 
-  return m_callsign.setParams(callsign, speed, frequency, level);
+  return m_callsign.setParams(callsign, speed, frequency, highLevel, lowLevel);
 }
 
 uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
@@ -135,7 +139,7 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   m_ackDelayTimer.setTimeout(0U, delay);
   m_ackMinTimer.setTimeout(minTime, 0U);
 
-  return m_rfAck.setParams(rfAck, speed, frequency, level);
+  return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
 uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)

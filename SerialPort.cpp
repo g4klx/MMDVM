@@ -365,25 +365,26 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
 uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
 {
-  if (length < 7U)
+  if (length < 8U)
     return 4U;
 
   uint8_t  speed     = data[0U];;
   uint16_t frequency = data[1U] * 10U;
   uint8_t  time      = data[2U];
   uint8_t  holdoff   = data[3U];
-  uint8_t  level     = data[4U];
+  uint8_t  highLevel = data[4U];
+  uint8_t  lowLevel  = data[5U];
 
-  bool callAtStart = (data[5U] & 0x01U) == 0x01U;
-  bool callAtEnd   = (data[5U] & 0x02U) == 0x02U;
+  bool callAtStart = (data[6U] & 0x01U) == 0x01U;
+  bool callAtEnd   = (data[6U] & 0x02U) == 0x02U;
 
   char callsign[50U];
   uint8_t n = 0U;
-  for (uint8_t i = 6U; i < length; i++, n++)
+  for (uint8_t i = 7U; i < length; i++, n++)
     callsign[n] = data[i];
   callsign[n] = '\0';
 
-  return fm.setCallsign(callsign, speed, frequency, time, holdoff, level, callAtStart, callAtEnd);
+  return fm.setCallsign(callsign, speed, frequency, time, holdoff, highLevel, lowLevel, callAtStart, callAtEnd);
 }
 
 uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)

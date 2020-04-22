@@ -84,11 +84,13 @@ m_dotLen(0U),
 m_dotPos(0U),
 m_audio(NULL),
 m_audioLen(0U),
-m_audioPos(0U)
+m_audioPos(0U),
+m_highLevel(0U),
+m_lowLevel(0)
 {
 }
 
-uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t level)
+uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t highLevel, uint8_t lowLevel)
 {
   for (uint8_t i = 0U; text[i] != '\0'; i++) {
     for (uint8_t j = 0U; SYMBOL_LIST[j].c != 0U; j++) {
@@ -109,58 +111,60 @@ uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency,
     }
   }
 
-  q15_t value = q15_t(level * 128);
+  m_highLevel = q15_t(highLevel * 128);
+  m_lowLevel  = q15_t(lowLevel * 128);
 
   m_dotLen = 24000U / speed;   // In samples
 
   m_audioLen = 24000U / frequency; // In samples
 
-  m_audio = new q15_t[m_audioLen];
+  m_audio = new bool[m_audioLen];
 
   for (uint16_t i = 0U; i < m_audioLen; i++) {
     if (i < (m_audioLen / 2U))
-      m_audio[i] = value;
+      m_audio[i] = true;
     else
-      m_audio[i] = -value;
+      m_audio[i] = false;
   }
 
   return 0U;
 }
 
-void CFMKeyer::getAudio(q15_t* samples, uint8_t length)
-{
-  if (!m_wanted)
-    return;
-
-  for (uint8_t i = 0U; i < length; i++) {
-    bool b = READ_BIT(m_poBuffer, m_poPos);
-    if (b)
-      samples[i] += m_audio[m_audioPos];
-
-    m_audioPos++;
-    if (m_audioPos >= m_audioLen)
-      m_audioPos = 0U;
-    m_dotPos++;
-    if (m_dotPos >= m_dotLen) {
-      m_dotPos = 0U;
-      m_poPos++;
-      if (m_poPos >= m_poLen) {
-        stop();
-        return;
-      }
-    }
-  }
-}
-
-q15_t CFMKeyer::getAudio()
+q15_t CFMKeyer::getHighAudio()
 {
   q15_t output = 0U;
   if (!m_wanted)
-    return 0U; 
-    
+    return 0U;
+
   bool b = READ_BIT(m_poBuffer, m_poPos);
   if (b)
-    output = m_audio[m_audioPos];
+    output = m_audio[m_audioPos] ? m_highLevel : -m_highLevel;
+
+  m_audioPos++;
+  if (m_audioPos >= m_audioLen)
+    m_audioPos = 0U;
+  m_dotPos++;
+  if (m_dotPos >= m_dotLen) {
+    m_dotPos = 0U;
+    m_poPos++;
+    if (m_poPos >= m_poLen) {
+      stop();
+      return output;
+    }
+  }
+
+  return output;
+}
+
+q15_t CFMKeyer::getLowAudio()
+{
+  q15_t output = 0U;
+  if (!m_wanted)
+    return 0U;
+
+  bool b = READ_BIT(m_poBuffer, m_poPos);
+  if (b)
+    output = m_audio[m_audioPos] ? m_lowLevel : -m_lowLevel;
 
   m_audioPos++;
   if (m_audioPos >= m_audioLen)

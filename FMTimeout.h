@@ -30,8 +30,6 @@ public:
   void start();
   void stop();
 
-  void getAudio(q15_t* samples, uint8_t length);
-
   q15_t getAudio();
 
 private:
