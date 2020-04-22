@@ -86,7 +86,7 @@ m_threshold(0.0F),
 m_count(0U),
 m_q0(0.0F),
 m_q1(0.0F),
-m_result(false)
+m_result((CTCSSState)0U)
 {
 }
 
@@ -107,24 +107,32 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
   return 0U;
 }
 
-bool CFMCTCSSRX::process(q15_t* samples, uint8_t length)
+CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
-  for (unsigned int i = 0U; i < length; i++) {
-    float32_t q2 = m_q1;
-    m_q1 = m_q0;
-    m_q0 = m_coeff * m_q1 - q2 + float32_t(samples[i]) / 32768.0F;
+  m_result = m_result & (~CTS_READY);
+  float32_t q2 = m_q1;
+  m_q1 = m_q0;
+  m_q0 = m_coeff * m_q1 - q2 + float32_t(sample) / 32768.0F;
 
-    m_count++;
-    if (m_count == N) {
-      float32_t value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeff;
-      m_result = value >= m_threshold;
-      //DEBUG4("CTCSS value / threshold / result", value, m_threshold, m_result);
-      m_count = 0U;
-      m_q0 = 0.0F;
-      m_q1 = 0.0F;
-    }
+  m_count++;
+  if (m_count == N) {
+    float32_t value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeff;
+    m_result = m_result | CTS_READY;
+    if(value >= m_threshold)
+      m_result = m_result | CTS_VALID;
+    else
+      m_result = m_result & ~CTS_VALID;
+
+    m_count = 0U;
+    m_q0 = 0.0F;
+    m_q1 = 0.0F;
   }
 
+  return m_result;
+}
+
+CTCSSState CFMCTCSSRX::getState()
+{
   return m_result;
 }
 
@@ -132,6 +140,6 @@ void CFMCTCSSRX::reset()
 {
   m_q0 = 0.0F;
   m_q1 = 0.0F;
-  m_result = false;
+  m_result = (CTCSSState)0U;
   m_count  = 0U;
 }
