@@ -86,7 +86,7 @@ m_threshold(0.0F),
 m_count(0U),
 m_q0(0.0F),
 m_q1(0.0F),
-m_result((CTCSSState)0U)
+m_result(CTS_NONE)
 {
 }
 
@@ -118,7 +118,7 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
   if (m_count == N) {
     float32_t value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeff;
     m_result = m_result | CTS_READY;
-    if(value >= m_threshold)
+    if (value >= m_threshold)
       m_result = m_result | CTS_VALID;
     else
       m_result = m_result & ~CTS_VALID;
@@ -140,6 +140,6 @@ void CFMCTCSSRX::reset()
 {
   m_q0 = 0.0F;
   m_q1 = 0.0F;
-  m_result = (CTCSSState)0U;
+  m_result = CTS_NONE;
   m_count  = 0U;
 }

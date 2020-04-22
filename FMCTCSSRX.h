@@ -21,8 +21,9 @@
 
 #include "Config.h"
 
-enum CTCSSState : uint8_t
+enum CTCSSState
 {
+  CTS_NONE  = 0,
   CTS_READY = 1,
   CTS_VALID = 2,
   CTS_READY_VALID = CTS_READY | CTS_VALID

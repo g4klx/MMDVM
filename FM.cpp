@@ -60,36 +60,31 @@ m_hangTimer()
 
 void CFM::samples(q15_t* samples, uint8_t length)
 {
-  CTCSSState ctcssState;
-
-  bool validCTCSS = false;
-  q15_t currentSample;
   uint8_t i = 0;
-
   for (; i < length; i++) {
-    currentSample = samples[i];//save to a local variable to avoid indirection on every access
+    q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
-    ctcssState = m_ctcssRX.process(currentSample);
+    CTCSSState ctcssState = m_ctcssRX.process(currentSample);
 
-    if(CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
+    if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
       continue;
-    } else if(CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
+    } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
-      validCTCSS = CTCSS_VALID(ctcssState);
+      bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS, i + 1U);
       if (m_modemState != STATE_FM)
         continue;
-    } else if(CTCSS_READY(ctcssState) && m_modemState == STATE_FM) {
+    } else if (CTCSS_READY(ctcssState) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
-      validCTCSS = CTCSS_VALID(ctcssState);
+      bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS, i + 1U);
       if (m_modemState != STATE_FM)
         break;
-    } else if(CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
+    } else if (CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
-        validCTCSS = CTCSS_VALID(ctcssState);
+        bool validCTCSS = CTCSS_VALID(ctcssState);
         stateMachine(validCTCSS, i + 1U);
     }
     
@@ -114,7 +109,7 @@ void CFM::samples(q15_t* samples, uint8_t length)
     samples[i] = currentSample;
   }
 
-  if(m_modemState == STATE_FM)
+  if (m_modemState == STATE_FM)
     io.write(STATE_FM, samples, i);//only write the actual number of processed samples to IO
 }
 
