@@ -111,8 +111,6 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
   m_result = m_result & (~CTS_READY);
 
-  q31_t samp = q31_t(sample) << 16;
-
   q31_t q2 = m_q1;
   m_q1 = m_q0;
 
@@ -121,8 +119,8 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
   q31_t t2 = __SSAT((t1 >> 31), 31);
   q31_t t3 = t2 * 2;
 
-  // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + samp
-  m_q0 = t3 - q2 + samp;
+  // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + sample
+  m_q0 = t3 - q2 + q31_t(sample);
 
   m_count++;
   if (m_count == N) {
