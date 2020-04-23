@@ -20,18 +20,11 @@
 #include "Globals.h"
 #include "FM.h"
 
-q15_t FILTER_COEFFS[] = {
-   -630,   -842,   -846,   -634,   -312,    -53,    -14,   -251,   -683,  -1113,  -1322,  -1179,   -718,   -147,    234,    172,
-   -399,  -1298,  -2124,  -2402,  -1783,   -201,   2051,   4399,   6169,   6827,   6169,   4399,   2051,   -201,  -1783,  -2402,
-  -2124,  -1298,   -399,    172,    234,   -147,   -718,  -1179,  -1322,  -1113,   -683,   -251,    -14,    -53,   -312,   -634,
-   -846,   -842,   -630};
-
-const uint16_t FILTER_COEFFS_LEN = 51U;
-
+// 2 stage IIR Butterworth filter generated using https://github.com/F4FXL/iir_fixed_point/blob/4f1e580a7dad9f8742d24a06edd14b62110ba6e4/gen_coeff.py
+q15_t FILTER_COEFFS[] = {1105,  2210, 1105, 16384,-19003,7512, 14,//1st stage
+                         16384,-32768,16384,16384,-31020,14751,14};//2nd stage
 
 CFM::CFM() :
-m_filterBuffer(NULL),
-m_filterPosition(0U),
 m_callsign(),
 m_rfAck(),
 m_ctcssRX(),
@@ -46,13 +39,15 @@ m_holdoffTimer(),
 m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
-m_hangTimer()
+m_hangTimer(),
+m_filter()
 {
-  m_filterBuffer = new q15_t[FILTER_COEFFS_LEN];
+  arm_biquad_cascade_df1_init_q15(&m_filter, 2, FILTER_COEFFS, m_filterState, 0);
 }
 
 void CFM::samples(q15_t* samples, uint8_t length)
 {
+  arm_biquad_casd_df1_inst_q15* filterPtr = &m_filter;
   uint8_t i = 0;
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
@@ -98,7 +93,8 @@ void CFM::samples(q15_t* samples, uint8_t length)
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
-    currentSample = filter(currentSample);
+    //currentSample = filter(currentSample);
+    arm_biquad_cascade_df1_fast_q15(filterPtr, samples +i, &currentSample, 1);
 
     currentSample += m_ctcssTX.getAudio();
 
@@ -393,27 +389,4 @@ void CFM::beginRelaying()
 {
   m_timeoutTimer.start();
   m_ackMinTimer.start();
-}
-
-q15_t CFM::filter(q15_t sample)
-{
-  q15_t output = 0;
-
-  m_filterBuffer[m_filterPosition] = sample;
-
-  uint8_t iTaps = 0U;
-
-  for (int8_t i = m_filterPosition; i >= 0; i--) {
-    q31_t temp = FILTER_COEFFS[iTaps++] * m_filterBuffer[i];
-    output += q15_t(__SSAT((temp >> 15), 16));
-  }
-
-  for (int8_t i = FILTER_COEFFS_LEN - 1; i >= m_filterPosition; i--) {
-    q31_t temp = FILTER_COEFFS[iTaps++] * m_filterBuffer[i];
-    output += q15_t(__SSAT((temp >> 15), 16));
-  }
-
-  m_filterPosition = (m_filterPosition + 1U) % FILTER_COEFFS_LEN;
-
-  return output;
 }

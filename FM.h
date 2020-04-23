@@ -37,6 +37,9 @@ enum FM_STATE {
   FS_HANG
 };
 
+
+
+
 class CFM {
 public:
   CFM();
@@ -52,8 +55,6 @@ public:
   uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime);
 
 private:
-  q15_t*               m_filterBuffer;
-  uint8_t              m_filterPosition;
   CFMKeyer             m_callsign;
   CFMKeyer             m_rfAck;
   CFMCTCSSRX           m_ctcssRX;
@@ -69,6 +70,8 @@ private:
   CFMTimer             m_ackMinTimer;
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
+  arm_biquad_casd_df1_inst_q15 m_filter;
+  q15_t                m_filterState[8];//must be filterOrder * 4 long
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);
