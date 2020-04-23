@@ -20,9 +20,13 @@
 #include "Globals.h"
 #include "FM.h"
 
-// 2 stage IIR Butterworth filter generated using https://github.com/F4FXL/iir_fixed_point/blob/4f1e580a7dad9f8742d24a06edd14b62110ba6e4/gen_coeff.py
-q15_t FILTER_COEFFS[] = {1105,  2210, 1105, 16384,-19003,7512, 14,//1st stage
-                         16384,-32768,16384,16384,-31020,14751,14};//2nd stage
+// 3 stage IIR Butterworth filter generated (if you change the order change the size of m_filterState). Also change the ordre in init call below
+// 0.2db band pass ripple
+// 300 - 2700Hz
+q15_t FILTER_COEFFS[] = {  362,   724,    362,16384,-18947,10676, 14,//1st stage
+                         16384,     0, -16384,16384,-25170, 9526, 14,//2nd stage
+                         16384,-32768,  16384,16384,-32037,15730,14};//3rd stage
+
 
 CFM::CFM() :
 m_callsign(),
@@ -42,7 +46,7 @@ m_ackDelayTimer(),
 m_hangTimer(),
 m_filter()
 {
-  arm_biquad_cascade_df1_init_q15(&m_filter, 2, FILTER_COEFFS, m_filterState, 0);
+  arm_biquad_cascade_df1_init_q15(&m_filter, 3, FILTER_COEFFS, m_filterState, 0);
 }
 
 void CFM::samples(q15_t* samples, uint8_t length)
@@ -93,7 +97,6 @@ void CFM::samples(q15_t* samples, uint8_t length)
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
-    //currentSample = filter(currentSample);
     arm_biquad_cascade_df1_fast_q15(filterPtr, samples +i, &currentSample, 1);
 
     currentSample += m_ctcssTX.getAudio();

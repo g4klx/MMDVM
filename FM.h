@@ -71,7 +71,7 @@ private:
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
   arm_biquad_casd_df1_inst_q15 m_filter;
-  q15_t                m_filterState[8];//must be filterOrder * 4 long
+  q15_t                m_filterState[12];//must be filterOrder * 4 long
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);
