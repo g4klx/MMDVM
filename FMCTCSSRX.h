@@ -62,7 +62,7 @@ public:
   void reset();
 
 private:
- q31_t      m_coeffDivTwo;
+ q63_t      m_coeffDivTwo;
  q31_t      m_threshold;
  uint16_t   m_count;
  q31_t      m_q0;

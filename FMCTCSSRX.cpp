@@ -22,7 +22,7 @@
 
 const struct CTCSS_TABLE {
   uint8_t frequency;
-  q31_t   coeffDivTwo;
+  q63_t   coeffDivTwo;
 } CTCSS_TABLE_DATA[] = {
   { 67U, 2147153298},
   { 69U, 2147130228},
@@ -111,32 +111,34 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
   m_result = m_result & (~CTS_READY);
 
+  q31_t samp = q31_t(sample) << 16;
+
   q31_t q2 = m_q1;
   m_q1 = m_q0;
 
   // Q31 multiplication, t3 = m_coeffDivTwo * 2 * m_q1
   q63_t t1 = m_coeffDivTwo * m_q1;
-  q31_t t2 = __SSAT((t1 >> 32), 31);
+  q31_t t2 = __SSAT((t1 >> 31), 31);
   q31_t t3 = t2 * 2;
 
-  // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + sample
-  m_q0 = t3 - q2 + q31_t(sample);
+  // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + samp
+  m_q0 = t3 - q2 + samp;
 
   m_count++;
   if (m_count == N) {
     // Q31 multiplication, t2 = m_q0 * m_q0
-    q63_t t1 = m_q0 * m_q0;
-    q31_t t2 = __SSAT((t1 >> 32), 31);
+    q63_t t1 = q63_t(m_q0) * q63_t(m_q0);
+    q31_t t2 = __SSAT((t1 >> 31), 31);
 
     // Q31 multiplication, t4 = m_q0 * m_q0
-    q63_t t3 = m_q1 * m_q1;
-    q31_t t4 = __SSAT((t3 >> 32), 31);
+    q63_t t3 = q63_t(m_q1) * q63_t(m_q1);
+    q31_t t4 = __SSAT((t3 >> 31), 31);
 
     // Q31 multiplication, t9 = m_q0 * m_q1 * m_coeffDivTwo * 2
-    q63_t t5 = m_q0 * m_q1;
-    q31_t t6 = __SSAT((t5 >> 32), 31);
+    q63_t t5 = q63_t(m_q0) * q63_t(m_q1);
+    q31_t t6 = __SSAT((t5 >> 31), 31);
     q63_t t7 = t6 * m_coeffDivTwo;
-    q31_t t8 = __SSAT((t7 >> 32), 31);
+    q31_t t8 = __SSAT((t7 >> 31), 31);
     q31_t t9  = t8 * 2;
 
     // value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeffDivTwo * 2
