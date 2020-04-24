@@ -26,6 +26,7 @@
 #include "FMTimeout.h"
 #include "FMKeyer.h"
 #include "FMTimer.h"
+#include "FMDirectForm1.h"
 
 enum FM_STATE {
   FS_LISTENING,
@@ -36,6 +37,9 @@ enum FM_STATE {
   FS_TIMEOUT_WAIT,
   FS_HANG
 };
+
+
+
 
 class CFM {
 public:
@@ -52,8 +56,6 @@ public:
   uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime);
 
 private:
-  q15_t*               m_filterBuffer;
-  uint8_t              m_filterPosition;
   CFMKeyer             m_callsign;
   CFMKeyer             m_rfAck;
   CFMCTCSSRX           m_ctcssRX;
@@ -69,6 +71,9 @@ private:
   CFMTimer             m_ackMinTimer;
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
+  CFMDirectFormI          m_filterStage1;
+  CFMDirectFormI          m_filterStage2;
+  CFMDirectFormI          m_filterStage3;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);
