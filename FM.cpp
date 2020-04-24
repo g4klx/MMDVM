@@ -114,13 +114,14 @@ uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency
   m_callsignAtStart = callsignAtStart;
   m_callsignAtEnd   = callsignAtEnd;
 
-  uint16_t holdoffTime  = 0U;
+  uint16_t holdoffTime  = holdoff * 60U;
   uint16_t callsignTime = time * 60U;
-  if (holdoff > 0U)
-    holdoffTime  = callsignTime / holdoff;
 
   m_holdoffTimer.setTimeout(holdoffTime, 0U);
   m_callsignTimer.setTimeout(callsignTime, 0U);
+
+  if (holdoffTime > 0U)
+    m_holdoffTimer.start();
 
   return m_callsign.setParams(callsign, speed, frequency, highLevel, lowLevel);
 }
@@ -190,7 +191,6 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
       m_modemState = STATE_IDLE;
       m_callsignTimer.stop();
       m_timeoutTimer.stop();
-      m_holdoffTimer.stop();
       m_kerchunkTimer.stop();
       m_ackMinTimer.stop();
       m_ackDelayTimer.stop();
@@ -237,7 +237,6 @@ void CFM::kerchunkState(bool validSignal)
     m_timeoutTimer.stop();
     m_ackMinTimer.stop();
     m_callsignTimer.stop();
-    m_holdoffTimer.stop();
   }
 }
 
@@ -316,7 +315,6 @@ void CFM::hangState(bool validSignal)
         sendCallsign();
 
       m_callsignTimer.stop();
-      m_holdoffTimer.stop();
     }
   }
 
