@@ -31,8 +31,8 @@ THE SOFTWARE.
 
 #include "Globals.h"
 
-#ifndef DIRECTFORMI_HPP_
-#define DIRECTFORMI_HPP_
+#ifndef DIRECTFORMI_H_
+#define DIRECTFORMI_H_
 class CFMDirectFormI
 {
 public:
@@ -65,9 +65,6 @@ public:
 		c_b2 = my.c_b2; // FIR
 		c_a1 = my.c_a1;
 		c_a2 = my.c_a2; // IIR
-
-	// scaling factor
-		q_scaling = my.q_scaling; // 2^q_scaling
     }
 
 	void reset ()
@@ -111,4 +108,4 @@ private:
 	q31_t c_a1,c_a2; // IIR
 };
 
-#endif /* DIRECTFORMI_HPP_ */
+#endif /* DIRECTFORMI_H */

@@ -20,14 +20,6 @@
 #include "Globals.h"
 #include "FM.h"
 
-// 3 stage IIR Butterworth filter generated (if you change the order change the size of m_filterState). Also change the ordre in init call below
-// 0.2db band pass ripple
-// 300 - 2700Hz
-q15_t FILTER_COEFFS[] = {362,724,362,16384,-18947,10676,
-                          16384,0,-16384,16384,-25170,9526,
-                          16384,-32768,16384,16384,-32037,15730};
-
-
 CFM::CFM() :
 m_callsign(),
 m_rfAck(),
