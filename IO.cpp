@@ -80,7 +80,6 @@ m_ysfTXLevel(128 * 128),
 m_p25TXLevel(128 * 128),
 m_nxdnTXLevel(128 * 128),
 m_pocsagTXLevel(128 * 128),
-m_fmRXLevel(128 * 128),
 m_fmTXLevel(128 * 128),
 m_rxDCOffset(DC_OFFSET),
 m_txDCOffset(DC_OFFSET),
@@ -358,19 +357,11 @@ void CIO::process()
       }
 
       if (m_fmEnable) {
-        q15_t FMVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
-        for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-          q31_t res1 = dcSamples[i] * m_fmRXLevel;
-          FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
-        }
+        fm.samples(dcSamples, RX_BLOCK_SIZE);
 #else
-        for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-          q31_t res1 = samples[i] * m_fmRXLevel;
-          FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
-        }
+        fm.samples(samples, RX_BLOCK_SIZE);
 #endif
-        fm.samples(FMVals, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
@@ -431,19 +422,11 @@ void CIO::process()
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_FM) {
-      q15_t FMVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
-      for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-        q31_t res1 = dcSamples[i] * m_fmRXLevel;
-        FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
-      }
+      fm.samples(dcSamples, RX_BLOCK_SIZE);
 #else
-      for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-        q31_t res1 = samples[i] * m_fmRXLevel;
-        FMVals[i] = q15_t(__SSAT((res1 >> 15), 16));
-      }
+      fm.samples(samples, RX_BLOCK_SIZE);
 #endif
-      fm.samples(FMVals, RX_BLOCK_SIZE);
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
       ::arm_fir_fast_q15(&m_gaussianFilter, samples, GMSKVals, RX_BLOCK_SIZE);
@@ -544,7 +527,7 @@ void CIO::setMode()
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, uint8_t fmRXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset)
 {
   m_pttInvert = pttInvert;
 
@@ -556,7 +539,6 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
   m_p25TXLevel    = q15_t(p25TXLevel * 128);
   m_nxdnTXLevel   = q15_t(nxdnTXLevel * 128);
   m_pocsagTXLevel = q15_t(pocsagTXLevel * 128);
-  m_fmRXLevel     = q15_t(fmRXLevel * 128);
   m_fmTXLevel     = q15_t(fmTXLevel * 128);
 
   m_rxDCOffset   = DC_OFFSET + rxDCOffset;
