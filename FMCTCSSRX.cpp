@@ -111,8 +111,6 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
   m_result = m_result & (~CTS_READY);
 
-  q31_t samp = q31_t(sample);
-
   q31_t q2 = m_q1;
   m_q1 = m_q0;
 
