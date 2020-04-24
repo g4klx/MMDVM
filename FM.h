@@ -26,6 +26,7 @@
 #include "FMTimeout.h"
 #include "FMKeyer.h"
 #include "FMTimer.h"
+#include "FMDirectForm1.h"
 
 enum FM_STATE {
   FS_LISTENING,
@@ -70,8 +71,9 @@ private:
   CFMTimer             m_ackMinTimer;
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
-  arm_biquad_casd_df1_inst_q15 m_filter;
-  q15_t                m_filterState[12];//must be filterOrder * 4 long
+  CFMDirectFormI          m_filterStage1;
+  CFMDirectFormI          m_filterStage2;
+  CFMDirectFormI          m_filterStage3;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);

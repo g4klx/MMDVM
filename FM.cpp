@@ -23,9 +23,9 @@
 // 3 stage IIR Butterworth filter generated (if you change the order change the size of m_filterState). Also change the ordre in init call below
 // 0.2db band pass ripple
 // 300 - 2700Hz
-q15_t FILTER_COEFFS[] = {  362,   724,    362,16384,-18947,10676, 14,//1st stage
-                         16384,     0, -16384,16384,-25170, 9526, 14,//2nd stage
-                         16384,-32768,  16384,16384,-32037,15730,14};//3rd stage
+q15_t FILTER_COEFFS[] = {362,724,362,16384,-18947,10676,
+                          16384,0,-16384,16384,-25170,9526,
+                          16384,-32768,16384,16384,-32037,15730};
 
 
 CFM::CFM() :
@@ -44,14 +44,14 @@ m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
 m_hangTimer(),
-m_filter()
+m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),
+m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
+m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460)
 {
-  arm_biquad_cascade_df1_init_q15(&m_filter, 3, FILTER_COEFFS, m_filterState, 0);
 }
 
 void CFM::samples(q15_t* samples, uint8_t length)
 {
-  arm_biquad_casd_df1_inst_q15* filterPtr = &m_filter;
   uint8_t i = 0;
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
@@ -97,7 +97,7 @@ void CFM::samples(q15_t* samples, uint8_t length)
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
-    arm_biquad_cascade_df1_fast_q15(filterPtr, samples +i, &currentSample, 1);
+    currentSample = q15_t(m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample))));
 
     currentSample += m_ctcssTX.getAudio();
 
