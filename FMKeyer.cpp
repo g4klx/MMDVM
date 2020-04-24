@@ -111,8 +111,8 @@ uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency,
     }
   }
 
-  m_highLevel = q15_t(highLevel * 128);
-  m_lowLevel  = q15_t(lowLevel * 128);
+  m_highLevel = q15_t(highLevel);
+  m_lowLevel  = q15_t(lowLevel);
 
   m_dotLen = 24000U / speed;   // In samples
 

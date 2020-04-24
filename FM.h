@@ -71,9 +71,9 @@ private:
   CFMTimer             m_ackMinTimer;
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
-  CFMDirectFormI          m_filterStage1;
-  CFMDirectFormI          m_filterStage2;
-  CFMDirectFormI          m_filterStage3;
+  CFMDirectFormI       m_filterStage1;
+  CFMDirectFormI       m_filterStage2;
+  CFMDirectFormI       m_filterStage3;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);
@@ -86,8 +86,6 @@ private:
 
   void sendCallsign();
   void beginRelaying();
-
-  q15_t filter(q15_t sample);
 };
 
 #endif
