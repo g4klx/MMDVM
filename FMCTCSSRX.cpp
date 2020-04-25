@@ -92,6 +92,8 @@ m_result(CTS_NONE)
 
 uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
 {
+  m_coeffDivTwo = 0;
+
   for (uint8_t i = 0U; i < CTCSS_TABLE_DATA_LEN; i++) {
     if (RX_CTCSS_TABLE_DATA[i].frequency == frequency) {
       m_coeffDivTwo = RX_CTCSS_TABLE_DATA[i].coeffDivTwo;
