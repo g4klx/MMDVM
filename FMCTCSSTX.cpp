@@ -20,11 +20,11 @@
 #include "Globals.h"
 #include "FMCTCSSTX.h"
 
-const struct CTCSS_TABLE {
+const struct TX_CTCSS_TABLE {
   uint8_t  frequency;
   uint16_t length;
   q15_t    increment;
-} CTCSS_TABLE_DATA[] = {
+} TX_CTCSS_TABLE_DATA[] = {
   { 67U, 358U,  92},
   { 69U, 346U,  95},
   { 71U, 334U,  99},
@@ -88,11 +88,11 @@ m_n(0U)
 
 uint8_t CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
 {
-  const CTCSS_TABLE* entry = NULL;
+  const TX_CTCSS_TABLE* entry = NULL;
 
   for (uint8_t i = 0U; i < CTCSS_TABLE_DATA_LEN; i++) {
-    if (CTCSS_TABLE_DATA[i].frequency == frequency) {
-      entry = CTCSS_TABLE_DATA + i;
+    if (TX_CTCSS_TABLE_DATA[i].frequency == frequency) {
+      entry = TX_CTCSS_TABLE_DATA + i;
       break;
     }
   }
