@@ -72,8 +72,8 @@ const struct {
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
-#define WRITE_BIT(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
-#define READ_BIT(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
+#define WRITE_BIT_FM(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
+#define READ_BIT_FM(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
 CFMKeyer::CFMKeyer() :
 m_wanted(false),
@@ -98,7 +98,7 @@ uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency,
         uint32_t MASK = 0x80000000U;
         for (uint8_t k = 0U; k < SYMBOL_LIST[j].length; k++, m_poLen++, MASK >>= 1) {
           bool b = (SYMBOL_LIST[j].pattern & MASK) == MASK;
-          WRITE_BIT(m_poBuffer, m_poLen, b);
+          WRITE_BIT_FM(m_poBuffer, m_poLen, b);
 
           if (m_poLen >= 995U) {
             m_poLen = 0U;
@@ -136,7 +136,7 @@ q15_t CFMKeyer::getHighAudio()
   if (!m_wanted)
     return 0U;
 
-  bool b = READ_BIT(m_poBuffer, m_poPos);
+  bool b = READ_BIT_FM(m_poBuffer, m_poPos);
   if (b)
     output = m_audio[m_audioPos] ? m_highLevel : -m_highLevel;
 
@@ -162,7 +162,7 @@ q15_t CFMKeyer::getLowAudio()
   if (!m_wanted)
     return 0U;
 
-  bool b = READ_BIT(m_poBuffer, m_poPos);
+  bool b = READ_BIT_FM(m_poBuffer, m_poPos);
   if (b)
     output = m_audio[m_audioPos] ? m_lowLevel : -m_lowLevel;
 
