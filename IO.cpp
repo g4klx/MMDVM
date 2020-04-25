@@ -357,10 +357,11 @@ void CIO::process()
       }
 
       if (m_fmEnable) {
+        bool cos = getCOSInt();
 #if defined(USE_DCBLOCKER)
-        fm.samples(dcSamples, RX_BLOCK_SIZE);
+        fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
 #else
-        fm.samples(samples, RX_BLOCK_SIZE);
+        fm.samples(cos, samples, RX_BLOCK_SIZE);
 #endif
       }
     } else if (m_modemState == STATE_DSTAR) {
@@ -422,10 +423,11 @@ void CIO::process()
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
     } else if (m_modemState == STATE_FM) {
+      bool cos = getCOSInt();
 #if defined(USE_DCBLOCKER)
-      fm.samples(dcSamples, RX_BLOCK_SIZE);
+      fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
 #else
-      fm.samples(samples, RX_BLOCK_SIZE);
+      fm.samples(cos, samples, RX_BLOCK_SIZE);
 #endif
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];

@@ -38,14 +38,19 @@ m_ackDelayTimer(),
 m_hangTimer(),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
-m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460)
+m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
+m_useCOS(true),
+m_rxBoost(1U)
 {
 }
 
-void CFM::samples(q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
   uint8_t i = 0;
   for (; i < length; i++) {
+    if (!m_useCOS)
+      cos = true;
+
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
     CTCSSState ctcssState = m_ctcssRX.process(currentSample);
@@ -56,25 +61,27 @@ void CFM::samples(q15_t* samples, uint8_t length)
     } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS, i + 1U);
+      stateMachine(validCTCSS && cos, i + 1U);
       if (m_modemState != STATE_FM)
         continue;
     } else if (CTCSS_READY(ctcssState) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS, i + 1U);
+      stateMachine(validCTCSS && cos, i + 1U);
       if (m_modemState != STATE_FM)
         break;
     } else if (CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
         bool validCTCSS = CTCSS_VALID(ctcssState);
-        stateMachine(validCTCSS, i + 1U);
+        stateMachine(validCTCSS && cos, i + 1U);
     }
     
     // Only let audio through when relaying audio
     if (m_state != FS_RELAYING && m_state != FS_KERCHUNK)
       currentSample = 0U;
+
+    currentSample *= m_rxBoost;
 
     if (!m_callsign.isRunning())
       currentSample += m_rfAck.getHighAudio();
@@ -134,8 +141,11 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost)
 {
+  m_useCOS  = useCOS;
+  m_rxBoost = q15_t(rxBoost);
+
   m_timeoutTimer.setTimeout(timeout, 0U);
   m_kerchunkTimer.setTimeout(kerchunkTime, 0U);
   m_hangTimer.setTimeout(hangTime, 0U);
