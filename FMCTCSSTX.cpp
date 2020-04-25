@@ -102,9 +102,7 @@ uint8_t CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
 
   m_length = entry->length;
 
-  if (m_values)
-    delete[] m_values;
-
+  delete[] m_values;
   m_values = new q15_t[m_length];
 
   q15_t arg = 0;

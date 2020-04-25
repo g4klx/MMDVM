@@ -46,11 +46,11 @@ m_rxBoost(1U)
 
 void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
-  uint8_t i = 0;
-  for (; i < length; i++) {
-    if (!m_useCOS)
-      cos = true;
+  if (!m_useCOS)
+    cos = true;
 
+  uint8_t i = 0U;
+  for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
     CTCSSState ctcssState = m_ctcssRX.process(currentSample);

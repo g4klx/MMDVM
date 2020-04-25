@@ -92,7 +92,8 @@ m_lowLevel(0)
 
 uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency, uint8_t highLevel, uint8_t lowLevel)
 {
-  m_poLen=0;
+  m_poLen = 0U;
+
   for (uint8_t i = 0U; text[i] != '\0'; i++) {
     for (uint8_t j = 0U; SYMBOL_LIST[j].c != 0U; j++) {
       if (SYMBOL_LIST[j].c == text[i]) {
@@ -119,9 +120,7 @@ uint8_t CFMKeyer::setParams(const char* text, uint8_t speed, uint16_t frequency,
 
   m_audioLen = 24000U / frequency; // In samples
 
-  if (m_audio)
-    delete[] m_audio;
-
+  delete[] m_audio;
   m_audio = new bool[m_audioLen];
 
   for (uint16_t i = 0U; i < m_audioLen; i++) {
