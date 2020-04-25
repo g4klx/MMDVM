@@ -39,6 +39,7 @@ m_hangTimer(),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
+m_blanking(),
 m_useCOS(true),
 m_rxBoost(1U)
 {
@@ -78,7 +79,9 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     }
     
     // Only let audio through when relaying audio
-    if (m_state != FS_RELAYING && m_state != FS_KERCHUNK)
+    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK)
+      currentSample = m_blanking.process(currentSample);
+    else
       currentSample = 0U;
 
     currentSample *= m_rxBoost;
@@ -141,7 +144,7 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost, uint8_t maxDev)
 {
   m_useCOS  = useCOS;
   m_rxBoost = q15_t(rxBoost);
@@ -151,6 +154,7 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_hangTimer.setTimeout(hangTime, 0U);
 
   m_timeoutTone.setParams(timeoutLevel);
+  m_blanking.setParams(maxDev, timeoutLevel);
 
   uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold);
   if (ret != 0U)

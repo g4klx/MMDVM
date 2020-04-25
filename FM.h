@@ -21,6 +21,7 @@
 
 #include "Config.h"
 
+#include "FMBlanking.h"
 #include "FMCTCSSRX.h"
 #include "FMCTCSSTX.h"
 #include "FMTimeout.h"
@@ -53,7 +54,7 @@ public:
 
   uint8_t setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd);
   uint8_t setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level);
-  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost);
+  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost, uint8_t maxDev);
 
 private:
   CFMKeyer             m_callsign;
@@ -74,6 +75,7 @@ private:
   CFMDirectFormI       m_filterStage1;
   CFMDirectFormI       m_filterStage2;
   CFMDirectFormI       m_filterStage3;
+  CFMBlanking          m_blanking;
   bool                 m_useCOS;
   q15_t                m_rxBoost;
 
