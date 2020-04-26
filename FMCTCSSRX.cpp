@@ -113,6 +113,16 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
   m_result = m_result & (~CTS_READY);
 
+  // sample / rxLevel
+  q15_t rxLevel = io.getRxLevel();
+  q31_t sample31 = q31_t(sample) << 16;
+  if (((sample31 >> 31) & 1) == ((rxLevel >> 15) & 1))
+    sample31 += rxLevel >> 1;
+  else
+    sample31 -= rxLevel >> 1;
+  sample31 /= rxLevel;
+  
+
   q31_t q2 = m_q1;
   m_q1 = m_q0;
 
@@ -122,7 +132,7 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
   q31_t t3 = t2 * 2;
 
   // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + sample
-  m_q0 = t3 - q2 + q31_t(sample);
+  m_q0 = t3 - q2 + sample31;
 
   m_count++;
   if (m_count == N) {
@@ -144,11 +154,15 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
     // value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeffDivTwo * 2
     q31_t value = t2 + t4 - t9;
 
+    bool previousCTCSSValid = CTCSS_VALID(m_result);
     m_result = m_result | CTS_READY;
     if (value >= m_threshold)
       m_result = m_result | CTS_VALID;
     else
       m_result = m_result & ~CTS_VALID;
+
+    if(previousCTCSSValid != CTCSS_VALID(m_result))
+      DEBUG4("CTCSS Value / Threshold / Valid", value, m_threshold, CTCSS_VALID(m_result));
 
     m_count = 0U;
     m_q0 = 0;

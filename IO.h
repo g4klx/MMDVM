@@ -56,6 +56,8 @@ public:
   
   void selfTest();
 
+  q15_t getRxLevel() const;
+
 private:
   bool                 m_started;
 
