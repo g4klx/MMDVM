@@ -54,7 +54,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
-    CTCSSState ctcssState = m_ctcssRX.process(currentSample);
+    CTCSSState ctcssState = m_ctcssRX.process(getUnscaledSample(currentSample));
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
@@ -396,4 +396,18 @@ void CFM::beginRelaying()
 {
   m_timeoutTimer.start();
   m_ackMinTimer.start();
+}
+
+q15_t CFM::getUnscaledSample(q15_t sample)
+{
+  // sample / rxLevel
+  q15_t rxLevel = io.getRxLevel();
+  q31_t sample31 = q31_t(sample) << 16;
+  if (((sample31 >> 31) & 1) == ((rxLevel >> 15) & 1))
+    sample31 += rxLevel >> 1;
+  else
+    sample31 -= rxLevel >> 1;
+  sample31 /= rxLevel;
+
+  return q15_t(sample31);
 }

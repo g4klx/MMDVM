@@ -55,7 +55,7 @@ public:
 
   uint8_t setParams(uint8_t frequency, uint8_t threshold);
   
-  CTCSSState process(q15_t samples);
+  CTCSSState process(q15_t sample);
 
   CTCSSState getState();
 
