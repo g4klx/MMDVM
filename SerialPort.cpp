@@ -408,7 +408,7 @@ uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
 
 uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
 {
-  if (length < 10U)
+  if (length < 11U)
     return 4U;
 
   uint16_t timeout        = data[0U] * 5U;
@@ -425,8 +425,9 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
 
   uint8_t  rxBoost        = data[8U];
   uint8_t  maxDev         = data[9U];
+  uint8_t  rxLevel        = data[10U];
 
-  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime, useCOS, rxBoost, maxDev);
+  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime, useCOS, rxBoost, maxDev, rxLevel);
 }
 
 uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)

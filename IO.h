@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -55,8 +55,6 @@ public:
   uint32_t getWatchdog();
   
   void selfTest();
-
-  q15_t getRxLevel() const;
 
 private:
   bool                 m_started;

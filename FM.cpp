@@ -41,7 +41,8 @@ m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_useCOS(true),
-m_rxBoost(1U)
+m_rxBoost(1U),
+m_rxLevel(128 * 128)
 {
 }
 
@@ -144,10 +145,11 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost, uint8_t maxDev)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost, uint8_t maxDev, uint8_t rxLevel)
 {
   m_useCOS  = useCOS;
   m_rxBoost = q15_t(rxBoost);
+  m_rxLevel = q15_t(rxLevel * 128);
 
   m_timeoutTimer.setTimeout(timeout, 0U);
   m_kerchunkTimer.setTimeout(kerchunkTime, 0U);
@@ -401,13 +403,14 @@ void CFM::beginRelaying()
 q15_t CFM::getUnscaledSample(q15_t sample)
 {
   // sample / rxLevel
-  q15_t rxLevel = io.getRxLevel();
   q31_t sample31 = q31_t(sample) << 16;
-  if (((sample31 >> 31) & 1) == ((rxLevel >> 15) & 1))
-    sample31 += rxLevel >> 1;
+
+  if (((sample31 >> 31) & 1) == ((m_rxLevel >> 15) & 1))
+    sample31 += m_rxLevel >> 1;
   else
-    sample31 -= rxLevel >> 1;
-  sample31 /= rxLevel;
+    sample31 -= m_rxLevel >> 1;
+
+  sample31 /= m_rxLevel;
 
   return q15_t(sample31);
 }
