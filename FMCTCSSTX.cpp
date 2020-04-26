@@ -111,6 +111,8 @@ uint8_t CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
     m_values[i] = q15_t(__SSAT((value >> 15), 16));
 
     arg += entry->increment;
+    if(arg < 0)//did we exceed max value of q15_t and flip over ?
+      arg += 32768;//bring arg back to valid values for ::arm_sin_q15, as per doc it needs to be in the range 0 to 0.99999999 (aka 0 - 32767)
   }
 
   return 0U;
