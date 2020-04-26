@@ -106,7 +106,7 @@ uint8_t CFMCTCSSTX::setParams(uint8_t frequency, uint8_t level)
 
   q31_t arg = 0;
   for (uint16_t i = 0U; i < m_length; i++) {
-    q63_t value = ::arm_sin_q31(arg) * q15_t(level * 13);
+    q63_t value = ::arm_sin_q31(arg) * q63_t(level * 13);
     m_values[i] = q15_t(__SSAT((value >> 31), 16));
 
     arg += entry->increment;
