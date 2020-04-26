@@ -90,6 +90,8 @@ private:
 
   void sendCallsign();
   void beginRelaying();
+
+  q15_t getUnscaledSample(q15_t sample);
 };
 
 #endif
