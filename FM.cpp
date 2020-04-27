@@ -55,7 +55,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
-    CTCSSState ctcssState = m_ctcssRX.process(getUnscaledSample(currentSample));
+    CTCSSState ctcssState = m_ctcssRX.process(currentSample);
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
@@ -158,7 +158,7 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_timeoutTone.setParams(timeoutLevel);
   m_blanking.setParams(maxDev, timeoutLevel);
 
-  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold);
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold, m_rxLevel);
   if (ret != 0U)
     return ret;
 
@@ -400,17 +400,4 @@ void CFM::beginRelaying()
   m_ackMinTimer.start();
 }
 
-q15_t CFM::getUnscaledSample(q15_t sample)
-{
-  // sample / rxLevel
-  q31_t sample31 = q31_t(sample) << 16;
 
-  if (((sample31 >> 31) & 1) == ((m_rxLevel >> 15) & 1))
-    sample31 += m_rxLevel >> 1;
-  else
-    sample31 -= m_rxLevel >> 1;
-
-  sample31 /= m_rxLevel;
-
-  return q15_t(sample31);
-}
