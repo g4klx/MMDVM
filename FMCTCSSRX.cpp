@@ -93,7 +93,7 @@ m_rxLevelInverse(1)
 
 uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, uint8_t level)
 {
-  m_rxLevelInverse = 255 / q15_t(level);
+  m_rxLevelInverse = 511 / q15_t(level);
 
   m_coeffDivTwo = 0;
 
