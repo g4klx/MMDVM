@@ -91,10 +91,9 @@ m_rxLevelInverse(1)
 {
 }
 
-uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, q15_t rxLevel)
+uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, uint8_t level)
 {
-  // Calculate 1/rxLevel
-  m_rxLevelInverse = q31_t(q15Division(65535 /* This value should be 32767 (q15 1). But this does not work.*/, rxLevel));
+  m_rxLevelInverse = 255 / q15_t(level);
 
   m_coeffDivTwo = 0;
 
@@ -115,7 +114,7 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, q15_t rxLeve
 
 CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
-  q63_t sample31 = q31_t(sample) * m_rxLevelInverse;
+  q31_t sample31 = q31_t(sample) * m_rxLevelInverse;
 
   m_result = m_result & (~CTS_READY); 
 

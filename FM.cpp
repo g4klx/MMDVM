@@ -156,7 +156,7 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_timeoutTone.setParams(timeoutLevel);
   m_blanking.setParams(maxDev, timeoutLevel);
 
-  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold, q15_t(rxLevel * 128));
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold, rxLevel);
   if (ret != 0U)
     return ret;
 
@@ -397,5 +397,3 @@ void CFM::beginRelaying()
   m_timeoutTimer.start();
   m_ackMinTimer.start();
 }
-
-
