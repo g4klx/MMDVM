@@ -29,12 +29,11 @@ const struct TONE_TABLE {
   q31_t    increment;
 } TONE_TABLE_DATA[] = {
   {2495U, 10U, 223248821},
-  {2079U, 12U, 186025771},
-  {1633U, 15U, 148802721},
-  {1247U, 20U, 111579672},
-  {1039U, 24U, 93012886},
-  {956U,  26U, 85541432}};
-
+  {2079U, 12U, 186025772},
+  {1633U, 15U, 146118367},
+  {1247U, 19U, 111579672},
+  {1039U, 23U, 93012886},
+  {956U,  25U, 85541432}};
 
 const uint8_t TONE_TABLE_DATA_LEN = 6U;
 
@@ -126,4 +125,3 @@ uint8_t CCalFM::write(const uint8_t* data, uint8_t length)
 
   return 0U;
 }
-
