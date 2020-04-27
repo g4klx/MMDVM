@@ -53,7 +53,7 @@ class CFMCTCSSRX {
 public:
   CFMCTCSSRX();
 
-  uint8_t setParams(uint8_t frequency, uint8_t threshold);
+  uint8_t setParams(uint8_t frequency, uint8_t threshold, uint8_t level);
   
   CTCSSState process(q15_t sample);
 
@@ -62,12 +62,13 @@ public:
   void reset();
 
 private:
- q63_t      m_coeffDivTwo;
- q31_t      m_threshold;
- uint16_t   m_count;
- q31_t      m_q0;
- q31_t      m_q1;
- CTCSSState m_result;
+  q63_t      m_coeffDivTwo;
+  q31_t      m_threshold;
+  uint16_t   m_count;
+  q31_t      m_q0;
+  q31_t      m_q1;
+  CTCSSState m_result;
+  q15_t      m_rxLevelInverse;
 };
 
 #endif

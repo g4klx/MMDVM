@@ -592,8 +592,3 @@ bool CIO::hasLockout() const
 {
   return m_lockout;
 }
-
-q15_t CIO::getRxLevel() const
-{
-  return m_rxLevel;
-}

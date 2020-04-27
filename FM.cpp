@@ -54,7 +54,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
-    CTCSSState ctcssState = m_ctcssRX.process(getUnscaledSample(currentSample));
+    CTCSSState ctcssState = m_ctcssRX.process(currentSample);
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
@@ -144,7 +144,7 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost, uint8_t maxDev)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost, uint8_t maxDev, uint8_t rxLevel)
 {
   m_useCOS  = useCOS;
   m_rxBoost = q15_t(rxBoost);
@@ -156,7 +156,7 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_timeoutTone.setParams(timeoutLevel);
   m_blanking.setParams(maxDev, timeoutLevel);
 
-  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold);
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold, rxLevel);
   if (ret != 0U)
     return ret;
 
@@ -396,18 +396,4 @@ void CFM::beginRelaying()
 {
   m_timeoutTimer.start();
   m_ackMinTimer.start();
-}
-
-q15_t CFM::getUnscaledSample(q15_t sample)
-{
-  // sample / rxLevel
-  q15_t rxLevel = io.getRxLevel();
-  q31_t sample31 = q31_t(sample) << 16;
-  if (((sample31 >> 31) & 1) == ((rxLevel >> 15) & 1))
-    sample31 += rxLevel >> 1;
-  else
-    sample31 -= rxLevel >> 1;
-  sample31 /= rxLevel;
-
-  return q15_t(sample31);
 }
