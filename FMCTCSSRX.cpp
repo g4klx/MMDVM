@@ -86,12 +86,16 @@ m_threshold(0),
 m_count(0U),
 m_q0(0),
 m_q1(0),
-m_result(CTS_NONE)
+m_result(CTS_NONE),
+m_rxLevelInverse(1)
 {
 }
 
-uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
+uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, q15_t rxLevel)
 {
+  // Calculate 1/rxLevel
+  m_rxLevelInverse = q31_t(q15Division(65535 /* This value should be 32767 (q15 1). But this does not work.*/, rxLevel));
+
   m_coeffDivTwo = 0;
 
   for (uint8_t i = 0U; i < CTCSS_TABLE_DATA_LEN; i++) {
@@ -111,6 +115,8 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
 
 CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
+  q63_t sample31 = q31_t(sample) * m_rxLevelInverse;
+
   m_result = m_result & (~CTS_READY); 
 
   q31_t q2 = m_q1;
@@ -122,7 +128,7 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
   q31_t t3 = t2 * 2;
 
   // m_q0 = m_coeffDivTwo * m_q1 * 2 - q2 + sample
-  m_q0 = t3 - q2 + q31_t(sample);
+  m_q0 = t3 - q2 + sample31;
 
   m_count++;
   if (m_count == N) {

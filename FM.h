@@ -78,7 +78,6 @@ private:
   CFMBlanking          m_blanking;
   bool                 m_useCOS;
   q15_t                m_rxBoost;
-  q15_t                m_rxLevel;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);
@@ -91,8 +90,6 @@ private:
 
   void sendCallsign();
   void beginRelaying();
-
-  q15_t getUnscaledSample(q15_t sample);
 };
 
 #endif
