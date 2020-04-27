@@ -23,21 +23,6 @@
 #include "CalFM.h"
 
 
-/*
-const struct TONE_TABLE {
-  uint16_t  frequency;
-  uint16_t length;
-  q31_t    increment;
-} TONE_TABLE_DATA[] = {
-  {2495U, 10U, 140271371},
-  {2079U, 12U, 116883439},
-  {1633U, 15U, 91808877},
-  {1247U, 20U, 70107575},
-  {1039U, 24U, 58441775},
-  {956U,  26U, 53747266}};
-*/
-
-
 const struct TONE_TABLE {
   uint16_t  frequency;
   uint16_t length;
