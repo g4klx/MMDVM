@@ -62,6 +62,7 @@ CFM        fm;
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
 CCalDMR     calDMR;
+CCalFM      calFM;
 CCalP25     calP25;
 CCalNXDN    calNXDN;
 CCalPOCSAG  calPOCSAG;
@@ -114,6 +115,9 @@ void loop()
 
   if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
     calDMR.process();
+
+  if (m_modemState == STATE_FMCAL10K || m_modemState == STATE_FMCAL12K || m_modemState == STATE_FMCAL15K || m_modemState == STATE_FMCAL20K || m_modemState == STATE_FMCAL25K || m_modemState == STATE_FMCAL30K)
+    calFM.process();
 
   if (m_modemState == STATE_P25CAL1K)
     calP25.process();
