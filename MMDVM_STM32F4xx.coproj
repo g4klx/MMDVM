@@ -273,6 +273,7 @@
     <File name="CalDStarTX.cpp" path="CalDStarTX.cpp" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/source" path="" type="2"/>
     <File name="CalDMR.h" path="CalDMR.h" type="1"/>
+    <File name="CalFM.h" path="CalFM.h" type="1"/>
     <File name="DMRDMOTX.h" path="DMRDMOTX.h" type="1"/>
     <File name="IODue.cpp" path="IODue.cpp" type="1"/>
     <File name="DMRTX.cpp" path="DMRTX.cpp" type="1"/>
@@ -290,6 +291,7 @@
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver" path="" type="2"/>
     <File name="DMRDefines.h" path="DMRDefines.h" type="1"/>
     <File name="CalDMR.cpp" path="CalDMR.cpp" type="1"/>
+    <File name="CalFM.cpp" path="CalFM.cpp" type="1"/>
     <File name="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_adc.h" path="STM32F4XX_Lib/STM32F4xx_StdPeriph_Driver/include/stm32f4xx_adc.h" type="1"/>
     <File name="SerialSTM.cpp" path="SerialSTM.cpp" type="1"/>
     <File name="STM32F4XX_Lib/CMSIS/Lib/GCC/libarm_cortexM4lf_math.a" path="STM32F4XX_Lib/CMSIS/Lib/GCC/libarm_cortexM4lf_math.a" type="1"/>
