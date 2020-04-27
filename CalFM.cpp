@@ -95,7 +95,7 @@ void CCalFM::process()
 
     q31_t arg = 0;
     for (uint16_t i = 0U; i < m_length; i++) {
-      q63_t value = ::arm_sin_q31(arg) * q63_t(m_level * 13);
+      q63_t value = ::arm_sin_q31(arg) * q63_t(m_level * 128);
       m_tone[i] = q15_t(__SSAT((value >> 31), 16));
 
       arg += entry->increment;
