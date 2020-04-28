@@ -78,10 +78,12 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, i + 1U);
     }
-    
+
     // Only let audio through when relaying audio
-    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK)
+    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {    
+      m_downsampler.addSample(currentSample);
       currentSample = m_blanking.process(currentSample);
+    }
     else
       currentSample = 0U;
 
@@ -100,9 +102,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
-    currentSample = q15_t(m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample))));
-
-    m_downsampler.addSample(currentSample);
+    currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
 
     currentSample += m_ctcssTX.getAudio();
 
