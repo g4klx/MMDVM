@@ -28,6 +28,7 @@
 #include "FMKeyer.h"
 #include "FMTimer.h"
 #include "FMDirectForm1.h"
+#include "FMDownsampler.h"
 
 enum FM_STATE {
   FS_LISTENING,
@@ -78,6 +79,7 @@ private:
   CFMBlanking          m_blanking;
   bool                 m_useCOS;
   q15_t                m_rfAudioBoost;
+  CFMDownsampler       m_downsampler;
 
   void stateMachine(bool validSignal, uint8_t length);
   void listeningState(bool validSignal);

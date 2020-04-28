@@ -41,7 +41,8 @@ m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_useCOS(true),
-m_rfAudioBoost(1U)
+m_rfAudioBoost(1U),
+m_downsampler(1024)//Size might need adjustement
 {
 }
 
@@ -74,8 +75,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     } else if (CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
-        bool validCTCSS = CTCSS_VALID(ctcssState);
-        stateMachine(validCTCSS && cos, i + 1U);
+      bool validCTCSS = CTCSS_VALID(ctcssState);
+      stateMachine(validCTCSS && cos, i + 1U);
     }
     
     // Only let audio through when relaying audio
@@ -100,6 +101,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
       currentSample += m_timeoutTone.getAudio();
 
     currentSample = q15_t(m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample))));
+
+    m_downsampler.addSample(currentSample);
 
     currentSample += m_ctcssTX.getAudio();
 
