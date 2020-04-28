@@ -41,7 +41,7 @@ CCalFM::CCalFM() :
 m_tone(NULL),
 m_frequency(0),
 m_length(0),
-m_level(128*128),
+m_level(128*32),
 m_transmit(false),
 m_lastState(STATE_IDLE),
 m_audioSeq(0)
