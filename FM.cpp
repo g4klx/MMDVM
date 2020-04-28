@@ -41,7 +41,7 @@ m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_useCOS(true),
-m_rxBoost(1U)
+m_rfAudioBoost(1U)
 {
 }
 
@@ -84,7 +84,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     else
       currentSample = 0U;
 
-    currentSample *= m_rxBoost;
+    currentSample *= m_rfAudioBoost;
 
     if (!m_callsign.isRunning())
       currentSample += m_rfAck.getHighAudio();
@@ -144,10 +144,10 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rxBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
-  m_useCOS  = useCOS;
-  m_rxBoost = q15_t(rxBoost);
+  m_useCOS       = useCOS;
+  m_rfAudioBoost = q15_t(rfAudioBoost);
 
   m_timeoutTimer.setTimeout(timeout, 0U);
   m_kerchunkTimer.setTimeout(kerchunkTime, 0U);
