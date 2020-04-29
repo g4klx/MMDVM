@@ -88,7 +88,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
       currentSample = m_blanking.process(currentSample);
       currentSample *= m_rfAudioBoost;
     } else {
-      currentSample = 0U;
+      currentSample = 0;
     }
 
     if (!m_callsign.isRunning())
