@@ -22,9 +22,9 @@ q = 0
 scaling_factor = 2**q
 
 # let's generate a sequence of 2nd order IIR filters
-#sos = signal.cheby1(3,rp,[f1, f2],'bandpass', output='sos', fs=fs)
+sos = signal.cheby1(3,rp,[f1, f2],'bandpass', output='sos', fs=fs)
 #sos = signal.cheby1(1, rp, 2122, 'lowpass', output='sos', fs=fs) #deemphasis filter
-sos = signal.cheby1(1, rp, 2122, 'highpass', output='sos', fs=fs) #deemphasis filter
+#sos = signal.cheby1(1, rp, 2122, 'highpass', output='sos', fs=fs) #deemphasis filter
 
 #sos = np.round((sos) * scaling_factor)
 
