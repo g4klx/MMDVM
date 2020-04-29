@@ -81,17 +81,15 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
       stateMachine(validCTCSS && cos, i + 1U);
     }
 
-    currentSample = m_deemphasis.filter(currentSample);
-
     // Only let audio through when relaying audio
     if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {    
+      currentSample = m_deemphasis.filter(currentSample);
       m_downsampler.addSample(currentSample);
       currentSample = m_blanking.process(currentSample);
-    }
-    else
+      currentSample *= m_rfAudioBoost;
+    } else {
       currentSample = 0U;
-
-    currentSample *= m_rfAudioBoost;
+    }
 
     if (!m_callsign.isRunning())
       currentSample += m_rfAck.getHighAudio();
