@@ -17,21 +17,22 @@ f2 = 2700
 rp = 0.2
 
 # scaling factor in bits, do not change !
-q = 15
+q = 0
 # scaling factor as facor...
 scaling_factor = 2**q
 
 # let's generate a sequence of 2nd order IIR filters
-#sos = signal.butter(2,[f1/fs*2,f2/fs*2],'pass',output='sos')
-sos = signal.cheby1(3,rp,[f1/fs*2,f2/fs*2],'bandpass', output='sos')
+#sos = signal.cheby1(3,rp,[f1, f2],'bandpass', output='sos', fs=fs)
+#sos = signal.cheby1(1, rp, 2122, 'lowpass', output='sos', fs=fs) #deemphasis filter
+sos = signal.cheby1(1, rp, 2122, 'highpass', output='sos', fs=fs) #deemphasis filter
 
-sos = np.round((sos) * scaling_factor)
+#sos = np.round((sos) * scaling_factor)
 
 # print coefficients
 for biquad in sos:
     for coeff in biquad:
-        print(int(coeff),",",sep="",end="")
-        #print((coeff),",",sep="",end="")
+        #print(int(coeff),",",sep="",end="")
+        print((coeff),",",sep="",end="")
     print("")
 
 # plot the frequency response
