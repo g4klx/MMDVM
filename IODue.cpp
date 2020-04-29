@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -35,6 +35,7 @@
 #define PIN_P25                19
 #define PIN_NXDN               20
 #define PIN_POCSAG             4
+#define PIN_FM                 5
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -50,6 +51,7 @@
 #define PIN_P25                6
 #define PIN_NXDN               5
 #define PIN_POCSAG             4
+#define PIN_FM                 3
 #define ADC_CHER_Chan          (1<<13)                // ADC on Due pin A11 - Due AD13 - (1 << 13)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC13
 #define ADC_CDR_Chan           13
@@ -67,6 +69,7 @@
 #define PIN_P25                6
 #define PIN_NXDN               5
 #define PIN_POCSAG             4
+#define PIN_FM                 3
 #define ADC_CHER_Chan          (1<<7)                 // ADC on Due pin A0  - Due AD7 - (1 << 7)
 #define ADC_ISR_EOC_Chan       ADC_ISR_EOC7
 #define ADC_CDR_Chan           7
@@ -106,6 +109,9 @@ void CIO::initInt()
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   pinMode(PIN_POCSAG, OUTPUT);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
+  pinMode(PIN_FM,     OUTPUT);
 #endif
 #endif
 }
@@ -258,10 +264,19 @@ void CIO::setPOCSAGInt(bool on)
 #endif
 }
 
+void CIO::setFMInt(bool on)
+{
+#if defined(USE_ALTERNATE_FM_LEDS)
+  digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+  digitalWrite(PIN_YSF,   on ? HIGH : LOW);
+#else
+  digitalWrite(PIN_FM, on ? HIGH : LOW);
+#endif
+}
+
 void CIO::delayInt(unsigned int dly)
 {
   delay(dly);
 }
 
 #endif
-
