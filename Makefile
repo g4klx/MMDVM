@@ -239,7 +239,7 @@ $(OBJDIR_F7):
 $(BINDIR)/$(BINHEX_F4): $(BINDIR)/$(BINELF_F4)
 	$(CP) -O ihex $< $@
 	@echo "Objcopy from ELF to IHEX complete!\n"
-	
+
 $(BINDIR)/$(BINBIN_F4): $(BINDIR)/$(BINELF_F4)
 	$(CP) -O binary $< $@
 	@echo "Objcopy from ELF to BINARY complete!\n"
@@ -252,7 +252,7 @@ $(BINDIR)/$(BINELF_F4): $(OBJ_F4)
 $(BINDIR)/$(BINHEX_F7): $(BINDIR)/$(BINELF_F7)
 	$(CP) -O ihex $< $@
 	@echo "Objcopy from ELF to IHEX complete!\n"
-	
+
 $(BINDIR)/$(BINBIN_F7): $(BINDIR)/$(BINELF_F7)
 	$(CP) -O binary $< $@
 	@echo "Objcopy from ELF to BINARY complete!\n"
@@ -342,13 +342,10 @@ deploy-dvm: deploy-pi
 deploy-pi-f7:
 ifneq ($(wildcard /usr/local/bin/stm32flash),)
 	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
-	-/usr/local/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F7)
 	/usr/local/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
-endif
 
-ifneq ($(wildcard /usr/bin/stm32flash),)
+else ifneq ($(wildcard /usr/bin/stm32flash),)
 	-/usr/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
-	-/usr/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F7)
 	/usr/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
 endif
 
