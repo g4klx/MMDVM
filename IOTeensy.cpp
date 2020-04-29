@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017,2018,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -37,9 +37,11 @@
 #if defined(__MK20DX256__)
 #define PIN_NXDN               2
 #define PIN_POCSAG             3
+#define PIN_FM                 4
 #else
 #define PIN_NXDN               24
 #define PIN_POCSAG             25
+#define PIN_FM                 26
 #endif
 #define PIN_ADC                5        // A0,  Pin 14
 #define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
@@ -75,6 +77,9 @@ void CIO::initInt()
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   pinMode(PIN_POCSAG, OUTPUT);
+#endif
+#if !defined(USE_ALTERNATE_FM_LEDS)
+  pinMode(PIN_FM,     OUTPUT);
 #endif
 #endif
 }
@@ -240,6 +245,16 @@ void CIO::setPOCSAGInt(bool on)
   digitalWrite(PIN_DMR,   on ? HIGH : LOW);
 #else
   digitalWrite(PIN_POCSAG, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setFMInt(bool on)
+{
+#if defined(USE_ALTERNATE_FM_LEDS)
+  digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+  digitalWrite(PIN_YSF,   on ? HIGH : LOW);
+#else
+  digitalWrite(PIN_FM, on ? HIGH : LOW);
 #endif
 }
 
