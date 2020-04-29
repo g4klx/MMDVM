@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -32,6 +32,7 @@ bool m_ysfEnable    = true;
 bool m_p25Enable    = true;
 bool m_nxdnEnable   = true;
 bool m_pocsagEnable = true;
+bool m_fmEnable     = true;
 
 bool m_duplex = true;
 
@@ -59,11 +60,14 @@ CNXDNTX    nxdnTX;
 
 CPOCSAGTX  pocsagTX;
 
+CFM        fm;
+
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
 CCalDMR     calDMR;
 CCalP25     calP25;
 CCalNXDN    calNXDN;
+CCalFM      calFM;
 CCalPOCSAG  calPOCSAG;
 CCalRSSI    calRSSI;
 
@@ -106,6 +110,9 @@ void loop()
   if (m_pocsagEnable && (m_modemState == STATE_POCSAG || pocsagTX.busy()))
     pocsagTX.process();
 
+  if (m_fmEnable && m_modemState == STATE_FM)
+    fm.process();
+
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();
 
@@ -120,6 +127,9 @@ void loop()
 
   if (m_modemState == STATE_POCSAGCAL)
     calPOCSAG.process();
+
+  if (m_modemState == STATE_FMCAL10K || m_modemState == STATE_FMCAL12K || m_modemState == STATE_FMCAL15K || m_modemState == STATE_FMCAL20K || m_modemState == STATE_FMCAL25K ||m_modemState == STATE_FMCAL30K)
+    calFM.process();
 
   if (m_modemState == STATE_IDLE)
     cwIdTX.process();
