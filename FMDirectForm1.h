@@ -79,7 +79,7 @@ public:
 	inline q15_t filter(const q15_t in)
 	{
 		// calculate the output
-		register q31_t out_upscaled = c_b0 * in    //F4FXL puting stauration here made everything quiet, not sure why
+		register q31_t out_upscaled = c_b0 * in
 									+ c_b1 * m_x1
 									+ c_b2 * m_x2
 									- c_a1 * m_y1

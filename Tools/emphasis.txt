@@ -1,0 +1,58 @@
+% GNU Octave script to generate pre and deemphasis filters
+% https://dsp.stackexchange.com/questions/34605/biquad-cookbook-formula-for-broadcast-fm-de-emphasis
+% PACKAGES
+
+pkg load control
+pkg load signal
+
+clear all;
+clc;
+
+fs = 24000;
+samplingtime = 1/fs;
+
+% analog prototype
+A2 = [1];
+B2 = [0.000075 1];
+
+% Pre
+Ds = tf(B2, A2);
+% De
+% Ds = tf(A2, B2);
+ 
+Ds = Ds/dcgain(Ds);
+
+% MZT
+T1 = 0.000075; % 75us
+z1 = -exp(-1.0/(fs*T1));
+p1 = 1+z1;
+
+a0 = 1.0;
+a1 = p1;
+a2 = 0;
+
+b0 = 1.0;
+b1 = z1;
+b2 = 0;
+
+% swap between a1, b1 to select pre- or de-emphasis
+
+# Pre
+Bmzt = [b0 a1 b2]
+Amzt = [a0 b1 a2]
+% De
+% Bmzt = [b0 b1 b2]
+% Amzt = [a0 a1 a2]
+
+DzMZT = tf(Amzt, Bmzt, samplingtime);
+DzMZT = DzMZT/dcgain(DzMZT);
+
+%% Plot
+wmin = 2 * pi * 20.0; % 20Hz
+wmax = 2 * pi * ((fs/2.0) - (fs/2 - 20000)); %20kHz
+
+figure(1);
+bode(Ds, 'b', DzMZT, 'c', {wmin, wmax});
+legend('Analog prototype', 'MZT 2nd order','location', 'northwest');
+grid on;
+pause();
