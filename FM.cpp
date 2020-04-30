@@ -39,8 +39,8 @@ m_hangTimer(),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
-m_preemphasis(32768,  13967, 0, 32768, -18801, 0),//75µS 24kHz sampling rate
-m_deemphasis (32768, -18801, 0, 32768,  13967, 0),//75µS 24kHz sampling rate
+m_preemphasis(32768,   1771, 0, 32768, -30997, 0),//750µS 24kHz sampling rate
+m_deemphasis (32768, -30997, 0, 32768,   1771, 0),//750µS 24kHz sampling rate
 m_blanking(),
 m_useCOS(true),
 m_rfAudioBoost(1U),

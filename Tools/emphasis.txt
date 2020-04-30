@@ -9,21 +9,24 @@ clear all;
 clc;
 
 fs = 24000;
+timeConstant = 0.00075; %750µS
+
+
 samplingtime = 1/fs;
 
 % analog prototype
 A2 = [1];
-B2 = [0.000075 1];
+B2 = [timeConstant 1];
 
 % Pre
-Ds = tf(B2, A2);
+%Ds = tf(B2, A2);
 % De
-% Ds = tf(A2, B2);
+Ds = tf(A2, B2);
  
 Ds = Ds/dcgain(Ds);
 
 % MZT
-T1 = 0.000075; % 75us
+T1 = timeConstant;
 z1 = -exp(-1.0/(fs*T1));
 p1 = 1+z1;
 
@@ -37,12 +40,12 @@ b2 = 0;
 
 % swap between a1, b1 to select pre- or de-emphasis
 
-# Pre
-Bmzt = [b0 a1 b2]
-Amzt = [a0 b1 a2]
+% Pre
+%Bmzt = [b0 a1 b2]
+%Amzt = [a0 b1 a2]
 % De
-% Bmzt = [b0 b1 b2]
-% Amzt = [a0 a1 a2]
+Bmzt = [b0 b1 b2]
+Amzt = [a0 a1 a2]
 
 DzMZT = tf(Amzt, Bmzt, samplingtime);
 DzMZT = DzMZT/dcgain(DzMZT);
