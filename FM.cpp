@@ -83,8 +83,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
     // Only let audio through when relaying audio
     if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {    
-      currentSample = m_deemphasis.filter(currentSample);
-      m_downsampler.addSample(currentSample);
+      // currentSample = m_deemphasis.filter(currentSample);
+      // m_downsampler.addSample(currentSample);
       currentSample = m_blanking.process(currentSample);
       currentSample *= m_rfAudioBoost;
     } else {
@@ -106,7 +106,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
     currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
 
-    currentSample = m_preemphasis.filter(currentSample);
+    // currentSample = m_preemphasis.filter(currentSample);
 
     currentSample += m_ctcssTX.getAudio();
 

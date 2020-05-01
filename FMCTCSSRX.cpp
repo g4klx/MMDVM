@@ -93,7 +93,7 @@ m_rxLevelInverse(1)
 
 uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, uint8_t level)
 {
-  m_rxLevelInverse = 511 / q15_t(level);
+  m_rxLevelInverse = q15Division(65535, q15_t(level * 128));
 
   m_coeffDivTwo = 0;
 
@@ -179,3 +179,17 @@ void CFMCTCSSRX::reset()
   m_result = CTS_NONE;
   m_count  = 0U;
 }
+
+//Taken from https://en.wikipedia.org/wiki/Q_(number_format)#Division
+q15_t CFMCTCSSRX::q15Division(q15_t a, q15_t divisor)
+{
+  q31_t a31 = q31_t(a) << 16;
+
+  if (((a >> 31) & 1) == ((divisor >> 15) & 1))
+    a31 += divisor >> 1;
+  else
+    a31 -= divisor >> 1;
+
+  return a31 / divisor;
+}
+
