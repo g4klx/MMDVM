@@ -62,6 +62,8 @@ public:
   void reset();
 
 private:
+  q15_t q15Division(q15_t a, q15_t divisor);
+
   q63_t      m_coeffDivTwo;
   q31_t      m_threshold;
   uint16_t   m_count;
