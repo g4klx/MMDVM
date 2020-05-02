@@ -57,7 +57,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
-    CTCSSState ctcssState = m_ctcssRX.process(currentSample);
+    uint8_t ctcssState = m_ctcssRX.process(currentSample);
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
@@ -123,7 +123,19 @@ void CFM::process()
 
 void CFM::reset()
 {
+  m_state = FS_LISTENING;
+
+  m_callsignTimer.stop();
+  m_timeoutTimer.stop();
+  m_kerchunkTimer.stop();
+  m_ackMinTimer.stop();
+  m_ackDelayTimer.stop();
+  m_hangTimer.stop();
+
   m_ctcssRX.reset();
+  m_rfAck.stop();
+  m_callsign.stop();
+  m_timeoutTone.stop();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd)
