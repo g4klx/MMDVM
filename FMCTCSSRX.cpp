@@ -112,7 +112,7 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, uint8_t leve
   return 0U;
 }
 
-CTCSSState CFMCTCSSRX::process(q15_t sample)
+uint8_t CFMCTCSSRX::process(q15_t sample)
 {
   q31_t sample31 = q31_t(sample) * m_rxLevelInverse;
 
@@ -164,11 +164,6 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
     m_q1 = 0;
   }
 
-  return m_result;
-}
-
-CTCSSState CFMCTCSSRX::getState()
-{
   return m_result;
 }
 

@@ -57,7 +57,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
 
-    CTCSSState ctcssState = m_ctcssRX.process(currentSample);
+    uint8_t ctcssState = m_ctcssRX.process(currentSample);
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
