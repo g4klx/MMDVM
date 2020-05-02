@@ -116,7 +116,7 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
 {
   q31_t sample31 = q31_t(sample) * m_rxLevelInverse;
 
-  m_result = m_result & (~CTS_READY); 
+  m_result &= ~CTS_READY;
 
   q31_t q2 = m_q1;
   m_q1 = m_q0;
@@ -150,13 +150,13 @@ CTCSSState CFMCTCSSRX::process(q15_t sample)
     q31_t value = t2 + t4 - t9;
 
     bool previousCTCSSValid = CTCSS_VALID(m_result);
-    m_result = m_result | CTS_READY;
+    m_result |= CTS_READY;
     if (value >= m_threshold)
-      m_result = m_result | CTS_VALID;
+      m_result |= CTS_VALID;
     else
-      m_result = m_result & ~CTS_VALID;
+      m_result &= ~CTS_VALID;
 
-    if(previousCTCSSValid != CTCSS_VALID(m_result))
+    if (previousCTCSSValid != CTCSS_VALID(m_result))
       DEBUG4("CTCSS Value / Threshold / Valid", value, m_threshold, CTCSS_VALID(m_result));
 
     m_count = 0U;
@@ -192,4 +192,3 @@ q15_t CFMCTCSSRX::q15Division(q15_t a, q15_t divisor)
 
   return a31 / divisor;
 }
-

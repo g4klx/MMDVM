@@ -23,26 +23,10 @@
 
 enum CTCSSState
 {
-  CTS_NONE  = 0,
-  CTS_READY = 1,
-  CTS_VALID = 2,
-  CTS_READY_VALID = CTS_READY | CTS_VALID
+  CTS_NONE,
+  CTS_READY,
+  CTS_VALID
 };
-
-inline CTCSSState operator|(CTCSSState a, CTCSSState b)
-{
-  return static_cast<CTCSSState>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
-}
-
-inline CTCSSState operator&(CTCSSState a, CTCSSState b)
-{
-  return static_cast<CTCSSState>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
-}
-
-inline CTCSSState operator~(CTCSSState a)
-{
-  return static_cast<CTCSSState>(~(static_cast<uint8_t>(a)));
-}
 
 #define CTCSS_READY(a) ((a & CTS_READY) != 0)
 #define CTCSS_NOT_READY(a) ((a & CTS_READY) == 0)
@@ -62,8 +46,6 @@ public:
   void reset();
 
 private:
-  q15_t q15Division(q15_t a, q15_t divisor);
-
   q63_t      m_coeffDivTwo;
   q31_t      m_threshold;
   uint16_t   m_count;
@@ -71,6 +53,8 @@ private:
   q31_t      m_q1;
   CTCSSState m_result;
   q15_t      m_rxLevelInverse;
+
+  q15_t q15Division(q15_t a, q15_t divisor);
 };
 
 #endif

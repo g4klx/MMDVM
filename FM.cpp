@@ -123,7 +123,19 @@ void CFM::process()
 
 void CFM::reset()
 {
+  m_state = FS_LISTENING;
+
+  m_callsignTimer.stop();
+  m_timeoutTimer.stop();
+  m_kerchunkTimer.stop();
+  m_ackMinTimer.stop();
+  m_ackDelayTimer.stop();
+  m_hangTimer.stop();
+
   m_ctcssRX.reset();
+  m_rfAck.stop();
+  m_callsign.stop();
+  m_timeoutTone.stop();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd)
