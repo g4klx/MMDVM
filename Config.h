@@ -85,6 +85,6 @@
 // #define USE_ALTERNATE_POCSAG_LEDS
 
 // Use the D-Star and YSF LEDs for FM
-// #define USE_ALTERNATE_FM_LEDS
+#define USE_ALTERNATE_FM_LEDS
 
 #endif
