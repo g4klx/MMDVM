@@ -38,13 +38,13 @@ const struct TONE_TABLE {
 const uint8_t TONE_TABLE_DATA_LEN = 6U;
 
 CCalFM::CCalFM() :
-m_tone(NULL),
 m_frequency(0),
 m_length(0),
+m_tone(NULL),
 m_level(128*32),
 m_transmit(false),
-m_lastState(STATE_IDLE),
-m_audioSeq(0)
+m_audioSeq(0),
+m_lastState(STATE_IDLE)
 {
 }
 
