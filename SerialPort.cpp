@@ -329,7 +329,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   uint8_t fmTXLevel     = data[18U];
 
-  m_modemState  = modemState;
+  setMode(modemState);
 
   m_dstarEnable  = dstarEnable;
   m_dmrEnable    = dmrEnable;
