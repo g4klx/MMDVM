@@ -21,28 +21,9 @@
 
 #include "Config.h"
 
-enum CTCSSState
-{
-  CTS_NONE  = 0,
-  CTS_READY = 1,
-  CTS_VALID = 2,
-  CTS_READY_VALID = CTS_READY | CTS_VALID
-};
-
-inline CTCSSState operator|(CTCSSState a, CTCSSState b)
-{
-  return static_cast<CTCSSState>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
-}
-
-inline CTCSSState operator&(CTCSSState a, CTCSSState b)
-{
-  return static_cast<CTCSSState>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
-}
-
-inline CTCSSState operator~(CTCSSState a)
-{
-  return static_cast<CTCSSState>(~(static_cast<uint8_t>(a)));
-}
+const uint8_t CTS_NONE  = 0U;
+const uint8_t CTS_READY = 1U;
+const uint8_t CTS_VALID = 2U;
 
 #define CTCSS_READY(a) ((a & CTS_READY) != 0)
 #define CTCSS_NOT_READY(a) ((a & CTS_READY) == 0)
@@ -55,22 +36,20 @@ public:
 
   uint8_t setParams(uint8_t frequency, uint8_t threshold, uint8_t level);
   
-  CTCSSState process(q15_t sample);
-
-  CTCSSState getState();
+  uint8_t process(q15_t sample);
 
   void reset();
 
 private:
-  q15_t q15Division(q15_t a, q15_t divisor);
+  q63_t    m_coeffDivTwo;
+  q31_t    m_threshold;
+  uint16_t m_count;
+  q31_t    m_q0;
+  q31_t    m_q1;
+  uint8_t  m_result;
+  q15_t    m_rxLevelInverse;
 
-  q63_t      m_coeffDivTwo;
-  q31_t      m_threshold;
-  uint16_t   m_count;
-  q31_t      m_q0;
-  q31_t      m_q1;
-  CTCSSState m_result;
-  q15_t      m_rxLevelInverse;
+  q15_t q15Division(q15_t a, q15_t divisor);
 };
 
 #endif
