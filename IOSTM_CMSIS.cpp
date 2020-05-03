@@ -158,16 +158,29 @@ void GPIOConfigPin(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t mode_cnf_value
 #if defined(STM32F1_POG)
 void FancyLEDEffect()
 {
-  bitband_t foo[] = {&BB_LED, &BB_COSLED, &BB_PTT, &BB_DMR, &BB_DSTAR, &BB_YSF, &BB_P25, &BB_NXDN, &BB_POCSAG, &BB_FM};
-   
-  for(int i=0; i<10; i++){
-    *foo[i] = 0x01;
+  int ledCount = 10;
+
+  bitband_t foo[] = {&BB_LED, &BB_COSLED, &BB_PTT, &BB_DMR, &BB_DSTAR, &BB_YSF, &BB_P25, NULL, NULL, NULL};
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
+  foo_[7] = &BB_NXDN;
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
+  foo__[8] = &BB_POCSAG;
+#endif
+#if !defined(USE_ALTERNATE_FM_LEDS)
+  foo__[9] = &BB_FM;
+#endif
+
+  for(int i=0; i<ledCount; i++){
+    if(foo[i] != NULL)
+      *foo[i] = 0x01;
   }
   GPIOConfigPin(PORT_USART1_TXD, PIN_USART1_TXD, GPIO_CRL_MODE0_1);
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
   delay(SystemCoreClock/1000*100);
-  for(int i=0; i<7; i++){
-    *foo[i] = 0x00;
+  for(int i=0; i<ledCount; i++){
+    if(foo[i] != NULL)
+      *foo[i] = 0x00;
   }
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
   delay(SystemCoreClock/1000*20);
@@ -176,18 +189,22 @@ void FancyLEDEffect()
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
   
   *foo[0] = 0x01;
-  for(int i=1; i<10; i++){
+  for(int i=1; i<ledCount; i++){
     delay(SystemCoreClock/1000*10);
-    *foo[i-1] = 0x00;
-    *foo[i] = 0x01;
+    if (foo[i-1] != NULL)
+      *foo[i-1] = 0x00;
+    if (foo[i] != NULL)
+      *foo[i] = 0x01;
   }
-  for(int i=10; i>=0; i--){
+  for(int i=ledCount - 2; i>=0; i--) {
     delay(SystemCoreClock/1000*10);
-    *foo[i+1] = 0x00;
-    *foo[i] = 0x01;
+    if (foo[i+1] != NULL)
+      *foo[i+1] = 0x00;
+    if (foo[i] != NULL)
+      *foo[i] = 0x01;
   }
   delay(SystemCoreClock/1000*10);
-  *foo[5+1-6] = 0x00;
+  *foo[0] = 0x00;
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
   delay(SystemCoreClock/1000*10);
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
