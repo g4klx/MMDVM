@@ -83,7 +83,7 @@ private:
   q15_t                m_rfAudioBoost;
   CFMDownsampler       m_downsampler;
 
-  void stateMachine(bool validSignal, uint8_t length);
+  void stateMachine(bool validSignal);
   void listeningState(bool validSignal);
   void kerchunkState(bool validSignal);
   void relayingState(bool validSignal);
@@ -91,6 +91,8 @@ private:
   void timeoutState(bool validSignal);
   void timeoutWaitState(bool validSignal);
   void hangState(bool validSignal);
+
+  void clock(uint8_t length);
 
   void sendCallsign();
   void beginRelaying();

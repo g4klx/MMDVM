@@ -53,6 +53,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   if (!m_useCOS)
     cos = true;
 
+  clock(length);
+
   uint8_t i = 0U;
   for (; i < length; i++) {
     q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
@@ -65,20 +67,20 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS && cos, i + 1U);
+      stateMachine(validCTCSS && cos);
       if (m_modemState != STATE_FM)
         continue;
     } else if (CTCSS_READY(ctcssState) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS && cos, i + 1U);
+      stateMachine(validCTCSS && cos);
       if (m_modemState != STATE_FM)
         break;
     } else if (CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS && cos, i + 1U);
+      stateMachine(validCTCSS && cos);
     }
 
     // Only let audio through when relaying audio
@@ -182,16 +184,8 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   return m_ctcssTX.setParams(ctcssFrequency, ctcssLevel);
 }
 
-void CFM::stateMachine(bool validSignal, uint8_t length)
+void CFM::stateMachine(bool validSignal)
 {
-  m_callsignTimer.clock(length);
-  m_timeoutTimer.clock(length);
-  m_holdoffTimer.clock(length);
-  m_kerchunkTimer.clock(length);
-  m_ackMinTimer.clock(length);
-  m_ackDelayTimer.clock(length);
-  m_hangTimer.clock(length);
-
   switch (m_state) {
     case FS_LISTENING:
       listeningState(validSignal);
@@ -230,6 +224,17 @@ void CFM::stateMachine(bool validSignal, uint8_t length)
       m_hangTimer.stop();
     }
   }
+}
+
+void CFM::clock(uint8_t length)
+{
+  m_callsignTimer.clock(length);
+  m_timeoutTimer.clock(length);
+  m_holdoffTimer.clock(length);
+  m_kerchunkTimer.clock(length);
+  m_ackMinTimer.clock(length);
+  m_ackDelayTimer.clock(length);
+  m_hangTimer.clock(length);
 }
 
 void CFM::listeningState(bool validSignal)
