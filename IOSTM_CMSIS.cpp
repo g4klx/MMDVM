@@ -160,15 +160,21 @@ void FancyLEDEffect()
 {
   int ledCount = 10;
 
-  bitband_t foo[] = {&BB_LED, &BB_COSLED, &BB_PTT, &BB_DMR, &BB_DSTAR, &BB_YSF, &BB_P25, NULL, NULL, NULL};
-#if !defined(USE_ALTERNATE_NXDN_LEDS)
-  foo[7] = &BB_NXDN;
+  bitband_t foo[] = {&BB_LED, &BB_COSLED, &BB_PTT, &BB_DMR, &BB_DSTAR, &BB_YSF, &BB_P25,
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+	NULL,
+#else
+	&BB_NXDN,
 #endif
-#if !defined(USE_ALTERNATE_POCSAG_LEDS)
-  foo[8] = &BB_POCSAG;
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+	NULL,
+#else
+  	&BB_POCSAG,
 #endif
-#if !defined(USE_ALTERNATE_FM_LEDS)
-  foo[9] = &BB_FM;
+#if defined(USE_ALTERNATE_FM_LEDS)
+	NULL};
+#else
+	&BB_FM};
 #endif
 
   for(int i=0; i<ledCount; i++){
