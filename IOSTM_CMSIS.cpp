@@ -85,7 +85,7 @@ USART1_RXD PA10  input (AF)
 #define PIN_POCSAG        11
 #define PORT_POCSAG       GPIOB
 #define BB_POCSAG         *((bitband_t)BITBAND_PERIPH(&PORT_POCSAG->ODR, PIN_POCSAG))
-#define PIN_FM            12
+#define PIN_FM            14
 #define PORT_FM           GPIOB
 #define BB_FM             *((bitband_t)BITBAND_PERIPH(&PORT_FM->ODR, PIN_FM))
 
