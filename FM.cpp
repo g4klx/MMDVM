@@ -160,7 +160,9 @@ uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency
 uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level)
 {
   m_ackDelayTimer.setTimeout(0U, delay);
-  m_ackMinTimer.setTimeout(minTime, 0U);
+
+  if (minTime > 0U)
+    m_ackMinTimer.setTimeout(minTime, delay);
 
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
