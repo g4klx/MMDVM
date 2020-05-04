@@ -29,6 +29,7 @@ m_timeoutTone(),
 m_state(FS_LISTENING),
 m_callsignAtStart(false),
 m_callsignAtEnd(false),
+m_callsignAtLatch(false),
 m_callsignTimer(),
 m_timeoutTimer(),
 m_holdoffTimer(),
@@ -140,10 +141,11 @@ void CFM::reset()
   m_timeoutTone.stop();
 }
 
-uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd)
+uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
 {
   m_callsignAtStart = callsignAtStart;
   m_callsignAtEnd   = callsignAtEnd;
+  m_callsignAtLatch = callsignAtLatch;
 
   uint16_t holdoffTime  = holdoff * 60U;
   uint16_t callsignTime = time * 60U;
@@ -246,6 +248,8 @@ void CFM::listeningState(bool validSignal)
       DEBUG1("State to KERCHUNK");
       m_state = FS_KERCHUNK;
       m_kerchunkTimer.start();
+      if (m_callsignAtStart && !m_callsignAtLatch)
+        sendCallsign();
     } else {
       DEBUG1("State to RELAYING");
       m_state = FS_RELAYING;
@@ -269,6 +273,10 @@ void CFM::kerchunkState(bool validSignal)
       DEBUG1("State to RELAYING");
       m_state = FS_RELAYING;
       m_kerchunkTimer.stop();
+      if (m_callsignAtStart && m_callsignAtLatch) {
+        sendCallsign();
+        m_callsignTimer.start();
+      }
     }
   } else {
     DEBUG1("State to LISTENING");
