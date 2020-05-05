@@ -101,7 +101,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200502 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
+#define DESCRIPTION "20200504 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -376,6 +376,7 @@ uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
 
   bool callAtStart = (data[6U] & 0x01U) == 0x01U;
   bool callAtEnd   = (data[6U] & 0x02U) == 0x02U;
+  bool callAtLatch = (data[6U] & 0x04U) == 0x04U;
 
   char callsign[50U];
   uint8_t n = 0U;
@@ -383,7 +384,7 @@ uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
     callsign[n] = data[i];
   callsign[n] = '\0';
 
-  return fm.setCallsign(callsign, speed, frequency, time, holdoff, highLevel, lowLevel, callAtStart, callAtEnd);
+  return fm.setCallsign(callsign, speed, frequency, time, holdoff, highLevel, lowLevel, callAtStart, callAtEnd, callAtLatch);
 }
 
 uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
