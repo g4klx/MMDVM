@@ -45,7 +45,7 @@ m_deemphasis (32768, -18801, 0, 32768,  13967, 0),//75µS 24kHz sampling rate
 m_blanking(),
 m_useCOS(true),
 m_rfAudioBoost(1U),
-m_downsampler(1024)//Size might need adjustement
+m_downsampler(128)//Size might need adjustement
 {
 }
 
