@@ -77,6 +77,7 @@ const struct {
   {',', 0xEEAEE000U, 22U},
   {'-', 0xEAAE0000U, 18U},
   {'=', 0xEAB80000U, 16U},
+  {'.', 0xBAEB8000U, 20U},
   {' ', 0x00000000U, 4U},
   {0U,  0x00000000U, 0U}
 };
@@ -170,4 +171,3 @@ void CCWIdTX::reset()
   m_poPtr = 0U;
   m_n     = 0U;
 }
-
