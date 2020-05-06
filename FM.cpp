@@ -44,6 +44,7 @@ m_preemphasis(32768,  13967, 0, 32768, -18801, 0),//75µS 24kHz sampling rate
 m_deemphasis (32768, -18801, 0, 32768,  13967, 0),//75µS 24kHz sampling rate
 m_blanking(),
 m_useCOS(true),
+m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_downsampler(128)//Size might need adjustement
 {
@@ -51,8 +52,12 @@ m_downsampler(128)//Size might need adjustement
 
 void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
-  if (!m_useCOS)
+  if (m_useCOS) {
+    if (m_cosInvert)
+      cos = !cos;
+  } else {
     cos = true;
+  }
 
   clock(length);
 
@@ -169,9 +174,11 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
-  m_useCOS       = useCOS;
+  m_useCOS    = useCOS;
+  m_cosInvert = cosInvert;
+
   m_rfAudioBoost = q15_t(rfAudioBoost);
 
   m_timeoutTimer.setTimeout(timeout, 0U);
