@@ -101,7 +101,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200502 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
+#define DESCRIPTION "20200506 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -262,7 +262,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-  if (length < 19U)
+  if (length < 21U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -329,6 +329,10 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
 
   uint8_t fmTXLevel     = data[18U];
 
+  uint8_t p25TXHang     = data[19U];
+
+  uint8_t nxdnTXHang    = data[20U];
+
   setMode(modemState);
 
   m_dstarEnable  = dstarEnable;
@@ -354,6 +358,8 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   dmrIdleRX.setColorCode(colorCode);
 
   ysfTX.setParams(ysfLoDev, ysfTXHang);
+  p25TX.setParams(p25TXHang);
+  nxdnTX.setParams(nxdnTXHang);
 
   io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, txDCOffset, rxDCOffset);
 
