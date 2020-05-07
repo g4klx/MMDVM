@@ -76,43 +76,56 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS && cos);
+      // XXX Need to have somewhere to get the ext audio state
+      stateMachine(validCTCSS && cos, false);
       if (m_modemState != STATE_FM)
         continue;
     } else if (CTCSS_READY(ctcssState) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS && cos);
+      // XXX Need to have somewhere to get the ext audio state
+      stateMachine(validCTCSS && cos, false);
       if (m_modemState != STATE_FM)
         break;
     } else if (CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS && cos);
+      // XXX Need to have somewhere to get the ext audio state
+      stateMachine(validCTCSS && cos, false);
     }
 
-    // Only let audio through when relaying audio
-    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {    
+    // Only let RF audio through when relaying RF audio
+    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF) {
       // currentSample = m_deemphasis.filter(currentSample);
-      // m_downsampler.addSample(currentSample);
+
+      if (m_extEnabled)
+        m_downsampler.addSample(currentSample);
+
       currentSample = m_blanking.process(currentSample);
       currentSample *= m_rfAudioBoost;
+    } else if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+      // XXX Where do we receive the ext audio?
+      currentSample = m_blanking.process(currentSample);
+      currentSample *= m_extAudioBoost;
     } else {
       currentSample = 0;
     }
 
-    if (!m_callsign.isRunning())
+    if (!m_callsign.isRunning() && !m_extAck.isRunning())
       currentSample += m_rfAck.getHighAudio();
-    
-    if (!m_rfAck.isRunning()) {
+
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+      currentSample += m_extAck.getHighAudio();
+
+    if (!m_rfAck.isRunning() && !m_extAck.isRunning()) {
       if (m_state == FS_LISTENING)
         currentSample += m_callsign.getHighAudio();
       else
         currentSample += m_callsign.getLowAudio();
     }
 
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
     currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
@@ -145,6 +158,7 @@ void CFM::reset()
 
   m_ctcssRX.reset();
   m_rfAck.stop();
+  m_extAck.stop();
   m_callsign.stop();
   m_timeoutTone.stop();
 }
@@ -207,36 +221,51 @@ uint8_t CFM::setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t
   return m_extAck.setParams(ack, speed, frequency, level, level);
 }
 
-void CFM::stateMachine(bool validSignal)
+void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
 {
   switch (m_state) {
     case FS_LISTENING:
-      listeningState(validSignal);
+      listeningState(validRFSignal, validExtSignal);
       break;
-    case FS_KERCHUNK:
-      kerchunkState(validSignal);
+    case FS_KERCHUNK_RF:
+      kerchunkRFState(validRFSignal);
       break;
-    case FS_RELAYING:
-      relayingState(validSignal);
+    case FS_RELAYING_RF:
+      relayingRFState(validRFSignal);
       break;
-    case FS_RELAYING_WAIT:
-      relayingWaitState(validSignal);
+    case FS_RELAYING_WAIT_RF:
+      relayingRFWaitState(validRFSignal);
       break;
-    case FS_TIMEOUT:
-      timeoutState(validSignal);
+    case FS_TIMEOUT_RF:
+      timeoutRFState(validRFSignal);
       break;
-    case FS_TIMEOUT_WAIT:
-      timeoutWaitState(validSignal);
+    case FS_TIMEOUT_WAIT_RF:
+      timeoutRFWaitState(validRFSignal);
+      break;
+    case FS_KERCHUNK_EXT:
+      kerchunkExtState(validExtSignal);
+      break;
+    case FS_RELAYING_EXT:
+      relayingExtState(validExtSignal);
+      break;
+    case FS_RELAYING_WAIT_EXT:
+      relayingExtWaitState(validExtSignal);
+      break;
+    case FS_TIMEOUT_EXT:
+      timeoutExtState(validExtSignal);
+      break;
+    case FS_TIMEOUT_WAIT_EXT:
+      timeoutExtWaitState(validExtSignal);
       break;
     case FS_HANG:
-      hangState(validSignal);
+      hangState(validRFSignal, validExtSignal);
       break;
     default:
       break;
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning()) {
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning()) {
       DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
       m_callsignTimer.stop();
@@ -260,18 +289,38 @@ void CFM::clock(uint8_t length)
   m_hangTimer.clock(length);
 }
 
-void CFM::listeningState(bool validSignal)
+void CFM::listeningState(bool validRFSignal, bool validExtSignal)
 {
-  if (validSignal) {
+  if (validRFSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
-      DEBUG1("State to KERCHUNK");
-      m_state = FS_KERCHUNK;
+      DEBUG1("State to KERCHUNK_RF");
+      m_state = FS_KERCHUNK_RF;
       m_kerchunkTimer.start();
       if (m_callsignAtStart && !m_callsignAtLatch)
         sendCallsign();
     } else {
-      DEBUG1("State to RELAYING");
-      m_state = FS_RELAYING;
+      DEBUG1("State to RELAYING_RF");
+      m_state = FS_RELAYING_RF;
+      if (m_callsignAtStart)
+        sendCallsign();
+    }
+
+    beginRelaying();
+
+    m_callsignTimer.start();
+
+    DEBUG1("Change to STATE_FM");
+    m_modemState = STATE_FM;
+  } else if (validExtSignal) {
+    if (m_kerchunkTimer.getTimeout() > 0U) {
+      DEBUG1("State to KERCHUNK_EXT");
+      m_state = FS_KERCHUNK_EXT;
+      m_kerchunkTimer.start();
+      if (m_callsignAtStart && !m_callsignAtLatch)
+        sendCallsign();
+    } else {
+      DEBUG1("State to RELAYING_EXT");
+      m_state = FS_RELAYING_EXT;
       if (m_callsignAtStart)
         sendCallsign();
     }
@@ -285,12 +334,12 @@ void CFM::listeningState(bool validSignal)
   }
 }
 
-void CFM::kerchunkState(bool validSignal)
+void CFM::kerchunkRFState(bool validSignal)
 {
   if (validSignal) {
     if (m_kerchunkTimer.hasExpired()) {
-      DEBUG1("State to RELAYING");
-      m_state = FS_RELAYING;
+      DEBUG1("State to RELAYING_RF");
+      m_state = FS_RELAYING_RF;
       m_kerchunkTimer.stop();
       if (m_callsignAtStart && m_callsignAtLatch) {
         sendCallsign();
@@ -307,19 +356,19 @@ void CFM::kerchunkState(bool validSignal)
   }
 }
 
-void CFM::relayingState(bool validSignal)
+void CFM::relayingRFState(bool validSignal)
 {
   if (validSignal) {
     if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
-      DEBUG1("State to TIMEOUT");
-      m_state = FS_TIMEOUT;
+      DEBUG1("State to TIMEOUT_RF");
+      m_state = FS_TIMEOUT_RF;
       m_ackMinTimer.stop();
       m_timeoutTimer.stop();
       m_timeoutTone.start();
     }
   } else {
-    DEBUG1("State to RELAYING_WAIT");
-    m_state = FS_RELAYING_WAIT;
+    DEBUG1("State to RELAYING_WAIT_RF");
+    m_state = FS_RELAYING_WAIT_RF;
     m_ackDelayTimer.start();
   }
 
@@ -329,11 +378,11 @@ void CFM::relayingState(bool validSignal)
   }
 }
 
-void CFM::relayingWaitState(bool validSignal)
+void CFM::relayingRFWaitState(bool validSignal)
 {
   if (validSignal) {
-    DEBUG1("State to RELAYING");
-    m_state = FS_RELAYING;
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
     m_ackDelayTimer.stop();
   } else {
     if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
@@ -342,12 +391,12 @@ void CFM::relayingWaitState(bool validSignal)
 
       if (m_ackMinTimer.isRunning()) {
         if (m_ackMinTimer.hasExpired()) {
-          DEBUG1("Send ack");
+          DEBUG1("Send RF ack");
           m_rfAck.start();
           m_ackMinTimer.stop();
         }
       } else {
-          DEBUG1("Send ack");
+          DEBUG1("Send RF ack");
           m_rfAck.start();
           m_ackMinTimer.stop();
       }
@@ -364,13 +413,100 @@ void CFM::relayingWaitState(bool validSignal)
   }
 }
 
-void CFM::hangState(bool validSignal)
+void CFM::kerchunkExtState(bool validSignal)
 {
   if (validSignal) {
-    DEBUG1("State to RELAYING");
-    m_state = FS_RELAYING;
+    if (m_kerchunkTimer.hasExpired()) {
+      DEBUG1("State to RELAYING_EXT");
+      m_state = FS_RELAYING_EXT;
+      m_kerchunkTimer.stop();
+      if (m_callsignAtStart && m_callsignAtLatch) {
+        sendCallsign();
+        m_callsignTimer.start();
+      }
+    }
+  } else {
+    DEBUG1("State to LISTENING");
+    m_state = FS_LISTENING;
+    m_kerchunkTimer.stop();
+    m_timeoutTimer.stop();
+    m_ackMinTimer.stop();
+    m_callsignTimer.stop();
+  }
+}
+
+void CFM::relayingExtState(bool validSignal)
+{
+  if (validSignal) {
+    if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      DEBUG1("State to TIMEOUT_EXT");
+      m_state = FS_TIMEOUT_EXT;
+      m_ackMinTimer.stop();
+      m_timeoutTimer.stop();
+      m_timeoutTone.start();
+    }
+  } else {
+    DEBUG1("State to RELAYING_WAIT_EXT");
+    m_state = FS_RELAYING_WAIT_EXT;
+    m_ackDelayTimer.start();
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::relayingExtWaitState(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to HANG");
+      m_state = FS_HANG;
+
+      if (m_ackMinTimer.isRunning()) {
+        if (m_ackMinTimer.hasExpired()) {
+          DEBUG1("Send Ext ack");
+          m_extAck.start();
+          m_ackMinTimer.stop();
+        }
+      } else {
+          DEBUG1("Send Ext ack");
+          m_extAck.start();
+          m_ackMinTimer.stop();
+      }
+
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+      m_hangTimer.start();
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::hangState(bool validRFSignal, bool validExtSignal)
+{
+  if (validRFSignal) {
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
     DEBUG1("Stop ack");
     m_rfAck.stop();
+    m_extAck.stop();
+    beginRelaying();
+  } else if (validExtSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+    DEBUG1("Stop ack");
+    m_rfAck.stop();
+    m_extAck.stop();
     beginRelaying();
   } else {
     if (m_hangTimer.isRunning() && m_hangTimer.hasExpired()) {
@@ -391,11 +527,11 @@ void CFM::hangState(bool validSignal)
   }
 }
 
-void CFM::timeoutState(bool validSignal)
+void CFM::timeoutRFState(bool validSignal)
 {
   if (!validSignal) {
-    DEBUG1("State to TIMEOUT_WAIT");
-    m_state = FS_TIMEOUT_WAIT;
+    DEBUG1("State to TIMEOUT_WAIT_RF");
+    m_state = FS_TIMEOUT_WAIT_RF;
     m_ackDelayTimer.start();
   }
 
@@ -405,18 +541,18 @@ void CFM::timeoutState(bool validSignal)
   }
 }
 
-void CFM::timeoutWaitState(bool validSignal)
+void CFM::timeoutRFWaitState(bool validSignal)
 {
   if (validSignal) {
-    DEBUG1("State to TIMEOUT");
-    m_state = FS_TIMEOUT;
+    DEBUG1("State to TIMEOUT_RF");
+    m_state = FS_TIMEOUT_RF;
     m_ackDelayTimer.stop();
   } else {
     if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
       DEBUG1("State to HANG");
       m_state = FS_HANG;
       m_timeoutTone.stop();
-      DEBUG1("Send ack");
+      DEBUG1("Send RF ack");
       m_rfAck.start();
       m_ackDelayTimer.stop();
       m_ackMinTimer.stop();
@@ -431,6 +567,45 @@ void CFM::timeoutWaitState(bool validSignal)
   }
 }
 
+void CFM::timeoutExtState(bool validSignal)
+{
+  if (!validSignal) {
+    DEBUG1("State to TIMEOUT_WAIT_EXT");
+    m_state = FS_TIMEOUT_WAIT_EXT;
+    m_ackDelayTimer.start();
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutExtWaitState(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to TIMEOUT_EXT");
+    m_state = FS_TIMEOUT_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to HANG");
+      m_state = FS_HANG;
+      m_timeoutTone.stop();
+      DEBUG1("Send Ext ack");
+      m_extAck.start();
+      m_ackDelayTimer.stop();
+      m_ackMinTimer.stop();
+      m_timeoutTimer.stop();
+      m_hangTimer.start();
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
 void CFM::sendCallsign()
 {
   if (m_holdoffTimer.isRunning()) {

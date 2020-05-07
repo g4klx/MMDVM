@@ -32,11 +32,16 @@
 
 enum FM_STATE {
   FS_LISTENING,
-  FS_KERCHUNK,
-  FS_RELAYING,
-  FS_RELAYING_WAIT,
-  FS_TIMEOUT,
-  FS_TIMEOUT_WAIT,
+  FS_KERCHUNK_RF,
+  FS_RELAYING_RF,
+  FS_RELAYING_WAIT_RF,
+  FS_TIMEOUT_RF,
+  FS_TIMEOUT_WAIT_RF,
+  FS_KERCHUNK_EXT,
+  FS_RELAYING_EXT,
+  FS_RELAYING_WAIT_EXT,
+  FS_TIMEOUT_EXT,
+  FS_TIMEOUT_WAIT_EXT,
   FS_HANG
 };
 
@@ -91,14 +96,19 @@ private:
   CFMDownsampler       m_downsampler;
   bool                 m_extEnabled;
 
-  void stateMachine(bool validSignal);
-  void listeningState(bool validSignal);
-  void kerchunkState(bool validSignal);
-  void relayingState(bool validSignal);
-  void relayingWaitState(bool validSignal);
-  void timeoutState(bool validSignal);
-  void timeoutWaitState(bool validSignal);
-  void hangState(bool validSignal);
+  void stateMachine(bool validRFSignal, bool validExtSignal);
+  void listeningState(bool validRFSignal, bool validExtSignal);
+  void kerchunkRFState(bool validSignal);
+  void relayingRFState(bool validSignal);
+  void relayingRFWaitState(bool validSignal);
+  void timeoutRFState(bool validSignal);
+  void timeoutRFWaitState(bool validSignal);
+  void kerchunkExtState(bool validSignal);
+  void relayingExtState(bool validSignal);
+  void relayingExtWaitState(bool validSignal);
+  void timeoutExtState(bool validSignal);
+  void timeoutExtWaitState(bool validSignal);
+  void hangState(bool validRFSignal, bool validExtSignal);
 
   void clock(uint8_t length);
 
