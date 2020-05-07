@@ -450,3 +450,15 @@ void CFM::beginRelaying()
   m_timeoutTimer.start();
   m_ackMinTimer.start();
 }
+
+uint8_t CFM::getSpace() const
+{
+  // The amount of free space for receiving external audio, in bytes.
+  return 0U;
+}
+
+uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
+{
+  // Handle incoming external audio, in 12-bit packed form.
+  return 0U;
+}
