@@ -68,6 +68,7 @@ const uint8_t MMDVM_POCSAG_DATA  = 0x50U;
 const uint8_t MMDVM_FM_PARAMS1   = 0x60U;
 const uint8_t MMDVM_FM_PARAMS2   = 0x61U;
 const uint8_t MMDVM_FM_PARAMS3   = 0x62U;
+const uint8_t MMDVM_FM_DATA      = 0x65U;
 
 const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
@@ -101,7 +102,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200506 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
+#define DESCRIPTION "20200507 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -156,7 +157,7 @@ void CSerialPort::getStatus()
 
   // Send all sorts of interesting internal values
   reply[0U]  = MMDVM_FRAME_START;
-  reply[1U]  = 13U;
+  reply[1U]  = 14U;
   reply[2U]  = MMDVM_GET_STATUS;
 
   reply[3U]  = 0x00U;
@@ -238,7 +239,12 @@ void CSerialPort::getStatus()
   else
     reply[12U] = 0U;
 
-  writeInt(1U, reply, 13);
+  if (m_fmEnable)
+    reply[13U] = fm.getSpace();
+  else
+    reply[13U] = 0U;
+
+  writeInt(1U, reply, 14);
 }
 
 void CSerialPort::getVersion()
@@ -876,6 +882,20 @@ void CSerialPort::process()
             }
             break;
 
+          case MMDVM_FM_DATA:
+            if (m_fmEnable) {
+              if (m_modemState == STATE_IDLE || m_modemState == STATE_FM)
+                err = fm.writeData(m_buffer + 3U, m_len - 3U);
+            }
+            if (err == 0U) {
+              if (m_modemState == STATE_IDLE)
+                setMode(STATE_FM);
+            } else {
+              DEBUG2("Received invalid FM data", err);
+              sendNAK(err);
+            }
+            break;
+
           case MMDVM_TRANSPARENT:
           case MMDVM_QSO_INFO:
             // Do nothing on the MMDVM.
@@ -1186,6 +1206,29 @@ void CSerialPort::writeNXDNLost()
   reply[2U] = MMDVM_NXDN_LOST;
 
   writeInt(1U, reply, 3);
+}
+
+void CSerialPort::writeFMData(const uint8_t* data, uint8_t length)
+{
+  if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
+    return;
+
+  if (!m_fmEnable)
+    return;
+
+  uint8_t reply[130U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_FM_DATA;
+
+  uint8_t count = 3U;
+  for (uint8_t i = 0U; i < length; i++, count++)
+    reply[count] = data[i];
+
+  reply[1U] = count;
+
+  writeInt(1U, reply, count);
 }
 
 void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
