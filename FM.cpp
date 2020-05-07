@@ -23,6 +23,7 @@
 CFM::CFM() :
 m_callsign(),
 m_rfAck(),
+m_extAck(),
 m_ctcssRX(),
 m_ctcssTX(),
 m_timeoutTone(),
@@ -46,7 +47,9 @@ m_blanking(),
 m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
-m_downsampler(128)//Size might need adjustement
+m_extAudioBoost(1U),
+m_downsampler(128U),   //Size might need adjustement
+m_extEnabled(false)
 {
 }
 
@@ -193,6 +196,15 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
     return ret;
 
   return m_ctcssTX.setParams(ctcssFrequency, ctcssLevel);
+}
+
+uint8_t CFM::setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t frequency, uint8_t level)
+{
+  m_extEnabled = true;
+
+  m_extAudioBoost = q15_t(audioBoost);
+
+  return m_extAck.setParams(ack, speed, frequency, level, level);
 }
 
 void CFM::stateMachine(bool validSignal)

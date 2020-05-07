@@ -78,6 +78,7 @@ private:
   uint8_t setFMParams1(const uint8_t* data, uint8_t length);
   uint8_t setFMParams2(const uint8_t* data, uint8_t length);
   uint8_t setFMParams3(const uint8_t* data, uint8_t length);
+  uint8_t setFMParams4(const uint8_t* data, uint8_t length);
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);

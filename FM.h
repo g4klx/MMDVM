@@ -41,8 +41,6 @@ enum FM_STATE {
 };
 
 
-
-
 class CFM {
 public:
   CFM();
@@ -56,6 +54,7 @@ public:
   uint8_t setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch);
   uint8_t setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level);
   uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel);
+  uint8_t setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t frequency, uint8_t level);
 
   uint8_t getSpace() const;
 
@@ -64,6 +63,7 @@ public:
 private:
   CFMKeyer             m_callsign;
   CFMKeyer             m_rfAck;
+  CFMKeyer             m_extAck;
   CFMCTCSSRX           m_ctcssRX;
   CFMCTCSSTX           m_ctcssTX;
   CFMTimeout           m_timeoutTone;
@@ -87,7 +87,9 @@ private:
   bool                 m_useCOS;
   bool                 m_cosInvert;
   q15_t                m_rfAudioBoost;
+  q15_t                m_extAudioBoost;
   CFMDownsampler       m_downsampler;
+  bool                 m_extEnabled;
 
   void stateMachine(bool validSignal);
   void listeningState(bool validSignal);

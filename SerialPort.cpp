@@ -68,6 +68,7 @@ const uint8_t MMDVM_POCSAG_DATA  = 0x50U;
 const uint8_t MMDVM_FM_PARAMS1   = 0x60U;
 const uint8_t MMDVM_FM_PARAMS2   = 0x61U;
 const uint8_t MMDVM_FM_PARAMS3   = 0x62U;
+const uint8_t MMDVM_FM_PARAMS4   = 0x63U;
 const uint8_t MMDVM_FM_DATA      = 0x65U;
 
 const uint8_t MMDVM_ACK          = 0x70U;
@@ -438,6 +439,25 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
   return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssThreshold, ctcssLevel, kerchunkTime, hangTime, useCOS, cosInvert, rfAudioBoost, maxDev, rxLevel);
 }
 
+uint8_t CSerialPort::setFMParams4(const uint8_t* data, uint8_t length)
+{
+  if (length < 4U)
+    return 4U;
+
+  uint8_t  audioBoost = data[0U];
+  uint8_t  speed      = data[1U];
+  uint16_t frequency  = data[2U] * 10U;
+  uint8_t  level      = data[3U];
+
+  char ack[50U];
+  uint8_t n = 0U;
+  for (uint8_t i = 4U; i < length; i++, n++)
+    ack[n] = data[i];
+  ack[n] = '\0';
+
+  return fm.setExt(ack, audioBoost, speed, frequency, level);
+}
+
 uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
 {
   if (length < 1U)
@@ -662,6 +682,16 @@ void CSerialPort::process()
               sendACK();
             } else {
               DEBUG2("Received invalid FM params 3", err);
+              sendNAK(err);
+            }
+            break;
+
+          case MMDVM_FM_PARAMS4:
+            err = setFMParams4(m_buffer + 3U, m_len - 3U);
+            if (err == 0U) {
+              sendACK();
+            } else {
+              DEBUG2("Received invalid FM params 4", err);
               sendNAK(err);
             }
             break;
