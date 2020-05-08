@@ -77,8 +77,6 @@ private:
   CFMDirectFormI       m_filterStage1;
   CFMDirectFormI       m_filterStage2;
   CFMDirectFormI       m_filterStage3;
-  CFMDirectFormI       m_preemphasis;
-  CFMDirectFormI       m_deemphasis;
   CFMBlanking          m_blanking;
   bool                 m_useCOS;
   bool                 m_cosInvert;
