@@ -131,8 +131,10 @@ void CFM::process()
     return;
 
   uint16_t space = io.getSpace();
-  if (space == 0U)
+  if (space < 3U)
     return;
+
+  space -= 2U;
 
   if (space < length)
     length = space;
