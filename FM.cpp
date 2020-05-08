@@ -643,21 +643,17 @@ uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
   for (uint8_t i = 0U; i < length; i += 3U) {
     uint16_t sample1 = 0U;
     uint16_t sample2 = 0U;
-    uint16_t MASK = 0x0001U;
+    uint32_t MASK = 0x00000FFFU;
 
-    const uint8_t* base = data + i;
-    for (uint8_t j = 0U; j < 12U; j++, MASK <<= 1) {
-      uint8_t pos1 = j;
-      uint8_t pos2 = j + 12U;
+    uint32_t pack = 0U;
+    uint8_t* packPointer = (uint8_t*)&pack;
 
-      bool b1 = READ_BIT_AUDIO(base, pos1) != 0U;
-      bool b2 = READ_BIT_AUDIO(base, pos2) != 0U;
+    packPointer[1U] = data[i];
+    packPointer[2U] = data[i + 1U];
+    packPointer[3U] = data[i + 2U];
 
-      if (b1)
-        sample1 |= MASK;
-      if (b2)
-        sample2 |= MASK;
-    }
+    sample2 = uint16_t(pack & MASK);
+    sample1 = uint16_t(pack >> 12);
 
     // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047)
     samples[nSamples++] = q15_t(sample1) - 2048;
