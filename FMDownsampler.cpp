@@ -23,10 +23,12 @@
 
 CFMDownsampler::CFMDownsampler(uint16_t length) :
 m_ringBuffer(length),//length might need tweaking
+m_samplePack(0),
+m_samplePackBytes(0),
 m_packIndex(0),
 m_downSampleIndex(0)
 {
-    m_samplePack = 0;
+    m_samplePackBytes = &m_samplePack;
 }
 
 void CFMDownsampler::addSample(q15_t sample)
@@ -45,7 +47,7 @@ void CFMDownsampler::addSample(q15_t sample)
             m_ringBuffer.put(m_samplePackBytes[2]); 
             m_ringBuffer.put(m_samplePackBytes[3]); 
 
-            m_samplePack = 0;
+            m_samplePack = 0;//reset the sample pack
         }
         break;
         default:
@@ -53,7 +55,7 @@ void CFMDownsampler::addSample(q15_t sample)
         break;
         }
         m_packIndex++;
-        if(m_packIndex >= 2)
+        if(m_packIndex >= 2)//did we pack to samples ?
             m_packIndex = 0;  
     }
 
