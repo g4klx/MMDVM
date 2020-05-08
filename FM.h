@@ -86,8 +86,6 @@ private:
   CFMDirectFormI       m_filterStage1;
   CFMDirectFormI       m_filterStage2;
   CFMDirectFormI       m_filterStage3;
-  CFMDirectFormI       m_preemphasis;
-  CFMDirectFormI       m_deemphasis;
   CFMBlanking          m_blanking;
   bool                 m_useCOS;
   bool                 m_cosInvert;
@@ -95,6 +93,7 @@ private:
   q15_t                m_extAudioBoost;
   CFMDownsampler       m_downsampler;
   bool                 m_extEnabled;
+  q15_t                m_rxLevel;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
   void listeningState(bool validRFSignal, bool validExtSignal);

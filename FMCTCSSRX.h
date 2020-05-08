@@ -34,7 +34,7 @@ class CFMCTCSSRX {
 public:
   CFMCTCSSRX();
 
-  uint8_t setParams(uint8_t frequency, uint8_t threshold, uint8_t level);
+  uint8_t setParams(uint8_t frequency, uint8_t threshold);
   
   uint8_t process(q15_t sample);
 
@@ -47,9 +47,6 @@ private:
   q31_t    m_q0;
   q31_t    m_q1;
   uint8_t  m_result;
-  q15_t    m_rxLevelInverse;
-
-  q15_t q15Division(q15_t a, q15_t divisor);
 };
 
 #endif
