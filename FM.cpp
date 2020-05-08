@@ -20,6 +20,11 @@
 #include "Globals.h"
 #include "FM.h"
 
+const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
+
+#define WRITE_BIT_AUDIO(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
+#define READ_BIT_AUDIO(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
+
 CFM::CFM() :
 m_callsign(),
 m_rfAck(),
@@ -632,6 +637,34 @@ uint8_t CFM::getSpace() const
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
 {
-  // Handle incoming external audio, in 12-bit packed form.
+  q15_t samples[170U];
+  uint8_t nSamples = 0U;
+
+  for (uint8_t i = 0U; i < length; i += 3U) {
+    uint16_t sample1 = 0U;
+    uint16_t sample2 = 0U;
+    uint16_t MASK = 0x0001U;
+
+    uint8_t* base = data + i;
+    for (uint8_t j = 0U; j < 12U; j++, MASK <<= 1) {
+      uint8_t pos1 = j;
+      uint8_t pos2 = j + 12U;
+
+      bool b1 = READ_BIT_AUDIO(base, pos1) != 0U;
+      bool b2 = READ_BIT_AUDIO(base, pos2) != 0U;
+
+      if (b1)
+        sample1 |= MASK;
+      if (b2)
+        sample2 |= MASK;
+    }
+
+    // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047)
+    samples[nSamples++] = q15_t(sample1) - 2048;
+    samples[nSamples++] = q15_t(sample2) - 2048;
+  }
+
+  // Received audio is now in Q15 format in samples, with length nSamples.
+
   return 0U;
 }
