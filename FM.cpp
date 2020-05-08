@@ -645,7 +645,7 @@ uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
     uint16_t sample2 = 0U;
     uint16_t MASK = 0x0001U;
 
-    uint8_t* base = data + i;
+    const uint8_t* base = data + i;
     for (uint8_t j = 0U; j < 12U; j++, MASK <<= 1) {
       uint8_t pos1 = j;
       uint8_t pos2 = j + 12U;
