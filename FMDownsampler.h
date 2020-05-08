@@ -33,8 +33,8 @@ public:
 private:
   CFMDownsampleRB m_ringBuffer;
 
-  int32_t m_samplePack;
-  int32_t *m_samplePackBytes;
+  uint32_t m_samplePack;
+  uint32_t *m_samplePackPointer;
 
   uint8_t m_packIndex;
   uint8_t m_downSampleIndex;
