@@ -44,12 +44,13 @@ m_blanking(),
 m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
-m_downsampler(128),//Size might need adjustement
-m_rxLevel(1)
+m_downsampler(128U),//Size might need adjustement
+m_rxLevel(1),
+m_outputRB(2400U)   // 100ms of audio
 {
 }
 
-void CFM::samples(bool cos, q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 {
   if (m_useCOS) {
     if (m_cosInvert)
@@ -115,15 +116,32 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
     currentSample += m_ctcssTX.getAudio();
 
-    samples[i] = currentSample;
+    if (m_modemState == STATE_FM)
+      m_outputRB.put(currentSample);
   }
-
-  if (m_modemState == STATE_FM)
-    io.write(STATE_FM, samples, i);//only write the actual number of processed samples to IO
 }
 
 void CFM::process()
 {
+  if (m_modemState != STATE_FM)
+    return;
+
+  uint16_t length = m_outputRB.getData();
+  if (length == 0U)
+    return;
+
+  uint16_t space = io.getSpace();
+  if (space == 0U)
+    return;
+
+  if (space < length)
+    length = space;
+
+  for (uint16_t i = 0U; i < length; i++) {
+    q15_t sample;
+    m_outputRB.get(sample);
+    io.write(STATE_FM, &sample, 1U);
+  }
 }
 
 void CFM::reset()
@@ -141,6 +159,8 @@ void CFM::reset()
   m_rfAck.stop();
   m_callsign.stop();
   m_timeoutTone.stop();
+
+  m_outputRB.reset();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
@@ -262,6 +282,8 @@ void CFM::listeningState(bool validSignal)
       if (m_callsignAtStart)
         sendCallsign();
     }
+
+    insertSilence(50U);
 
     beginRelaying();
 
@@ -438,3 +460,10 @@ void CFM::beginRelaying()
   m_ackMinTimer.start();
 }
 
+void CFM::insertSilence(uint16_t ms)
+{
+  uint32_t nSamples = ms * 24U;
+
+  for (uint32_t i = 0U; i < nSamples; i++)
+    m_outputRB.put(0);
+}
