@@ -27,6 +27,7 @@
 #include "FMTimeout.h"
 #include "FMKeyer.h"
 #include "FMTimer.h"
+#include "FMRB.h"
 #include "FMDirectForm1.h"
 #include "FMDownsampler.h"
 
@@ -50,7 +51,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(bool cos, q15_t* samples, uint8_t length);
+  void samples(bool cos, const q15_t* samples, uint8_t length);
 
   void process();
 
@@ -94,6 +95,7 @@ private:
   CFMDownsampler       m_downsampler;
   bool                 m_extEnabled;
   q15_t                m_rxLevel;
+  CFMRB                m_outputRB;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
   void listeningState(bool validRFSignal, bool validExtSignal);
@@ -113,6 +115,7 @@ private:
 
   void sendCallsign();
   void beginRelaying();
+  void insertSilence(uint16_t ms);
 };
 
 #endif
