@@ -23,29 +23,31 @@
 
 CFMDownsampler::CFMDownsampler(uint16_t length) :
 m_ringBuffer(length),//length might need tweaking
-m_packIndex(0),
-m_downSampleIndex(0)
+m_samplePack(0U),
+m_samplePackPointer(NULL),
+m_packIndex(0U),
+m_downSampleIndex(0U)
 {
-    m_samplePack = 0;
+    m_samplePackPointer = &m_samplePack;
 }
 
 void CFMDownsampler::addSample(q15_t sample)
 {
     //only take one of three samples
-    if(m_downSampleIndex == 0) {
+    if(m_downSampleIndex == 0U) {
       switch(m_packIndex){
         case 0:
-          m_samplePack = int32_t(sample) << 12;
+          m_samplePack = uint32_t(sample) << 12;
         break;
         case 1:{
-            m_samplePack |= int32_t(sample);
+            m_samplePack |= uint32_t(sample);
             
             //we did not use MSB; skip it
-            m_ringBuffer.put(m_samplePackBytes[1]); 
-            m_ringBuffer.put(m_samplePackBytes[2]); 
-            m_ringBuffer.put(m_samplePackBytes[3]); 
+            m_ringBuffer.put(m_samplePackPointer[1U]); 
+            m_ringBuffer.put(m_samplePackPointer[2U]); 
+            m_ringBuffer.put(m_samplePackPointer[3U]); 
 
-            m_samplePack = 0;
+            m_samplePack = 0;//reset the sample pack
         }
         break;
         default:
@@ -53,11 +55,11 @@ void CFMDownsampler::addSample(q15_t sample)
         break;
         }
         m_packIndex++;
-        if(m_packIndex >= 2)
-            m_packIndex = 0;  
+        if(m_packIndex >= 2U)//did we pack to samples ?
+            m_packIndex = 0U;  
     }
 
     m_downSampleIndex++;
-    if(m_downSampleIndex >= 3)
-        m_downSampleIndex = 0;
+    if(m_downSampleIndex >= 3U)
+        m_downSampleIndex = 0U;
 }

@@ -32,10 +32,10 @@ public:
 
 private:
   CFMDownsampleRB m_ringBuffer;
-  union {
-    int32_t m_samplePack;
-    int8_t  m_samplePackBytes[4];
-  };
+
+  uint32_t m_samplePack;
+  uint32_t *m_samplePackPointer;
+
   uint8_t m_packIndex;
   uint8_t m_downSampleIndex;
 };
