@@ -24,7 +24,7 @@
 CFMDownsampler::CFMDownsampler(uint16_t length) :
 m_ringBuffer(length),//length might need tweaking
 m_samplePack(0U),
-m_samplePackPointer(0U),
+m_samplePackPointer(NULL),
 m_packIndex(0U),
 m_downSampleIndex(0U)
 {
