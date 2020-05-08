@@ -40,13 +40,12 @@ m_hangTimer(),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
-m_preemphasis(32768,  13967, 0, 32768, -18801, 0),//75µS 24kHz sampling rate
-m_deemphasis (32768, -18801, 0, 32768,  13967, 0),//75µS 24kHz sampling rate
 m_blanking(),
 m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
-m_downsampler(128)//Size might need adjustement
+m_downsampler(128),//Size might need adjustement
+m_rxLevel(1)
 {
 }
 
@@ -63,7 +62,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
   uint8_t i = 0U;
   for (; i < length; i++) {
-    q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
+    // ARMv7-M has hardware integer division 
+    q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
     uint8_t ctcssState = m_ctcssRX.process(currentSample);
 
@@ -90,8 +90,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     }
 
     // Only let audio through when relaying audio
-    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {    
-      // currentSample = m_deemphasis.filter(currentSample);
+    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {  
       // m_downsampler.addSample(currentSample);
       currentSample = m_blanking.process(currentSample);
       currentSample *= m_rfAudioBoost;
@@ -113,8 +112,6 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
       currentSample += m_timeoutTone.getAudio();
 
     currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
-
-    // currentSample = m_preemphasis.filter(currentSample);
 
     currentSample += m_ctcssTX.getAudio();
 
@@ -188,7 +185,9 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_timeoutTone.setParams(timeoutLevel);
   m_blanking.setParams(maxDev, timeoutLevel);
 
-  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold, rxLevel);
+  m_rxLevel = rxLevel; //q15_t(255)/q15_t(rxLevel >> 1);
+
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold);
   if (ret != 0U)
     return ret;
 
@@ -438,3 +437,4 @@ void CFM::beginRelaying()
   m_timeoutTimer.start();
   m_ackMinTimer.start();
 }
+
