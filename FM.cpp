@@ -46,7 +46,8 @@ m_blanking(),
 m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
-m_downsampler(128)//Size might need adjustement
+m_downsampler(128),//Size might need adjustement
+m_rxLevel(1)
 {
 }
 
@@ -63,7 +64,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
   uint8_t i = 0U;
   for (; i < length; i++) {
-    q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
+    // ARMv7-M has hardware integer division 
+    q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
     uint8_t ctcssState = m_ctcssRX.process(currentSample);
 
@@ -188,7 +190,9 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_timeoutTone.setParams(timeoutLevel);
   m_blanking.setParams(maxDev, timeoutLevel);
 
-  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold, rxLevel);
+  m_rxLevel = rxLevel; //q15_t(255)/q15_t(rxLevel >> 1);
+
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold);
   if (ret != 0U)
     return ret;
 
@@ -438,3 +442,4 @@ void CFM::beginRelaying()
   m_timeoutTimer.start();
   m_ackMinTimer.start();
 }
+
