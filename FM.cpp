@@ -52,6 +52,7 @@ m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_extAudioBoost(1U),
 m_downsampler(128U),//Size might need adjustement
+m_extEnabled(false),
 m_rxLevel(1),
 m_outputRB(2400U)   // 100ms of audio
 {
