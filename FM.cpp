@@ -51,10 +51,11 @@ m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_extAudioBoost(1U),
-m_downsampler(128U),//Size might need adjustement
+m_downsampler(1200U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
-m_outputRB(2400U)   // 100ms of audio
+m_outputRFRB(2400U),   // 100ms of audio
+m_inputExtRB(2400U) //100ms of Audio
 {
 }
 
@@ -72,46 +73,48 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
   uint8_t i = 0U;
   for (; i < length; i++) {
     // ARMv7-M has hardware integer division 
-    q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+    q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+    uint8_t ctcssState = m_ctcssRX.process(currentRFSample);
 
-    uint8_t ctcssState = m_ctcssRX.process(currentSample);
+    q15_t currentExtSample;
+    bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
 
-    if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-      //Not enough samples to determine if you have CTCSS, just carry on
+    if ((!inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
+      //Not enough samples to determine if you have CTCSS, just carry on.
       continue;
-    } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      // XXX Need to have somewhere to get the ext audio state
-      stateMachine(validCTCSS && cos, false);
+      stateMachine(validCTCSS && cos, inputExt);
       if (m_modemState != STATE_FM)
         continue;
-    } else if (CTCSS_READY(ctcssState) && m_modemState == STATE_FM) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      // XXX Need to have somewhere to get the ext audio state
-      stateMachine(validCTCSS && cos, false);
+      stateMachine(validCTCSS && cos, inputExt);
       if (m_modemState != STATE_FM)
         break;
-    } else if (CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
+    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      // XXX Need to have somewhere to get the ext audio state
-      stateMachine(validCTCSS && cos, false);
+      stateMachine(validCTCSS && cos, inputExt);
+    }
+
+    q15_t currentSample = currentRFSample;
+    q15_t currentBoost = m_rfAudioBoost;
+    if(m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT){
+      currentSample = currentExtSample;
+      currentBoost = m_extAudioBoost;
     }
 
     // Only let RF audio through when relaying RF audio
-    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF) {
-      if (m_extEnabled)
+    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+      if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
         m_downsampler.addSample(currentSample);
 
       currentSample = m_blanking.process(currentSample);
-      currentSample *= m_rfAudioBoost;
-    } else if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-      // XXX Where do we receive the ext audio?
-      currentSample = m_blanking.process(currentSample);
-      currentSample *= m_extAudioBoost;
+      currentSample *= currentBoost;
     } else {
       currentSample = 0;
     }
@@ -137,7 +140,7 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     currentSample += m_ctcssTX.getAudio();
 
     if (m_modemState == STATE_FM)
-      m_outputRB.put(currentSample);
+      m_outputRFRB.put(currentSample);
   }
 }
 
@@ -146,7 +149,7 @@ void CFM::process()
   if (m_modemState != STATE_FM)
     return;
 
-  uint16_t length = m_outputRB.getData();
+  uint16_t length = m_outputRFRB.getData();
   if (length == 0U)
     return;
 
@@ -161,7 +164,7 @@ void CFM::process()
 
   for (uint16_t i = 0U; i < length; i++) {
     q15_t sample;
-    m_outputRB.get(sample);
+    m_outputRFRB.get(sample);
     io.write(STATE_FM, &sample, 1U);
   }
 }
@@ -183,7 +186,7 @@ void CFM::reset()
   m_callsign.stop();
   m_timeoutTone.stop();
 
-  m_outputRB.reset();
+  m_outputRFRB.reset();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
@@ -656,14 +659,11 @@ void CFM::beginRelaying()
 uint8_t CFM::getSpace() const
 {
   // The amount of free space for receiving external audio, in bytes.
-  return 0U;
+  return m_inputExtRB.getSpace();
 }
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
 {
-  q15_t samples[170U];
-  uint8_t nSamples = 0U;
-
   for (uint8_t i = 0U; i < length; i += 3U) {
     uint16_t sample1 = 0U;
     uint16_t sample2 = 0U;
@@ -679,9 +679,15 @@ uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
     sample2 = uint16_t(pack & MASK);
     sample1 = uint16_t(pack >> 12);
 
-    // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047)
-    samples[nSamples++] = q15_t(sample1) - 2048;
-    samples[nSamples++] = q15_t(sample2) - 2048;
+    // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047).
+    // Incoming data has sample rate 8kHz, just add 2 empty samples after
+    // every incoming sample to upsample to 24kHz
+    m_inputExtRB.put(q15_t(sample1) - 2048);
+    m_inputExtRB.put(0);
+    m_inputExtRB.put(0);
+    m_inputExtRB.put(q15_t(sample2) - 2048);
+    m_inputExtRB.put(0);
+    m_inputExtRB.put(0);
   }
 
   // Received audio is now in Q15 format in samples, with length nSamples.
@@ -694,5 +700,5 @@ void CFM::insertSilence(uint16_t ms)
   uint32_t nSamples = ms * 24U;
 
   for (uint32_t i = 0U; i < nSamples; i++)
-    m_outputRB.put(0);
+    m_outputRFRB.put(0);
 }
