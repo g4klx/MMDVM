@@ -169,7 +169,7 @@ void CIO::interrupt()
 
   if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
     sample = ADC0_RA;
-    m_rxBuffer.put(sample, control);
+    m_rxBuffer.put({sample, control});
   }
     
 #if defined(SEND_RSSI_DATA)

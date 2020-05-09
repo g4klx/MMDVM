@@ -192,7 +192,7 @@ void CIO::interrupt()
     DACC->DACC_CDR = sample;
 
     sample = ADC->ADC_CDR[ADC_CDR_Chan];
-    m_rxBuffer.put(sample, control);
+    m_rxBuffer.put({sample, control});
 
 #if defined(SEND_RSSI_DATA)
     m_rssiBuffer.put(ADC->ADC_CDR[RSSI_CDR_Chan]);

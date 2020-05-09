@@ -1346,7 +1346,7 @@ void CIO::interrupt()
    ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
    ADC_SoftwareStartConv(ADC1);
 
-   m_rxBuffer.put(sample, control);
+   m_rxBuffer.put({sample, control});
    m_rssiBuffer.put(rawRSSI);
 
    m_watchdog++;

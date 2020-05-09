@@ -53,9 +53,9 @@ public:
   
   uint16_t getData() const;
 
-  bool put(const TDATATYPE item);
+  bool put(const volatile TDATATYPE item) volatile;
 
-  bool get(TDATATYPE& item);
+  bool get(volatile TDATATYPE& item) volatile;
 
   TDATATYPE peek() const;
 

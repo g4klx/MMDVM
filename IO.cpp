@@ -272,15 +272,16 @@ void CIO::process()
     uint16_t rssi[RX_BLOCK_SIZE];
 
     for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-      uint16_t sample;
-      m_rxBuffer.get(sample, control[i]);
+      TSample sample;
+      m_rxBuffer.get(sample);
+      control[i] = sample.control;
       m_rssiBuffer.get(rssi[i]);
 
       // Detect ADC overflow
-      if (m_detect && (sample == 0U || sample == 4095U))
+      if (m_detect && (sample.sample == 0U || sample.sample == 4095U))
         m_adcOverflow++;
 
-      q15_t res1 = q15_t(sample) - m_rxDCOffset;
+      q15_t res1 = q15_t(sample.sample) - m_rxDCOffset;
       q31_t res2 = res1 * m_rxLevel;
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }

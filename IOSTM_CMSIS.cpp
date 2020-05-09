@@ -420,7 +420,7 @@ void CIO::interrupt()
 
     // Read value from ADC1 and ADC2
     sample  = ADC1->DR;   // read conversion result; EOC is cleared by this read
-    m_rxBuffer.put(sample, control);
+    m_rxBuffer.put({sample, control});
 #if defined(SEND_RSSI_DATA)
     rawRSSI = ADC2->DR;
     m_rssiBuffer.put(rawRSSI);
