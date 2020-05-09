@@ -245,7 +245,7 @@ void CFM::stateMachine(bool validSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning()) {
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && m_outputRB.getData() == 0U) {
       DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
       m_callsignTimer.stop();
