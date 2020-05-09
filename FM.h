@@ -84,6 +84,7 @@ private:
   q15_t                m_rfAudioBoost;
   CFMDownsampler       m_downsampler;
   q15_t                m_rxLevel;
+  CFMRB                m_inputRB;
   CFMRB                m_outputRB;
 
   void stateMachine(bool validSignal);
@@ -99,6 +100,8 @@ private:
 
   void sendCallsign();
   void beginRelaying();
+
+  void insertDelay(uint16_t ms);
   void insertSilence(uint16_t ms);
 };
 

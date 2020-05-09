@@ -46,8 +46,10 @@ m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_downsampler(128U),//Size might need adjustement
 m_rxLevel(1),
+m_inputRB(4800U),   // 200ms of audio
 m_outputRB(2400U)   // 100ms of audio
 {
+  insertDelay(100U);
 }
 
 void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
@@ -67,6 +69,10 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
     uint8_t ctcssState = m_ctcssRX.process(currentSample);
+
+    // Delay the audio by 100ms to better match the CTCSS detector output
+    m_inputRB.put(currentSample);
+    m_inputRB.get(currentSample);
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
@@ -460,6 +466,14 @@ void CFM::beginRelaying()
 {
   m_timeoutTimer.start();
   m_ackMinTimer.start();
+}
+
+void CFM::insertDelay(uint16_t ms)
+{
+  uint32_t nSamples = ms * 24U;
+
+  for (uint32_t i = 0U; i < nSamples; i++)
+    m_inputRB.put(0);
 }
 
 void CFM::insertSilence(uint16_t ms)
