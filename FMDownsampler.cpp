@@ -22,7 +22,7 @@
 
 
 CFMDownsampler::CFMDownsampler(uint16_t length) :
-m_ringBuffer(length),//length might need tweaking
+m_ringBuffer(length),
 m_samplePack(0U),
 m_samplePackPointer(NULL),
 m_packIndex(0U),
@@ -62,4 +62,15 @@ void CFMDownsampler::addSample(q15_t sample)
     m_downSampleIndex++;
     if(m_downSampleIndex >= 3U)
         m_downSampleIndex = 0U;
+}
+
+bool CFMDownsampler::getPackedData(uint8_t& data)
+{
+  return m_ringBuffer.get(data);
+}
+
+void CFMDownsampler::reset()
+{
+  m_downSampleIndex = 0;
+  m_packIndex = 0;
 }

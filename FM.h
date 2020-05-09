@@ -27,7 +27,7 @@
 #include "FMTimeout.h"
 #include "FMKeyer.h"
 #include "FMTimer.h"
-#include "FMRB.h"
+#include "RingBuffer.h"
 #include "FMDirectForm1.h"
 #include "FMDownsampler.h"
 
@@ -95,8 +95,8 @@ private:
   CFMDownsampler       m_downsampler;
   bool                 m_extEnabled;
   q15_t                m_rxLevel;
-  CFMRB                m_outputRFRB;
-  CFMRB                m_inputExtRB;
+  CRingBuffer<q15_t>   m_outputRFRB;
+  CRingBuffer<q15_t>   m_inputExtRB;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
   void listeningState(bool validRFSignal, bool validExtSignal);
