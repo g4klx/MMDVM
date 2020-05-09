@@ -21,80 +21,16 @@ Boston, MA  02110-1301, USA.
 #include "SerialRB.h"
 
 CSerialRB::CSerialRB(uint16_t length) :
-m_length(length),
-m_head(0U),
-m_tail(0U),
-m_full(false)
+CRingBuffer<uint8_t>(length)
 {
-  m_buffer = new uint8_t[length];
-}
-
-void CSerialRB::reset()
-{
-  m_head = 0U;
-  m_tail = 0U;
-  m_full = false;
-}
-
-uint16_t CSerialRB::getSpace() const
-{
-  uint16_t n = 0U;
-
-  if (m_tail == m_head)
-    n = m_full ? 0U : m_length;
-  else if (m_tail < m_head)
-    n = m_length - m_head + m_tail;
-  else
-    n = m_tail - m_head;
-
-  if (n > m_length)
-    n = 0U;
-
-  return n;
-}
-
-uint16_t CSerialRB::getData() const
-{
-  if (m_tail == m_head)
-    return m_full ? m_length : 0U;
-  else if (m_tail < m_head)
-    return m_head - m_tail;
-  else
-    return m_length - m_tail + m_head;
-}
-
-bool CSerialRB::put(uint8_t c)
-{
-  if (m_full)
-    return false;
-
-  m_buffer[m_head] = c;
-
-  m_head++;
-  if (m_head >= m_length)
-    m_head = 0U;
-
-  if (m_head == m_tail)
-    m_full = true;
-
-  return true;
-}
-
-uint8_t CSerialRB::peek() const
-{
-  return m_buffer[m_tail];
 }
 
 uint8_t CSerialRB::get()
 {
-  uint8_t value = m_buffer[m_tail];
-
-  m_full = false;
-
-  m_tail++;
-  if (m_tail >= m_length)
-    m_tail = 0U;
-
-  return value;
+  uint8_t value;
+  if(CRingBuffer<uint8_t>::get(value))
+    return value;
+  
+  return 0U;
 }
 

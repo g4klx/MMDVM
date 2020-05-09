@@ -56,7 +56,7 @@ public:
   bool put(const volatile TDATATYPE item) volatile;
 
   bool get(volatile TDATATYPE& item) volatile;
-
+  
   TDATATYPE peek() const;
 
   bool hasOverflowed();

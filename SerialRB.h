@@ -21,41 +21,15 @@ Boston, MA  02110-1301, USA.
 #if !defined(SERIALRB_H)
 #define  SERIALRB_H
 
-#if defined(STM32F4XX)
-#include "stm32f4xx.h"
-#elif defined(STM32F7XX)
-#include "stm32f7xx.h"
-#elif defined(STM32F105xC)
-#include "stm32f1xx.h"
-#include <cstddef>
-#else
-#include <Arduino.h>
-#endif
+#include "RingBuffer.h"
 
 const uint16_t SERIAL_RINGBUFFER_SIZE = 370U;
 
-class CSerialRB {
+class CSerialRB : public CRingBuffer<uint8_t>{
 public:
   CSerialRB(uint16_t length = SERIAL_RINGBUFFER_SIZE);
 
-  uint16_t getSpace() const;
-
-  uint16_t getData() const;
-
-  void reset();
-
-  bool put(uint8_t c);
-
-  uint8_t peek() const;
-
   uint8_t get();
-
-private:
-  uint16_t          m_length;
-  volatile uint8_t* m_buffer;
-  volatile uint16_t m_head;
-  volatile uint16_t m_tail;
-  volatile bool     m_full;
 };
 
 #endif
