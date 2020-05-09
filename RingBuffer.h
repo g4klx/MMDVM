@@ -53,9 +53,9 @@ public:
   
   uint16_t getData() const;
 
-  bool put(TDATATYPE sample);
+  bool put(const TDATATYPE item);
 
-  bool get(TDATATYPE& sample);
+  bool get(TDATATYPE& item);
 
   TDATATYPE peek() const;
 
@@ -72,6 +72,6 @@ private:
   bool                  m_overflow;
 };
 
-
+#include "RingBuffer.impl.h"
 
 #endif
