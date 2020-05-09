@@ -22,7 +22,7 @@
 #include "Globals.h"
 
 #include "SampleRB.h"
-#include "RSSIRB.h"
+#include "RingBuffer.h"
 
 class CIO {
 public:
@@ -57,11 +57,11 @@ public:
   void selfTest();
 
 private:
-  bool                 m_started;
+  bool                  m_started;
 
-  CSampleRB            m_rxBuffer;
-  CSampleRB            m_txBuffer;
-  CRSSIRB              m_rssiBuffer;
+  CSampleRB             m_rxBuffer;
+  CSampleRB             m_txBuffer;
+  CRingBuffer<uint16_t> m_rssiBuffer;
 
   arm_biquad_casd_df1_inst_q31 m_dcFilter;
   q31_t                        m_dcState[4];
