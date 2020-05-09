@@ -51,10 +51,11 @@ m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_extAudioBoost(1U),
-m_downsampler(128U),//Size might need adjustement
+m_downsampler(1200U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
-m_outputRB(2400U)   // 100ms of audio
+m_outputRB(2400U),   // 100ms of audio
+m_incomingNetworkRB(2400U) //100ms of Audio
 {
 }
 
@@ -656,14 +657,11 @@ void CFM::beginRelaying()
 uint8_t CFM::getSpace() const
 {
   // The amount of free space for receiving external audio, in bytes.
-  return 0U;
+  return m_incomingNetworkRB.getSpace();
 }
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
 {
-  q15_t samples[170U];
-  uint8_t nSamples = 0U;
-
   for (uint8_t i = 0U; i < length; i += 3U) {
     uint16_t sample1 = 0U;
     uint16_t sample2 = 0U;
@@ -679,9 +677,15 @@ uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
     sample2 = uint16_t(pack & MASK);
     sample1 = uint16_t(pack >> 12);
 
-    // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047)
-    samples[nSamples++] = q15_t(sample1) - 2048;
-    samples[nSamples++] = q15_t(sample2) - 2048;
+    // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047).
+    // Incoming data has sample rate 8kHz, just add 2 empty samples after
+    // every incoming sample to upsample to 24kHz
+    m_incomingNetworkRB.put(q15_t(sample1) - 2048);
+    m_incomingNetworkRB.put(0);
+    m_incomingNetworkRB.put(0);
+    m_incomingNetworkRB.put(q15_t(sample2) - 2048);
+    m_incomingNetworkRB.put(0);
+    m_incomingNetworkRB.put(0);
   }
 
   // Received audio is now in Q15 format in samples, with length nSamples.

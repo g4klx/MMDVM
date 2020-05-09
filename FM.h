@@ -96,6 +96,7 @@ private:
   bool                 m_extEnabled;
   q15_t                m_rxLevel;
   CFMRB                m_outputRB;
+  CFMRB                m_incomingNetworkRB;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
   void listeningState(bool validRFSignal, bool validExtSignal);
