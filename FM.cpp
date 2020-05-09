@@ -102,19 +102,19 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     }
 
     q15_t currentSample = currentRFSample;
-    if(m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT)
+    q15_t currentBoost = m_rfAudioBoost;
+    if(m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT){
       currentSample = currentExtSample;
+      currentBoost = m_extAudioBoost;
+    }
 
     // Only let RF audio through when relaying RF audio
-    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF) {
-      if (m_extEnabled)
+    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+      if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
         m_downsampler.addSample(currentSample);
 
       currentSample = m_blanking.process(currentSample);
-      currentSample *= m_rfAudioBoost;
-    } else if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-      currentSample = m_blanking.process(currentSample);
-      currentSample *= m_extAudioBoost;
+      currentSample *= currentBoost;
     } else {
       currentSample = 0;
     }
