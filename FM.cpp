@@ -73,34 +73,37 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
   uint8_t i = 0U;
   for (; i < length; i++) {
     // ARMv7-M has hardware integer division 
-    q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+    q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+    uint8_t ctcssState = m_ctcssRX.process(currentRFSample);
 
-    uint8_t ctcssState = m_ctcssRX.process(currentSample);
+    q15_t currentExtSample;
+    bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
 
-    if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
+    if ((!inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on.
       continue;
-    } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      // XXX Need to have somewhere to get the ext audio state
-      stateMachine(validCTCSS && cos, false);
+      stateMachine(validCTCSS && cos, inputExt);
       if (m_modemState != STATE_FM)
         continue;
-    } else if (CTCSS_READY(ctcssState) && m_modemState == STATE_FM) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      // XXX Need to have somewhere to get the ext audio state
-      stateMachine(validCTCSS && cos, false);
+      stateMachine(validCTCSS && cos, inputExt);
       if (m_modemState != STATE_FM)
         break;
-    } else if (CTCSS_NOT_READY(ctcssState) && m_modemState == STATE_FM && i == length - 1) {
+    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
       bool validCTCSS = CTCSS_VALID(ctcssState);
-      // XXX Need to have somewhere to get the ext audio state
-      stateMachine(validCTCSS && cos, false);
+      stateMachine(validCTCSS && cos, inputExt);
     }
+
+    q15_t currentSample = currentRFSample;
+    if(m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT)
+      currentSample = currentExtSample;
 
     // Only let RF audio through when relaying RF audio
     if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF) {
@@ -110,7 +113,6 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
       currentSample = m_blanking.process(currentSample);
       currentSample *= m_rfAudioBoost;
     } else if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-      // XXX Where do we receive the ext audio?
       currentSample = m_blanking.process(currentSample);
       currentSample *= m_extAudioBoost;
     } else {
