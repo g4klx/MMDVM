@@ -95,6 +95,7 @@ private:
   CFMDownsampler       m_downsampler;
   bool                 m_extEnabled;
   q15_t                m_rxLevel;
+  CRingBuffer<q15_t>   m_inputRFRB;
   CRingBuffer<q15_t>   m_outputRFRB;
   CRingBuffer<q15_t>   m_inputExtRB;
 
@@ -116,6 +117,8 @@ private:
 
   void sendCallsign();
   void beginRelaying();
+
+  void insertDelay(uint16_t ms);
   void insertSilence(uint16_t ms);
 };
 
