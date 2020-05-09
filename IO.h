@@ -26,14 +26,6 @@
 struct TSample {
   volatile uint16_t sample;
   volatile uint8_t control;
-
-  TSample operator=(const volatile TSample& other) volatile {
-      return {other.sample, other.control};
-  }
-
-  volatile TSample operator=(const TSample& other) volatile {
-      return {other.sample, other.control};
-  }
 };
 
 class CIO {
