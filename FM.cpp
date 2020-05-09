@@ -342,6 +342,8 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
+    insertSilence(50U);
+
     beginRelaying();
 
     m_callsignTimer.start();
