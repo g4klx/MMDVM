@@ -493,9 +493,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
       m_dacOverflow++;
 
     if (control == NULL)
-      m_txBuffer.put(res3, MARK_NONE);
+      m_txBuffer.put({res3, MARK_NONE});
     else
-      m_txBuffer.put(res3, control[i]);
+      m_txBuffer.put({res3, control[i]});
   }
 }
 

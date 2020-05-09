@@ -185,14 +185,13 @@ void CIO::startInt()
 void CIO::interrupt()
 {
   if ((ADC->ADC_ISR & ADC_ISR_EOC_Chan) == ADC_ISR_EOC_Chan) {    // Ensure there was an End-of-Conversion and we read the ISR reg
-    uint8_t control = MARK_NONE;
-    uint16_t sample = DC_OFFSET;
+    TSample sample = {DC_OFFSET, MARK_NONE};
 
-    m_txBuffer.get(sample, control);
-    DACC->DACC_CDR = sample;
+    m_txBuffer.get(sample);
+    DACC->DACC_CDR = sample.sample;
 
-    sample = ADC->ADC_CDR[ADC_CDR_Chan];
-    m_rxBuffer.put({sample, control});
+    sample.sample = ADC->ADC_CDR[ADC_CDR_Chan];
+    m_rxBuffer.put(sample);
 
 #if defined(SEND_RSSI_DATA)
     m_rssiBuffer.put(ADC->ADC_CDR[RSSI_CDR_Chan]);

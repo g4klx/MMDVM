@@ -21,7 +21,6 @@
 
 #include "Globals.h"
 
-#include "SampleRB.h"
 #include "RingBuffer.h"
 
 struct TSample {
@@ -73,7 +72,7 @@ private:
   bool                  m_started;
 
   CRingBuffer<TSample>  m_rxBuffer;
-  CSampleRB             m_txBuffer;
+  CRingBuffer<TSample>  m_txBuffer;
   CRingBuffer<uint16_t> m_rssiBuffer;
 
   arm_biquad_casd_df1_inst_q31 m_dcFilter;
