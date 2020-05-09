@@ -187,6 +187,9 @@ void CFM::reset()
   m_timeoutTone.stop();
 
   m_outputRFRB.reset();
+  m_inputExtRB.reset();
+
+  m_downsampler.reset();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
