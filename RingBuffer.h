@@ -47,15 +47,17 @@
 template <typename TDATATYPE>
 class CRingBuffer {
 public:
-  CRingBuffer(uint16_t length);
+  CRingBuffer(uint16_t length = 370U);
   
   uint16_t getSpace() const;
   
   uint16_t getData() const;
 
-  bool put(const volatile TDATATYPE item) volatile;
+  bool put(TDATATYPE item) volatile;
 
-  bool get(volatile TDATATYPE& item) volatile;
+  bool get(TDATATYPE& item);
+
+  TDATATYPE get();
   
   TDATATYPE peek() const;
 
@@ -65,7 +67,7 @@ public:
 
 private:
   uint16_t              m_length;
-  volatile TDATATYPE*   m_buffer;
+  TDATATYPE*            m_buffer;
   volatile uint16_t     m_head;
   volatile uint16_t     m_tail;
   volatile bool         m_full;

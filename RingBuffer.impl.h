@@ -56,14 +56,14 @@ template <typename TDATATYPE> uint16_t CRingBuffer<TDATATYPE>::getData() const
     return m_length - m_tail + m_head;
 }
 
-template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::put(const TDATATYPE sample) volatile
+template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::put(TDATATYPE item) volatile
 {
   if (m_full) {
     m_overflow = true;
     return false;
   }
 
-  m_buffer[m_head] = sample;
+  m_buffer[m_head] = item;
 
   m_head++;
   if (m_head >= m_length)
@@ -80,7 +80,7 @@ template <typename TDATATYPE> TDATATYPE CRingBuffer<TDATATYPE>::peek() const
   return m_buffer[m_tail];
 }
 
-template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::get(volatile TDATATYPE& item) volatile
+template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::get(TDATATYPE& item)
 {
   if (m_head == m_tail && !m_full)
     return false;
@@ -111,4 +111,13 @@ template <typename TDATATYPE> void CRingBuffer<TDATATYPE>::reset()
   m_tail = 0U;
   m_full     = false;
   m_overflow = false;
+}
+
+template <typename TDATATYPE>  TDATATYPE CRingBuffer<TDATATYPE>::get()
+{
+  TDATATYPE value;
+  if(get(value))
+    return value;
+
+  //return 0U;
 }
