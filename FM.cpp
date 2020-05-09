@@ -54,8 +54,8 @@ m_extAudioBoost(1U),
 m_downsampler(1200U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
-m_outputRB(2400U),   // 100ms of audio
-m_incomingNetworkRB(2400U) //100ms of Audio
+m_outputRFRB(2400U),   // 100ms of audio
+m_inputExtRB(2400U) //100ms of Audio
 {
 }
 
@@ -78,7 +78,7 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     uint8_t ctcssState = m_ctcssRX.process(currentSample);
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-      //Not enough samples to determine if you have CTCSS, just carry on
+      //Not enough samples to determine if you have CTCSS, just carry on.
       continue;
     } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
@@ -138,7 +138,7 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     currentSample += m_ctcssTX.getAudio();
 
     if (m_modemState == STATE_FM)
-      m_outputRB.put(currentSample);
+      m_outputRFRB.put(currentSample);
   }
 }
 
@@ -147,7 +147,7 @@ void CFM::process()
   if (m_modemState != STATE_FM)
     return;
 
-  uint16_t length = m_outputRB.getData();
+  uint16_t length = m_outputRFRB.getData();
   if (length == 0U)
     return;
 
@@ -162,7 +162,7 @@ void CFM::process()
 
   for (uint16_t i = 0U; i < length; i++) {
     q15_t sample;
-    m_outputRB.get(sample);
+    m_outputRFRB.get(sample);
     io.write(STATE_FM, &sample, 1U);
   }
 }
@@ -184,7 +184,7 @@ void CFM::reset()
   m_callsign.stop();
   m_timeoutTone.stop();
 
-  m_outputRB.reset();
+  m_outputRFRB.reset();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
@@ -657,7 +657,7 @@ void CFM::beginRelaying()
 uint8_t CFM::getSpace() const
 {
   // The amount of free space for receiving external audio, in bytes.
-  return m_incomingNetworkRB.getSpace();
+  return m_inputExtRB.getSpace();
 }
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
@@ -680,12 +680,12 @@ uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
     // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047).
     // Incoming data has sample rate 8kHz, just add 2 empty samples after
     // every incoming sample to upsample to 24kHz
-    m_incomingNetworkRB.put(q15_t(sample1) - 2048);
-    m_incomingNetworkRB.put(0);
-    m_incomingNetworkRB.put(0);
-    m_incomingNetworkRB.put(q15_t(sample2) - 2048);
-    m_incomingNetworkRB.put(0);
-    m_incomingNetworkRB.put(0);
+    m_inputExtRB.put(q15_t(sample1) - 2048);
+    m_inputExtRB.put(0);
+    m_inputExtRB.put(0);
+    m_inputExtRB.put(q15_t(sample2) - 2048);
+    m_inputExtRB.put(0);
+    m_inputExtRB.put(0);
   }
 
   // Received audio is now in Q15 format in samples, with length nSamples.
@@ -698,5 +698,5 @@ void CFM::insertSilence(uint16_t ms)
   uint32_t nSamples = ms * 24U;
 
   for (uint32_t i = 0U; i < nSamples; i++)
-    m_outputRB.put(0);
+    m_outputRFRB.put(0);
 }
