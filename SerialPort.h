@@ -21,7 +21,7 @@
 
 #include "Config.h"
 #include "Globals.h"
-#include "SerialRB.h"
+#include "RingBuffer.h"
 
 
 class CSerialPort {
@@ -66,7 +66,7 @@ private:
   uint8_t   m_ptr;
   uint8_t   m_len;
   bool      m_debug;
-  CSerialRB m_repeat;
+  CRingBuffer<uint8_t> m_repeat;
 
   void    sendACK();
   void    sendNAK(uint8_t err);

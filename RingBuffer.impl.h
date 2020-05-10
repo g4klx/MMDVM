@@ -112,12 +112,3 @@ template <typename TDATATYPE> void CRingBuffer<TDATATYPE>::reset()
   m_full     = false;
   m_overflow = false;
 }
-
-template <typename TDATATYPE>  TDATATYPE CRingBuffer<TDATATYPE>::get()
-{
-  TDATATYPE value;
-  if(get(value))
-    return value;
-
-  //return 0U;
-}

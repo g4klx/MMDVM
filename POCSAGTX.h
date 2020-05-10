@@ -21,7 +21,7 @@
 
 #include "Config.h"
 
-#include "SerialRB.h"
+#include "RingBuffer.h"
 
 class CPOCSAGTX {
 public:
@@ -40,7 +40,7 @@ public:
   bool busy();
 
 private:
-  CSerialRB            m_buffer;
+  CRingBuffer<uint8_t>            m_buffer;
   arm_fir_instance_q15 m_modFilter;
   q15_t                m_modState[170U];     // NoTaps + BlockSize - 1, 6 + 160 - 1 plus some spare
   uint8_t              m_poBuffer[200U];

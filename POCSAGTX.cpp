@@ -61,7 +61,8 @@ void CPOCSAGTX::process()
         m_poBuffer[m_poLen++] = POCSAG_SYNC;
     } else {
       for (uint8_t i = 0U; i < POCSAG_FRAME_LENGTH_BYTES; i++) {
-        uint8_t c = m_buffer.get();
+        uint8_t c;
+        m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }
     }
