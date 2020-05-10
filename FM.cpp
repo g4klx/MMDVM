@@ -86,6 +86,7 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 
     q15_t currentExtSample;
     bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
+    inputExt = inputExt && m_extEnabled;
 
     if (!inputExt && (CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on. But only if we haven't any external data in the queue
@@ -116,12 +117,15 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
       currentBoost = m_extAudioBoost;
     }
 
+    
+
     // Only let RF audio through when relaying RF audio
     if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+      currentSample = m_blanking.process(currentSample);
+      
       if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
         m_downsampler.addSample(currentSample);
 
-      currentSample = m_blanking.process(currentSample);
       currentSample *= currentBoost;
     } else {
       currentSample = 0;
@@ -157,6 +161,11 @@ void CFM::process()
   q15_t sample;
   while(io.getSpace() >= 3U && m_outputRFRB.get(sample))
     io.write(STATE_FM, &sample, 1U);
+
+  uint8_t serialSample;
+  //write data to serial port
+  while(m_downsampler.getPackedData(serialSample))
+    serial.writeFMData(&serialSample, 1U);
 }
 
 void CFM::reset()
