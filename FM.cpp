@@ -117,12 +117,10 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
       currentBoost = m_extAudioBoost;
     }
 
-    
-
     // Only let RF audio through when relaying RF audio
     if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
       currentSample = m_blanking.process(currentSample);
-      
+
       if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
         m_downsampler.addSample(currentSample);
 
@@ -159,12 +157,12 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 void CFM::process()
 {
   q15_t sample;
-  while(io.getSpace() >= 3U && m_outputRFRB.get(sample))
+  while (io.getSpace() >= 3U && m_outputRFRB.get(sample))
     io.write(STATE_FM, &sample, 1U);
 
   uint8_t serialSample;
   //write data to serial port
-  while(m_downsampler.getPackedData(serialSample))
+  while (m_downsampler.getPackedData(serialSample))
     serial.writeFMData(&serialSample, 1U);
 }
 
@@ -295,16 +293,14 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning()) {
-      DEBUG1("Change to STATE_IDLE");
-      m_modemState = STATE_IDLE;
-      m_callsignTimer.stop();
-      m_timeoutTimer.stop();
-      m_kerchunkTimer.stop();
-      m_ackMinTimer.stop();
-      m_ackDelayTimer.stop();
-      m_hangTimer.stop();
-    }
+    DEBUG1("Change to STATE_IDLE");
+    m_modemState = STATE_IDLE;
+    m_callsignTimer.stop();
+    m_timeoutTimer.stop();
+    m_kerchunkTimer.stop();
+    m_ackMinTimer.stop();
+    m_ackDelayTimer.stop();
+    m_hangTimer.stop();
   }
 }
 
