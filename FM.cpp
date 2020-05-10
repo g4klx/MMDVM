@@ -152,25 +152,8 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 
 void CFM::process()
 {
-  if (m_modemState != STATE_FM)
-    return;
-
-  uint16_t length = m_outputRFRB.getData();
-  if (length == 0U)
-    return;
-
-  uint16_t space = io.getSpace();
-  if (space < 3U)
-    return;
-
-  space -= 2U;
-
-  if (space < length)
-    length = space;
-
-  for (uint16_t i = 0U; i < length; i++) {
-    q15_t sample;
-    m_outputRFRB.get(sample);
+  q15_t sample;
+  while(io.getSpace() >= 3U && m_outputRFRB.get(sample)) {
     io.write(STATE_FM, &sample, 1U);
   }
 }
@@ -302,7 +285,7 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning() && m_outputRFRB.getData() == 0U) {
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning()) {
       DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
       m_callsignTimer.stop();
@@ -721,3 +704,4 @@ void CFM::insertSilence(uint16_t ms)
   for (uint32_t i = 0U; i < nSamples; i++)
     m_outputRFRB.put(0);
 }
+
