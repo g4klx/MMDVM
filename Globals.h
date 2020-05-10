@@ -28,6 +28,7 @@
 #include "STM32Utils.h"
 #else
 #include <Arduino.h>
+#undef PI //Undefine PI to get rid of annoying warning as it is also defined in arm_math.h.
 #endif
 
 #if defined(__SAM3X8E__) || defined(STM32F105xC)

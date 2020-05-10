@@ -20,7 +20,6 @@
 #if !defined(RINGBUFFER_H)
 #define  RINGBUFFER_H
 
-
 #if defined(STM32F4XX)
 #include "stm32f4xx.h"
 #elif defined(STM32F7XX)
@@ -30,6 +29,7 @@
 #include <cstddef>
 #else
 #include <Arduino.h>
+#undef PI
 #endif
 
 #if defined(__SAM3X8E__) || defined(STM32F105xC)
@@ -56,7 +56,7 @@ public:
   bool put(TDATATYPE item) volatile;
 
   bool get(TDATATYPE& item);
-  
+
   TDATATYPE peek() const;
 
   bool hasOverflowed();
