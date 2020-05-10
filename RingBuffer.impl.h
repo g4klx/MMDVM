@@ -80,7 +80,7 @@ template <typename TDATATYPE> TDATATYPE CRingBuffer<TDATATYPE>::peek() const
   return m_buffer[m_tail];
 }
 
-template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::get(TDATATYPE& item)
+template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::get(TDATATYPE& item) volatile
 {
   if (m_head == m_tail && !m_full)
     return false;

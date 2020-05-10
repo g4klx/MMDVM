@@ -55,7 +55,7 @@ public:
 
   bool put(TDATATYPE item) volatile;
 
-  bool get(TDATATYPE& item);
+  bool get(TDATATYPE& item) volatile;
 
   TDATATYPE peek() const;
 
