@@ -85,8 +85,8 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     q15_t currentExtSample;
     bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
 
-    if ((!inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
-      //Not enough samples to determine if you have CTCSS, just carry on.
+    if (!inputExt && (CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
+      //Not enough samples to determine if you have CTCSS, just carry on. But only if we haven't any external data in the queue
       continue;
     } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
