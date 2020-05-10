@@ -41,7 +41,7 @@ CCalFM::CCalFM() :
 m_frequency(0),
 m_length(0),
 m_tone(NULL),
-m_level(128*32),
+m_level(128 * 12),
 m_transmit(false),
 m_audioSeq(0),
 m_lastState(STATE_IDLE)
@@ -52,29 +52,29 @@ void CCalFM::process()
 {
   const TONE_TABLE* entry = NULL;
 
-  if (m_modemState!=m_lastState)
+  if (m_modemState != m_lastState)
   {
     switch (m_modemState) {
         case STATE_FMCAL10K:
-          m_frequency=956U;
+          m_frequency = 956U;
           break;
         case STATE_FMCAL12K:
-          m_frequency=1039U;
+          m_frequency = 1039U;
           break;
         case STATE_FMCAL15K:
-          m_frequency=1247U;
+          m_frequency = 1247U;
           break;
         case STATE_FMCAL20K:
-          m_frequency=1633U;
+          m_frequency = 1633U;
           break;
         case STATE_FMCAL25K:
-          m_frequency=2079U;
+          m_frequency = 2079U;
           break;
         case STATE_FMCAL30K:
-          m_frequency=2495U;
+          m_frequency = 2495U;
           break;
         default:
-          m_frequency=0;
+          m_frequency = 0U;
           break;
     }
 
