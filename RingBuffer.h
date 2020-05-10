@@ -20,7 +20,6 @@
 #if !defined(RINGBUFFER_H)
 #define  RINGBUFFER_H
 
-
 #if defined(STM32F4XX)
 #include "stm32f4xx.h"
 #elif defined(STM32F7XX)
@@ -30,6 +29,7 @@
 #include <cstddef>
 #else
 #include <Arduino.h>
+#undef PI
 #endif
 
 #if defined(__SAM3X8E__) || defined(STM32F105xC)
@@ -47,15 +47,15 @@
 template <typename TDATATYPE>
 class CRingBuffer {
 public:
-  CRingBuffer(uint16_t length);
+  CRingBuffer(uint16_t length = 370U);
   
   uint16_t getSpace() const;
   
   uint16_t getData() const;
 
-  bool put(TDATATYPE sample);
+  bool put(TDATATYPE item) volatile;
 
-  bool get(TDATATYPE& sample);
+  bool get(TDATATYPE& item) volatile;
 
   TDATATYPE peek() const;
 
@@ -65,13 +65,13 @@ public:
 
 private:
   uint16_t              m_length;
-  volatile TDATATYPE*   m_buffer;
+  TDATATYPE*            m_buffer;
   volatile uint16_t     m_head;
   volatile uint16_t     m_tail;
   volatile bool         m_full;
   bool                  m_overflow;
 };
 
-
+#include "RingBuffer.impl.h"
 
 #endif

@@ -1318,25 +1318,24 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-   uint8_t control  = MARK_NONE;
-   uint16_t sample  = DC_OFFSET;
+   TSample sample = {DC_OFFSET, MARK_NONE};
    uint16_t rawRSSI = 0U;
 
-   m_txBuffer.get(sample, control);
+   m_txBuffer.get(sample);
 
    // Send the value to the DAC
 #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
-   DAC_SetChannel2Data(DAC_Align_12b_R, sample);
+   DAC_SetChannel2Data(DAC_Align_12b_R, sample.sample);
 #else
-   DAC_SetChannel1Data(DAC_Align_12b_R, sample);
+   DAC_SetChannel1Data(DAC_Align_12b_R, sample.sample);
 #endif
 
    // Read value from ADC1 and ADC2
    if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)) {
       // shouldn't be still in reset at this point so null the sample value?
-      sample  = 0U;
+      sample.sample  = 0U;
    } else {
-      sample  = ADC_GetConversionValue(ADC1);
+      sample.sample  = ADC_GetConversionValue(ADC1);
 #if defined(SEND_RSSI_DATA)
       rawRSSI = ADC_GetConversionValue(ADC2);
 #endif
@@ -1346,7 +1345,7 @@ void CIO::interrupt()
    ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
    ADC_SoftwareStartConv(ADC1);
 
-   m_rxBuffer.put(sample, control);
+   m_rxBuffer.put(sample);
    m_rssiBuffer.put(rawRSSI);
 
    m_watchdog++;

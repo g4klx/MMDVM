@@ -21,7 +21,7 @@
 
 #include "Config.h"
 
-#include "SerialRB.h"
+#include "RingBuffer.h"
 
 class CNXDNTX {
 public:
@@ -36,7 +36,7 @@ public:
   uint8_t getSpace() const;
 
 private:
-  CSerialRB                        m_buffer;
+  CRingBuffer<uint8_t>                        m_buffer;
   arm_fir_interpolate_instance_q15 m_modFilter;
   arm_fir_instance_q15             m_sincFilter;
   q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare

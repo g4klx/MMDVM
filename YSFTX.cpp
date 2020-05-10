@@ -76,7 +76,8 @@ void CYSFTX::process()
         m_poBuffer[m_poLen++] = YSF_START_SYNC;
     } else {
       for (uint8_t i = 0U; i < YSF_FRAME_LENGTH_BYTES; i++) {
-        uint8_t c = m_buffer.get();
+        uint8_t c;
+        m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }
     }
