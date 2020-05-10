@@ -54,9 +54,11 @@ m_extAudioBoost(1U),
 m_downsampler(1200U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
-m_outputRFRB(2400U),   // 100ms of audio
-m_inputExtRB(2400U) //100ms of Audio
+m_inputRFRB(4800U),   // 200ms of audio
+m_outputRFRB(2400U),  // 100ms of audio
+m_inputExtRB(2400U)   // 100ms of Audio
 {
+  insertDelay(100U);
 }
 
 void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
@@ -75,6 +77,10 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     // ARMv7-M has hardware integer division 
     q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
     uint8_t ctcssState = m_ctcssRX.process(currentRFSample);
+
+    // Delay the audio by 100ms to better match the CTCSS detector output
+    m_inputRFRB.put(currentRFSample);
+    m_inputRFRB.get(currentRFSample);
 
     q15_t currentExtSample;
     bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
@@ -296,7 +302,7 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning()) {
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning() && m_outputRFRB.getData() == 0U) {
       DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
       m_callsignTimer.stop();
@@ -335,6 +341,8 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
       if (m_callsignAtStart)
         sendCallsign();
     }
+
+    insertSilence(50U);
 
     beginRelaying();
 
@@ -696,6 +704,14 @@ uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
   // Received audio is now in Q15 format in samples, with length nSamples.
 
   return 0U;
+}
+
+void CFM::insertDelay(uint16_t ms)
+{
+  uint32_t nSamples = ms * 24U;
+
+  for (uint32_t i = 0U; i < nSamples; i++)
+    m_inputRFRB.put(0);
 }
 
 void CFM::insertSilence(uint16_t ms)
