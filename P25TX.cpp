@@ -79,7 +79,7 @@ void CP25TX::process()
       uint8_t length;
       m_buffer.get(length);
       for (uint8_t i = 0U; i < length; i++) {
-        uint8_t c;
+        uint8_t c = 0U;
         m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }

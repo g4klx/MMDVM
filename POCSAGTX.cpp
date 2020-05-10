@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2018,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ void CPOCSAGTX::process()
         m_poBuffer[m_poLen++] = POCSAG_SYNC;
     } else {
       for (uint8_t i = 0U; i < POCSAG_FRAME_LENGTH_BYTES; i++) {
-        uint8_t c;
+        uint8_t c = 0U;
         m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }
@@ -147,4 +147,3 @@ uint8_t CPOCSAGTX::getSpace() const
 {
   return m_buffer.getSpace() / POCSAG_FRAME_LENGTH_BYTES;
 }
-

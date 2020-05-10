@@ -78,9 +78,11 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
     uint8_t ctcssState = m_ctcssRX.process(currentRFSample);
 
-    // Delay the audio by 100ms to better match the CTCSS detector output
-    m_inputRFRB.put(currentRFSample);
-    m_inputRFRB.get(currentRFSample);
+    if (!m_useCOS) {
+      // Delay the audio by 100ms to better match the CTCSS detector output
+      m_inputRFRB.put(currentRFSample);
+      m_inputRFRB.get(currentRFSample);
+    }
 
     q15_t currentExtSample;
     bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
@@ -153,9 +155,8 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 void CFM::process()
 {
   q15_t sample;
-  while(io.getSpace() >= 3U && m_outputRFRB.get(sample)) {
+  while(io.getSpace() >= 3U && m_outputRFRB.get(sample))
     io.write(STATE_FM, &sample, 1U);
-  }
 }
 
 void CFM::reset()
@@ -704,4 +705,3 @@ void CFM::insertSilence(uint16_t ms)
   for (uint32_t i = 0U; i < nSamples; i++)
     m_outputRFRB.put(0);
 }
-
