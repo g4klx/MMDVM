@@ -132,7 +132,7 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 void CFM::process()
 {
   q15_t sample;
-  while(io.getSpace() >= 3U && m_outputRB.get(sample))
+  while (io.getSpace() >= 3U && m_outputRB.get(sample))
     io.write(STATE_FM, &sample, 1U);
 }
 
@@ -235,16 +235,14 @@ void CFM::stateMachine(bool validSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning()) {
-      DEBUG1("Change to STATE_IDLE");
-      m_modemState = STATE_IDLE;
-      m_callsignTimer.stop();
-      m_timeoutTimer.stop();
-      m_kerchunkTimer.stop();
-      m_ackMinTimer.stop();
-      m_ackDelayTimer.stop();
-      m_hangTimer.stop();
-    }
+    DEBUG1("Change to STATE_IDLE");
+    m_modemState = STATE_IDLE;
+    m_callsignTimer.stop();
+    m_timeoutTimer.stop();
+    m_kerchunkTimer.stop();
+    m_ackMinTimer.stop();
+    m_ackDelayTimer.stop();
+    m_hangTimer.stop();
   }
 }
 
