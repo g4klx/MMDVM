@@ -70,9 +70,11 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 
     uint8_t ctcssState = m_ctcssRX.process(currentSample);
 
-    // Delay the audio by 100ms to better match the CTCSS detector output
-    m_inputRB.put(currentSample);
-    m_inputRB.get(currentSample);
+    if (!m_useCOS) {
+      // Delay the audio by 100ms to better match the CTCSS detector output
+      m_inputRB.put(currentSample);
+      m_inputRB.get(currentSample);
+    }
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
@@ -130,9 +132,8 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 void CFM::process()
 {
   q15_t sample;
-  while(io.getSpace() >= 3U && m_outputRB.get(sample)) {
+  while(io.getSpace() >= 3U && m_outputRB.get(sample))
     io.write(STATE_FM, &sample, 1U);
-  }
 }
 
 void CFM::reset()
