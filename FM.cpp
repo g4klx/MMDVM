@@ -154,21 +154,36 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 
 void CFM::process()
 {
-  q15_t sample;
-  while (io.getSpace() >= 3U && m_outputRFRB.get(sample))
-    io.write(STATE_FM, &sample, 1U);
+  if (io.getSpace() > 2 && (m_outputRFRB.getData() >= 250 || m_state != STATE_FM)) {//if we just left FM mode, so write all what is left in buffer, regardless of the amoutn of data
+    uint16_t length = m_outputRFRB.getData();
+    uint16_t space = io.getSpace() - 2;
 
-  if(m_downsampler.getData() >= 127) {
-    uint8_t length = uint8_t(m_downsampler.getData());
+    if(length > space)
+      length = space;
+
+    q15_t samples[length];
+    for(uint16_t i = 0; i < length; i++) {
+      q15_t sample = 0;
+      m_outputRFRB.get(sample);
+      samples[i] = sample;
+    }
+
+    io.write(STATE_FM, samples, length);
+  }
+
+  //Write audio to serial
+  if (m_downsampler.getData() >= 127 || m_state != STATE_FM) {//if we just left FM mode, so write all what is left in buffer, regardless of the amoutn of data
+    uint16_t length = m_downsampler.getData();
 
     if(length > 127U)//max message size on serial is 127
       length = 127U;
 
     uint8_t serialSamples[length];
 
-    for(uint8_t i = 0U; i < length; i++) {
+    for(uint16_t i = 0U; i < length; i++) {
       uint8_t serialSample = 0U;
       m_downsampler.getPackedData(serialSample);
+      serialSamples[i] = serialSample;
     }
     serial.writeFMData(serialSamples, length);
   }
