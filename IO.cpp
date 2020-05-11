@@ -264,6 +264,7 @@ void CIO::process()
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
     setPTTInt(m_pttInvert ? true : false);
+    DEBUG1("Process TX OFF");
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
@@ -453,6 +454,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   if (!m_tx) {
     m_tx = true;
     setPTTInt(m_pttInvert ? false : true);
+    DEBUG1("Write TX ON");
   }
 
   q15_t txLevel = 0;

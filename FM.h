@@ -51,7 +51,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(bool cos, const q15_t* samples, uint8_t length);
+  void samples(bool cos, q15_t* samples, uint8_t length);
 
   void process();
 
@@ -117,6 +117,7 @@ private:
   void clock(uint8_t length);
 
   void sendCallsign();
+  void sendBeeps();
   void beginRelaying();
 
   void insertDelay(uint16_t ms);

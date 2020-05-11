@@ -28,6 +28,7 @@ public:
   CFMDownsampler(uint16_t length);
   void addSample(q15_t sample);
   bool getPackedData(uint8_t& data);
+  uint16_t getData();
   void reset();
 
 private:

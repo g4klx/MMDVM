@@ -20,10 +20,8 @@
 #include "Globals.h"
 #include "FM.h"
 
-const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
-
-#define WRITE_BIT_AUDIO(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
-#define READ_BIT_AUDIO(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
+const uint16_t FM_TX_BLOCK_SIZE = 250U;
+const uint16_t FM_SERIAL_BLOCK_SIZE = 127U;
 
 CFM::CFM() :
 m_callsign(),
@@ -64,7 +62,7 @@ m_inputExtRB(2400U)   // 100ms of Audio
   insertDelay(100U);
 }
 
-void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
   if (m_useCOS) {
     if (m_cosInvert)
@@ -149,19 +147,58 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     currentSample += m_ctcssTX.getAudio();
 
     m_outputRFRB.put(currentSample);
+    //samples[i] = currentSample;
   }
+
+  // XXX This relays audio correctly, no tones yet, process need to be commented
+  // if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT)
+  //   io.write(STATE_FM, samples, i);
+
 }
 
 void CFM::process()
 {
-  q15_t sample;
-  while (io.getSpace() >= 3U && m_outputRFRB.get(sample))
-    io.write(STATE_FM, &sample, 1U);
+  uint16_t space = io.getSpace() - 2U;
+  uint16_t length = m_outputRFRB.getData();
+  if (space > 2 && length >= FM_TX_BLOCK_SIZE ) {
 
-  uint8_t serialSample;
-  //write data to serial port
-  while (m_downsampler.getPackedData(serialSample))
-    serial.writeFMData(&serialSample, 1U);
+    if(length > FM_TX_BLOCK_SIZE)
+      length = FM_TX_BLOCK_SIZE;
+    if(space > FM_TX_BLOCK_SIZE)
+      space = FM_TX_BLOCK_SIZE;
+    if(length > space)
+      length = space;
+
+    q15_t samples[FM_TX_BLOCK_SIZE];
+    for(uint16_t i = 0U; i < length; i++) {
+      q15_t sample = 0;
+      m_outputRFRB.get(sample);
+      samples[i] = sample;
+    }
+
+    io.write(STATE_FM, samples, length);
+  }
+
+  // //Write audio to serial
+  // if (m_downsampler.getData() >= 127 || m_state != STATE_FM) {//if we just left FM mode, so write all what is left in buffer, regardless of the amoutn of data
+  //   uint16_t length = m_downsampler.getData();
+
+  //   if(length > FM_SERIAL_BLOCK_SIZE)//max message size on serial is 127
+  //     length = FM_SERIAL_BLOCK_SIZE;
+
+  //   if(length > FM_SERIAL_BLOCK_SIZE)
+  //     length = FM_SERIAL_BLOCK_SIZE;
+
+  //   uint8_t serialSamples[FM_SERIAL_BLOCK_SIZE];
+
+  //   for(uint16_t i = 0U; i < length; i++) {
+  //     uint8_t serialSample = 0U;
+  //     m_downsampler.getPackedData(serialSample);
+  //     serialSamples[i] = serialSample;
+  //   }
+
+  //   serial.writeFMData(serialSamples, length);
+  // }
 }
 
 void CFM::reset()
@@ -289,6 +326,11 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
       break;
     default:
       break;
+  }
+
+  if (m_state == FS_LISTENING) {
+    m_outputRFRB.reset();
+    m_downsampler.reset();
   }
 }
 

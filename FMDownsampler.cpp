@@ -28,7 +28,7 @@ m_samplePackPointer(NULL),
 m_packIndex(0U),
 m_downSampleIndex(0U)
 {
-    m_samplePackPointer = &m_samplePack;
+  m_samplePackPointer = &m_samplePack;
 }
 
 void CFMDownsampler::addSample(q15_t sample)
@@ -55,7 +55,7 @@ void CFMDownsampler::addSample(q15_t sample)
         break;
         }
         m_packIndex++;
-        if(m_packIndex >= 2U)//did we pack to samples ?
+        if(m_packIndex >= 2U)//did we pack two samples ?
             m_packIndex = 0U;  
     }
 
@@ -67,6 +67,11 @@ void CFMDownsampler::addSample(q15_t sample)
 bool CFMDownsampler::getPackedData(uint8_t& data)
 {
   return m_ringBuffer.get(data);
+}
+
+uint16_t CFMDownsampler::getData()
+{
+  return m_ringBuffer.getData();
 }
 
 void CFMDownsampler::reset()
