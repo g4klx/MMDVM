@@ -150,7 +150,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     //samples[i] = currentSample;
   }
 
-  // XXX This relays audio correctly, no t, process need to be commented
+  // XXX This relays audio correctly, no tones yet, process need to be commented
   // if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT)
   //   io.write(STATE_FM, samples, i);
 
