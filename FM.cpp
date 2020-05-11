@@ -43,6 +43,7 @@ m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
 m_hangTimer(),
+m_statusTimer(),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
@@ -58,6 +59,8 @@ m_inputRFRB(4800U),   // 200ms of audio
 m_outputRFRB(2400U),  // 100ms of audio
 m_inputExtRB(2400U)   // 100ms of Audio
 {
+  m_statusTimer.setTimeout(1U, 0U);
+
   insertDelay(100U);
 }
 
@@ -88,22 +91,18 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
     inputExt = inputExt && m_extEnabled;
 
-    if (!inputExt && (CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
+    if (!inputExt && (CTCSS_NOT_READY(ctcssState))) {
       //Not enough samples to determine if you have CTCSS, just carry on. But only if we haven't any external data in the queue
       continue;
-    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
+    } else if ((inputExt || CTCSS_READY(ctcssState))) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, inputExt);
-      if (m_modemState != STATE_FM)
-        continue;
-    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState == STATE_FM) {
+    } else if ((inputExt || CTCSS_READY(ctcssState))) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, inputExt);
-      if (m_modemState != STATE_FM)
-        break;
-    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState == STATE_FM && i == length - 1) {
+    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
       bool validCTCSS = CTCSS_VALID(ctcssState);
@@ -149,8 +148,7 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 
     currentSample += m_ctcssTX.getAudio();
 
-    if (m_modemState == STATE_FM)
-      m_outputRFRB.put(currentSample);
+    m_outputRFRB.put(currentSample);
   }
 }
 
@@ -176,6 +174,7 @@ void CFM::reset()
   m_ackMinTimer.stop();
   m_ackDelayTimer.stop();
   m_hangTimer.stop();
+  m_statusTimer.stop();
 
   m_ctcssRX.reset();
   m_rfAck.stop();
@@ -291,17 +290,6 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
     default:
       break;
   }
-
-  if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    DEBUG1("Change to STATE_IDLE");
-    m_modemState = STATE_IDLE;
-    m_callsignTimer.stop();
-    m_timeoutTimer.stop();
-    m_kerchunkTimer.stop();
-    m_ackMinTimer.stop();
-    m_ackDelayTimer.stop();
-    m_hangTimer.stop();
-  }
 }
 
 void CFM::clock(uint8_t length)
@@ -313,6 +301,12 @@ void CFM::clock(uint8_t length)
   m_ackMinTimer.clock(length);
   m_ackDelayTimer.clock(length);
   m_hangTimer.clock(length);
+  m_statusTimer.clock(length);
+
+  if (m_statusTimer.isRunning() && m_statusTimer.hasExpired()) {
+    serial.writeFMStatus();
+    m_statusTimer.start();
+  }
 }
 
 void CFM::listeningState(bool validRFSignal, bool validExtSignal)
@@ -337,8 +331,8 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
 
     m_callsignTimer.start();
 
-    DEBUG1("Change to STATE_FM");
-    m_modemState = STATE_FM;
+    m_statusTimer.start();
+    serial.writeFMStatus();
   } else if (validExtSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
       DEBUG1("State to KERCHUNK_EXT");
@@ -359,8 +353,8 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
 
     m_callsignTimer.start();
 
-    DEBUG1("Change to STATE_FM");
-    m_modemState = STATE_FM;
+    m_statusTimer.start();
+    serial.writeFMStatus();
   }
 }
 

@@ -51,6 +51,7 @@ public:
   void writeNXDNLost();
 
   void writeFMData(const uint8_t* data, uint8_t length);
+  void writeFMStatus();
 
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
