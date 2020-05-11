@@ -158,10 +158,20 @@ void CFM::process()
   while (io.getSpace() >= 3U && m_outputRFRB.get(sample))
     io.write(STATE_FM, &sample, 1U);
 
-  uint8_t serialSample;
-  //write data to serial port
-  while (m_downsampler.getPackedData(serialSample))
-    serial.writeFMData(&serialSample, 1U);
+  if(m_downsampler.getData() >= 127) {
+    uint8_t length = uint8_t(m_downsampler.getData());
+
+    if(length > 127U)//max message size on serial is 127
+      length = 127U;
+
+    uint8_t serialSamples[length];
+
+    for(uint8_t i = 0U; i < length; i++) {
+      uint8_t serialSample = 0U;
+      m_downsampler.getPackedData(serialSample);
+    }
+    serial.writeFMData(serialSamples, length);
+  }
 }
 
 void CFM::reset()
