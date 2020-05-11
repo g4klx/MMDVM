@@ -377,6 +377,7 @@ void CFM::kerchunkRFState(bool validSignal)
     m_timeoutTimer.stop();
     m_ackMinTimer.stop();
     m_callsignTimer.stop();
+    m_statusTimer.stop();
   }
 }
 
@@ -456,6 +457,7 @@ void CFM::kerchunkExtState(bool validSignal)
     m_timeoutTimer.stop();
     m_ackMinTimer.stop();
     m_callsignTimer.stop();
+    m_statusTimer.stop();
   }
 }
 
@@ -537,6 +539,7 @@ void CFM::hangState(bool validRFSignal, bool validExtSignal)
       DEBUG1("State to LISTENING");
       m_state = FS_LISTENING;
       m_hangTimer.stop();
+      m_statusTimer.stop();
 
       if (m_callsignAtEnd)
         sendCallsign();
