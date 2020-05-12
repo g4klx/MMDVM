@@ -241,7 +241,7 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
   m_useCOS    = useCOS;
   m_cosInvert = cosInvert;
@@ -257,7 +257,7 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
 
   m_rxLevel = rxLevel; //q15_t(255)/q15_t(rxLevel >> 1);
 
-  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold);
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold);
   if (ret != 0U)
     return ret;
 
@@ -334,7 +334,7 @@ void CFM::clock(uint8_t length)
   m_statusTimer.clock(length);
 
   if (m_statusTimer.isRunning() && m_statusTimer.hasExpired()) {
-    serial.writeFMStatus();
+    serial.writeFMStatus(m_state);
     m_statusTimer.start();
   }
 }
@@ -362,7 +362,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
     m_callsignTimer.start();
 
     m_statusTimer.start();
-    serial.writeFMStatus();
+    serial.writeFMStatus(m_state);
   } else if (validExtSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
       DEBUG1("State to KERCHUNK_EXT");
@@ -384,7 +384,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
     m_callsignTimer.start();
 
     m_statusTimer.start();
-    serial.writeFMStatus();
+    serial.writeFMStatus(m_state);
   }
 }
 
@@ -737,4 +737,3 @@ void CFM::insertSilence(uint16_t ms)
   for (uint32_t i = 0U; i < nSamples; i++)
     m_outputRFRB.put(0);
 }
-
