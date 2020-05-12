@@ -117,7 +117,6 @@ private:
   void clock(uint8_t length);
 
   void sendCallsign();
-  void sendBeeps();
   void beginRelaying();
 
   void insertDelay(uint16_t ms);

@@ -20,8 +20,8 @@
 #include "Globals.h"
 #include "FM.h"
 
-const uint16_t FM_TX_BLOCK_SIZE = 250U;
-const uint16_t FM_SERIAL_BLOCK_SIZE = 127U;
+const uint16_t FM_TX_BLOCK_SIZE = 400U;
+const uint16_t FM_SERIAL_BLOCK_SIZE = 126U;
 
 CFM::CFM() :
 m_callsign(),
@@ -50,7 +50,7 @@ m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_extAudioBoost(1U),
-m_downsampler(1200U),// 100 ms of audio
+m_downsampler(400U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
 m_inputRFRB(4800U),   // 200ms of audio
@@ -89,18 +89,18 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
     inputExt = inputExt && m_extEnabled;
 
-    if (!inputExt && (CTCSS_NOT_READY(ctcssState))) {
+    if (!inputExt && (CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on. But only if we haven't any external data in the queue
       continue;
-    } else if ((inputExt || CTCSS_READY(ctcssState))) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, inputExt);
-    } else if ((inputExt || CTCSS_READY(ctcssState))) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, inputExt);
-    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && i == length - 1) {
+    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
       bool validCTCSS = CTCSS_VALID(ctcssState);
@@ -117,10 +117,6 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     // Only let RF audio through when relaying RF audio
     if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
       currentSample = m_blanking.process(currentSample);
-
-      if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-        m_downsampler.addSample(currentSample);
-
       currentSample *= currentBoost;
     } else {
       currentSample = 0;
@@ -147,58 +143,44 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     currentSample += m_ctcssTX.getAudio();
 
     m_outputRFRB.put(currentSample);
-    //samples[i] = currentSample;
   }
-
-  // XXX This relays audio correctly, no tones yet, process need to be commented
-  // if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT)
-  //   io.write(STATE_FM, samples, i);
-
 }
 
 void CFM::process()
 {
   uint16_t space = io.getSpace() - 2U;
-  uint16_t length = m_outputRFRB.getData();
-  if (space > 2 && length >= FM_TX_BLOCK_SIZE ) {
-
-    if(length > FM_TX_BLOCK_SIZE)
-      length = FM_TX_BLOCK_SIZE;
+  uint16_t txLength = m_outputRFRB.getData();
+  if (space > 2 && txLength >= FM_TX_BLOCK_SIZE ) {
+    
+    if(txLength > FM_TX_BLOCK_SIZE)
+      txLength = FM_TX_BLOCK_SIZE;
     if(space > FM_TX_BLOCK_SIZE)
       space = FM_TX_BLOCK_SIZE;
-    if(length > space)
-      length = space;
+    if(txLength > space)
+      txLength = space;
 
     q15_t samples[FM_TX_BLOCK_SIZE];
-    for(uint16_t i = 0U; i < length; i++) {
+
+    for (uint16_t i = 0U; i < txLength; i++) {
       q15_t sample = 0;
       m_outputRFRB.get(sample);
       samples[i] = sample;
+
+      if(m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF)) {
+        m_downsampler.addSample(sample);
+        uint16_t downSamplerLength = m_downsampler.getData();
+        if(downSamplerLength >= FM_SERIAL_BLOCK_SIZE) {
+          TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
+          for(uint16_t j = 0U; j < downSamplerLength; j++) {
+            m_downsampler.getPackedData(serialSamples[j]);
+          }
+          serial.writeFMData((uint8_t*)serialSamples, txLength * sizeof(TSamplePairPack));
+        }
+      }
     }
 
-    io.write(STATE_FM, samples, length);
+    io.write(STATE_FM, samples, txLength);
   }
-
-  // //Write audio to serial
-  // if (m_downsampler.getData() >= 127 || m_state != STATE_FM) {//if we just left FM mode, so write all what is left in buffer, regardless of the amoutn of data
-  //   uint16_t length = m_downsampler.getData();
-
-  //   if(length > FM_SERIAL_BLOCK_SIZE)//max message size on serial is 127
-  //     length = FM_SERIAL_BLOCK_SIZE;
-
-  //   if(length > FM_SERIAL_BLOCK_SIZE)
-  //     length = FM_SERIAL_BLOCK_SIZE;
-
-  //   uint8_t serialSamples[FM_SERIAL_BLOCK_SIZE];
-
-  //   for(uint16_t i = 0U; i < length; i++) {
-  //     uint8_t serialSample = 0U;
-  //     m_downsampler.getPackedData(serialSample);
-  //     serialSamples[i] = serialSample;
-  //   }
-
-  //   serial.writeFMData(serialSamples, length);
-  // }
 }
 
 void CFM::reset()
@@ -367,7 +349,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
-    insertSilence(50U);
+    insertDelay(50U);
 
     beginRelaying();
 
@@ -389,7 +371,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
-    insertSilence(50U);
+    insertDelay(50U);
 
     beginRelaying();
 
@@ -749,3 +731,4 @@ void CFM::insertSilence(uint16_t ms)
   for (uint32_t i = 0U; i < nSamples; i++)
     m_outputRFRB.put(0);
 }
+

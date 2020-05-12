@@ -43,9 +43,9 @@ void CFMDownsampler::addSample(q15_t sample)
             m_samplePack |= uint32_t(sample);
             
             //we did not use MSB; skip it
-            m_ringBuffer.put(m_samplePackPointer[1U]); 
-            m_ringBuffer.put(m_samplePackPointer[2U]); 
-            m_ringBuffer.put(m_samplePackPointer[3U]); 
+            TSamplePairPack pair{m_samplePackPointer[1U], m_samplePackPointer[2U], m_samplePackPointer[3U]}; 
+
+            m_ringBuffer.put(pair);
 
             m_samplePack = 0;//reset the sample pack
         }
@@ -64,7 +64,7 @@ void CFMDownsampler::addSample(q15_t sample)
         m_downSampleIndex = 0U;
 }
 
-bool CFMDownsampler::getPackedData(uint8_t& data)
+bool CFMDownsampler::getPackedData(TSamplePairPack& data)
 {
   return m_ringBuffer.get(data);
 }
