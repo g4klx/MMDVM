@@ -349,7 +349,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
-    insertDelay(50U);
+    insertSilence(50U);
 
     beginRelaying();
 
@@ -371,7 +371,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
-    insertDelay(50U);
+    insertSilence(50U);
 
     beginRelaying();
 
