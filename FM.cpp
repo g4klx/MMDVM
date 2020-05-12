@@ -21,7 +21,8 @@
 #include "FM.h"
 
 const uint16_t FM_TX_BLOCK_SIZE = 400U;
-const uint16_t FM_SERIAL_BLOCK_SIZE = 126U;
+const uint16_t FM_SERIAL_BLOCK_SIZE = 42U;//this is actually the number of sample pairs to send over serial. One sample pair is 3bytes.
+                                          //three times this vqlue shall never exceed 126 !
 
 CFM::CFM() :
 m_callsign(),
@@ -117,6 +118,9 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     // Only let RF audio through when relaying RF audio
     if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
       currentSample = m_blanking.process(currentSample);
+      if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
+        m_downsampler.addSample(currentSample);
+
       currentSample *= currentBoost;
     } else {
       currentSample = 0;
@@ -166,15 +170,17 @@ void CFM::process()
       m_outputRFRB.get(sample);
       samples[i] = sample;
 
-      if(m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF)) {
-        m_downsampler.addSample(sample);
+      if(m_extEnabled) {
         uint16_t downSamplerLength = m_downsampler.getData();
+
         if(downSamplerLength >= FM_SERIAL_BLOCK_SIZE) {
           TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
+
           for(uint16_t j = 0U; j < downSamplerLength; j++) {
             m_downsampler.getPackedData(serialSamples[j]);
           }
-          serial.writeFMData((uint8_t*)serialSamples, txLength * sizeof(TSamplePairPack));
+
+          serial.writeFMData((uint8_t*)serialSamples, downSamplerLength * sizeof(TSamplePairPack));
         }
       }
     }
