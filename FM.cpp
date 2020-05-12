@@ -365,7 +365,7 @@ void CFM::clock(uint8_t length)
   m_statusTimer.clock(length);
 
   if (m_statusTimer.isRunning() && m_statusTimer.hasExpired()) {
-    serial.writeFMStatus(false);
+    serial.writeFMStatus();
     m_statusTimer.start();
   }
 }
@@ -391,7 +391,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
     m_callsignTimer.start();
 
     m_statusTimer.start();
-    serial.writeFMStatus(true);
+    serial.writeFMStatus();
   } else if (validExtSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
       DEBUG1("State to KERCHUNK_EXT");
@@ -411,7 +411,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
     m_callsignTimer.start();
 
     m_statusTimer.start();
-    serial.writeFMStatus(false);
+    serial.writeFMStatus();
   }
 }
 
