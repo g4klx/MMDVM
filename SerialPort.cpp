@@ -1263,7 +1263,7 @@ void CSerialPort::writeFMData(const uint8_t* data, uint8_t length)
   writeInt(1U, reply, count);
 }
 
-void CSerialPort::writeFMStatus()
+void CSerialPort::writeFMStatus(uint8_t status)
 {
   if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
     return;
@@ -1274,10 +1274,11 @@ void CSerialPort::writeFMStatus()
   uint8_t reply[10U];
 
   reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 3U;
+  reply[1U] = 4U;
   reply[2U] = MMDVM_FM_STATUS;
+  reply[3U] = status;
 
-  writeInt(1U, reply, 3);
+  writeInt(1U, reply, 4);
 }
 
 void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
