@@ -16,8 +16,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMRB_H)
-#define  FMRB_H
+#if !defined(FMDOWNSAMPLERB_H)
+#define  FMDOWNSAMPLERB_H
 
 #if defined(STM32F4XX)
 #include "stm32f4xx.h"

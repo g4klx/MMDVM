@@ -547,6 +547,7 @@ YSF      PC7    output
 P25      PC8    output
 NXDN     PC9    output
 POCSAG   PA8    output
+FM       PA11   output
 
 MDSTAR   PC1    output
 MDMR     PC2    output
@@ -554,6 +555,7 @@ MYSF     PC3    output
 MP25     PC4    output
 MNXDN    PC10   output
 MPOCSAG  PC11   output
+MFM      PC13   output
 
 RX       PA0    analog input
 RSSI     PA7    analog input
@@ -589,6 +591,10 @@ EXT_CLK  PA15   input
 #define PIN_POCSAG        GPIO_Pin_8
 #define PORT_POCSAG       GPIOA
 #define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOA
+
+#define PIN_FM            GPIO_Pin_11
+#define PORT_FM           GPIOA
+#define RCC_Per_FM        RCC_AHB1Periph_GPIOA
 
 #define PIN_DSTAR         GPIO_Pin_15
 #define PORT_DSTAR        GPIOB
@@ -626,6 +632,10 @@ EXT_CLK  PA15   input
 #define PIN_MPOCSAG       GPIO_Pin_11
 #define PORT_MPOCSAG      GPIOC
 #define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
+
+#define PIN_MFM           GPIO_Pin_13
+#define PORT_MFM          GPIOC
+#define RCC_Per_MFM       RCC_AHB1Periph_GPIOC
 #endif
 
 #define PIN_EXT_CLK       GPIO_Pin_15
