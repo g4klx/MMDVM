@@ -120,6 +120,7 @@ private:
   void beginRelaying();
 
   void insertDelay(uint16_t ms);
+  void insertSilence(uint16_t ms);
 };
 
 #endif
