@@ -82,19 +82,17 @@ const uint16_t N = 24000U / 4U;
 
 CFMCTCSSRX::CFMCTCSSRX() :
 m_coeffDivTwo(0),
-m_threshold(0),
+m_highThreshold(0),
+m_lowThreshold(0),
 m_count(0U),
 m_q0(0),
 m_q1(0),
-m_result(CTS_NONE),
-m_rxLevelInverse(1)
+m_result(CTS_NONE)
 {
 }
 
-uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, uint8_t level)
+uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold)
 {
-  m_rxLevelInverse = q15Division(65535, q15_t(level * 128));
-
   m_coeffDivTwo = 0;
 
   for (uint8_t i = 0U; i < CTCSS_TABLE_DATA_LEN; i++) {
@@ -107,14 +105,16 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold, uint8_t leve
   if (m_coeffDivTwo == 0)
     return 4U;
 
-  m_threshold = q31_t(threshold);
+  m_highThreshold = q31_t(highThreshold);
+  m_lowThreshold  = q31_t(lowThreshold);
 
   return 0U;
 }
 
 uint8_t CFMCTCSSRX::process(q15_t sample)
 {
-  q31_t sample31 = q31_t(sample) * m_rxLevelInverse;
+  //get more dynamic into the decoder by multiplying the sample by 1.5
+  q31_t sample31 = q31_t(sample) +  (q31_t(sample) >> 1);
 
   m_result &= ~CTS_READY;
 
@@ -150,14 +150,19 @@ uint8_t CFMCTCSSRX::process(q15_t sample)
     q31_t value = t2 + t4 - t9;
 
     bool previousCTCSSValid = CTCSS_VALID(m_result);
+
+    q31_t threshold = m_highThreshold;
+    if (previousCTCSSValid)
+      threshold = m_lowThreshold;
+
     m_result |= CTS_READY;
-    if (value >= m_threshold)
+    if (value >= threshold)
       m_result |= CTS_VALID;
     else
       m_result &= ~CTS_VALID;
 
     if (previousCTCSSValid != CTCSS_VALID(m_result))
-      DEBUG4("CTCSS Value / Threshold / Valid", value, m_threshold, CTCSS_VALID(m_result));
+      DEBUG4("CTCSS Value / Threshold / Valid", value, threshold, CTCSS_VALID(m_result));
 
     m_count = 0U;
     m_q0 = 0;
@@ -173,17 +178,4 @@ void CFMCTCSSRX::reset()
   m_q1 = 0;
   m_result = CTS_NONE;
   m_count  = 0U;
-}
-
-//Taken from https://en.wikipedia.org/wiki/Q_(number_format)#Division
-q15_t CFMCTCSSRX::q15Division(q15_t a, q15_t divisor)
-{
-  q31_t a31 = q31_t(a) << 16;
-
-  if (((a >> 31) & 1) == ((divisor >> 15) & 1))
-    a31 += divisor >> 1;
-  else
-    a31 -= divisor >> 1;
-
-  return a31 / divisor;
 }

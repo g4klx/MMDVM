@@ -40,17 +40,19 @@ m_hangTimer(),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
-m_preemphasis(32768,  13967, 0, 32768, -18801, 0),//75µS 24kHz sampling rate
-m_deemphasis (32768, -18801, 0, 32768,  13967, 0),//75µS 24kHz sampling rate
 m_blanking(),
 m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
-m_downsampler(128)//Size might need adjustement
+m_downsampler(128U),//Size might need adjustement
+m_rxLevel(1),
+m_inputRB(4800U),   // 200ms of audio
+m_outputRB(2400U)   // 100ms of audio
 {
+  insertDelay(100U);
 }
 
-void CFM::samples(bool cos, q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 {
   if (m_useCOS) {
     if (m_cosInvert)
@@ -63,9 +65,16 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
   uint8_t i = 0U;
   for (; i < length; i++) {
-    q15_t currentSample = samples[i];//save to a local variable to avoid indirection on every access
+    // ARMv7-M has hardware integer division 
+    q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
     uint8_t ctcssState = m_ctcssRX.process(currentSample);
+
+    if (!m_useCOS) {
+      // Delay the audio by 100ms to better match the CTCSS detector output
+      m_inputRB.put(currentSample);
+      m_inputRB.get(currentSample);
+    }
 
     if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on
@@ -90,8 +99,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     }
 
     // Only let audio through when relaying audio
-    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {    
-      // currentSample = m_deemphasis.filter(currentSample);
+    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {  
       // m_downsampler.addSample(currentSample);
       currentSample = m_blanking.process(currentSample);
       currentSample *= m_rfAudioBoost;
@@ -114,19 +122,18 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
     currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
 
-    // currentSample = m_preemphasis.filter(currentSample);
-
     currentSample += m_ctcssTX.getAudio();
 
-    samples[i] = currentSample;
+    if (m_modemState == STATE_FM)
+      m_outputRB.put(currentSample);
   }
-
-  if (m_modemState == STATE_FM)
-    io.write(STATE_FM, samples, i);//only write the actual number of processed samples to IO
 }
 
 void CFM::process()
 {
+  q15_t sample;
+  while (io.getSpace() >= 3U && m_outputRB.get(sample))
+    io.write(STATE_FM, &sample, 1U);
 }
 
 void CFM::reset()
@@ -144,6 +151,8 @@ void CFM::reset()
   m_rfAck.stop();
   m_callsign.stop();
   m_timeoutTone.stop();
+
+  m_outputRB.reset();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
@@ -174,7 +183,7 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
   m_useCOS    = useCOS;
   m_cosInvert = cosInvert;
@@ -188,7 +197,9 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_timeoutTone.setParams(timeoutLevel);
   m_blanking.setParams(maxDev, timeoutLevel);
 
-  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssThreshold, rxLevel);
+  m_rxLevel = rxLevel; //q15_t(255)/q15_t(rxLevel >> 1);
+
+  uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold);
   if (ret != 0U)
     return ret;
 
@@ -224,16 +235,14 @@ void CFM::stateMachine(bool validSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning()) {
-      DEBUG1("Change to STATE_IDLE");
-      m_modemState = STATE_IDLE;
-      m_callsignTimer.stop();
-      m_timeoutTimer.stop();
-      m_kerchunkTimer.stop();
-      m_ackMinTimer.stop();
-      m_ackDelayTimer.stop();
-      m_hangTimer.stop();
-    }
+    DEBUG1("Change to STATE_IDLE");
+    m_modemState = STATE_IDLE;
+    m_callsignTimer.stop();
+    m_timeoutTimer.stop();
+    m_kerchunkTimer.stop();
+    m_ackMinTimer.stop();
+    m_ackDelayTimer.stop();
+    m_hangTimer.stop();
   }
 }
 
@@ -263,6 +272,8 @@ void CFM::listeningState(bool validSignal)
       if (m_callsignAtStart)
         sendCallsign();
     }
+
+    insertSilence(50U);
 
     beginRelaying();
 
@@ -437,4 +448,20 @@ void CFM::beginRelaying()
 {
   m_timeoutTimer.start();
   m_ackMinTimer.start();
+}
+
+void CFM::insertDelay(uint16_t ms)
+{
+  uint32_t nSamples = ms * 24U;
+
+  for (uint32_t i = 0U; i < nSamples; i++)
+    m_inputRB.put(0);
+}
+
+void CFM::insertSilence(uint16_t ms)
+{
+  uint32_t nSamples = ms * 24U;
+
+  for (uint32_t i = 0U; i < nSamples; i++)
+    m_outputRB.put(0);
 }
