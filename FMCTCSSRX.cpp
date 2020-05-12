@@ -82,7 +82,8 @@ const uint16_t N = 24000U / 4U;
 
 CFMCTCSSRX::CFMCTCSSRX() :
 m_coeffDivTwo(0),
-m_threshold(0),
+m_highThreshold(0),
+m_lowThreshold(0),
 m_count(0U),
 m_q0(0),
 m_q1(0),
@@ -90,7 +91,7 @@ m_result(CTS_NONE)
 {
 }
 
-uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
+uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold)
 {
   m_coeffDivTwo = 0;
 
@@ -104,7 +105,8 @@ uint8_t CFMCTCSSRX::setParams(uint8_t frequency, uint8_t threshold)
   if (m_coeffDivTwo == 0)
     return 4U;
 
-  m_threshold = q31_t(threshold);
+  m_highThreshold = q31_t(highThreshold);
+  m_lowThreshold  = q31_t(lowThreshold);
 
   return 0U;
 }
@@ -148,14 +150,19 @@ uint8_t CFMCTCSSRX::process(q15_t sample)
     q31_t value = t2 + t4 - t9;
 
     bool previousCTCSSValid = CTCSS_VALID(m_result);
+
+    q31_t threshold = m_highThreshold;
+    if (previousCTCSSValid)
+      threshold = m_lowThreshold;
+
     m_result |= CTS_READY;
-    if (value >= m_threshold)
+    if (value >= threshold)
       m_result |= CTS_VALID;
     else
       m_result &= ~CTS_VALID;
 
     if (previousCTCSSValid != CTCSS_VALID(m_result))
-      DEBUG4("CTCSS Value / Threshold / Valid", value, m_threshold, CTCSS_VALID(m_result));
+      DEBUG4("CTCSS Value / Threshold / Valid", value, threshold, CTCSS_VALID(m_result));
 
     m_count = 0U;
     m_q0 = 0;
