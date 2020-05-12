@@ -20,8 +20,8 @@
 #include "Globals.h"
 #include "FM.h"
 
-const uint16_t FM_TX_BLOCK_SIZE = 127U;
-const uint16_t FM_SERIAL_BLOCK_SIZE = 127U;
+const uint16_t FM_TX_BLOCK_SIZE = 400U;
+const uint16_t FM_SERIAL_BLOCK_SIZE = 126U;
 
 CFM::CFM() :
 m_callsign(),
@@ -50,7 +50,7 @@ m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_extAudioBoost(1U),
-m_downsampler(1200U),// 100 ms of audio
+m_downsampler(400U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
 m_inputRFRB(4800U),   // 200ms of audio
@@ -117,10 +117,6 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     // Only let RF audio through when relaying RF audio
     if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
       currentSample = m_blanking.process(currentSample);
-
-      if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-        m_downsampler.addSample(currentSample);
-
       currentSample *= currentBoost;
     } else {
       currentSample = 0;
@@ -153,44 +149,75 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 void CFM::process()
 {
   uint16_t space = io.getSpace() - 2U;
-  uint16_t length = m_outputRFRB.getData();
-  if (space > 2 && length >= FM_TX_BLOCK_SIZE ) {
-
-    if(length > FM_TX_BLOCK_SIZE)
-      length = FM_TX_BLOCK_SIZE;
+  uint16_t txLength = m_outputRFRB.getData();
+  if (space > 2 && txLength >= FM_TX_BLOCK_SIZE ) {
+    
+    if(txLength > FM_TX_BLOCK_SIZE)
+      txLength = FM_TX_BLOCK_SIZE;
     if(space > FM_TX_BLOCK_SIZE)
       space = FM_TX_BLOCK_SIZE;
-    if(length > space)
-      length = space;
+    if(txLength > space)
+      txLength = space;
 
     q15_t samples[FM_TX_BLOCK_SIZE];
-    for(uint16_t i = 0U; i < length; i++) {
+
+    for (uint16_t i = 0U; i < txLength; i++) {
       q15_t sample = 0;
       m_outputRFRB.get(sample);
       samples[i] = sample;
-    }
 
-    io.write(STATE_FM, samples, length);
-  }
-
-  if (m_extEnabled) {
-    length = m_downsampler.getData();
-    //Write audio to serial
-    if (length >= FM_SERIAL_BLOCK_SIZE) {
-      
-      if(length > FM_SERIAL_BLOCK_SIZE)
-        length = FM_SERIAL_BLOCK_SIZE;
-
-      uint8_t serialSamples[FM_SERIAL_BLOCK_SIZE];
-      for(uint16_t i = 0U; i < length; i++) {
-        uint8_t serialSample = 0U;
-        m_downsampler.getPackedData(serialSample);
-        serialSamples[i] = serialSample;
+      if(m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF)) {
+        m_downsampler.addSample(sample);
+        uint16_t downSamplerLength = m_downsampler.getData();
+        if(downSamplerLength >= FM_SERIAL_BLOCK_SIZE) {
+          TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
+          for(uint16_t j = 0U; j < downSamplerLength; j++) {
+            m_downsampler.getPackedData(serialSamples[j]);
+          }
+          serial.writeFMData((uint8_t*)serialSamples, txLength * sizeof(TSamplePairPack));
+        }
       }
-
-      serial.writeFMData(serialSamples, length);
     }
+
+    io.write(STATE_FM, samples, txLength);
   }
+  // if (space > 2 && length >= FM_TX_BLOCK_SIZE ) {
+
+  //   if(length > FM_TX_BLOCK_SIZE)
+  //     length = FM_TX_BLOCK_SIZE;
+  //   if(space > FM_TX_BLOCK_SIZE)
+  //     space = FM_TX_BLOCK_SIZE;
+  //   if(length > space)
+  //     length = space;
+
+  //   q15_t samples[FM_TX_BLOCK_SIZE];
+  //   for(uint16_t i = 0U; i < length; i++) {
+  //     q15_t sample = 0;
+  //     m_outputRFRB.get(sample);
+  //     samples[i] = sample;
+  //   }
+
+  //   io.write(STATE_FM, samples, length);
+  // }
+
+  // if (m_extEnabled) {
+  //   length = m_downsampler.getData();
+  //   //Write audio to serial
+  //   if (length >= FM_SERIAL_BLOCK_SIZE) {
+      
+  //     if(length > FM_SERIAL_BLOCK_SIZE)
+  //       length = FM_SERIAL_BLOCK_SIZE;
+
+  //     TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
+  //     for(uint16_t i = 0U; i < length; i++) {
+  //       TSamplePairPack samplePair = {0U, 0U, 0U};
+  //       m_downsampler.getPackedData(samplePair);
+  //       serialSamples[i] = samplePair;
+  //     }
+
+  //     serial.writeFMData((uint8_t*)&serialSamples, length * sizeof(TSamplePairPack));
+  //   }
+  // }
 }
 
 void CFM::reset()
@@ -338,7 +365,7 @@ void CFM::clock(uint8_t length)
   m_statusTimer.clock(length);
 
   if (m_statusTimer.isRunning() && m_statusTimer.hasExpired()) {
-    serial.writeFMStatus();
+    serial.writeFMStatus(false);
     m_statusTimer.start();
   }
 }
@@ -364,7 +391,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
     m_callsignTimer.start();
 
     m_statusTimer.start();
-    serial.writeFMStatus();
+    serial.writeFMStatus(true);
   } else if (validExtSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
       DEBUG1("State to KERCHUNK_EXT");
@@ -384,7 +411,7 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
     m_callsignTimer.start();
 
     m_statusTimer.start();
-    serial.writeFMStatus();
+    serial.writeFMStatus(false);
   }
 }
 
@@ -729,3 +756,4 @@ void CFM::insertDelay(uint16_t ms)
   for (uint32_t i = 0U; i < nSamples; i++)
     m_inputRFRB.put(0);
 }
+

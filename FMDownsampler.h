@@ -23,16 +23,22 @@
 #include "Config.h"
 #include "RingBuffer.h"
 
+struct TSamplePairPack {
+  uint8_t byte0;
+  uint8_t byte1;
+  uint8_t byte2;
+};
+
 class CFMDownsampler {
 public:
   CFMDownsampler(uint16_t length);
   void addSample(q15_t sample);
-  bool getPackedData(uint8_t& data);
+  bool getPackedData(TSamplePairPack& data);
   uint16_t getData();
   void reset();
 
 private:
-  CRingBuffer<uint8_t> m_ringBuffer;
+  CRingBuffer<TSamplePairPack> m_ringBuffer;
 
   uint32_t m_samplePack;
   uint32_t *m_samplePackPointer;
