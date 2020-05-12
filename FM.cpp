@@ -173,26 +173,24 @@ void CFM::process()
     io.write(STATE_FM, samples, length);
   }
 
-  // //Write audio to serial
-  // if (m_downsampler.getData() >= 127 || m_state != STATE_FM) {//if we just left FM mode, so write all what is left in buffer, regardless of the amoutn of data
-  //   uint16_t length = m_downsampler.getData();
+  if (m_extEnabled) {
+    length = m_downsampler.getData();
+    //Write audio to serial
+    if (length >= FM_SERIAL_BLOCK_SIZE) {
+      
+      if(length > FM_SERIAL_BLOCK_SIZE)
+        length = FM_SERIAL_BLOCK_SIZE;
 
-  //   if(length > FM_SERIAL_BLOCK_SIZE)//max message size on serial is 127
-  //     length = FM_SERIAL_BLOCK_SIZE;
+      uint8_t serialSamples[FM_SERIAL_BLOCK_SIZE];
+      for(uint16_t i = 0U; i < length; i++) {
+        uint8_t serialSample = 0U;
+        m_downsampler.getPackedData(serialSample);
+        serialSamples[i] = serialSample;
+      }
 
-  //   if(length > FM_SERIAL_BLOCK_SIZE)
-  //     length = FM_SERIAL_BLOCK_SIZE;
-
-  //   uint8_t serialSamples[FM_SERIAL_BLOCK_SIZE];
-
-  //   for(uint16_t i = 0U; i < length; i++) {
-  //     uint8_t serialSample = 0U;
-  //     m_downsampler.getPackedData(serialSample);
-  //     serialSamples[i] = serialSample;
-  //   }
-
-  //   serial.writeFMData(serialSamples, length);
-  // }
+      serial.writeFMData(serialSamples, length);
+    }
+  }
 }
 
 void CFM::reset()
