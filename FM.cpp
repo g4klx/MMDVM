@@ -20,7 +20,7 @@
 #include "Globals.h"
 #include "FM.h"
 
-const uint16_t FM_TX_BLOCK_SIZE = 250U;
+const uint16_t FM_TX_BLOCK_SIZE = 127U;
 const uint16_t FM_SERIAL_BLOCK_SIZE = 127U;
 
 CFM::CFM() :
@@ -89,18 +89,18 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
     inputExt = inputExt && m_extEnabled;
 
-    if (!inputExt && (CTCSS_NOT_READY(ctcssState))) {
+    if (!inputExt && (CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
       //Not enough samples to determine if you have CTCSS, just carry on. But only if we haven't any external data in the queue
       continue;
-    } else if ((inputExt || CTCSS_READY(ctcssState))) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, inputExt);
-    } else if ((inputExt || CTCSS_READY(ctcssState))) {
+    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState == STATE_FM) {
       //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, inputExt);
-    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && i == length - 1) {
+    } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
       bool validCTCSS = CTCSS_VALID(ctcssState);
@@ -147,13 +147,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     currentSample += m_ctcssTX.getAudio();
 
     m_outputRFRB.put(currentSample);
-    //samples[i] = currentSample;
   }
-
-  // XXX This relays audio correctly, no tones yet, process need to be commented
-  // if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT)
-  //   io.write(STATE_FM, samples, i);
-
 }
 
 void CFM::process()
@@ -744,8 +738,8 @@ void CFM::insertDelay(uint16_t ms)
 
 void CFM::insertSilence(uint16_t ms)
 {
-  uint32_t nSamples = ms * 24U;
+  // uint32_t nSamples = ms * 24U;
 
-  for (uint32_t i = 0U; i < nSamples; i++)
-    m_outputRFRB.put(0);
+  // for (uint32_t i = 0U; i < nSamples; i++)
+  //   m_outputRFRB.put(0);
 }
