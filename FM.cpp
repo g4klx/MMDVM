@@ -359,8 +359,6 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
-    insertSilence(50U);
-
     beginRelaying();
 
     m_callsignTimer.start();
@@ -380,8 +378,6 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
       if (m_callsignAtStart)
         sendCallsign();
     }
-
-    insertSilence(50U);
 
     beginRelaying();
 
@@ -732,12 +728,4 @@ void CFM::insertDelay(uint16_t ms)
 
   for (uint32_t i = 0U; i < nSamples; i++)
     m_inputRFRB.put(0);
-}
-
-void CFM::insertSilence(uint16_t ms)
-{
-  // uint32_t nSamples = ms * 24U;
-
-  // for (uint32_t i = 0U; i < nSamples; i++)
-  //   m_outputRFRB.put(0);
 }
