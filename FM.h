@@ -27,6 +27,7 @@
 #include "FMTimeout.h"
 #include "FMKeyer.h"
 #include "FMTimer.h"
+#include "FMRB.h"
 #include "FMDirectForm1.h"
 #include "FMDownsampler.h"
 
@@ -47,7 +48,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(bool cos, q15_t* samples, uint8_t length);
+  void samples(bool cos, const q15_t* samples, uint8_t length);
 
   void process();
 
@@ -55,7 +56,7 @@ public:
 
   uint8_t setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch);
   uint8_t setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level);
-  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel);
+  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel);
 
 private:
   CFMKeyer             m_callsign;
@@ -77,13 +78,14 @@ private:
   CFMDirectFormI       m_filterStage1;
   CFMDirectFormI       m_filterStage2;
   CFMDirectFormI       m_filterStage3;
-  CFMDirectFormI       m_preemphasis;
-  CFMDirectFormI       m_deemphasis;
   CFMBlanking          m_blanking;
   bool                 m_useCOS;
   bool                 m_cosInvert;
   q15_t                m_rfAudioBoost;
   CFMDownsampler       m_downsampler;
+  q15_t                m_rxLevel;
+  CFMRB                m_inputRB;
+  CFMRB                m_outputRB;
 
   void stateMachine(bool validSignal);
   void listeningState(bool validSignal);
@@ -98,6 +100,9 @@ private:
 
   void sendCallsign();
   void beginRelaying();
+
+  void insertDelay(uint16_t ms);
+  void insertSilence(uint16_t ms);
 };
 
 #endif
