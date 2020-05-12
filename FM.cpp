@@ -87,7 +87,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     }
 
     q15_t currentExtSample;
-    bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
+    bool inputExt = m_inputExtRB.getSample(currentExtSample);//always consume the external input data so it does not overflow
     inputExt = inputExt && m_extEnabled;
 
     if (!inputExt && (CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
@@ -691,35 +691,7 @@ uint8_t CFM::getSpace() const
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
 {
-  for (uint8_t i = 0U; i < length; i += 3U) {
-    uint16_t sample1 = 0U;
-    uint16_t sample2 = 0U;
-    uint32_t MASK = 0x00000FFFU;
-
-    uint32_t pack = 0U;
-    uint8_t* packPointer = (uint8_t*)&pack;
-
-    packPointer[1U] = data[i];
-    packPointer[2U] = data[i + 1U];
-    packPointer[3U] = data[i + 2U];
-
-    sample2 = uint16_t(pack & MASK);
-    sample1 = uint16_t(pack >> 12);
-
-    // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047).
-    // Incoming data has sample rate 8kHz, just add 2 empty samples after
-    // every incoming sample to upsample to 24kHz
-    m_inputExtRB.put(q15_t(sample1) - 2048);
-    m_inputExtRB.put(0);
-    m_inputExtRB.put(0);
-    m_inputExtRB.put(q15_t(sample2) - 2048);
-    m_inputExtRB.put(0);
-    m_inputExtRB.put(0);
-  }
-
-  // Received audio is now in Q15 format in samples, with length nSamples.
-
-  return 0U;
+  m_inputExtRB.addData(data, length);
 }
 
 void CFM::insertDelay(uint16_t ms)
