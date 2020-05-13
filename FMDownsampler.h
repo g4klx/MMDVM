@@ -38,8 +38,7 @@ private:
   uint32_t m_samplePack;
   uint8_t *m_samplePackPointer;
 
-  uint8_t m_packIndex;
-  uint8_t m_downSampleIndex;
+  uint8_t m_sampleIndex;
 };
 
 #endif
