@@ -28,7 +28,7 @@ m_samplePackPointer(NULL),
 m_packIndex(0U),
 m_downSampleIndex(0U)
 {
-  m_samplePackPointer = &m_samplePack;
+  m_samplePackPointer = (uint8_t*)&m_samplePack;
 }
 
 void CFMDownsampler::addSample(q15_t sample)
@@ -40,14 +40,14 @@ void CFMDownsampler::addSample(q15_t sample)
           m_samplePack = uint32_t(sample) << 12;
         break;
         case 1:{
-            m_samplePack |= uint32_t(sample);
-            
-            //we did not use MSB; skip it
-            TSamplePairPack pair{m_samplePackPointer[1U], m_samplePackPointer[2U], m_samplePackPointer[3U]}; 
+          m_samplePack |= uint32_t(sample);
+          
+          //we did not use MSB; skip it
+          TSamplePairPack pair{m_samplePackPointer[1U], m_samplePackPointer[2U], m_samplePackPointer[3U]}; 
 
-            m_ringBuffer.put(pair);
+          m_ringBuffer.put(pair);
 
-            m_samplePack = 0;//reset the sample pack
+          m_samplePack = 0;//reset the sample pack
         }
         break;
         default:
