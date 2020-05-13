@@ -25,43 +25,38 @@ CFMDownsampler::CFMDownsampler(uint16_t length) :
 m_ringBuffer(length),
 m_samplePack(0U),
 m_samplePackPointer(NULL),
-m_packIndex(0U),
-m_downSampleIndex(0U)
+m_sampleIndex(0U)
 {
   m_samplePackPointer = (uint8_t*)&m_samplePack;
 }
 
 void CFMDownsampler::addSample(q15_t sample)
 {
-    //only take one of three samples
-    if(m_downSampleIndex == 0U) {
-      switch(m_packIndex){
-        case 0:
-          m_samplePack = uint32_t(sample) << 12;
-        break;
-        case 1:{
-          m_samplePack |= uint32_t(sample);
-          
-          //we did not use MSB; skip it
-          TSamplePairPack pair{m_samplePackPointer[1U], m_samplePackPointer[2U], m_samplePackPointer[3U]}; 
+  uint16_t usample = uint16_t(sample + 2048);
+  //only take one of three samples
+  switch(m_sampleIndex){
+    case 0:
+      m_samplePack = uint32_t(usample) << 12;
+    break;
+    case 3:{
+      m_samplePack |= uint32_t(usample);
+      
+      //we did not use MSB; skip it
+      TSamplePairPack pair{m_samplePackPointer[1U], m_samplePackPointer[2U], m_samplePackPointer[3U]}; 
 
-          m_ringBuffer.put(pair);
+      m_ringBuffer.put(pair);
 
-          m_samplePack = 0;//reset the sample pack
-        }
-        break;
-        default:
-            //should never happen
-        break;
-        }
-        m_packIndex++;
-        if(m_packIndex >= 2U)//did we pack two samples ?
-            m_packIndex = 0U;  
+      m_samplePack = 0U;//reset the sample pack
     }
+    break;
+    default:
+        //Just skip this sample
+    break;
+  }
 
-    m_downSampleIndex++;
-    if(m_downSampleIndex >= 3U)
-        m_downSampleIndex = 0U;
+  m_sampleIndex++;
+  if(m_sampleIndex >= 6U)//did we pack two samples ?
+      m_sampleIndex = 0U;  
 }
 
 bool CFMDownsampler::getPackedData(TSamplePairPack& data)
@@ -76,6 +71,5 @@ uint16_t CFMDownsampler::getData()
 
 void CFMDownsampler::reset()
 {
-  m_downSampleIndex = 0;
-  m_packIndex = 0;
+  m_sampleIndex = 0U;
 }
