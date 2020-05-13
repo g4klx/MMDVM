@@ -53,9 +53,9 @@ public:
 
   void reset();
 
-  uint8_t setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd);
+  uint8_t setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch);
   uint8_t setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level);
-  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel);
+  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel);
 
 private:
   CFMKeyer             m_callsign;
@@ -66,6 +66,7 @@ private:
   FM_STATE             m_state;
   bool                 m_callsignAtStart;
   bool                 m_callsignAtEnd;
+  bool                 m_callsignAtLatch;
   CFMTimer             m_callsignTimer;
   CFMTimer             m_timeoutTimer;
   CFMTimer             m_holdoffTimer;
@@ -80,10 +81,11 @@ private:
   CFMDirectFormI       m_deemphasis;
   CFMBlanking          m_blanking;
   bool                 m_useCOS;
+  bool                 m_cosInvert;
   q15_t                m_rfAudioBoost;
   CFMDownsampler       m_downsampler;
 
-  void stateMachine(bool validSignal, uint8_t length);
+  void stateMachine(bool validSignal);
   void listeningState(bool validSignal);
   void kerchunkState(bool validSignal);
   void relayingState(bool validSignal);
@@ -91,6 +93,8 @@ private:
   void timeoutState(bool validSignal);
   void timeoutWaitState(bool validSignal);
   void hangState(bool validSignal);
+
+  void clock(uint8_t length);
 
   void sendCallsign();
   void beginRelaying();

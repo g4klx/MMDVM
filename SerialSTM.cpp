@@ -50,7 +50,7 @@ extern "C" {
 }
 
 /* ************* USART1 ***************** */
-#if defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_F7M) || defined(STM32F722_PI) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || (defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER))
+#if defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_F7M) || defined(STM32F722_PI) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || (defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)) || defined(DRCC_DVM)
 
 volatile uint8_t  TXSerialfifo1[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo1[RX_SERIAL_FIFO_SIZE];
@@ -241,7 +241,7 @@ void WriteUSART1(const uint8_t* data, uint16_t length)
 #endif
 
 /* ************* USART2 ***************** */
-#if defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
+#if defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO) || defined(DRCC_DVM)
 
 volatile uint8_t  TXSerialfifo2[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo2[RX_SERIAL_FIFO_SIZE];
@@ -845,11 +845,15 @@ void CSerialPort::beginInt(uint8_t n, int speed)
          InitUSART1(speed);
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          InitUSART2(speed);
+         #elif defined(DRCC_DVM)
+         InitUSART1(speed);
          #endif
          break;
       case 3U:
          #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
          InitUSART1(speed);
+         #elif defined(DRCC_DVM)
+         InitUSART2(speed);
          #else
          InitUART5(speed);
          #endif
@@ -869,10 +873,14 @@ int CSerialPort::availableInt(uint8_t n)
          return AvailUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return AvailUSART2();
+         #elif defined(DRCC_DVM)
+         return AvailUSART1();
          #endif
       case 3U:
          #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
          return AvailUSART1();
+         #elif defined(DRCC_DVM)
+         return AvailUSART2();
          #else
          return AvailUART5();
          #endif
@@ -891,10 +899,14 @@ int CSerialPort::availableForWriteInt(uint8_t n)
          return AvailForWriteUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return AvailForWriteUSART2();
+         #elif defined(DRCC_DVM)
+         return AvailForWriteUSART1();
          #endif
       case 3U:
          #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
          return AvailForWriteUSART1();
+         #elif defined(DRCC_DVM)
+         AvailForWriteUSART2();
          #else
          return AvailForWriteUART5();
          #endif
@@ -913,10 +925,14 @@ uint8_t CSerialPort::readInt(uint8_t n)
          return ReadUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return ReadUSART2();
+         #elif defined(DRCC_DVM)
+         return ReadUSART1();
          #endif
       case 3U:
          #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
          return ReadUSART1();
+         #elif defined(DRCC_DVM)
+         return ReadUSART2();
          #else
          return ReadUART5();
          #endif
@@ -941,6 +957,10 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
          WriteUSART2(data, length);
          if (flush)
             TXSerialFlush2();
+         #elif defined(DRCC_DVM)
+         WriteUSART1(data, length);
+         if (flush)
+            TXSerialFlush1();
          #endif
          break;
       case 3U:
@@ -948,6 +968,10 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
          WriteUSART1(data, length);
          if (flush)
             TXSerialFlush1();
+         #elif defined(DRCC_DVM)
+         WriteUSART2(data, length);
+         if (flush)
+            TXSerialFlush2();
          #else
          WriteUART5(data, length);
          if (flush)
