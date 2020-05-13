@@ -113,6 +113,15 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_POCSAG, &GPIO_InitStruct);
 #endif
+
+#if !defined(USE_ALTERNATE_FM_LEDS)
+   // FM pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_FM, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_FM;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_FM, &GPIO_InitStruct);
+#endif
+
 #endif
 
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
@@ -155,6 +164,15 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_MPOCSAG, &GPIO_InitStruct);
 #endif
+
+#if !defined(USE_ALTERNATE_FM_LEDS)
+   // FM mode pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_MFM, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_MFM;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_MFM, &GPIO_InitStruct);
+#endif
+
 #endif
 }
 
