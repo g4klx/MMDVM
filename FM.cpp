@@ -20,7 +20,7 @@
 #include "Globals.h"
 #include "FM.h"
 
-const uint16_t FM_TX_BLOCK_SIZE = 400U;
+const uint16_t FM_TX_BLOCK_SIZE = 100U;
 const uint16_t FM_SERIAL_BLOCK_SIZE = 42U;//this is actually the number of sample pairs to send over serial. One sample pair is 3bytes.
                                           //three times this value shall never exceed 126 !
 
@@ -152,30 +152,13 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
 void CFM::process()
 {
-  uint16_t space = io.getSpace() - 2U;
-  uint16_t length = m_outputRFRB.getData();
-  if (space > 2 && length >= FM_TX_BLOCK_SIZE ) {
-    
-    if(length > FM_TX_BLOCK_SIZE)
-      length = FM_TX_BLOCK_SIZE;
-    if(space > FM_TX_BLOCK_SIZE)
-      space = FM_TX_BLOCK_SIZE;
-    if(length > space)
-      length = space;
-
-    q15_t samples[FM_TX_BLOCK_SIZE];
-
-    for (uint16_t i = 0U; i < length; i++) {
-      q15_t sample = 0;
-      m_outputRFRB.get(sample);
-      samples[i] = sample;
-    }
-
-    io.write(STATE_FM, samples, length);
+  q15_t sample;
+  while (io.getSpace() >= 3U && m_outputRFRB.get(sample)) {
+    io.write(STATE_FM, &sample, 1);
   }
 
   if(m_extEnabled) {
-    length = m_downsampler.getData();
+    uint16_t length = m_downsampler.getData();
 
     if(length >= FM_SERIAL_BLOCK_SIZE) {
       if(length > FM_SERIAL_BLOCK_SIZE)
