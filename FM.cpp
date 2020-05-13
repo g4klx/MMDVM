@@ -695,6 +695,7 @@ uint8_t CFM::getSpace() const
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
 {
   m_inputExtRB.addData(data, length);
+  return 0U;//maybe return an error if overflowing ?
 }
 
 void CFM::insertDelay(uint16_t ms)

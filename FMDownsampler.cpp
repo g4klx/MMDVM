@@ -28,7 +28,7 @@ m_samplePackPointer(NULL),
 m_packIndex(0U),
 m_downSampleIndex(0U)
 {
-  m_samplePackPointer = &m_samplePack;
+  m_samplePackPointer = (uint8_t*)&m_samplePack;
 }
 
 void CFMDownsampler::addSample(q15_t sample)
