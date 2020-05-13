@@ -22,7 +22,7 @@
 
 const uint16_t FM_TX_BLOCK_SIZE = 400U;
 const uint16_t FM_SERIAL_BLOCK_SIZE = 42U;//this is actually the number of sample pairs to send over serial. One sample pair is 3bytes.
-                                          //three times this vqlue shall never exceed 126 !
+                                          //three times this value shall never exceed 126 !
 
 CFM::CFM() :
 m_callsign(),
@@ -153,39 +153,42 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 void CFM::process()
 {
   uint16_t space = io.getSpace() - 2U;
-  uint16_t txLength = m_outputRFRB.getData();
-  if (space > 2 && txLength >= FM_TX_BLOCK_SIZE ) {
+  uint16_t length = m_outputRFRB.getData();
+  if (space > 2 && length >= FM_TX_BLOCK_SIZE ) {
     
-    if(txLength > FM_TX_BLOCK_SIZE)
-      txLength = FM_TX_BLOCK_SIZE;
+    if(length > FM_TX_BLOCK_SIZE)
+      length = FM_TX_BLOCK_SIZE;
     if(space > FM_TX_BLOCK_SIZE)
       space = FM_TX_BLOCK_SIZE;
-    if(txLength > space)
-      txLength = space;
+    if(length > space)
+      length = space;
 
     q15_t samples[FM_TX_BLOCK_SIZE];
 
-    for (uint16_t i = 0U; i < txLength; i++) {
+    for (uint16_t i = 0U; i < length; i++) {
       q15_t sample = 0;
       m_outputRFRB.get(sample);
       samples[i] = sample;
-
-      if(m_extEnabled) {
-        uint16_t downSamplerLength = m_downsampler.getData();
-
-        if(downSamplerLength >= FM_SERIAL_BLOCK_SIZE) {
-          TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
-
-          for(uint16_t j = 0U; j < downSamplerLength; j++) {
-            m_downsampler.getPackedData(serialSamples[j]);
-          }
-
-          serial.writeFMData((uint8_t*)serialSamples, downSamplerLength * sizeof(TSamplePairPack));
-        }
-      }
     }
 
-    io.write(STATE_FM, samples, txLength);
+    io.write(STATE_FM, samples, length);
+  }
+
+  if(m_extEnabled) {
+    length = m_downsampler.getData();
+
+    if(length >= FM_SERIAL_BLOCK_SIZE) {
+      if(length > FM_SERIAL_BLOCK_SIZE)
+        length = FM_SERIAL_BLOCK_SIZE;
+        
+      TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
+
+      for(uint16_t j = 0U; j < length; j++) {
+        m_downsampler.getPackedData(serialSamples[j]);
+      }
+
+      serial.writeFMData((uint8_t*)serialSamples, length * sizeof(TSamplePairPack));
+    }
   }
 }
 
