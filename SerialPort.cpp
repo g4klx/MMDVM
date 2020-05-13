@@ -98,7 +98,9 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define TCXO "NO TCXO"
 #endif
 
-#if defined(STM32F4_RPT_HAT_TGO)
+#if defined(DRCC_DVM_NQF)
+#define	HW_TYPE	"MMDVM DRCC_DVM_NQF"
+#elif defined(STM32F4_RPT_HAT_TGO)
 #define	HW_TYPE	"MMDVM RPT_HAT_TGO"
 #else
 #define	HW_TYPE	"MMDVM"
