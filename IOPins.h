@@ -48,7 +48,7 @@
     #if defined(STM32F4_NUCLEO_MORPHO_HEADER)
         #include "pins/pins_f4_nucleo_morpho.h"
     #elif defined(STM32F4_NUCLEO_ARDUINO_HEADER)
-        #include "pins/pins_f4_nucleo_morpho.h"
+        #include "pins/pins_f4_nucleo_arduino.h"
     #else
         #error "Either STM32F4_NUCLEO_MORPHO_HEADER or STM32F4_NUCLEO_ARDUINO_HEADER need to be defined"
     #endif
@@ -58,6 +58,9 @@
 
 #elif defined(STM32F4_DVM)
     #include "pins/pins_f4_stm32dvm_v3.h"
+
+#elif defined(DRCC_DVM_NQF)
+    #include "pins/pins_f4_drcc_nqf.h"
 
 #else
     #error "A valid board type macro need to be defined."
