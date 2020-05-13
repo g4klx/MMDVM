@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2018,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -53,7 +53,9 @@ m_sincState(),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(240U)      // 200ms
+m_txDelay(240U),     // 200ms
+m_txHang(6000U),     // 5s
+m_txCount(0U)
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
   ::memset(m_sincState,  0x00U, 70U * sizeof(q15_t));
@@ -70,7 +72,7 @@ m_txDelay(240U)      // 200ms
 
 void CNXDNTX::process()
 {
-  if (m_buffer.getData() == 0U && m_poLen == 0U)
+  if (m_buffer.getData() == 0U && m_poLen == 0U && m_txCount == 0U)
     return;
 
   if (m_poLen == 0U) {
@@ -98,12 +100,27 @@ void CNXDNTX::process()
       writeByte(c);
 
       space -= 4U * NXDN_RADIO_SYMBOL_LENGTH;
+      if (m_duplex)
+        m_txCount = m_txHang;
       
       if (m_poPtr >= m_poLen) {
         m_poPtr = 0U;
         m_poLen = 0U;
         return;
       }
+    }
+  } else if (m_txCount > 0U) {
+    // Transmit silence until the hang timer has expired.
+    uint16_t space = io.getSpace();
+
+    while (space > (4U * NXDN_RADIO_SYMBOL_LENGTH)) {
+      writeSilence();
+
+      space -= 4U * NXDN_RADIO_SYMBOL_LENGTH;
+      m_txCount--;
+
+      if (m_txCount == 0U)
+        return;
     }
   }
 }
@@ -155,6 +172,19 @@ void CNXDNTX::writeByte(uint8_t c)
   io.write(STATE_NXDN, outBuffer, NXDN_RADIO_SYMBOL_LENGTH * 4U);
 }
 
+void CNXDNTX::writeSilence()
+{
+  q15_t inBuffer[4U] = {0x00U, 0x00U, 0x00U, 0x00U};
+  q15_t intBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
+  q15_t outBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
+
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, intBuffer, 4U);
+
+  ::arm_fir_fast_q15(&m_sincFilter, intBuffer, outBuffer, NXDN_RADIO_SYMBOL_LENGTH * 4U);
+
+  io.write(STATE_NXDN, outBuffer, NXDN_RADIO_SYMBOL_LENGTH * 4U);
+}
+
 void CNXDNTX::setTXDelay(uint8_t delay)
 {
   m_txDelay = 300U + uint16_t(delay) * 6U;        // 500ms + tx delay
@@ -168,3 +198,7 @@ uint8_t CNXDNTX::getSpace() const
   return m_buffer.getSpace() / NXDN_FRAME_LENGTH_BYTES;
 }
 
+void CNXDNTX::setParams(uint8_t txHang)
+{
+  m_txHang = txHang * 1200U;
+}
