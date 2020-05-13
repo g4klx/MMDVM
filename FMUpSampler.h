@@ -17,29 +17,30 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMDOWNSAMPLER_H)
-#define FMDOWNSAMPLER_H
+
+#if !defined(FMUPSAMPLER_H)
+#define FMUPSAMPLER_H
 
 #include "Config.h"
 #include "RingBuffer.h"
 #include "FMSamplePairPack.h"
 
-class CFMDownsampler {
+class CFMUpSampler {
 public:
-  CFMDownsampler(uint16_t length);
-  void addSample(q15_t sample);
-  bool getPackedData(TSamplePairPack& data);
-  uint16_t getData();
+  CFMUpSampler(uint16_t length);
+
   void reset();
 
+  void addData(const uint8_t* data, uint16_t length);
+
+  bool getSample(q15_t& sample);
+
+  uint16_t getSpace() const;
+
 private:
-  CRingBuffer<TSamplePairPack> m_ringBuffer;
-
-  uint32_t m_samplePack;
-  uint32_t *m_samplePackPointer;
-
-  uint8_t m_packIndex;
-  uint8_t m_downSampleIndex;
+  uint8_t m_upSampleIndex;
+  TSamplePairPack m_pack;
+  CRingBuffer<q15_t> m_samples;
 };
 
 #endif

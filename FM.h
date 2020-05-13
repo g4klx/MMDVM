@@ -30,6 +30,7 @@
 #include "RingBuffer.h"
 #include "FMDirectForm1.h"
 #include "FMDownsampler.h"
+#include "FMUpSampler.h"
 
 enum FM_STATE {
   FS_LISTENING,
@@ -98,7 +99,7 @@ private:
   q15_t                m_rxLevel;
   CRingBuffer<q15_t>   m_inputRFRB;
   CRingBuffer<q15_t>   m_outputRFRB;
-  CRingBuffer<q15_t>   m_inputExtRB;
+  CFMUpSampler         m_inputExtRB;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
   void listeningState(bool validRFSignal, bool validExtSignal);

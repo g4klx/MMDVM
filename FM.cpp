@@ -22,7 +22,7 @@
 
 const uint16_t FM_TX_BLOCK_SIZE = 400U;
 const uint16_t FM_SERIAL_BLOCK_SIZE = 42U;//this is actually the number of sample pairs to send over serial. One sample pair is 3bytes.
-                                          //three times this vqlue shall never exceed 126 !
+                                          //three times this value shall never exceed 126 !
 
 CFM::CFM() :
 m_callsign(),
@@ -87,7 +87,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     }
 
     q15_t currentExtSample;
-    bool inputExt = m_inputExtRB.get(currentExtSample);//always consume the external input data so it does not overflow
+    bool inputExt = m_inputExtRB.getSample(currentExtSample);//always consume the external input data so it does not overflow
     inputExt = inputExt && m_extEnabled;
 
     if (!inputExt && (CTCSS_NOT_READY(ctcssState)) && m_modemState != STATE_FM) {
@@ -153,39 +153,42 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 void CFM::process()
 {
   uint16_t space = io.getSpace() - 2U;
-  uint16_t txLength = m_outputRFRB.getData();
-  if (space > 2 && txLength >= FM_TX_BLOCK_SIZE ) {
+  uint16_t length = m_outputRFRB.getData();
+  if (space > 2 && length >= FM_TX_BLOCK_SIZE ) {
     
-    if(txLength > FM_TX_BLOCK_SIZE)
-      txLength = FM_TX_BLOCK_SIZE;
+    if(length > FM_TX_BLOCK_SIZE)
+      length = FM_TX_BLOCK_SIZE;
     if(space > FM_TX_BLOCK_SIZE)
       space = FM_TX_BLOCK_SIZE;
-    if(txLength > space)
-      txLength = space;
+    if(length > space)
+      length = space;
 
     q15_t samples[FM_TX_BLOCK_SIZE];
 
-    for (uint16_t i = 0U; i < txLength; i++) {
+    for (uint16_t i = 0U; i < length; i++) {
       q15_t sample = 0;
       m_outputRFRB.get(sample);
       samples[i] = sample;
-
-      if(m_extEnabled) {
-        uint16_t downSamplerLength = m_downsampler.getData();
-
-        if(downSamplerLength >= FM_SERIAL_BLOCK_SIZE) {
-          TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
-
-          for(uint16_t j = 0U; j < downSamplerLength; j++) {
-            m_downsampler.getPackedData(serialSamples[j]);
-          }
-
-          serial.writeFMData((uint8_t*)serialSamples, downSamplerLength * sizeof(TSamplePairPack));
-        }
-      }
     }
 
-    io.write(STATE_FM, samples, txLength);
+    io.write(STATE_FM, samples, length);
+  }
+
+  if(m_extEnabled) {
+    length = m_downsampler.getData();
+
+    if(length >= FM_SERIAL_BLOCK_SIZE) {
+      if(length > FM_SERIAL_BLOCK_SIZE)
+        length = FM_SERIAL_BLOCK_SIZE;
+        
+      TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
+
+      for(uint16_t j = 0U; j < length; j++) {
+        m_downsampler.getPackedData(serialSamples[j]);
+      }
+
+      serial.writeFMData((uint8_t*)serialSamples, length * sizeof(TSamplePairPack));
+    }
   }
 }
 
@@ -691,35 +694,7 @@ uint8_t CFM::getSpace() const
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
 {
-  for (uint8_t i = 0U; i < length; i += 3U) {
-    uint16_t sample1 = 0U;
-    uint16_t sample2 = 0U;
-    uint32_t MASK = 0x00000FFFU;
-
-    uint32_t pack = 0U;
-    uint8_t* packPointer = (uint8_t*)&pack;
-
-    packPointer[1U] = data[i];
-    packPointer[2U] = data[i + 1U];
-    packPointer[3U] = data[i + 2U];
-
-    sample2 = uint16_t(pack & MASK);
-    sample1 = uint16_t(pack >> 12);
-
-    // Convert from uint16_t (0 - +4095) to Q15 (-2048 - +2047).
-    // Incoming data has sample rate 8kHz, just add 2 empty samples after
-    // every incoming sample to upsample to 24kHz
-    m_inputExtRB.put(q15_t(sample1) - 2048);
-    m_inputExtRB.put(0);
-    m_inputExtRB.put(0);
-    m_inputExtRB.put(q15_t(sample2) - 2048);
-    m_inputExtRB.put(0);
-    m_inputExtRB.put(0);
-  }
-
-  // Received audio is now in Q15 format in samples, with length nSamples.
-
-  return 0U;
+  m_inputExtRB.addData(data, length);
 }
 
 void CFM::insertDelay(uint16_t ms)
