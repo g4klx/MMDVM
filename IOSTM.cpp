@@ -426,7 +426,7 @@ void CIO::setNXDNInt(bool on)
 void CIO::setPOCSAGInt(bool on)
 {
 #if defined(MODE_LEDS)
-#if defined(USE_ALTERNATE_FM_LEDS)
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_DMR,   PIN_DMR,   on ? Bit_SET : Bit_RESET);
 #else
@@ -435,7 +435,7 @@ void CIO::setPOCSAGInt(bool on)
 #endif
 
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-#if defined(USE_ALTERNATE_FM_LEDS)
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
    GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_MDMR,   PIN_MDMR,   on ? Bit_SET : Bit_RESET);
 #else
