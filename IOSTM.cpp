@@ -2,6 +2,7 @@
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016,2017,2018 by Andy Uribe CA6JAU
  *   Copyright (C) 2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2019,2020 by BG5HHP
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,1029 +24,8 @@
 #include "IO.h"
 
 #if defined(STM32F4XX) || defined(STM32F7XX)
+#include "IOPins.h"
 
-#if defined(STM32F4_RPT_HAT_TGO)
-/*
-Pin definitions for MMDVM_RPT_Hat Pi-Hat BG4TGO  board::
-
-PTT      PB13   output           CN10 Pin30
-COSLED   PB14   output           CN10 Pin28
-LED      PA5    output           CN10 Pin11
-COS      PB15   input            CN10 Pin26
-
-DSTAR    PB10   output           CN10 Pin25
-DMR      PB4    output           CN10 Pin27
-YSF      PB5    output           CN10 Pin29
-P25      PB3    output           CN10 Pin31
-NXDN     PA10   output           CN10 Pin33
-POCSAG   PB12   output           CN10 Pin16
-
-MDSTAR   PC4    output           CN10 Pin34
-MDMR     PC5    output           CN10 Pin6
-MYSF     PC2    output           CN7  Pin35
-MP25     PC3    output           CN7  Pin37
-MNXDN    PC6    output           CN10 Pin4
-MPOCSAG  PC8    output           CN10 Pin2
-
-RX       PA0    analog input     CN7 Pin28
-RSSI     PA1    analog input     CN7 Pin30
-TX       PA4    analog output    CN7 Pin32
-
-EXT_CLK  PA15   input            CN7 Pin17
-*/
-
-#define PIN_COS           GPIO_Pin_15
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_14
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_5
-#define PORT_LED          GPIOA
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOA
-
-#define PIN_P25           GPIO_Pin_3
-#define PORT_P25          GPIOB
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOB
-
-#define PIN_NXDN          GPIO_Pin_10
-#define PORT_NXDN         GPIOA
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_10
-#define PORT_DSTAR        GPIOB
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOB
-
-#define PIN_DMR           GPIO_Pin_4
-#define PORT_DMR          GPIOB
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOB
-
-#define PIN_YSF           GPIO_Pin_5
-#define PORT_YSF          GPIOB
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
-
-#if defined(MODE_PINS)
-#define PIN_MP25          GPIO_Pin_3
-#define PORT_MP25         GPIOC
-#define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
-
-#define PIN_MNXDN         GPIO_Pin_6
-#define PORT_MNXDN        GPIOC
-#define RCC_Per_MNXDN     RCC_AHB1Periph_GPIOC
-
-#define PIN_MDSTAR        GPIO_Pin_4
-#define PORT_MDSTAR       GPIOC
-#define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
-
-#define PIN_MDMR          GPIO_Pin_5
-#define PORT_MDMR         GPIOC
-#define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
-
-#define PIN_MYSF          GPIO_Pin_2
-#define PORT_MYSF         GPIOC
-#define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
-
-#define PIN_MPOCSAG       GPIO_Pin_8
-#define PORT_MPOCSAG      GPIOC
-#define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
-#endif
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F4_DISCOVERY)
-/*
-Pin definitions for STM32F4 Discovery Board:
-
-PTT      PB13   output           P1 Pin37
-COSLED   PA7    output           P1 Pin17
-LED      PD15   output           P1 Pin47
-COS      PA5    input            P1 Pin15
-
-DSTAR    PD12   output           P1 Pin44
-DMR      PD13   output           P1 Pin45
-YSF      PD14   output           P1 Pin46
-P25      PD11   output           P1 Pin43
-NXDN     PD10   output           P1 Pin42
-
-RX       PA0    analog input     P1 Pin12
-RSSI     PA1    analog input     P1 Pin11
-TX       PA4    analog output    P1 Pin16
-
-EXT_CLK  PA15   input            P2 Pin40
-*/
-
-#define PIN_COS           GPIO_Pin_5
-#define PORT_COS          GPIOA
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOA
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_7
-#define PORT_COSLED       GPIOA
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOA
-
-#define PIN_LED           GPIO_Pin_15
-#define PORT_LED          GPIOD
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOD
-
-#define PIN_P25           GPIO_Pin_11
-#define PORT_P25          GPIOD
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOD
-
-#define PIN_NXDN          GPIO_Pin_10
-#define PORT_NXDN         GPIOD
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOD
-
-#define PIN_DSTAR         GPIO_Pin_12
-#define PORT_DSTAR        GPIOD
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOD
-
-#define PIN_DMR           GPIO_Pin_13
-#define PORT_DMR          GPIOD
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOD
-
-#define PIN_YSF           GPIO_Pin_14
-#define PORT_YSF          GPIOD
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOD
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F4_PI)
-/*
-Pin definitions for STM32F4 Pi Board:
-
-PTT      PB13   output
-COSLED   PB14   output
-LED      PB15   output
-COS      PC0    input
-
-DSTAR    PC7    output
-DMR      PC8    output
-YSF      PA8    output
-P25      PC9    output
-NXDN     PB1    output
-POCSAG   PB12   output
-
-RX       PA0    analog input
-RSSI     PA7    analog input
-TX       PA4    analog output
-
-EXT_CLK  PA15   input
-*/
-
-#define PIN_COS           GPIO_Pin_0
-#define PORT_COS          GPIOC
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_14
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_15
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
-
-#define PIN_P25           GPIO_Pin_9
-#define PORT_P25          GPIOC
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
-
-#define PIN_NXDN          GPIO_Pin_1
-#define PORT_NXDN         GPIOB
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_7
-#define PORT_DSTAR        GPIOC
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOC
-
-#define PIN_DMR           GPIO_Pin_8
-#define PORT_DMR          GPIOC
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOC
-
-#define PIN_YSF           GPIO_Pin_8
-#define PORT_YSF          GPIOA
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOA
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_7
-#define PIN_RSSI_CH       ADC_Channel_7
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F722_PI)
-/*
-Pin definitions for STM32F722 Pi Board:
-
-PTT      PB13   output
-COSLED   PB14   output
-LED      PB15   output
-COS      PC0    input
-
-DSTAR    PC7    output
-DMR      PC8    output
-YSF      PA8    output
-P25      PC9    output
-NXDN     PB1    output
-POCSAG   PB12   output
-
-RX       PA0    analog input
-RSSI     PA7    analog input
-TX       PA4    analog output
-
-EXT_CLK  PA15   input
-*/
-
-#define PIN_COS           GPIO_Pin_0
-#define PORT_COS          GPIOC
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_14
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_15
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
-
-#define PIN_P25           GPIO_Pin_9
-#define PORT_P25          GPIOC
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
-
-#define PIN_NXDN          GPIO_Pin_1
-#define PORT_NXDN         GPIOB
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_7
-#define PORT_DSTAR        GPIOC
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOC
-
-#define PIN_DMR           GPIO_Pin_8
-#define PORT_DMR          GPIOC
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOC
-
-#define PIN_YSF           GPIO_Pin_8
-#define PORT_YSF          GPIOA
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOA
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_7
-#define PIN_RSSI_CH       ADC_Channel_7
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F4_F4M)
-/*
-Pin definitions for MMDVM-F4M Pi-Hat F0DEI board:
-
-PTT      PB13   output
-COSLED   PB14   output
-LED      PB15   output
-COS      PC0    input
-
-DSTAR    PC7    output
-DMR      PC8    output
-YSF      PA8    output
-P25      PC9    output
-NXDN     PB1    output
-POCSAG   PB12   output
-
-RX       PA0    analog input
-RSSI     PA7    analog input
-TX       PA4    analog output
-
-EXT_CLK  PA15   input
-*/
-
-#define PIN_COS           GPIO_Pin_0
-#define PORT_COS          GPIOC
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_14
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_15
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
-
-#define PIN_P25           GPIO_Pin_9
-#define PORT_P25          GPIOC
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
-
-#define PIN_NXDN          GPIO_Pin_1
-#define PORT_NXDN         GPIOB
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_7
-#define PORT_DSTAR        GPIOC
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOC
-
-#define PIN_DMR           GPIO_Pin_8
-#define PORT_DMR          GPIOC
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOC
-
-#define PIN_YSF           GPIO_Pin_8
-#define PORT_YSF          GPIOA
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOA
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_7
-#define PIN_RSSI_CH       ADC_Channel_7
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F722_F7M)
-/*
-Pin definitions for MMDVM-F7M Pi-Hat F0DEI board:
-
-PTT      PB13   output
-COSLED   PB14   output
-LED      PB15   output
-COS      PC0    input
-
-DSTAR    PC7    output
-DMR      PC8    output
-YSF      PA8    output
-P25      PC9    output
-NXDN     PB1    output
-POCSAG   PB12   output
-
-RX       PA0    analog input
-RSSI     PA7    analog input
-TX       PA4    analog output
-
-EXT_CLK  PA15   input
-*/
-
-#define PIN_COS           GPIO_Pin_0
-#define PORT_COS          GPIOC
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_14
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_15
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
-
-#define PIN_P25           GPIO_Pin_9
-#define PORT_P25          GPIOC
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
-
-#define PIN_NXDN          GPIO_Pin_1
-#define PORT_NXDN         GPIOB
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_7
-#define PORT_DSTAR        GPIOC
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOC
-
-#define PIN_DMR           GPIO_Pin_8
-#define PORT_DMR          GPIOC
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOC
-
-#define PIN_YSF           GPIO_Pin_8
-#define PORT_YSF          GPIOA
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOA
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_7
-#define PIN_RSSI_CH       ADC_Channel_7
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F722_RPT_HAT)
-/*
-Pin definitions for MMDVM_RPT_Hat Pi-Hat F0DEI DB9MAT DF2ET board:
-
-PTT      PB14   output
-COSLED   PB13   output
-LED      PB12   output
-COS      PC0    input
-
-DSTAR    PB15   output
-DMR      PC6    output
-YSF      PC7    output
-P25      PC8    output
-NXDN     PC9    output
-POCSAG   PA8    output
-FM       PA11   output
-
-MDSTAR   PC1    output
-MDMR     PC2    output
-MYSF     PC3    output
-MP25     PC4    output
-MNXDN    PC10   output
-MPOCSAG  PC11   output
-MFM      PC13   output
-
-RX       PA0    analog input
-RSSI     PA7    analog input
-TX       PA4    analog output
-
-EXT_CLK  PA15   input
-*/
-
-#define PIN_COS           GPIO_Pin_0
-#define PORT_COS          GPIOC
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
-
-#define PIN_PTT           GPIO_Pin_14
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_13
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_12
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
-
-#define PIN_P25           GPIO_Pin_8
-#define PORT_P25          GPIOC
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
-
-#define PIN_NXDN          GPIO_Pin_9
-#define PORT_NXDN         GPIOC
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOC
-
-#define PIN_POCSAG        GPIO_Pin_8
-#define PORT_POCSAG       GPIOA
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOA
-
-#define PIN_FM            GPIO_Pin_11
-#define PORT_FM           GPIOA
-#define RCC_Per_FM        RCC_AHB1Periph_GPIOA
-
-#define PIN_DSTAR         GPIO_Pin_15
-#define PORT_DSTAR        GPIOB
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOB
-
-#define PIN_DMR           GPIO_Pin_6
-#define PORT_DMR          GPIOC
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOC
-
-#define PIN_YSF           GPIO_Pin_7
-#define PORT_YSF          GPIOC
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOC
-
-#if defined(MODE_PINS)
-#define PIN_MP25          GPIO_Pin_4
-#define PORT_MP25         GPIOC
-#define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
-
-#define PIN_MNXDN         GPIO_Pin_10
-#define PORT_MNXDN        GPIOC
-#define RCC_Per_MNXDN     RCC_AHB1Periph_GPIOC
-
-#define PIN_MDSTAR        GPIO_Pin_1
-#define PORT_MDSTAR       GPIOC
-#define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
-
-#define PIN_MDMR          GPIO_Pin_2
-#define PORT_MDMR         GPIOC
-#define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
-
-#define PIN_MYSF          GPIO_Pin_3
-#define PORT_MYSF         GPIOC
-#define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
-
-#define PIN_MPOCSAG       GPIO_Pin_11
-#define PORT_MPOCSAG      GPIOC
-#define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
-
-#define PIN_MFM           GPIO_Pin_13
-#define PORT_MFM          GPIOC
-#define RCC_Per_MFM       RCC_AHB1Periph_GPIOC
-#endif
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_7
-#define PIN_RSSI_CH       ADC_Channel_7
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F4_NUCLEO)
-
-#if defined(STM32F4_NUCLEO_MORPHO_HEADER)
-/*
-Pin definitions for STM32F4 Nucleo boards (ST Morpho header):
-
-PTT      PB13   output           CN10 Pin30
-COSLED   PB14   output           CN10 Pin28
-LED      PA5    output           CN10 Pin11
-COS      PB15   input            CN10 Pin26
-
-DSTAR    PB10   output           CN10 Pin25
-DMR      PB4    output           CN10 Pin27
-YSF      PB5    output           CN10 Pin29
-P25      PB3    output           CN10 Pin31
-NXDN     PA10   output           CN10 Pin33
-POCSAG   PB12   output           CN10 Pin16
-
-MDSTAR   PC4    output           CN10 Pin34
-MDMR     PC5    output           CN10 Pin6
-MYSF     PC2    output           CN7 Pin35
-MP25     PC3    output           CN7 Pin37
-MNXDN    PC6    output           CN10 Pin4
-MPOCSAG  PC8    output           CN10 Pin2
-
-RX       PA0    analog input     CN7 Pin28
-RSSI     PA1    analog input     CN7 Pin30
-TX       PA4    analog output    CN7 Pin32
-
-EXT_CLK  PA15   input            CN7 Pin17
-*/
-
-#define PIN_COS           GPIO_Pin_15
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_14
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_5
-#define PORT_LED          GPIOA
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOA
-
-#define PIN_P25           GPIO_Pin_3
-#define PORT_P25          GPIOB
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOB
-
-#define PIN_NXDN          GPIO_Pin_10
-#define PORT_NXDN         GPIOA
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_10
-#define PORT_DSTAR        GPIOB
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOB
-
-#define PIN_DMR           GPIO_Pin_4
-#define PORT_DMR          GPIOB
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOB
-
-#define PIN_YSF           GPIO_Pin_5
-#define PORT_YSF          GPIOB
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
-
-#if defined(MODE_PINS)
-#define PIN_MP25          GPIO_Pin_3
-#define PORT_MP25         GPIOC
-#define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
-
-#define PIN_MNXDN         GPIO_Pin_6
-#define PORT_MNXDN        GPIOC
-#define RCC_Per_MNXDN     RCC_AHB1Periph_GPIOC
-
-#define PIN_MDSTAR        GPIO_Pin_4
-#define PORT_MDSTAR       GPIOC
-#define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
-
-#define PIN_MDMR          GPIO_Pin_5
-#define PORT_MDMR         GPIOC
-#define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
-
-#define PIN_MYSF          GPIO_Pin_2
-#define PORT_MYSF         GPIOC
-#define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
-
-#define PIN_MPOCSAG       GPIO_Pin_8
-#define PORT_MPOCSAG      GPIOC
-#define RCC_Per_MPOCSAG   RCC_AHB1Periph_GPIOC
-#endif
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F4_NUCLEO_ARDUINO_HEADER)
-/*
-Pin definitions for STM32F4 Nucleo boards (Arduino header):
-
-PTT      PB10   output           CN9 Pin7
-COSLED   PB3    output           CN9 Pin4
-LED      PB5    output           CN9 Pin5
-COS      PB4    input            CN9 Pin6
-
-DSTAR    PA1    output           CN8 Pin2
-DMR      PA4    output           CN8 Pin3
-YSF      PB0    output           CN8 Pin4
-P25      PC1    output           CN8 Pin5
-NXDN     PA3    output           CN9 Pin1
-POCSAG   PB12   output
-
-RX       PA0    analog input     CN8 Pin1
-RSSI     PC0    analog input     CN8 Pin6
-TX       PA5    analog output    CN5 Pin6
-
-EXT_CLK  PB8    input            CN5 Pin10
-*/
-
-#define PIN_COS           GPIO_Pin_4
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
-
-#define PIN_PTT           GPIO_Pin_10
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_3
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_5
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
-
-#define PIN_P25           GPIO_Pin_1
-#define PORT_P25          GPIOC
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOC
-
-#define PIN_NXDN          GPIO_Pin_3
-#define PORT_NXDN         GPIOA
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_1
-#define PORT_DSTAR        GPIOA
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOA
-
-#define PIN_DMR           GPIO_Pin_4
-#define PORT_DMR          GPIOA
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOA
-
-#define PIN_YSF           GPIO_Pin_0
-#define PORT_YSF          GPIOB
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
-
-#define PIN_EXT_CLK       GPIO_Pin_8
-#define SRC_EXT_CLK       GPIO_PinSource8
-#define PORT_EXT_CLK      GPIOB
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_0
-#define PIN_RSSI_CH       ADC_Channel_10
-#define PORT_RSSI         GPIOC
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOC
-
-#define PIN_TX            GPIO_Pin_5
-#define PIN_TX_CH         DAC_Channel_2
-
-#else
-#error "Either STM32F4_NUCLEO_MORPHO_HEADER or STM32F4_NUCLEO_ARDUINO_HEADER need to be defined in Config.h"
-#endif
-
-#elif defined(STM32F7_NUCLEO)
-/*
-Pin definitions for STM32F7 Nucleo boards (ST Morpho header):
-
-PTT      PB13   output           CN12 Pin30
-COSLED   PB14   output           CN12 Pin28
-LED      PA5    output           CN12 Pin11
-COS      PB15   input            CN12 Pin26
-
-DSTAR    PB10   output           CN12 Pin25
-DMR      PB4    output           CN12 Pin27
-YSF      PB5    output           CN12 Pin29
-P25      PB3    output           CN12 Pin31
-NXDN     PA10   output           CN12 Pin33
-POCSAG   PB12   output           CN12 Pin16
-
-MDSTAR   PC4    output           CN12 Pin34
-MDMR     PC5    output           CN12 Pin6
-MYSF     PC2    output           CN11 Pin35
-MP25     PC3    output           CN11 Pin37
-MNXDN    PC6    output           CN12 Pin4
-
-RX       PA0    analog input     CN11 Pin28
-RSSI     PA1    analog input     CN11 Pin30
-TX       PA4    analog output    CN11 Pin32
-
-EXT_CLK  PA15   input            CN11 Pin17
-*/
-
-#define PIN_COS           GPIO_Pin_15
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
-
-#define PIN_PTT           GPIO_Pin_13
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_14
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_5
-#define PORT_LED          GPIOA
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOA
-
-#define PIN_P25           GPIO_Pin_3
-#define PORT_P25          GPIOB
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOB
-
-#define PIN_NXDN          GPIO_Pin_10
-#define PORT_NXDN         GPIOA
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOA
-
-#define PIN_POCSAG        GPIO_Pin_12
-#define PORT_POCSAG       GPIOB
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_10
-#define PORT_DSTAR        GPIOB
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOB
-
-#define PIN_DMR           GPIO_Pin_4
-#define PORT_DMR          GPIOB
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOB
-
-#define PIN_YSF           GPIO_Pin_5
-#define PORT_YSF          GPIOB
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
-
-#if defined(MODE_PINS)
-#define PIN_MP25          GPIO_Pin_3
-#define PORT_MP25         GPIOC
-#define RCC_Per_MP25      RCC_AHB1Periph_GPIOC
-
-#define PIN_MNXDN         GPIO_Pin_6
-#define PORT_MNXDN        GPIOC
-#define RCC_Per_MNXDN     RCC_AHB1Periph_GPIOC
-
-#define PIN_MDSTAR        GPIO_Pin_4
-#define PORT_MDSTAR       GPIOC
-#define RCC_Per_MDSTAR    RCC_AHB1Periph_GPIOC
-
-#define PIN_MDMR          GPIO_Pin_5
-#define PORT_MDMR         GPIOC
-#define RCC_Per_MDMR      RCC_AHB1Periph_GPIOC
-
-#define PIN_MYSF          GPIO_Pin_2
-#define PORT_MYSF         GPIOC
-#define RCC_Per_MYSF      RCC_AHB1Periph_GPIOC
-#endif
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOA
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#elif defined(STM32F4_DVM)
-/*
-Pin definitions for STM32F4 STM32-DVM rev 3 Board:
-
-COS      PB13   input
-PTT      PB12   output
-COSLED   PB4    output
-LED      PB3    output
-
-P25      PB8    output
-NXDN     PB9    output
-DSTAR    PB6    output
-DMR      PB5    output
-YSF      PB7    output
-POCSAG   PC10   output
-
-RX       PB0    analog input
-RSSI     PB1    analog input
-TX       PA4    analog output
-
-EXT_CLK  PA15   input
-*/
-
-#define PIN_COS           GPIO_Pin_13
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
-
-
-#define PIN_PTT           GPIO_Pin_12
-#define PORT_PTT          GPIOB
-#define RCC_Per_PTT       RCC_AHB1Periph_GPIOB
-
-#define PIN_COSLED        GPIO_Pin_4
-#define PORT_COSLED       GPIOB
-#define RCC_Per_COSLED    RCC_AHB1Periph_GPIOB
-
-#define PIN_LED           GPIO_Pin_3
-#define PORT_LED          GPIOB
-#define RCC_Per_LED       RCC_AHB1Periph_GPIOB
-
-#define PIN_P25           GPIO_Pin_8
-#define PORT_P25          GPIOB
-#define RCC_Per_P25       RCC_AHB1Periph_GPIOB
-
-#define PIN_NXDN          GPIO_Pin_9
-#define PORT_NXDN         GPIOB
-#define RCC_Per_NXDN      RCC_AHB1Periph_GPIOB
-
-#define PIN_DSTAR         GPIO_Pin_6
-#define PORT_DSTAR        GPIOB
-#define RCC_Per_DSTAR     RCC_AHB1Periph_GPIOB
-
-#define PIN_DMR           GPIO_Pin_5
-#define PORT_DMR          GPIOB
-#define RCC_Per_DMR       RCC_AHB1Periph_GPIOB
-
-#define PIN_YSF           GPIO_Pin_7
-#define PORT_YSF          GPIOB
-#define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
-
-#define PIN_POCSAG        GPIO_Pin_10
-#define PORT_POCSAG       GPIOC
-#define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOC
-
-#define PIN_EXT_CLK       GPIO_Pin_15
-#define SRC_EXT_CLK       GPIO_PinSource15
-#define PORT_EXT_CLK      GPIOA
-
-#define PIN_RX            GPIO_Pin_0
-#define PIN_RX_CH         ADC_Channel_8
-#define PORT_RX           GPIOB
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOB
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_9
-#define PORT_RSSI         GPIOB
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOB
-
-#define PIN_TX            GPIO_Pin_4
-#define PIN_TX_CH         DAC_Channel_1
-
-#else
-#error "Either STM32F4_DISCOVERY, STM32F4_PI, STM32F722_PI, STM32F4_F4M, STM32F722_F7M, STM32F4_DVM, STM32F4_NUCLEO or STM32F7_NUCLEO need to be defined"
-#endif
 
 const uint16_t DC_OFFSET = 2048U;
 
@@ -1133,6 +113,15 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_POCSAG, &GPIO_InitStruct);
 #endif
+
+#if !defined(USE_ALTERNATE_FM_LEDS)
+   // FM pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_FM, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_FM;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_FM, &GPIO_InitStruct);
+#endif
+
 #endif
 
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
@@ -1175,6 +164,15 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_MPOCSAG, &GPIO_InitStruct);
 #endif
+
+#if !defined(USE_ALTERNATE_FM_LEDS)
+   // FM mode pin
+   RCC_AHB1PeriphClockCmd(RCC_Per_MFM, ENABLE);
+   GPIO_InitStruct.GPIO_Pin   = PIN_MFM;
+   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
+   GPIO_Init(PORT_MFM, &GPIO_InitStruct);
+#endif
+
 #endif
 }
 
@@ -1384,7 +382,9 @@ void CIO::setCOSInt(bool on)
 
 void CIO::setDStarInt(bool on)
 {
+#if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
+#endif
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
    GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
 #endif
@@ -1392,7 +392,9 @@ void CIO::setDStarInt(bool on)
 
 void CIO::setDMRInt(bool on)
 {
+#if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_DMR, PIN_DMR, on ? Bit_SET : Bit_RESET);
+#endif
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
    GPIO_WriteBit(PORT_MDMR, PIN_MDMR, on ? Bit_SET : Bit_RESET);
 #endif
@@ -1400,7 +402,9 @@ void CIO::setDMRInt(bool on)
 
 void CIO::setYSFInt(bool on)
 {
+#if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
+#endif
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
    GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
 #endif
@@ -1408,7 +412,9 @@ void CIO::setYSFInt(bool on)
 
 void CIO::setP25Int(bool on)
 {
+#if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
+#endif
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
    GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
 #endif
@@ -1416,16 +422,20 @@ void CIO::setP25Int(bool on)
 
 void CIO::setNXDNInt(bool on)
 {
+#if defined(MODE_LEDS)
 #if defined(USE_ALTERNATE_NXDN_LEDS)
    GPIO_WriteBit(PORT_YSF, PIN_YSF, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_P25, PIN_P25, on ? Bit_SET : Bit_RESET);
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-   GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
-   GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
-#endif
 #else
    GPIO_WriteBit(PORT_NXDN, PIN_NXDN, on ? Bit_SET : Bit_RESET);
+#endif
+#endif
+
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+   GPIO_WriteBit(PORT_MYSF, PIN_MYSF, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
+#else
    GPIO_WriteBit(PORT_MNXDN, PIN_MNXDN, on ? Bit_SET : Bit_RESET);
 #endif
 #endif
@@ -1433,16 +443,20 @@ void CIO::setNXDNInt(bool on)
 
 void CIO::setPOCSAGInt(bool on)
 {
+#if defined(MODE_LEDS)
 #if defined(USE_ALTERNATE_POCSAG_LEDS)
    GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
    GPIO_WriteBit(PORT_DMR,   PIN_DMR,   on ? Bit_SET : Bit_RESET);
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-   GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
-   GPIO_WriteBit(PORT_MDMR,   PIN_MDMR,   on ? Bit_SET : Bit_RESET);
-#endif
 #else
    GPIO_WriteBit(PORT_POCSAG,  PIN_POCSAG, on ? Bit_SET : Bit_RESET);
+#endif
+#endif
+
 #if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+   GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
+   GPIO_WriteBit(PORT_MDMR,   PIN_MDMR,   on ? Bit_SET : Bit_RESET);
+#else
    GPIO_WriteBit(PORT_MPOCSAG, PIN_MPOCSAG, on ? Bit_SET : Bit_RESET);
 #endif
 #endif

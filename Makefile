@@ -25,6 +25,7 @@ F7_LIB_PATH=./STM32F7XX_Lib
 # MCU external clock frequency (Hz)
 CLK_MMDVM_PI=12000000
 CLK_NUCLEO=8000000
+CLK_12MHZ=12000000
 
 # Directory Structure
 BINDIR=bin
@@ -93,6 +94,8 @@ ifndef $(OSC)
 		OSC=$(CLK_MMDVM_PI)
 	else ifeq ($(MAKECMDGOALS),pi-f722)
 		OSC=$(CLK_MMDVM_PI)
+	else ifeq ($(MAKECMDGOALS),drcc_nqf)
+		OSC=$(CLK_12MHZ)
 	else
 		OSC=$(CLK_NUCLEO)
 	endif
@@ -134,6 +137,9 @@ DEFS_RPT_HAT=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_RPT_HAT -DHS
 DEFS_DVM=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_DVM -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # MMDVM_RPT_Hat BG4TGO, BG5HHP board:
 DEFS_RPT_HAT_TGO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_RPT_HAT_TGO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# DRCC_DVM BG7NQF board:
+DEFS_DRCC_DVM=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DDRCC_DVM -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+
 
 # Build compiler flags
 CFLAGS_F4=-c $(MCFLAGS_F4) $(INCLUDES_F4)
@@ -152,7 +158,7 @@ CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -f
 LDFLAGS=-Os --specs=nano.specs
 
 # Build Rules
-.PHONY: all release dis pi pi-f722 f4m nucleo f767 dvm clean
+.PHONY: all release dis pi pi-f722 f4m nucleo f767 dvm drcc_nqf clean
 
 # Default target: Nucleo-64 F446RE board
 all: nucleo
@@ -216,6 +222,12 @@ dvm: CFLAGS+=$(CFLAGS_F4) $(DEFS_DVM)
 dvm: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DVM)
 dvm: LDFLAGS+=$(LDFLAGS_F4)
 dvm: release_f4
+
+drcc_nqf: GitVersion.h
+drcc_nqf: CFLAGS+=$(CFLAGS_F4) $(DEFS_DRCC_DVM) -DDRCC_DVM_NQF
+drcc_nqf: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DRCC_DVM) -DDRCC_DVM_NQF
+drcc_nqf: LDFLAGS+=$(LDFLAGS_F4)
+drcc_nqf: release_f4
 
 release_f4: $(BINDIR)
 release_f4: $(OBJDIR_F4)
@@ -365,3 +377,7 @@ else
 	echo "#define GITVERSION \"0000000\"" > $@
 endif
 endif
+
+flash_f4:
+	@echo "flashing firmware..."
+	st-flash write bin/$(BINBIN_F4) 0x8000000
