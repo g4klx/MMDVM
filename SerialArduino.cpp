@@ -30,7 +30,11 @@ void CSerialPort::beginInt(uint8_t n, int speed)
 {
   switch (n) {
     case 1U:
+#if defined(ARDUINO_DUE_USE_NATIVE_USB_PORT)
+      SerialUSB.begin(speed);
+#else
       Serial.begin(speed);
+#endif
       break;
     case 2U:
       Serial2.begin(speed);
@@ -47,7 +51,11 @@ int CSerialPort::availableInt(uint8_t n)
 {
   switch (n) {
     case 1U:
+#if defined(ARDUINO_DUE_USE_NATIVE_USB_PORT)
+      return SerialUSB.available();
+#else
       return Serial.available();
+#endif
     case 2U:
       return Serial2.available();
     case 3U:
@@ -61,7 +69,11 @@ int CSerialPort::availableForWriteInt(uint8_t n)
 {
   switch (n) {
     case 1U:
+#if defined(ARDUINO_DUE_USE_NATIVE_USB_PORT)
+      return SerialUSB.availableForWrite();
+#else
       return Serial.availableForWrite();
+#endif
     case 2U:
       return Serial2.availableForWrite();
     case 3U:
@@ -75,7 +87,11 @@ uint8_t CSerialPort::readInt(uint8_t n)
 {
   switch (n) {
     case 1U:
+#if defined(ARDUINO_DUE_USE_NATIVE_USB_PORT)
+      return SerialUSB.read();
+#else
       return Serial.read();
+#endif
     case 2U:
       return Serial2.read();
     case 3U:
@@ -89,10 +105,17 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
 {
   switch (n) {
     case 1U:
+#if defined(ARDUINO_DUE_USE_NATIVE_USB_PORT)
+      SerialUSB.write(data, length);
+      if (flush)
+        SerialUSB.flush();
+      break;
+#else
       Serial.write(data, length);
       if (flush)
         Serial.flush();
       break;
+#endif
     case 2U:
       Serial2.write(data, length);
       if (flush)

@@ -52,6 +52,11 @@
 #define ARDUINO_DUE_ZUM_V10
 #endif
 
+// Use the native USB port instead of the programming port
+// The native port is recommended when using FM network
+// as the rpogramming port does not have the required throughput
+// #define ARDUINO_DUE_USE_NATIVE_USB_PORT
+
 // For the SP8NTH board
 // #define ARDUINO_DUE_NTH
 
