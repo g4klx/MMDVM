@@ -54,7 +54,7 @@ m_extAudioBoost(1U),
 m_downsampler(400U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
-m_inputRFRB(4800U),   // 200ms of audio
+m_inputRFRB(2401U),   // 100ms of audio + 1 sample
 m_outputRFRB(2400U),  // 100ms of audio
 m_inputExtRB(2400U)   // 100ms of Audio
 {
@@ -152,9 +152,26 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
 void CFM::process()
 {
-  q15_t sample;
-  while (io.getSpace() >= 3U && m_outputRFRB.get(sample)) {
-    io.write(STATE_FM, &sample, 1);
+  uint16_t space = io.getSpace();
+  uint16_t length = m_outputRFRB.getData();
+  if (space > FM_TX_BLOCK_SIZE && length >= FM_TX_BLOCK_SIZE ) {
+    
+    if(length > FM_TX_BLOCK_SIZE)
+      length = FM_TX_BLOCK_SIZE;
+    if(space > FM_TX_BLOCK_SIZE)
+      space = FM_TX_BLOCK_SIZE;
+    if(length > space)
+      length = space;
+
+    q15_t samples[FM_TX_BLOCK_SIZE];
+
+    for (uint16_t i = 0U; i < length; i++) {
+      q15_t sample = 0;
+      m_outputRFRB.get(sample);
+      samples[i] = sample;
+    }
+
+    io.write(STATE_FM, samples, length);
   }
 
   if(m_extEnabled) {
