@@ -602,6 +602,10 @@ void CFM::timeoutRFState(bool validSignal)
   if (!validSignal) {
     DEBUG1("State to TIMEOUT_WAIT_RF");
     m_state = FS_TIMEOUT_WAIT_RF;
+
+    if (m_callsignAtEnd)
+        sendCallsign();
+
     m_ackDelayTimer.start();
   }
 
