@@ -411,6 +411,8 @@ void CFM::kerchunkRFState(bool validSignal)
     m_ackMinTimer.stop();
     m_callsignTimer.stop();
     m_statusTimer.stop();
+
+    serial.writeFMEOT();
   }
 }
 
@@ -423,6 +425,8 @@ void CFM::relayingRFState(bool validSignal)
       m_ackMinTimer.stop();
       m_timeoutTimer.stop();
       m_timeoutTone.start();
+
+      serial.writeFMEOT();
     }
   } else {
     DEBUG1("State to RELAYING_WAIT_RF");
@@ -574,10 +578,13 @@ void CFM::hangState(bool validRFSignal, bool validExtSignal)
       m_hangTimer.stop();
       m_statusTimer.stop();
 
+      serial.writeFMEOT();
+
       if (m_callsignAtEnd)
         sendCallsign();
 
       m_callsignTimer.stop();
+
     }
   }
 
