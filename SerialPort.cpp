@@ -1287,7 +1287,7 @@ void CSerialPort::writeFMStatus(uint8_t status)
   reply[2U] = MMDVM_FM_STATUS;
   reply[3U] = status;
 
-  writeInt(1U, reply, 4Us);
+  writeInt(1U, reply, 4U);
 }
 
 void CSerialPort::writeFMEOT()
