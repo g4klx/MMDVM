@@ -154,13 +154,13 @@ void CFM::process()
 {
   uint16_t space = io.getSpace();
   uint16_t length = m_outputRFRB.getData();
+
   if (space > FM_TX_BLOCK_SIZE && length >= FM_TX_BLOCK_SIZE ) {
-    
-    if(length > FM_TX_BLOCK_SIZE)
+    if (length > FM_TX_BLOCK_SIZE)
       length = FM_TX_BLOCK_SIZE;
-    if(space > FM_TX_BLOCK_SIZE)
+    if (space > FM_TX_BLOCK_SIZE)
       space = FM_TX_BLOCK_SIZE;
-    if(length > space)
+    if (length > space)
       length = space;
 
     q15_t samples[FM_TX_BLOCK_SIZE];
@@ -174,18 +174,17 @@ void CFM::process()
     io.write(STATE_FM, samples, length);
   }
 
-  if(m_extEnabled) {
+  if (m_extEnabled) {
     uint16_t length = m_downsampler.getData();
 
-    if(length >= FM_SERIAL_BLOCK_SIZE) {
-      if(length > FM_SERIAL_BLOCK_SIZE)
+    if (length >= FM_SERIAL_BLOCK_SIZE) {
+      if (length > FM_SERIAL_BLOCK_SIZE)
         length = FM_SERIAL_BLOCK_SIZE;
         
       TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
 
-      for(uint16_t j = 0U; j < length; j++) {
+      for (uint16_t j = 0U; j < length; j++)
         m_downsampler.getPackedData(serialSamples[j]);
-      }
 
       serial.writeFMData((uint8_t*)serialSamples, length * sizeof(TSamplePairPack));
     }
@@ -412,7 +411,7 @@ void CFM::kerchunkRFState(bool validSignal)
     m_callsignTimer.stop();
     m_statusTimer.stop();
 
-    if(m_extEnabled)
+    if (m_extEnabled)
       serial.writeFMEOT();
   }
 }
@@ -427,13 +426,16 @@ void CFM::relayingRFState(bool validSignal)
       m_timeoutTimer.stop();
       m_timeoutTone.start();
 
-      if(m_extEnabled)
+      if (m_extEnabled)
         serial.writeFMEOT();
     }
   } else {
     DEBUG1("State to RELAYING_WAIT_RF");
     m_state = FS_RELAYING_WAIT_RF;
     m_ackDelayTimer.start();
+
+    if (m_extEnabled)
+      serial.writeFMEOT();
   }
 
   if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
@@ -579,9 +581,6 @@ void CFM::hangState(bool validRFSignal, bool validExtSignal)
       m_state = FS_LISTENING;
       m_hangTimer.stop();
       m_statusTimer.stop();
-
-      if(m_extEnabled)
-        serial.writeFMEOT();
 
       if (m_callsignAtEnd)
         sendCallsign();
