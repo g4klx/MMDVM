@@ -1301,7 +1301,7 @@ void CSerialPort::writeFMEOT()
   uint8_t reply[10U];
 
   reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 4U;
+  reply[1U] = 3U;
   reply[2U] = MMDVM_FM_EOT;
 
   writeInt(1U, reply, 3U);
