@@ -71,6 +71,7 @@ const uint8_t MMDVM_FM_PARAMS3   = 0x62U;
 const uint8_t MMDVM_FM_PARAMS4   = 0x63U;
 const uint8_t MMDVM_FM_DATA      = 0x65U;
 const uint8_t MMDVM_FM_STATUS    = 0x66U;
+const uint8_t MMDVM_FM_EOT       = 0x67U;
 
 const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
@@ -1286,7 +1287,24 @@ void CSerialPort::writeFMStatus(uint8_t status)
   reply[2U] = MMDVM_FM_STATUS;
   reply[3U] = status;
 
-  writeInt(1U, reply, 4);
+  writeInt(1U, reply, 4U);
+}
+
+void CSerialPort::writeFMEOT()
+{
+  if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
+    return;
+
+  if (!m_fmEnable)
+    return;
+
+  uint8_t reply[10U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 3U;
+  reply[2U] = MMDVM_FM_EOT;
+
+  writeInt(1U, reply, 3U);
 }
 
 void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
