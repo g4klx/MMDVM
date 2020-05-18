@@ -316,7 +316,7 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
       break;
   }
 
-  if (m_state == FS_LISTENING && !m_rfAck.isRunning() && !m_extAck.isRunning()) {
+  if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted()) {
     m_outputRFRB.reset();
     m_downsampler.reset();
   }
