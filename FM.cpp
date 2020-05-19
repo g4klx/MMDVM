@@ -363,6 +363,9 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
 
     m_callsignTimer.start();
 
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     m_statusTimer.start();
     serial.writeFMStatus(m_state);
   } else if (validExtSignal) {
@@ -403,6 +406,9 @@ void CFM::kerchunkRFState(bool validSignal)
       }
     }
   } else {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
     DEBUG1("State to LISTENING");
     m_state = FS_LISTENING;
     m_kerchunkTimer.stop();
@@ -430,6 +436,9 @@ void CFM::relayingRFState(bool validSignal)
         serial.writeFMEOT();
     }
   } else {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
     DEBUG1("State to RELAYING_WAIT_RF");
     m_state = FS_RELAYING_WAIT_RF;
     m_ackDelayTimer.start();
@@ -447,6 +456,9 @@ void CFM::relayingRFState(bool validSignal)
 void CFM::relayingRFWaitState(bool validSignal)
 {
   if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     DEBUG1("State to RELAYING_RF");
     m_state = FS_RELAYING_RF;
     m_ackDelayTimer.stop();
@@ -562,6 +574,9 @@ void CFM::relayingExtWaitState(bool validSignal)
 void CFM::hangState(bool validRFSignal, bool validExtSignal)
 {
   if (validRFSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     DEBUG1("State to RELAYING_RF");
     m_state = FS_RELAYING_RF;
     DEBUG1("Stop ack");
@@ -599,6 +614,9 @@ void CFM::hangState(bool validRFSignal, bool validExtSignal)
 void CFM::timeoutRFState(bool validSignal)
 {
   if (!validSignal) {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
     DEBUG1("State to TIMEOUT_WAIT_RF");
     m_state = FS_TIMEOUT_WAIT_RF;
 
@@ -617,6 +635,9 @@ void CFM::timeoutRFState(bool validSignal)
 void CFM::timeoutRFWaitState(bool validSignal)
 {
   if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     DEBUG1("State to TIMEOUT_RF");
     m_state = FS_TIMEOUT_RF;
     m_ackDelayTimer.stop();
