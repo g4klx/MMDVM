@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2018 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -66,9 +66,6 @@ m_txCount(0U)
 
 void CYSFTX::process()
 {
-  if (m_buffer.getData() == 0U && m_poLen == 0U && m_txCount == 0U)
-    return;
-
   // If we have YSF data to transmit, do so.
   if (m_poLen == 0U && m_buffer.getData() > 0U) {
     if (!m_tx) {
