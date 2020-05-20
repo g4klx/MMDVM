@@ -97,10 +97,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
       //we had enough samples for CTCSS and we are in some other mode than FM
       bool validCTCSS = CTCSS_VALID(ctcssState);
       stateMachine(validCTCSS && cos, inputExt);
-    } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState == STATE_FM) {
-      //We had enough samples for CTCSS and we are in FM mode, trigger the state machine
-      bool validCTCSS = CTCSS_VALID(ctcssState);
-      stateMachine(validCTCSS && cos, inputExt);
+      if (m_modemState != STATE_FM)
+        continue;
     } else if ((inputExt || CTCSS_NOT_READY(ctcssState)) && m_modemState == STATE_FM && i == length - 1) {
       //Not enough samples for CTCSS but we already are in FM, trigger the state machine
       //but do not trigger the state machine on every single sample, save CPU!
@@ -318,7 +316,7 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
       break;
   }
 
-  if (m_state == FS_LISTENING) {
+  if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted()) {
     m_outputRFRB.reset();
     m_downsampler.reset();
   }
