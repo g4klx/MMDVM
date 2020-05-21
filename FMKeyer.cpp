@@ -205,6 +205,11 @@ void CFMKeyer::stop()
   m_audioPos = 0U;
 }
 
+bool CFMKeyer::isWanted() const
+{
+  return m_wanted;
+}
+
 bool CFMKeyer::isRunning() const
 {
   return m_poPos > 0U || m_dotPos > 0U || m_audioPos > 0U;

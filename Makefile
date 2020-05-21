@@ -155,7 +155,7 @@ LDFLAGS_F722 =-T stm32f722_link.ld $(MCFLAGS_F7) --specs=nosys.specs $(INCLUDES_
 # Common flags
 CFLAGS=-Os -ffunction-sections -fdata-sections -fno-builtin -Wno-implicit -DCUSTOM_NEW -DNO_EXCEPTIONS
 CXXFLAGS=-Os -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin -fno-rtti -DCUSTOM_NEW -DNO_EXCEPTIONS
-LDFLAGS=-Os --specs=nano.specs
+LDFLAGS=-Os --specs=nano.specs -Wl,-Map=bin/mmdvm.map
 
 # Build Rules
 .PHONY: all release dis pi pi-f722 f4m nucleo f767 dvm drcc_nqf clean

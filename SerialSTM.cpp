@@ -906,7 +906,7 @@ int CSerialPort::availableForWriteInt(uint8_t n)
          #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
          return AvailForWriteUSART1();
          #elif defined(DRCC_DVM)
-         AvailForWriteUSART2();
+         return AvailForWriteUSART2();
          #else
          return AvailForWriteUART5();
          #endif
