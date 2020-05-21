@@ -235,7 +235,7 @@ void CFM::stateMachine(bool validSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning()) {
+    if (!m_callsign.isWanted() && !m_rfAck.isWanted()) {
       DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
       m_callsignTimer.stop();
@@ -281,6 +281,9 @@ void CFM::listeningState(bool validSignal)
 
     m_callsignTimer.start();
 
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     DEBUG1("Change to STATE_FM");
     m_modemState = STATE_FM;
   }
@@ -299,6 +302,9 @@ void CFM::kerchunkState(bool validSignal)
       }
     }
   } else {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
     DEBUG1("State to LISTENING");
     m_state = FS_LISTENING;
     m_kerchunkTimer.stop();
@@ -319,6 +325,9 @@ void CFM::relayingState(bool validSignal)
       m_timeoutTone.start();
     }
   } else {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
     DEBUG1("State to RELAYING_WAIT");
     m_state = FS_RELAYING_WAIT;
     m_ackDelayTimer.start();
@@ -333,6 +342,9 @@ void CFM::relayingState(bool validSignal)
 void CFM::relayingWaitState(bool validSignal)
 {
   if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     DEBUG1("State to RELAYING");
     m_state = FS_RELAYING;
     m_ackDelayTimer.stop();
@@ -368,6 +380,9 @@ void CFM::relayingWaitState(bool validSignal)
 void CFM::hangState(bool validSignal)
 {
   if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     DEBUG1("State to RELAYING");
     m_state = FS_RELAYING;
     DEBUG1("Stop ack");
@@ -395,6 +410,9 @@ void CFM::hangState(bool validSignal)
 void CFM::timeoutState(bool validSignal)
 {
   if (!validSignal) {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
     DEBUG1("State to TIMEOUT_WAIT");
     m_state = FS_TIMEOUT_WAIT;
     m_ackDelayTimer.start();
@@ -409,6 +427,9 @@ void CFM::timeoutState(bool validSignal)
 void CFM::timeoutWaitState(bool validSignal)
 {
   if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
     DEBUG1("State to TIMEOUT");
     m_state = FS_TIMEOUT;
     m_ackDelayTimer.stop();

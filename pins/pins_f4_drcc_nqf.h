@@ -22,36 +22,40 @@
 /*
 Pin definitions for DRCC_DVM BG7NQF  board rev1
 
-PTT      PB12   output
-LED_PTT  PB4    output
-LED_COS  PB5    output
-LED_SRV  PB10   output
-COS      PB13   input
+TX/PTT_LED  PB12   output
+RX/COS_LED  PB5    output
+STATUS_LED  PB10   output
 
-DSTAR    N/A
-DMR      N/A
-YSF      N/A
-P25      N/A
-NXDN     N/A
-POCSAG   N/A
+COS_IN      PB13   input
 
-MDSTAR   PB14   output
-MDMR     PB8    output
-MYSF     PB9    output
-MP25     PB15   output
-MNXDN    N/A
-MPOCSAG  N/A
+DSTAR       N/A
+DMR         N/A
+YSF         N/A
+P25         N/A
+NXDN        N/A
+POCSAG      N/A
 
-RX       PB0    analog input
-RSSI     PB1    analog input
-TX       PA4    analog output
+MDMR/BIT0   PB8    output
+MYSF/BIT1   PB9    output
+MDSTAR/BIT2 PB14   output
+MP25/BIT3   PB15   output          Generic Mode Pins
+MNXDN       N/A
+MPOCSAG     N/A
 
-EXT_CLK  PA15   input
+RX          PA0    analog input
+RSSI        PA1    analog input
+TX          PA4    analog output
 
-UART1_TX PA9    output
-UART1_RX PA10   output
-UART2_TX PA2    output
-UART2_RX PA3    output
+EXT_CLK     PA15   input
+
+UART1_TX    PA9    output
+UART1_RX    PA10   output          Host Data Communication
+
+UART2_TX    PA2    output
+UART2_RX    PA3    output          Nextion Data Communication
+
+I2C1_SCL    PB6    output
+I2C1_SDA    PB7    output          OLED Data Communication as master
 
 */
 
@@ -124,13 +128,13 @@ UART2_RX PA3    output
 
 #define PIN_RX            GPIO_Pin_0
 #define PIN_RX_CH         ADC_Channel_0
-#define PORT_RX           GPIOB
-#define RCC_Per_RX        RCC_AHB1Periph_GPIOB
+#define PORT_RX           GPIOA
+#define RCC_Per_RX        RCC_AHB1Periph_GPIOA
 
 #define PIN_RSSI          GPIO_Pin_1
 #define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOB
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOB
+#define PORT_RSSI         GPIOA
+#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
 
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1

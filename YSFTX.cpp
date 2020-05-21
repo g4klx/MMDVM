@@ -66,9 +66,6 @@ m_txCount(0U)
 
 void CYSFTX::process()
 {
-  if (m_buffer.getData() == 0U && m_poLen == 0U && m_txCount == 0U)
-    return;
-
   // If we have YSF data to transmit, do so.
   if (m_poLen == 0U && m_buffer.getData() > 0U) {
     if (!m_tx) {
@@ -191,4 +188,3 @@ void CYSFTX::setParams(bool on, uint8_t txHang)
   m_loDev  = on;
   m_txHang = txHang * 1200U;
 }
-
