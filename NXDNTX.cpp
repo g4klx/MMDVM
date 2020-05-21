@@ -54,7 +54,7 @@ m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(240U),     // 200ms
-m_txHang(6000U),     // 5s
+m_txHang(3000U),     // 5s
 m_txCount(0U)
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
@@ -72,10 +72,7 @@ m_txCount(0U)
 
 void CNXDNTX::process()
 {
-  if (m_buffer.getData() == 0U && m_poLen == 0U && m_txCount == 0U)
-    return;
-
-  if (m_poLen == 0U) {
+  if (m_poLen == 0U && m_buffer.getData() > 0U) {
     if (!m_tx) {
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = NXDN_SYNC;
@@ -200,5 +197,5 @@ uint8_t CNXDNTX::getSpace() const
 
 void CNXDNTX::setParams(uint8_t txHang)
 {
-  m_txHang = txHang * 1200U;
+  m_txHang = txHang * 600U;
 }

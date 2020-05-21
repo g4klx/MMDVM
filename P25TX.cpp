@@ -70,10 +70,7 @@ m_txCount(0U)
 
 void CP25TX::process()
 {
-  if (m_buffer.getData() == 0U && m_poLen == 0U && m_txCount == 0U)
-    return;
-
-  if (m_poLen == 0U) {
+  if (m_poLen == 0U && m_buffer.getData() > 0U) {
     if (!m_tx) {
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = P25_START_SYNC;

@@ -35,6 +35,8 @@ public:
 
   bool isRunning() const;
 
+  bool isWanted() const;
+
 private:
   bool     m_wanted;
   uint8_t  m_poBuffer[1000U];
