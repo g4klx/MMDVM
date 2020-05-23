@@ -36,7 +36,9 @@
 // #define EXTERNAL_OSC 19200000
 
 // Use a higher baudrate for host communication. Required for FM network !
-// #define SERIAL_SPEED 230400
+#define SERIAL_SPEED 115200 //suitable for most older boards (Arduino, Due STM32F1_POG etc). External FM will NOT work with this !
+// #define SERIAL_SPEED 230400 //Only works on newer board M4, M7, Teensy. External FM will works with this
+// #define SERIAL_SPEED 460800 // Experimantal
 
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT
