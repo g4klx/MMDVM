@@ -35,6 +35,9 @@
 // For 19.2 MHz
 // #define EXTERNAL_OSC 19200000
 
+// Use a higher baudrate for host communication. Required for FM network !
+// #define SERIAL_SPEED 230400
+
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT
 
