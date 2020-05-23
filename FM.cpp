@@ -153,7 +153,8 @@ void CFM::process()
   uint16_t space = io.getSpace();
   uint16_t length = m_outputRFRB.getData();
 
-  if (space > FM_TX_BLOCK_SIZE && length >= FM_TX_BLOCK_SIZE ) {
+  if (space > 10U && length >= FM_TX_BLOCK_SIZE ) {
+    space -= 2U;
     if (length > FM_TX_BLOCK_SIZE)
       length = FM_TX_BLOCK_SIZE;
     if (space > FM_TX_BLOCK_SIZE)
