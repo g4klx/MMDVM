@@ -34,11 +34,9 @@ public:
 
 private:
   CRingBuffer<TSamplePairPack> m_ringBuffer;
-
-  uint32_t m_samplePack;
-  uint8_t *m_samplePackPointer;
-
-  uint8_t m_sampleIndex;
+  uint32_t                     m_samplePack;
+  uint8_t*                     m_samplePackPointer;
+  uint8_t                      m_sampleIndex;
 };
 
 #endif

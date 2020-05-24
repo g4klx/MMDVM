@@ -52,9 +52,9 @@ void CFMUpSampler::addData(const uint8_t* data, uint16_t length)
         uint32_t pack = 0U;
         uint8_t* packPtr = (uint8_t*)&pack;
 
-        packPtr[1] = m_pack.byte0;
-        packPtr[2] = m_pack.byte1;
-        packPtr[3] = m_pack.byte2;
+        packPtr[0U] = m_pack.byte0;
+        packPtr[1U] = m_pack.byte1;
+        packPtr[2U] = m_pack.byte2;
 
         q15_t sample2 = q15_t(uint16_t(pack & FM_UPSAMPLE_MASK) - 2048);
         q15_t sample1 = q15_t(uint16_t(pack >> 12) - 2048);

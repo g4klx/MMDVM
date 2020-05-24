@@ -23,6 +23,10 @@
 #include "Globals.h"
 #include "RingBuffer.h"
 
+#if !defined(SERIAL_SPEED)
+#define SERIAL_SPEED 115200
+#endif
+
 
 class CSerialPort {
 public:

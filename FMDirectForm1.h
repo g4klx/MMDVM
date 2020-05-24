@@ -29,7 +29,7 @@ THE SOFTWARE.
 
 // based on https://raw.githubusercontent.com/berndporr/iir_fixed_point/master/DirectFormI.h
 
-#include "Globals.h"
+#include <cstdint>
 
 #ifndef DIRECTFORMI_H_
 #define DIRECTFORMI_H_
