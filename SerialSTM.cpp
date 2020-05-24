@@ -83,7 +83,7 @@ void InitUSART1(int speed)
    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_9 | GPIO_Pin_10; //  Tx | Rx
-   GPIO_InitStructure.GPIO_Speed = GPIO_High_Speed;
+   GPIO_InitStructure.GPIO_Speed = GPIO_Fast_Speed;
    GPIO_Init(GPIOA, &GPIO_InitStructure);
 
    // Configure USART baud rate
