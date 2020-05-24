@@ -23,6 +23,7 @@
 #include "Config.h"
 #include "RingBuffer.h"
 #include "FMSamplePairPack.h"
+#include "FMDirectForm1.h"
 
 class CFMDownsampler {
 public:
@@ -34,11 +35,9 @@ public:
 
 private:
   CRingBuffer<TSamplePairPack> m_ringBuffer;
-
-  uint32_t m_samplePack;
-  uint8_t *m_samplePackPointer;
-
-  uint8_t m_sampleIndex;
+  uint32_t                     m_samplePack;
+  uint8_t*                     m_samplePackPointer;
+  uint8_t                      m_sampleIndex;
 };
 
 #endif

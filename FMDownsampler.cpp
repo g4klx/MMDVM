@@ -20,7 +20,6 @@
 #include "Config.h"
 #include "FMDownsampler.h"
 
-
 CFMDownsampler::CFMDownsampler(uint16_t length) :
 m_ringBuffer(length),
 m_samplePack(0U),
@@ -32,17 +31,17 @@ m_sampleIndex(0U)
 
 void CFMDownsampler::addSample(q15_t sample)
 {
-  uint16_t usample = uint16_t(sample + 2048);
+  uint32_t usample = uint32_t(int32_t(sample) + 2048);
   //only take one of three samples
   switch(m_sampleIndex){
     case 0:
-      m_samplePack = uint32_t(usample) << 12;
+      m_samplePack = usample << 12;
     break;
     case 3:{
-      m_samplePack |= uint32_t(usample);
+      m_samplePack |= usample;
       
       //we did not use MSB; skip it
-      TSamplePairPack pair{m_samplePackPointer[1U], m_samplePackPointer[2U], m_samplePackPointer[3U]}; 
+      TSamplePairPack pair{m_samplePackPointer[0U], m_samplePackPointer[1U], m_samplePackPointer[2U]}; 
 
       m_ringBuffer.put(pair);
 
