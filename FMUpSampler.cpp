@@ -92,5 +92,6 @@ bool CFMUpSampler::getSample(q15_t& sample)
 
 uint16_t CFMUpSampler::getSpace() const
 {
-  return m_samples.getSpace();
+  //return available space in bytes
+  return m_samples.getSpace() * sizeof(TSamplePairPack);
 }

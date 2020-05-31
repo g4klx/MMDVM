@@ -20,9 +20,11 @@
 #include "Globals.h"
 #include "FM.h"
 
+
 const uint16_t FM_TX_BLOCK_SIZE = 100U;
-const uint16_t FM_SERIAL_BLOCK_SIZE = 42U;//this is actually the number of sample pairs to send over serial. One sample pair is 3bytes.
-                                          //three times this value shall never exceed 126 !
+const uint16_t FM_SERIAL_BLOCK_SIZE = 84U;//this is the number of sample pairs to send over serial. One sample pair is 3bytes.
+                                          //three times this value shall never exceed 252
+const uint16_t FM_SERIAL_BLOCK_SIZE_BYTES = FM_SERIAL_BLOCK_SIZE * 3U;
 
 CFM::CFM() :
 m_callsign(),
@@ -721,8 +723,8 @@ void CFM::beginRelaying()
 
 uint8_t CFM::getSpace() const
 {
-  // The amount of free space for receiving external audio, in bytes.
-  return m_inputExtRB.getSpace();
+  // The amount of free space for receiving external audio, in frames.
+  return m_inputExtRB.getSpace() / FM_SERIAL_BLOCK_SIZE_BYTES;
 }
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
