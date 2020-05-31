@@ -21,69 +21,76 @@
 
 const uint32_t FM_UPSAMPLE_MASK = 0x00000FFFU;
 
-CFMUpSampler::CFMUpSampler(uint16_t length) :
+CFMUpSampler::CFMUpSampler() :
 m_upSampleIndex(0),
-m_pack({0U, 0U, 0U}),
-m_samples(length)
+m_pack(0U),
+m_packPointer(NULL),
+m_samples(3600U), //300ms of 12 bit 8kHz audio
+m_running(false)
 {
+  m_packPointer = (uint8_t*)&m_pack;
 }
 
 void CFMUpSampler::reset()
 {
     m_upSampleIndex = 0U;
-    m_pack = {0U, 0U, 0U};
+    m_pack = 0U;
     m_samples.reset();
+    m_running = false;
 }
 
 void CFMUpSampler::addData(const uint8_t* data, uint16_t length)
 {
-  for(uint16_t i = 0U; i < length; i++) {
-    switch (m_upSampleIndex)
-    {
-      case 0U:
-        m_pack.byte0 = data[i];
-      break;
-      case 1U:
-        m_pack.byte1 = data[i];
-      break;
-      case 2U: {
-        m_pack.byte2 = data[i];
-
-        uint32_t pack = 0U;
-        uint8_t* packPtr = (uint8_t*)&pack;
-
-        packPtr[0U] = m_pack.byte0;
-        packPtr[1U] = m_pack.byte1;
-        packPtr[2U] = m_pack.byte2;
-
-        q15_t sample2 = q15_t(uint16_t(pack & FM_UPSAMPLE_MASK) - 2048);
-        q15_t sample1 = q15_t(uint16_t(pack >> 12) - 2048);
-
-        m_samples.put(sample1);
-        m_samples.put(0);
-        m_samples.put(0);
-        m_samples.put(sample2);
-        m_samples.put(0);
-        m_samples.put(0);
-      }
-      break;
-      default:
-      //shoudl never happen
-      break;
-    }
-
-    m_upSampleIndex ++;
-    if (m_upSampleIndex > 2U)
-      m_upSampleIndex = 0U;
+  TSamplePairPack* packPointer = (TSamplePairPack*)data;
+  TSamplePairPack* packPointerEnd = packPointer + (length / 3U);
+  while(packPointer != packPointerEnd) {
+    m_samples.put(*packPointer);
+    packPointer++;
   }
+  if(!m_running)
+    m_running = m_samples.getData() > 300U;//75ms of audio
 }
 
 bool CFMUpSampler::getSample(q15_t& sample)
 {
-    return m_samples.get(sample);
+  if(!m_running)
+    return false;
+
+  switch (m_upSampleIndex)
+  {
+  case 0: {
+    TSamplePairPack pairPack;
+    if(!m_samples.get(pairPack)) {
+      m_running = false;
+      return false;
+    }
+      
+    m_pack = 0U;
+    m_packPointer = (uint8_t*)&m_pack;
+
+    m_packPointer[0U] = pairPack.byte0;
+    m_packPointer[1U] = pairPack.byte1;
+    m_packPointer[2U] = pairPack.byte2;
+
+    sample = q15_t(m_pack >> 12) - 2048;
+    break;
+  }
+  case 3:
+    sample = q15_t(m_pack & FM_UPSAMPLE_MASK) - 2048;
+  break;
+  default:
+    sample = 0;
+  break;
+  }
+
+  m_upSampleIndex++;
+  if(m_upSampleIndex >= 6U)
+    m_upSampleIndex = 0U;
+
+  return true;
 }
 
 uint16_t CFMUpSampler::getSpace() const
 {
-    return m_samples.getSpace();
+  return m_samples.getSpace();
 }

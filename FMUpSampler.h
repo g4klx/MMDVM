@@ -27,7 +27,7 @@
 
 class CFMUpSampler {
 public:
-  CFMUpSampler(uint16_t length);
+  CFMUpSampler();
 
   void reset();
 
@@ -39,8 +39,10 @@ public:
 
 private:
   uint8_t m_upSampleIndex;
-  TSamplePairPack m_pack;
-  CRingBuffer<q15_t> m_samples;
+  uint32_t m_pack;
+  uint8_t * m_packPointer;
+  CRingBuffer<TSamplePairPack> m_samples;
+  bool m_running;
 };
 
 #endif

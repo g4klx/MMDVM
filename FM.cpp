@@ -56,7 +56,7 @@ m_extEnabled(false),
 m_rxLevel(1),
 m_inputRFRB(2401U),   // 100ms of audio + 1 sample
 m_outputRFRB(2400U),  // 100ms of audio
-m_inputExtRB(2400U)   // 100ms of Audio
+m_inputExtRB()
 {
   m_statusTimer.setTimeout(1U, 0U);
 
@@ -727,8 +727,9 @@ uint8_t CFM::getSpace() const
 
 uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
 {
+  //todo check if length is a multiple of 3
   m_inputExtRB.addData(data, length);
-  return 0U;//maybe return an error if overflowing ?
+  return 0U;
 }
 
 void CFM::insertDelay(uint16_t ms)
