@@ -1257,7 +1257,7 @@ void CSerialPort::writeFMData(const uint8_t* data, uint8_t length)
   if (!m_fmEnable)
     return;
 
-  uint8_t reply[130U];
+  uint8_t reply[255U];
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
