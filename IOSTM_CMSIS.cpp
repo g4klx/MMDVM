@@ -1,7 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016, 2017 by Andy Uribe CA6JAU
- *   Copyright (C) 2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017,2018 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Wojciech Krutnik N0CALL
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,6 @@ YSF      PB8    output
 P25      PB9    output
 NXDN     PB10   output
 POCSAG   PB11   output
-FM       PB12   output
 
 RX       PB0    analog input (ADC1_8)
 RSSI     PB1    analog input (ADC2_9)
@@ -85,9 +84,6 @@ USART1_RXD PA10  input (AF)
 #define PIN_POCSAG        11
 #define PORT_POCSAG       GPIOB
 #define BB_POCSAG         *((bitband_t)BITBAND_PERIPH(&PORT_POCSAG->ODR, PIN_POCSAG))
-#define PIN_FM            14
-#define PORT_FM           GPIOB
-#define BB_FM             *((bitband_t)BITBAND_PERIPH(&PORT_FM->ODR, PIN_FM))
 
 #define PIN_RX            0
 #define PIN_RX_ADC_CH     8
@@ -158,35 +154,16 @@ void GPIOConfigPin(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t mode_cnf_value
 #if defined(STM32F1_POG)
 void FancyLEDEffect()
 {
-  int ledCount = 10;
-
-  bitband_t foo[] = {&BB_LED, &BB_COSLED, &BB_PTT, &BB_DMR, &BB_DSTAR, &BB_YSF, &BB_P25,
-#if defined(USE_ALTERNATE_NXDN_LEDS)
-	NULL,
-#else
-	&BB_NXDN,
-#endif
-#if defined(USE_ALTERNATE_POCSAG_LEDS)
-	NULL,
-#else
-  	&BB_POCSAG,
-#endif
-#if defined(USE_ALTERNATE_FM_LEDS)
-	NULL};
-#else
-	&BB_FM};
-#endif
-
-  for(int i=0; i<ledCount; i++){
-    if(foo[i] != NULL)
-      *foo[i] = 0x01;
+  bitband_t foo[] = {&BB_LED, &BB_COSLED, &BB_PTT, &BB_DMR, &BB_DSTAR, &BB_YSF, &BB_P25};
+   
+  for(int i=0; i<7; i++){
+    *foo[i] = 0x01;
   }
   GPIOConfigPin(PORT_USART1_TXD, PIN_USART1_TXD, GPIO_CRL_MODE0_1);
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
   delay(SystemCoreClock/1000*100);
-  for(int i=0; i<ledCount; i++){
-    if(foo[i] != NULL)
-      *foo[i] = 0x00;
+  for(int i=0; i<7; i++){
+    *foo[i] = 0x00;
   }
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
   delay(SystemCoreClock/1000*20);
@@ -195,22 +172,18 @@ void FancyLEDEffect()
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
   
   *foo[0] = 0x01;
-  for(int i=1; i<ledCount; i++){
+  for(int i=1; i<7; i++){
     delay(SystemCoreClock/1000*10);
-    if (foo[i-1] != NULL)
-      *foo[i-1] = 0x00;
-    if (foo[i] != NULL)
-      *foo[i] = 0x01;
+    *foo[i-1] = 0x00;
+    *foo[i] = 0x01;
   }
-  for(int i=ledCount - 2; i>=0; i--) {
+  for(int i=5; i>=0; i--){
     delay(SystemCoreClock/1000*10);
-    if (foo[i+1] != NULL)
-      *foo[i+1] = 0x00;
-    if (foo[i] != NULL)
-      *foo[i] = 0x01;
+    *foo[i+1] = 0x00;
+    *foo[i] = 0x01;
   }
   delay(SystemCoreClock/1000*10);
-  *foo[0] = 0x00;
+  *foo[5+1-6] = 0x00;
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x00;
   delay(SystemCoreClock/1000*10);
   *((bitband_t)BITBAND_PERIPH(&PORT_USART1_TXD->ODR, PIN_USART1_TXD)) = 0x01;
@@ -254,9 +227,6 @@ static inline void GPIOInit()
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   GPIOConfigPin(PORT_POCSAG, PIN_POCSAG, GPIO_CRL_MODE0_1);
-#endif
-#if !defined(USE_ALTERNATE_FM_LEDS)
-  GPIOConfigPin(PORT_FM,     PIN_FM,     GPIO_CRL_MODE0_1);
 #endif
 
   GPIOConfigPin(PORT_RX, PIN_RX, 0);
@@ -487,16 +457,6 @@ void CIO::setPOCSAGInt(bool on)
   BB_DMR   = !!on;
 #else
   BB_POCSAG = !!on;
-#endif
-}
-
-void CIO::setFMInt(bool on)
-{
-#if defined(USE_ALTERNATE_FM_LEDS)
-  BB_DSTAR = !!on;
-  BB_YSF   = !!on;
-#else
-  BB_FM = !!on;
 #endif
 }
 
