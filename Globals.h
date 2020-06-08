@@ -51,6 +51,7 @@ enum MMDVM_STATE {
   STATE_NXDN      = 5,
   STATE_POCSAG    = 6,
   STATE_FM        = 10,
+  STATE_AX25      = 11,
 
   // Dummy states start at 90
   STATE_NXDNCAL1K = 91,
@@ -96,6 +97,7 @@ enum MMDVM_STATE {
 #include "CalPOCSAG.h"
 #include "CalRSSI.h"
 #include "CWIdTX.h"
+#include "AX25RX.h"
 #include "Debug.h"
 #include "IO.h"
 #include "FM.h"
@@ -124,6 +126,7 @@ extern bool m_p25Enable;
 extern bool m_nxdnEnable;
 extern bool m_pocsagEnable;
 extern bool m_fmEnable;
+extern bool m_ax25Enable;
 
 extern bool m_duplex;
 
@@ -154,7 +157,8 @@ extern CNXDNTX nxdnTX;
 
 extern CPOCSAGTX pocsagTX;
 
-extern CFM fm;
+extern CFM     fm;
+extern CAX25RX ax25RX;
 
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
@@ -168,3 +172,4 @@ extern CCalRSSI    calRSSI;
 extern CCWIdTX cwIdTX;
 
 #endif
+

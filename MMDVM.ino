@@ -30,6 +30,7 @@ bool m_p25Enable    = true;
 bool m_nxdnEnable   = true;
 bool m_pocsagEnable = true;
 bool m_fmEnable     = true;
+bool m_ax25Enable   = true;
 
 bool m_duplex = true;
 
@@ -58,6 +59,7 @@ CNXDNTX    nxdnTX;
 CPOCSAGTX  pocsagTX;
 
 CFM        fm;
+CAX25RX    ax25RX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;

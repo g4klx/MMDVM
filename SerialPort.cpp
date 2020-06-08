@@ -65,6 +65,8 @@ const uint8_t MMDVM_NXDN_LOST    = 0x41U;
 
 const uint8_t MMDVM_POCSAG_DATA  = 0x50U;
 
+const uint8_t MMDVM_AX25_DATA    = 0x55U;
+
 const uint8_t MMDVM_FM_PARAMS1   = 0x60U;
 const uint8_t MMDVM_FM_PARAMS2   = 0x61U;
 const uint8_t MMDVM_FM_PARAMS3   = 0x62U;
@@ -103,7 +105,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200520 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
+#define DESCRIPTION "20200608 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -176,6 +178,8 @@ void CSerialPort::getStatus()
     reply[3U] |= 0x20U;
   if (m_fmEnable)
     reply[3U] |= 0x40U;
+  if (m_ax25Enable)
+    reply[3U] |= 0x80U;
 
   reply[4U]  = uint8_t(m_modemState);
 
@@ -282,6 +286,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   bool nxdnEnable   = (data[1U] & 0x10U) == 0x10U;
   bool pocsagEnable = (data[1U] & 0x20U) == 0x20U;
   bool fmEnable     = (data[1U] & 0x40U) == 0x40U;
+  bool ax25Enable   = (data[1U] & 0x80U) == 0x80U;
 
   uint8_t txDelay = data[2U];
   if (txDelay > 50U)
@@ -344,6 +349,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   m_nxdnEnable   = nxdnEnable;
   m_pocsagEnable = pocsagEnable;
   m_fmEnable     = fmEnable;
+  m_ax25Enable   = ax25Enable;
   m_duplex       = !simplex;
 
   dstarTX.setTXDelay(txDelay);
@@ -1195,6 +1201,29 @@ void CSerialPort::writeNXDNLost()
   reply[2U] = MMDVM_NXDN_LOST;
 
   writeInt(1U, reply, 3);
+}
+
+void CSerialPort::writeAX25Data(const uint8_t* data, uint8_t length)
+{
+  if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
+    return;
+
+  if (!m_ax25Enable)
+    return;
+
+  uint8_t reply[300U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_AX25_DATA;
+
+  uint8_t count = 3U;
+  for (uint8_t i = 0U; i < length; i++, count++)
+    reply[count] = data[i];
+
+  reply[1U] = count;
+
+  writeInt(1U, reply, count);
 }
 
 void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)

@@ -39,7 +39,7 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode via LEDs
-// #define MODE_LEDS
+#define MODE_LEDS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA

@@ -364,6 +364,14 @@ void CIO::process()
         fm.samples(cos, samples, RX_BLOCK_SIZE);
 #endif
       }
+
+      if (m_ax25Enable) {
+#if defined(USE_DCBLOCKER)
+        ax25RX.samples(dcSamples, RX_BLOCK_SIZE);
+#else
+        ax25RX.samples(samples, RX_BLOCK_SIZE);
+#endif
+      }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
@@ -426,8 +434,12 @@ void CIO::process()
       bool cos = getCOSInt();
 #if defined(USE_DCBLOCKER)
       fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
+      if (m_ax25Enable)
+        ax25RX.samples(dcSamples, RX_BLOCK_SIZE);
 #else
       fm.samples(cos, samples, RX_BLOCK_SIZE);
+      if (m_ax25Enable)
+        ax25RX.samples(samples, RX_BLOCK_SIZE);
 #endif
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
