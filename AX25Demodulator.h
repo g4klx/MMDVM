@@ -16,25 +16,20 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#if !defined(AX25Demodulator_H)
+#define  AX25Demodulator_H
+
 #include "Config.h"
-#include "Globals.h"
-#include "AX25RX.h"
 
-CAX25RX::CAX25RX() :
-m_demod1(1U),
-m_demod2(2U),
-m_demod3(3U)
-{
-}
+class CAX25Demodulator {
+public:
+  CAX25Demodulator(uint16_t n);
 
-void CAX25RX::samples(const q15_t* samples, uint8_t length)
-{
-  for (uint8_t i = 0U; i < length; i++) {
-    q15_t sample = samples[i];
+  void process(q15_t sample);
 
-    m_demod1.process(sample);
-    m_demod2.process(sample);
-    m_demod3.process(sample);
-  }
-}
+private:
+  uint16_t m_n;
+};
+
+#endif
 

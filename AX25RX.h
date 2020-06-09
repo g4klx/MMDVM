@@ -21,6 +21,8 @@
 
 #include "Config.h"
 
+#include "AX25Demodulator.h"
+
 class CAX25RX {
 public:
   CAX25RX();
@@ -28,6 +30,9 @@ public:
   void samples(const q15_t* samples, uint8_t length);
 
 private:
+  CAX25Demodulator m_demod1;
+  CAX25Demodulator m_demod2;
+  CAX25Demodulator m_demod3;
 };
 
 #endif

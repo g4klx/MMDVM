@@ -18,23 +18,14 @@
 
 #include "Config.h"
 #include "Globals.h"
-#include "AX25RX.h"
+#include "AX25Demodulator.h"
 
-CAX25RX::CAX25RX() :
-m_demod1(1U),
-m_demod2(2U),
-m_demod3(3U)
+CAX25Demodulator::CAX25Demodulator(uint16_t n) :
+m_n(n)
 {
 }
 
-void CAX25RX::samples(const q15_t* samples, uint8_t length)
+void CAX25Demodulator::process(q15_t sample)
 {
-  for (uint8_t i = 0U; i < length; i++) {
-    q15_t sample = samples[i];
-
-    m_demod1.process(sample);
-    m_demod2.process(sample);
-    m_demod3.process(sample);
-  }
 }
 
