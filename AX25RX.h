@@ -33,6 +33,7 @@ private:
   CAX25Demodulator m_demod1;
   CAX25Demodulator m_demod2;
   CAX25Demodulator m_demod3;
+  uint16_t         m_lastFCS;
 };
 
 #endif

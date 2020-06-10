@@ -21,14 +21,22 @@
 
 #include "Config.h"
 
+struct AX25Frame {
+  uint8_t  m_data[300U];
+  uint16_t m_length;
+  uint16_t m_fcs;
+};
+
 class CAX25Demodulator {
 public:
-  CAX25Demodulator(uint16_t n);
+  CAX25Demodulator();
 
-  void process(q15_t sample);
+  bool process(const q15_t* samples, uint8_t length, AX25Frame& frame);
 
 private:
-  uint16_t m_n;
+  bool m_nrziState;
+
+  bool NRZI(bool b);
 };
 
 #endif

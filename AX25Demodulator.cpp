@@ -20,12 +20,22 @@
 #include "Globals.h"
 #include "AX25Demodulator.h"
 
-CAX25Demodulator::CAX25Demodulator(uint16_t n) :
-m_n(n)
+CAX25Demodulator::CAX25Demodulator() :
+m_nrziState(false)
 {
 }
 
-void CAX25Demodulator::process(q15_t sample)
+bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, AX25Frame& frame)
 {
+  return false;
+}
+
+bool CAX25Demodulator::NRZI(bool b)
+{
+  bool result = (b == m_nrziState);
+
+  m_nrziState = b;
+
+  return result;
 }
 

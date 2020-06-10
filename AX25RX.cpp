@@ -21,20 +21,42 @@
 #include "AX25RX.h"
 
 CAX25RX::CAX25RX() :
-m_demod1(1U),
-m_demod2(2U),
-m_demod3(3U)
+m_demod1(),
+m_demod2(),
+m_demod3(),
+m_lastFCS(0U)
 {
 }
 
 void CAX25RX::samples(const q15_t* samples, uint8_t length)
 {
-  for (uint8_t i = 0U; i < length; i++) {
-    q15_t sample = samples[i];
+  AX25Frame frame;
 
-    m_demod1.process(sample);
-    m_demod2.process(sample);
-    m_demod3.process(sample);
+  bool ret = m_demod1.process(samples, length, frame);
+  if (ret) {
+    if (m_lastFCS != frame.m_fcs) {
+      DEBUG1("Decoder 1 reported");
+      m_lastFCS = frame.m_fcs;
+      serial.writeAX25Data(frame.m_data, frame.m_length);
+    }
+  }
+
+  ret = m_demod2.process(samples, length, frame);
+  if (ret) {
+    if (m_lastFCS != frame.m_fcs) {
+      DEBUG1("Decoder 2 reported");
+      m_lastFCS = frame.m_fcs;
+      serial.writeAX25Data(frame.m_data, frame.m_length);
+    }
+  }
+
+  ret = m_demod3.process(samples, length, frame);
+  if (ret) {
+    if (m_lastFCS != frame.m_fcs) {
+      DEBUG1("Decoder 3 reported");
+      m_lastFCS = frame.m_fcs;
+      serial.writeAX25Data(frame.m_data, frame.m_length);
+    }
   }
 }
 
