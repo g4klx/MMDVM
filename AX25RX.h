@@ -27,13 +27,15 @@ class CAX25RX {
 public:
   CAX25RX();
 
-  void samples(const q15_t* samples, uint8_t length);
+  void samples(q15_t* samples, uint8_t length);
 
 private:
-  CAX25Demodulator m_demod1;
-  CAX25Demodulator m_demod2;
-  CAX25Demodulator m_demod3;
-  uint16_t         m_lastFCS;
+  arm_fir_instance_q15 m_filter;
+  q15_t                m_state[160U];    // NoTaps + BlockSize - 1, 132 + 20 - 1 plus some spare
+  CAX25Demodulator     m_demod1;
+  CAX25Demodulator     m_demod2;
+  CAX25Demodulator     m_demod3;
+  uint16_t             m_lastFCS;
 };
 
 #endif

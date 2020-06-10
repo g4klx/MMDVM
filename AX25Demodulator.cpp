@@ -30,9 +30,9 @@ const float32_t SAMPLES_PER_SYMBOL = SAMPLE_RATE / SYMBOL_RATE;
 const float32_t PLL_LIMIT          = SAMPLES_PER_SYMBOL / 2.0F;
 
 // XXX This is for the wrong sample rate
-const uint32_t LPF_FILTER_LEN = 96;
+const uint32_t LPF_FILTER_LEN = 96U;
 
-q15_t lpfCoeffs[] = {
+q15_t LPF_FILTER_COEFFS[] = {
     0,     1,     3,     5,     8,    11,    14,    17,    19,    20,    18,    14,
     7,    -2,   -16,   -33,   -53,   -76,  -101,  -126,  -151,  -174,  -194,  -208,
  -215,  -212,  -199,  -173,  -133,   -79,   -10,    74,   173,   287,   413,   549,
@@ -48,7 +48,9 @@ q15_t lpfCoeffs[] = {
 //      loop_coeffs = firwin(9, [64.0/(1200/2)], width = None,
 //          pass_zero = True, scale = True, window='hann')
 //
-float32_t pllLoopCoeffs[] = {3.196252e-02F, 1.204223e-01F, 2.176819e-01F, 2.598666e-01F, 2.176819e-01F, 1.204223e-01F, 3.196252e-02F};
+const uint32_t PLL_FILTER_LEN = 7U;
+
+float32_t PLL_FILTER_COEFFS[] = {3.196252e-02F, 1.204223e-01F, 2.176819e-01F, 2.598666e-01F, 2.176819e-01F, 1.204223e-01F, 3.196252e-02F};
 
 CAX25Demodulator::CAX25Demodulator(float32_t* coeffs, uint16_t length) :
 m_audioFilter(),
@@ -72,11 +74,11 @@ m_pllCount(0.0F)
 
   m_lpfFilter.numTaps = LPF_FILTER_LEN;
   m_lpfFilter.pState  = m_lpfState;
-  m_lpfFilter.pCoeffs = lpfCoeffs;
+  m_lpfFilter.pCoeffs = LPF_FILTER_COEFFS;
 
-  m_pllFilter.numTaps = 7U;
+  m_pllFilter.numTaps = PLL_FILTER_LEN;
   m_pllFilter.pState  = m_pllState;
-  m_pllFilter.pCoeffs = pllLoopCoeffs;
+  m_pllFilter.pCoeffs = PLL_FILTER_COEFFS;
 }
 
 bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, CAX25Frame& frame)
