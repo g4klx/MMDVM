@@ -16,27 +16,20 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(AX25Demodulator_H)
-#define  AX25Demodulator_H
+#if !defined(AX25Frame_H)
+#define  AX25Frame_H
 
 #include "Config.h"
 
-#include "AX25Frame.h"
-
-
-class CAX25Demodulator {
+class CAX25Frame {
 public:
-  CAX25Demodulator();
+  CAX25Frame();
 
-  bool process(const q15_t* samples, uint8_t length, CAX25Frame& frame);
+  bool checkCRC();
 
-private:
-  bool*    m_delayLine;
-  uint16_t m_delayPos;
-  bool     m_nrziState;
-
-  bool delay(bool b);
-  bool NRZI(bool b);
+  uint8_t  m_data[300U];
+  uint16_t m_length;
+  uint16_t m_fcs;
 };
 
 #endif

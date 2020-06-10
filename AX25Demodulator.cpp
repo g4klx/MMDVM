@@ -20,14 +20,34 @@
 #include "Globals.h"
 #include "AX25Demodulator.h"
 
+const float DELAY       = 0.000448F;
+const float SAMPLE_RATE = 24000.0F;
+
+const uint16_t DELAY_LEN = uint16_t((DELAY / (1.0F / SAMPLE_RATE)) + 0.5F);
+
 CAX25Demodulator::CAX25Demodulator() :
+m_delayLine(NULL),
+m_delayPos(0U),
 m_nrziState(false)
 {
+  m_delayLine = new bool[2U * DELAY_LEN];
 }
 
-bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, AX25Frame& frame)
+bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, CAX25Frame& frame)
 {
   return false;
+}
+
+bool CAX25Demodulator::delay(bool b)
+{
+  bool r = m_delayLine[m_delayPos];
+
+  m_delayLine[m_delayPos++] = b;
+
+  if (m_delayPos >= DELAY_LEN)
+    m_delayPos = 0U;
+
+  return r;
 }
 
 bool CAX25Demodulator::NRZI(bool b)

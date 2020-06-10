@@ -30,7 +30,7 @@ m_lastFCS(0U)
 
 void CAX25RX::samples(const q15_t* samples, uint8_t length)
 {
-  AX25Frame frame;
+  CAX25Frame frame;
 
   bool ret = m_demod1.process(samples, length, frame);
   if (ret) {
