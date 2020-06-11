@@ -53,6 +53,7 @@ const uint32_t PLL_FILTER_LEN = 7U;
 float32_t PLL_FILTER_COEFFS[] = {3.196252e-02F, 1.204223e-01F, 2.176819e-01F, 2.598666e-01F, 2.176819e-01F, 1.204223e-01F, 3.196252e-02F};
 
 CAX25Demodulator::CAX25Demodulator(float32_t* coeffs, uint16_t length) :
+m_frame(),
 m_audioFilter(),
 m_audioState(),
 m_lpfFilter(),
@@ -64,7 +65,12 @@ m_pllFilter(),
 m_pllState(),
 m_pllLast(false),
 m_pllBits(1U),
-m_pllCount(0.0F)
+m_pllCount(0.0F),
+m_hdlcOnes(0U),
+m_hdlcFlag(false),
+m_hdlcBuffer(0U),
+m_hdlcBits(0U),
+m_hdlcState(AX25_IDLE)
 {
   m_delayLine = new bool[2U * DELAY_LEN];
 
@@ -110,10 +116,17 @@ bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, CAX25Frame&
     if (sample) {
       // We will only ever get one frame because there are
       // not enough bits in a block for more than one.
-      if (result)
-        hdlc_decoder_(NRZI(bit), true);
-      else
-        result = hdlc_decoder_(NRZI(bit), true);
+      if (result) {
+        HDLC(NRZI(bit));
+      } else {
+        result = HDLC(NRZI(bit));
+        if (result) {
+          ::memcpy(frame.m_data, m_frame.m_data, AX25_MAX_PACKET_LEN);
+          frame.m_length = frame.m_length;
+          frame.m_fcs    = m_frame.m_fcs;
+          m_frame.m_length = 0U;
+        }
+      }
     }
   }
 
@@ -169,5 +182,85 @@ bool CAX25Demodulator::PLL(bool input)
   m_pllCount += 1.0F;
 
   return sample;
+}
+
+bool CAX25Demodulator::HDLC(bool b)
+{
+  bool result = false;
+
+  if (m_hdlcOnes == 5U) {
+    if (b) {
+      // flag byte
+      m_hdlcFlag = true;
+    } else {
+      // bit stuffing...
+      m_hdlcFlag = false;
+      m_hdlcOnes = 0U;
+      return result;
+    }
+  }
+
+  m_hdlcBuffer >>= 1;
+  m_hdlcBuffer |= b ? 128U : 0U;
+  m_hdlcBits++;                      // Free-running until Sync byte.
+
+  if (b)
+    m_hdlcOnes++;
+  else
+    m_hdlcOnes = 0U;
+
+  if (m_hdlcFlag) {
+    switch (m_hdlcBuffer) {
+      case 0x7E:
+        if (m_frame.m_length > 0U) {
+          result = m_frame.checkCRC();
+          if (!result)
+            m_frame.m_length = 0U;
+        }
+        m_hdlcState = AX25_SYNC;
+        m_hdlcFlag = false;
+        m_hdlcBits = 0U;
+        break;
+
+      case 0xFE:
+        // Frame aborted
+        m_frame.m_length = 0U;
+        m_hdlcState = AX25_IDLE;
+        m_hdlcFlag = false;
+        m_hdlcBits = 0U;
+        break;
+
+      default:
+        break;
+    }
+
+    return result;
+  }
+
+  switch (m_hdlcState) {
+    case AX25_IDLE:
+      break;
+
+    case AX25_SYNC:
+      if (m_hdlcBits == 8U) {    // 8th bit.
+        // Start of frame data.
+        m_hdlcState = AX25_RECEIVE;
+        m_frame.append(m_hdlcBuffer);
+        m_hdlcBits = 0U;
+      }
+      break;
+
+    case AX25_RECEIVE:
+      if (m_hdlcBits == 8U) {    // 8th bit.
+        m_frame.append(m_hdlcBuffer);
+        m_hdlcBits = 0U;
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  return result;
 }
 

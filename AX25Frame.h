@@ -21,13 +21,17 @@
 
 #include "Config.h"
 
+const uint16_t AX25_MAX_PACKET_LEN = 300U;
+
 class CAX25Frame {
 public:
   CAX25Frame();
 
+  bool append(uint16_t c);
+
   bool checkCRC();
 
-  uint8_t  m_data[300U];
+  uint8_t  m_data[AX25_MAX_PACKET_LEN];
   uint16_t m_length;
   uint16_t m_fcs;
 };

@@ -61,6 +61,16 @@ m_fcs(0U)
 {
 }
 
+bool CAX25Frame::append(uint16_t c)
+{
+  if (m_length == AX25_MAX_PACKET_LEN)
+    return false;
+
+  m_data[m_length++] = uint8_t(c);
+
+  return true;
+}
+
 bool CAX25Frame::checkCRC()
 {
   union {

@@ -114,29 +114,29 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
   CAX25Frame frame;
 
   bool ret = m_demod1.process(output, length, frame);
-  if (ret) {
+  if (ret && frame.m_length > 10U) {
     if (m_lastFCS != frame.m_fcs) {
       DEBUG1("Decoder 1 reported");
       m_lastFCS = frame.m_fcs;
-      serial.writeAX25Data(frame.m_data, frame.m_length);
+      serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
     }
   }
 
   ret = m_demod2.process(output, length, frame);
-  if (ret) {
+  if (ret && frame.m_length > 10U) {
     if (m_lastFCS != frame.m_fcs) {
       DEBUG1("Decoder 2 reported");
       m_lastFCS = frame.m_fcs;
-      serial.writeAX25Data(frame.m_data, frame.m_length);
+      serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
     }
   }
 
   ret = m_demod3.process(output, length, frame);
-  if (ret) {
+  if (ret && frame.m_length > 10U) {
     if (m_lastFCS != frame.m_fcs) {
       DEBUG1("Decoder 3 reported");
       m_lastFCS = frame.m_fcs;
-      serial.writeAX25Data(frame.m_data, frame.m_length);
+      serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
     }
   }
 }
