@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright 2015-2019 Mobilinkd LLC <rob@mobilinkd.com>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
