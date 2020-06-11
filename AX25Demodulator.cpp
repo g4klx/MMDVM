@@ -122,6 +122,7 @@ bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, CAX25Frame&
       } else {
         result = HDLC(NRZI(bit));
         if (result) {
+          // Copy the frame data.
           ::memcpy(frame.m_data, m_frame.m_data, AX25_MAX_PACKET_LEN);
           frame.m_length = frame.m_length;
           frame.m_fcs    = m_frame.m_fcs;
@@ -187,8 +188,6 @@ bool CAX25Demodulator::PLL(bool input)
 
 bool CAX25Demodulator::HDLC(bool b)
 {
-  bool result = false;
-
   if (m_hdlcOnes == 5U) {
     if (b) {
       // flag byte
@@ -197,7 +196,7 @@ bool CAX25Demodulator::HDLC(bool b)
       // bit stuffing...
       m_hdlcFlag = false;
       m_hdlcOnes = 0U;
-      return result;
+      return false;
     }
   }
 
@@ -211,9 +210,11 @@ bool CAX25Demodulator::HDLC(bool b)
     m_hdlcOnes = 0U;
 
   if (m_hdlcFlag) {
+    bool result = false;
+
     switch (m_hdlcBuffer) {
       case 0x7E:
-        if (m_frame.m_length > 0U) {
+        if (m_frame.m_length > 2U) {
           result = m_frame.checkCRC();
           if (!result)
             m_frame.m_length = 0U;
@@ -262,6 +263,6 @@ bool CAX25Demodulator::HDLC(bool b)
       break;
   }
 
-  return result;
+  return false;
 }
 
