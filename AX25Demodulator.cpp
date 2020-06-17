@@ -209,7 +209,7 @@ bool CAX25Demodulator::HDLC(bool b)
 
     switch (m_hdlcBuffer) {
       case 0x7E:
-        if (m_frame.m_length >= 15U) {
+        if (m_frame.m_length >= 17U) {
           result = m_frame.checkCRC();
           if (!result)
               m_frame.m_length = 0U;
