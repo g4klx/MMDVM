@@ -21,27 +21,27 @@
 #include "Globals.h"
 #include "AX25Demodulator.h"
 
-const float32_t DELAY       = 0.000448F;
 const float32_t SAMPLE_RATE = 24000.0F;
 const float32_t SYMBOL_RATE = 1200.0F;
 
-const uint16_t DELAY_LEN = uint16_t((DELAY / (1.0F / SAMPLE_RATE)) + 0.5F);
+const uint16_t DELAY_LEN = 11U;
 
 const float32_t SAMPLES_PER_SYMBOL = SAMPLE_RATE / SYMBOL_RATE;
 const float32_t PLL_LIMIT          = SAMPLES_PER_SYMBOL / 2.0F;
 
-// XXX This is for the wrong sample rate
 const uint32_t LPF_FILTER_LEN = 96U;
 
 q15_t LPF_FILTER_COEFFS[] = {
-    0,     1,     3,     5,     8,    11,    14,    17,    19,    20,    18,    14,
-    7,    -2,   -16,   -33,   -53,   -76,  -101,  -126,  -151,  -174,  -194,  -208,
- -215,  -212,  -199,  -173,  -133,   -79,   -10,    74,   173,   287,   413,   549,
-  693,   842,   993,  1142,  1287,  1423,  1547,  1656,  1747,  1817,  1865,  1889,
- 1889,  1865,  1817,  1747,  1656,  1547,  1423,  1287,  1142,   993,   842,   693,
-  549,   413,   287,   173,    74,   -10,   -79,  -133,  -173,  -199,  -212,  -215,
- -208,  -194,  -174,  -151,  -126,  -101,   -76,   -53,   -33,   -16,    -2,     7,
-   14,    18,    20,    19,    17,    14,    11,     8,     5,     3,     1,     0,
+     0,    0,    0,    1,    2,    5,    8,   12,   18,   23,
+    29,   33,   36,   36,   33,   25,   13,   -5,  -28,  -57,
+   -89, -123, -159, -194, -225, -249, -264, -267, -254, -224,
+  -175, -104,  -12,  102,  236,  389,  557,  738,  926, 1117,
+  1306, 1486, 1654, 1802, 1927, 2025, 2092, 2126, 2126, 2092,
+  2025, 1927, 1802, 1654, 1486, 1306, 1117,  926,  738,  557,
+   389,  236,  102,  -12, -104, -175, -224, -254, -267, -264,
+  -249, -225, -194, -159, -123,  -89,  -57,  -28,   -5,   13,
+    25,   33,   36,   36,   33,   29,   23,   18,   12,    8,
+     5,    2,    1,    0,    0,    0
 };
 
 // 64 Hz loop filter.
@@ -53,7 +53,7 @@ const uint32_t PLL_FILTER_LEN = 7U;
 
 float32_t PLL_FILTER_COEFFS[] = {3.196252e-02F, 1.204223e-01F, 2.176819e-01F, 2.598666e-01F, 2.176819e-01F, 1.204223e-01F, 3.196252e-02F};
 
-CAX25Demodulator::CAX25Demodulator(float32_t* coeffs, uint16_t length) :
+CAX25Demodulator::CAX25Demodulator(q15_t* coeffs, uint16_t length) :
 m_frame(),
 m_audioFilter(),
 m_audioState(),
@@ -73,7 +73,7 @@ m_hdlcBuffer(0U),
 m_hdlcBits(0U),
 m_hdlcState(AX25_IDLE)
 {
-  m_delayLine = new bool[2U * DELAY_LEN];
+  m_delayLine = new bool[DELAY_LEN];
 
   m_audioFilter.numTaps = length;
   m_audioFilter.pState  = m_audioState;
@@ -88,22 +88,17 @@ m_hdlcState(AX25_IDLE)
   m_pllFilter.pCoeffs = PLL_FILTER_COEFFS;
 }
 
-bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, CAX25Frame& frame)
+bool CAX25Demodulator::process(q15_t* samples, uint8_t length, CAX25Frame& frame)
 {
   bool result = false;
 
-  float32_t input[RX_BLOCK_SIZE];
-  for (size_t i = 0; i < length; i++)
-    input[i] = float(samples[i]);
-
-  float32_t fa[RX_BLOCK_SIZE];
-  ::arm_fir_f32(&m_audioFilter, input, fa, RX_BLOCK_SIZE);
+  q15_t fa[RX_BLOCK_SIZE];
+  ::arm_fir_fast_q15(&m_audioFilter, samples, fa, RX_BLOCK_SIZE);
 
   int16_t buffer[RX_BLOCK_SIZE];
   for (uint8_t i = 0; i < length; i++) {
-      int16_t sample = int16_t(fa[i]);
-      bool     level = (sample >= 0);
-      bool   delayed = delay(level);
+      bool   level = (fa[i] >= 0);
+      bool delayed = delay(level);
       buffer[i] = (int16_t(level ^ delayed) << 1) - 1;
   }
 
@@ -124,7 +119,7 @@ bool CAX25Demodulator::process(const q15_t* samples, uint8_t length, CAX25Frame&
         if (result) {
           // Copy the frame data.
           ::memcpy(frame.m_data, m_frame.m_data, AX25_MAX_PACKET_LEN);
-          frame.m_length = frame.m_length;
+          frame.m_length = m_frame.m_length;
           frame.m_fcs    = m_frame.m_fcs;
           m_frame.m_length = 0U;
         }
@@ -160,7 +155,7 @@ bool CAX25Demodulator::PLL(bool input)
 {
   bool sample = false;
 		
-  if (input != m_pllLast or m_pllBits > 16U) {
+  if (input != m_pllLast || m_pllBits > 16U) {
     // Record transition.
     m_pllLast = input;
 
@@ -214,9 +209,11 @@ bool CAX25Demodulator::HDLC(bool b)
 
     switch (m_hdlcBuffer) {
       case 0x7E:
-        if (m_frame.m_length > 2U) {
+        if (m_frame.m_length >= 13U) {
           result = m_frame.checkCRC();
           if (!result)
+              m_frame.m_length = 0U;
+        } else {
             m_frame.m_length = 0U;
         }
         m_hdlcState = AX25_SYNC;
