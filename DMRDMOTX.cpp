@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
@@ -104,7 +104,7 @@ void CDMRDMOTX::process()
   }
 }
 
-uint8_t CDMRDMOTX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CDMRDMOTX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length != (DMR_FRAME_LENGTH_BYTES + 1U))
     return 4U;

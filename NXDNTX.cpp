@@ -122,7 +122,7 @@ void CNXDNTX::process()
   }
 }
 
-uint8_t CNXDNTX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CNXDNTX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length != (NXDN_FRAME_LENGTH_BYTES + 1U))
     return 4U;

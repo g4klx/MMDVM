@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -125,7 +125,7 @@ void CCWIdTX::process()
   }
 }
 
-uint8_t CCWIdTX::write(const uint8_t* data, uint8_t length)
+uint8_t CCWIdTX::write(const uint8_t* data, uint16_t length)
 {
   ::memset(m_poBuffer, 0x00U, 1000U * sizeof(uint8_t));
 

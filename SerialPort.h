@@ -50,7 +50,7 @@ public:
   void writeNXDNData(const uint8_t* data, uint8_t length);
   void writeNXDNLost();
 
-  void writeAX25Data(const uint8_t* data, uint8_t length);
+  void writeAX25Data(const uint8_t* data, uint16_t length);
 
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
@@ -62,9 +62,9 @@ public:
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4);
 
 private:
-  uint8_t   m_buffer[256U];
-  uint8_t   m_ptr;
-  uint8_t   m_len;
+  uint8_t   m_buffer[512U];
+  uint16_t  m_ptr;
+  uint16_t  m_len;
   bool      m_debug;
   CSerialRB m_repeat;
 
@@ -72,12 +72,13 @@ private:
   void    sendNAK(uint8_t err);
   void    getStatus();
   void    getVersion();
-  uint8_t setConfig(const uint8_t* data, uint8_t length);
-  uint8_t setMode(const uint8_t* data, uint8_t length);
+  uint8_t setConfig(const uint8_t* data, uint16_t length);
+  uint8_t setMode(const uint8_t* data, uint16_t length);
   void    setMode(MMDVM_STATE modemState);
-  uint8_t setFMParams1(const uint8_t* data, uint8_t length);
-  uint8_t setFMParams2(const uint8_t* data, uint8_t length);
-  uint8_t setFMParams3(const uint8_t* data, uint8_t length);
+  uint8_t setFMParams1(const uint8_t* data, uint16_t length);
+  uint8_t setFMParams2(const uint8_t* data, uint16_t length);
+  uint8_t setFMParams3(const uint8_t* data, uint16_t length);
+  void    processMessage();
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);

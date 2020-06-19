@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2019 by Florian Wolters DF2ET
+ *   Copyright (C) 2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -32,7 +33,7 @@ public:
 
   void process();
 
-  uint8_t write(const uint8_t* data, uint8_t length);
+  uint8_t write(const uint8_t* data, uint16_t length);
 
 private:
   POCSAGCAL m_state;

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2015,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,7 @@ public:
   void createData1k(uint8_t n);
   void createDataDMO1k(uint8_t n);
 
-  uint8_t write(const uint8_t* data, uint8_t length);
+  uint8_t write(const uint8_t* data, uint16_t length);
 
 private:
   bool      m_transmit;

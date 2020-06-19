@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2018 by Andy Uribe CA6JAU
+ *   Copyright (C) 2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -79,7 +80,7 @@ void CCalNXDN::process()
   }
 }
 
-uint8_t CCalNXDN::write(const uint8_t* data, uint8_t length)
+uint8_t CCalNXDN::write(const uint8_t* data, uint16_t length)
 {
   if (length != 1U)
     return 4U;

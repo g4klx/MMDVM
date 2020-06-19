@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -277,7 +277,7 @@ void CDStarTX::process()
   }
 }
 
-uint8_t CDStarTX::writeHeader(const uint8_t* header, uint8_t length)
+uint8_t CDStarTX::writeHeader(const uint8_t* header, uint16_t length)
 {
   if (length != DSTAR_HEADER_LENGTH_BYTES)
     return 4U;
@@ -296,7 +296,7 @@ uint8_t CDStarTX::writeHeader(const uint8_t* header, uint8_t length)
   return 0U;
 }
 
-uint8_t CDStarTX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CDStarTX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length != DSTAR_DATA_LENGTH_BYTES)
     return 4U;

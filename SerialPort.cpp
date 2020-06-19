@@ -266,7 +266,7 @@ void CSerialPort::getVersion()
   writeInt(1U, reply, count);
 }
 
-uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
+uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 {
   if (length < 21U)
     return 4U;
@@ -376,7 +376,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   return 0U;
 }
 
-uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
+uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint16_t length)
 {
   if (length < 8U)
     return 4U;
@@ -401,7 +401,7 @@ uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint8_t length)
   return fm.setCallsign(callsign, speed, frequency, time, holdoff, highLevel, lowLevel, callAtStart, callAtEnd, callAtLatch);
 }
 
-uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
+uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint16_t length)
 {
   if (length < 6U)
     return 4U;
@@ -421,7 +421,7 @@ uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint8_t length)
   return fm.setAck(ack, speed, frequency, minTime, delay, level);
 }
 
-uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
+uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint16_t length)
 {
   if (length < 12U)
     return 4U;
@@ -447,7 +447,7 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
   return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold, ctcssLevel, kerchunkTime, hangTime, useCOS, cosInvert, rfAudioBoost, maxDev, rxLevel);
 }
 
-uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
+uint8_t CSerialPort::setMode(const uint8_t* data, uint16_t length)
 {
   if (length < 1U)
     return 4U;
@@ -598,321 +598,33 @@ void CSerialPort::process()
         m_buffer[0U] = c;
         m_ptr = 1U;
         m_len = 0U;
-      }
-      else {
+      } else {
         m_ptr = 0U;
         m_len = 0U;
       }
     } else if (m_ptr == 1U) {
-      // Handle the frame length
+      // Handle the frame length, 1/2
       m_len = m_buffer[m_ptr] = c;
       m_ptr = 2U;
+    } else if (m_ptr == 2U) {
+      // Handle the frame length, 2/2
+      m_buffer[m_ptr] = c;
+      m_ptr = 3U;
+
+      if (m_len == 0U)
+        m_len = c + 255U;
+
+      // The full packet has been received, process it
+      if (m_ptr == m_len)
+        processMessage();
     } else {
       // Any other bytes are added to the buffer
       m_buffer[m_ptr] = c;
       m_ptr++;
 
       // The full packet has been received, process it
-      if (m_ptr == m_len) {
-        uint8_t err = 2U;
-
-        switch (m_buffer[2U]) {
-          case MMDVM_GET_STATUS:
-            getStatus();
-            break;
-
-          case MMDVM_GET_VERSION:
-            getVersion();
-            break;
-
-          case MMDVM_SET_CONFIG:
-            err = setConfig(m_buffer + 3U, m_len - 3U);
-            if (err == 0U)
-              sendACK();
-            else
-              sendNAK(err);
-            break;
-
-          case MMDVM_SET_MODE:
-            err = setMode(m_buffer + 3U, m_len - 3U);
-            if (err == 0U)
-              sendACK();
-            else
-              sendNAK(err);
-            break;
-
-          case MMDVM_SET_FREQ:
-            sendACK();
-            break;
-
-          case MMDVM_FM_PARAMS1:
-            err = setFMParams1(m_buffer + 3U, m_len - 3U);
-            if (err == 0U) {
-              sendACK();
-            } else {
-              DEBUG2("Received invalid FM params 1", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_FM_PARAMS2:
-            err = setFMParams2(m_buffer + 3U, m_len - 3U);
-            if (err == 0U) {
-              sendACK();
-            } else {
-              DEBUG2("Received invalid FM params 2", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_FM_PARAMS3:
-            err = setFMParams3(m_buffer + 3U, m_len - 3U);
-            if (err == 0U) {
-              sendACK();
-            } else {
-              DEBUG2("Received invalid FM params 3", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_CAL_DATA:
-            if (m_modemState == STATE_DSTARCAL)
-              err = calDStarTX.write(m_buffer + 3U, m_len - 3U);
-            if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
-              err = calDMR.write(m_buffer + 3U, m_len - 3U);
-            if (m_modemState == STATE_FMCAL10K || m_modemState == STATE_FMCAL12K || m_modemState == STATE_FMCAL15K || m_modemState == STATE_FMCAL20K || m_modemState == STATE_FMCAL25K || m_modemState == STATE_FMCAL30K)
-              err = calFM.write(m_buffer + 3U, m_len - 3U);
-            if (m_modemState == STATE_P25CAL1K)
-              err = calP25.write(m_buffer + 3U, m_len - 3U);
-            if (m_modemState == STATE_NXDNCAL1K)
-              err = calNXDN.write(m_buffer + 3U, m_len - 3U);
-            if (m_modemState == STATE_POCSAGCAL)
-              err = calPOCSAG.write(m_buffer + 3U, m_len - 3U);
-            if (err == 0U) {
-              sendACK();
-            } else {
-              DEBUG2("Received invalid calibration data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_SEND_CWID:
-            err = 5U;
-            if (m_modemState == STATE_IDLE)
-              err = cwIdTX.write(m_buffer + 3U, m_len - 3U);
-            if (err != 0U) {
-              DEBUG2("Invalid CW Id data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DSTAR_HEADER:
-            if (m_dstarEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
-                err = dstarTX.writeHeader(m_buffer + 3U, m_len - 3U);
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_DSTAR);
-            } else {
-              DEBUG2("Received invalid D-Star header", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DSTAR_DATA:
-            if (m_dstarEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
-                err = dstarTX.writeData(m_buffer + 3U, m_len - 3U);
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_DSTAR);
-            } else {
-              DEBUG2("Received invalid D-Star data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DSTAR_EOT:
-            if (m_dstarEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
-                err = dstarTX.writeEOT();
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_DSTAR);
-            } else {
-              DEBUG2("Received invalid D-Star EOT", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DMR_DATA1:
-            if (m_dmrEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
-                if (m_duplex)
-                  err = dmrTX.writeData1(m_buffer + 3U, m_len - 3U);
-              }
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_DMR);
-            } else {
-              DEBUG2("Received invalid DMR data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DMR_DATA2:
-            if (m_dmrEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
-                if (m_duplex)
-                  err = dmrTX.writeData2(m_buffer + 3U, m_len - 3U);
-                else
-                  err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
-              }
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_DMR);
-            } else {
-              DEBUG2("Received invalid DMR data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DMR_START:
-            if (m_dmrEnable) {
-              err = 4U;
-              if (m_len == 4U) {
-                if (m_buffer[3U] == 0x01U && m_modemState == STATE_DMR) {
-                  if (!m_tx)
-                    dmrTX.setStart(true);
-                  err = 0U;
-                } else if (m_buffer[3U] == 0x00U && m_modemState == STATE_DMR) {
-                  if (m_tx)
-                    dmrTX.setStart(false);
-                  err = 0U;
-                }
-              }
-            }
-            if (err != 0U) {
-              DEBUG2("Received invalid DMR start", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DMR_SHORTLC:
-            if (m_dmrEnable)
-              err = dmrTX.writeShortLC(m_buffer + 3U, m_len - 3U);
-            if (err != 0U) {
-              DEBUG2("Received invalid DMR Short LC", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_DMR_ABORT:
-            if (m_dmrEnable)
-              err = dmrTX.writeAbort(m_buffer + 3U, m_len - 3U);
-            if (err != 0U) {
-              DEBUG2("Received invalid DMR Abort", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_YSF_DATA:
-            if (m_ysfEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_YSF)
-                err = ysfTX.writeData(m_buffer + 3U, m_len - 3U);
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_YSF);
-            } else {
-              DEBUG2("Received invalid System Fusion data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_P25_HDR:
-            if (m_p25Enable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
-                err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_P25);
-            } else {
-              DEBUG2("Received invalid P25 header", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_P25_LDU:
-            if (m_p25Enable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
-                err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_P25);
-            } else {
-              DEBUG2("Received invalid P25 LDU", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_NXDN_DATA:
-            if (m_nxdnEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_NXDN)
-                err = nxdnTX.writeData(m_buffer + 3U, m_len - 3U);
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_NXDN);
-            } else {
-              DEBUG2("Received invalid NXDN data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_POCSAG_DATA:
-            if (m_pocsagEnable) {
-              if (m_modemState == STATE_IDLE || m_modemState == STATE_POCSAG)
-                err = pocsagTX.writeData(m_buffer + 3U, m_len - 3U);
-            }
-            if (err == 0U) {
-              if (m_modemState == STATE_IDLE)
-                setMode(STATE_POCSAG);
-            } else {
-              DEBUG2("Received invalid POCSAG data", err);
-              sendNAK(err);
-            }
-            break;
-
-          case MMDVM_TRANSPARENT:
-          case MMDVM_QSO_INFO:
-            // Do nothing on the MMDVM.
-            break;
-
-#if defined(SERIAL_REPEATER)
-          case MMDVM_SERIAL: {
-            for (uint8_t i = 3U; i < m_len; i++)
-              m_repeat.put(m_buffer[i]);
-            }
-            break;
-#endif
-
-          default:
-            // Handle this, send a NAK back
-            sendNAK(1U);
-            break;
-        }
-
-        m_ptr = 0U;
-        m_len = 0U;
-      }
+      if (m_ptr == m_len)
+        processMessage();
     }
   }
 
@@ -939,6 +651,308 @@ void CSerialPort::process()
   while (availableInt(3U))
     readInt(3U);
 #endif
+}
+
+void CSerialPort::processMessage()
+{
+  uint8_t err = 2U;
+
+  switch (m_buffer[2U]) {
+    case MMDVM_GET_STATUS:
+      getStatus();
+      break;
+
+    case MMDVM_GET_VERSION:
+      getVersion();
+      break;
+
+    case MMDVM_SET_CONFIG:
+      err = setConfig(m_buffer + 3U, m_len - 3U);
+      if (err == 0U)
+        sendACK();
+      else
+        sendNAK(err);
+      break;
+
+    case MMDVM_SET_MODE:
+      err = setMode(m_buffer + 3U, m_len - 3U);
+      if (err == 0U)
+        sendACK();
+      else
+        sendNAK(err);
+      break;
+
+    case MMDVM_SET_FREQ:
+      sendACK();
+      break;
+
+    case MMDVM_FM_PARAMS1:
+      err = setFMParams1(m_buffer + 3U, m_len - 3U);
+      if (err == 0U) {
+        sendACK();
+      } else {
+        DEBUG2("Received invalid FM params 1", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_FM_PARAMS2:
+      err = setFMParams2(m_buffer + 3U, m_len - 3U);
+      if (err == 0U) {
+        sendACK();
+      } else {
+        DEBUG2("Received invalid FM params 2", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_FM_PARAMS3:
+      err = setFMParams3(m_buffer + 3U, m_len - 3U);
+      if (err == 0U) {
+        sendACK();
+      } else {
+        DEBUG2("Received invalid FM params 3", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_CAL_DATA:
+      if (m_modemState == STATE_DSTARCAL)
+        err = calDStarTX.write(m_buffer + 3U, m_len - 3U);
+      if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
+        err = calDMR.write(m_buffer + 3U, m_len - 3U);
+      if (m_modemState == STATE_FMCAL10K || m_modemState == STATE_FMCAL12K || m_modemState == STATE_FMCAL15K || m_modemState == STATE_FMCAL20K || m_modemState == STATE_FMCAL25K || m_modemState == STATE_FMCAL30K)
+        err = calFM.write(m_buffer + 3U, m_len - 3U);
+      if (m_modemState == STATE_P25CAL1K)
+        err = calP25.write(m_buffer + 3U, m_len - 3U);
+      if (m_modemState == STATE_NXDNCAL1K)
+        err = calNXDN.write(m_buffer + 3U, m_len - 3U);
+      if (m_modemState == STATE_POCSAGCAL)
+        err = calPOCSAG.write(m_buffer + 3U, m_len - 3U);
+      if (err == 0U) {
+        sendACK();
+      } else {
+        DEBUG2("Received invalid calibration data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_SEND_CWID:
+      err = 5U;
+      if (m_modemState == STATE_IDLE)
+        err = cwIdTX.write(m_buffer + 3U, m_len - 3U);
+      if (err != 0U) {
+        DEBUG2("Invalid CW Id data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DSTAR_HEADER:
+      if (m_dstarEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
+          err = dstarTX.writeHeader(m_buffer + 3U, m_len - 3U);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_DSTAR);
+      } else {
+        DEBUG2("Received invalid D-Star header", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DSTAR_DATA:
+      if (m_dstarEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
+          err = dstarTX.writeData(m_buffer + 3U, m_len - 3U);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_DSTAR);
+      } else {
+        DEBUG2("Received invalid D-Star data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DSTAR_EOT:
+      if (m_dstarEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
+          err = dstarTX.writeEOT();
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_DSTAR);
+      } else {
+        DEBUG2("Received invalid D-Star EOT", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DMR_DATA1:
+      if (m_dmrEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+          if (m_duplex)
+            err = dmrTX.writeData1(m_buffer + 3U, m_len - 3U);
+        }
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_DMR);
+      } else {
+        DEBUG2("Received invalid DMR data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DMR_DATA2:
+      if (m_dmrEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+          if (m_duplex)
+            err = dmrTX.writeData2(m_buffer + 3U, m_len - 3U);
+          else
+            err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
+        }
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_DMR);
+      } else {
+        DEBUG2("Received invalid DMR data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DMR_START:
+      if (m_dmrEnable) {
+        err = 4U;
+        if (m_len == 4U) {
+          if (m_buffer[3U] == 0x01U && m_modemState == STATE_DMR) {
+            if (!m_tx)
+              dmrTX.setStart(true);
+            err = 0U;
+          } else if (m_buffer[3U] == 0x00U && m_modemState == STATE_DMR) {
+            if (m_tx)
+              dmrTX.setStart(false);
+            err = 0U;
+          }
+        }
+      }
+      if (err != 0U) {
+        DEBUG2("Received invalid DMR start", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DMR_SHORTLC:
+      if (m_dmrEnable)
+        err = dmrTX.writeShortLC(m_buffer + 3U, m_len - 3U);
+      if (err != 0U) {
+        DEBUG2("Received invalid DMR Short LC", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_DMR_ABORT:
+      if (m_dmrEnable)
+        err = dmrTX.writeAbort(m_buffer + 3U, m_len - 3U);
+      if (err != 0U) {
+        DEBUG2("Received invalid DMR Abort", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_YSF_DATA:
+      if (m_ysfEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_YSF)
+          err = ysfTX.writeData(m_buffer + 3U, m_len - 3U);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_YSF);
+      } else {
+        DEBUG2("Received invalid System Fusion data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_P25_HDR:
+      if (m_p25Enable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
+          err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_P25);
+      } else {
+        DEBUG2("Received invalid P25 header", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_P25_LDU:
+      if (m_p25Enable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
+          err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_P25);
+      } else {
+        DEBUG2("Received invalid P25 LDU", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_NXDN_DATA:
+      if (m_nxdnEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_NXDN)
+          err = nxdnTX.writeData(m_buffer + 3U, m_len - 3U);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_NXDN);
+      } else {
+        DEBUG2("Received invalid NXDN data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_POCSAG_DATA:
+      if (m_pocsagEnable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_POCSAG)
+          err = pocsagTX.writeData(m_buffer + 3U, m_len - 3U);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_POCSAG);
+      } else {
+        DEBUG2("Received invalid POCSAG data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_TRANSPARENT:
+    case MMDVM_QSO_INFO:
+      // Do nothing on the MMDVM.
+      break;
+
+#if defined(SERIAL_REPEATER)
+    case MMDVM_SERIAL: {
+      for (uint8_t i = 3U; i < m_len; i++)
+        m_repeat.put(m_buffer[i]);
+      }
+      break;
+#endif
+
+    default:
+      // Handle this, send a NAK back
+      sendNAK(1U);
+      break;
+  }
+
+  m_ptr = 0U;
+  m_len = 0U;
 }
 
 void CSerialPort::writeDStarHeader(const uint8_t* header, uint8_t length)
@@ -1203,7 +1217,7 @@ void CSerialPort::writeNXDNLost()
   writeInt(1U, reply, 3);
 }
 
-void CSerialPort::writeAX25Data(const uint8_t* data, uint8_t length)
+void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
 {
   if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
     return;
@@ -1211,19 +1225,28 @@ void CSerialPort::writeAX25Data(const uint8_t* data, uint8_t length)
   if (!m_ax25Enable)
     return;
 
-  uint8_t reply[300U];
+  uint8_t reply[512U];
 
   reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_AX25_DATA;
 
-  uint8_t count = 3U;
-  for (uint8_t i = 0U; i < length; i++, count++)
-    reply[count] = data[i];
+  if (length > 252U) {
+    reply[1U] = 0U;
+    reply[2U] = (length + 4U) - 255U;
+    reply[3U] = MMDVM_AX25_DATA;
 
-  reply[1U] = count;
+    for (uint8_t i = 0U; i < length; i++)
+      reply[i + 4U] = data[i];
 
-  writeInt(1U, reply, count);
+    writeInt(1U, reply, length + 4U);
+  } else {
+    reply[1U] = length + 3U;
+    reply[2U] = MMDVM_AX25_DATA;
+
+    for (uint8_t i = 0U; i < length; i++)
+      reply[i + 3U] = data[i];
+
+    writeInt(1U, reply, length + 3U);
+  }
 }
 
 void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)

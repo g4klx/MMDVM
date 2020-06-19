@@ -27,7 +27,7 @@ class CP25TX {
 public:
   CP25TX();
 
-  uint8_t writeData(const uint8_t* data, uint8_t length);
+  uint8_t writeData(const uint8_t* data, uint16_t length);
 
   void process();
 

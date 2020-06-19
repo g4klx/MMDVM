@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
@@ -144,7 +144,7 @@ void CDMRTX::process()
   }
 }
 
-uint8_t CDMRTX::writeData1(const uint8_t* data, uint8_t length)
+uint8_t CDMRTX::writeData1(const uint8_t* data, uint16_t length)
 {
   if (length != (DMR_FRAME_LENGTH_BYTES + 1U))
     return 4U;
@@ -168,7 +168,7 @@ uint8_t CDMRTX::writeData1(const uint8_t* data, uint8_t length)
   return 0U;
 }
 
-uint8_t CDMRTX::writeData2(const uint8_t* data, uint8_t length)
+uint8_t CDMRTX::writeData2(const uint8_t* data, uint16_t length)
 {
   if (length != (DMR_FRAME_LENGTH_BYTES + 1U))
     return 4U;
@@ -192,7 +192,7 @@ uint8_t CDMRTX::writeData2(const uint8_t* data, uint8_t length)
   return 0U;
 }
 
-uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint8_t length)
+uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint16_t length)
 {
   if (length != 9U)
     return 4U;
@@ -208,7 +208,7 @@ uint8_t CDMRTX::writeShortLC(const uint8_t* data, uint8_t length)
   return 0U;
 }
 
-uint8_t CDMRTX::writeAbort(const uint8_t* data, uint8_t length)
+uint8_t CDMRTX::writeAbort(const uint8_t* data, uint16_t length)
 {
   if (length != 1U)
     return 4U;

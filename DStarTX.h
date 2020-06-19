@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ class CDStarTX {
 public:
   CDStarTX();
 
-  uint8_t writeHeader(const uint8_t* header, uint8_t length);
-  uint8_t writeData(const uint8_t* data, uint8_t length);
+  uint8_t writeHeader(const uint8_t* header, uint16_t length);
+  uint8_t writeData(const uint8_t* data, uint16_t length);
   uint8_t writeEOT();
 
   void process();
