@@ -616,15 +616,19 @@ void CSerialPort::process()
 
       // The full packet has been received, process it
       if (m_ptr == m_len)
-        processMessage();
+        processMessage(m_buffer + 3U, m_len - 3U);
     } else {
       // Any other bytes are added to the buffer
       m_buffer[m_ptr] = c;
       m_ptr++;
 
       // The full packet has been received, process it
-      if (m_ptr == m_len)
-        processMessage();
+      if (m_ptr == m_len) {
+        if (m_len > 255U)
+          processMessage(m_buffer + 4U, m_len - 4U);
+        else
+          processMessage(m_buffer + 3U, m_len - 3U);
+      }
     }
   }
 
@@ -653,7 +657,7 @@ void CSerialPort::process()
 #endif
 }
 
-void CSerialPort::processMessage()
+void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
 {
   uint8_t err = 2U;
 
@@ -667,7 +671,7 @@ void CSerialPort::processMessage()
       break;
 
     case MMDVM_SET_CONFIG:
-      err = setConfig(m_buffer + 3U, m_len - 3U);
+      err = setConfig(buffer, length);
       if (err == 0U)
         sendACK();
       else
@@ -675,7 +679,7 @@ void CSerialPort::processMessage()
       break;
 
     case MMDVM_SET_MODE:
-      err = setMode(m_buffer + 3U, m_len - 3U);
+      err = setMode(buffer, length);
       if (err == 0U)
         sendACK();
       else
@@ -687,7 +691,7 @@ void CSerialPort::processMessage()
       break;
 
     case MMDVM_FM_PARAMS1:
-      err = setFMParams1(m_buffer + 3U, m_len - 3U);
+      err = setFMParams1(buffer, length);
       if (err == 0U) {
         sendACK();
       } else {
@@ -697,7 +701,7 @@ void CSerialPort::processMessage()
       break;
 
     case MMDVM_FM_PARAMS2:
-      err = setFMParams2(m_buffer + 3U, m_len - 3U);
+      err = setFMParams2(buffer, length);
       if (err == 0U) {
         sendACK();
       } else {
@@ -707,7 +711,7 @@ void CSerialPort::processMessage()
       break;
 
     case MMDVM_FM_PARAMS3:
-      err = setFMParams3(m_buffer + 3U, m_len - 3U);
+      err = setFMParams3(buffer, length);
       if (err == 0U) {
         sendACK();
       } else {
@@ -718,17 +722,17 @@ void CSerialPort::processMessage()
 
     case MMDVM_CAL_DATA:
       if (m_modemState == STATE_DSTARCAL)
-        err = calDStarTX.write(m_buffer + 3U, m_len - 3U);
+        err = calDStarTX.write(buffer, length);
       if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
-        err = calDMR.write(m_buffer + 3U, m_len - 3U);
+        err = calDMR.write(buffer, length);
       if (m_modemState == STATE_FMCAL10K || m_modemState == STATE_FMCAL12K || m_modemState == STATE_FMCAL15K || m_modemState == STATE_FMCAL20K || m_modemState == STATE_FMCAL25K || m_modemState == STATE_FMCAL30K)
-        err = calFM.write(m_buffer + 3U, m_len - 3U);
+        err = calFM.write(buffer, length);
       if (m_modemState == STATE_P25CAL1K)
-        err = calP25.write(m_buffer + 3U, m_len - 3U);
+        err = calP25.write(buffer, length);
       if (m_modemState == STATE_NXDNCAL1K)
-        err = calNXDN.write(m_buffer + 3U, m_len - 3U);
+        err = calNXDN.write(buffer, length);
       if (m_modemState == STATE_POCSAGCAL)
-        err = calPOCSAG.write(m_buffer + 3U, m_len - 3U);
+        err = calPOCSAG.write(buffer, length);
       if (err == 0U) {
         sendACK();
       } else {
@@ -740,7 +744,7 @@ void CSerialPort::processMessage()
     case MMDVM_SEND_CWID:
       err = 5U;
       if (m_modemState == STATE_IDLE)
-        err = cwIdTX.write(m_buffer + 3U, m_len - 3U);
+        err = cwIdTX.write(buffer, length);
       if (err != 0U) {
         DEBUG2("Invalid CW Id data", err);
         sendNAK(err);
@@ -750,7 +754,7 @@ void CSerialPort::processMessage()
     case MMDVM_DSTAR_HEADER:
       if (m_dstarEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
-          err = dstarTX.writeHeader(m_buffer + 3U, m_len - 3U);
+          err = dstarTX.writeHeader(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
@@ -764,7 +768,7 @@ void CSerialPort::processMessage()
     case MMDVM_DSTAR_DATA:
       if (m_dstarEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_DSTAR)
-          err = dstarTX.writeData(m_buffer + 3U, m_len - 3U);
+          err = dstarTX.writeData(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
@@ -793,7 +797,7 @@ void CSerialPort::processMessage()
       if (m_dmrEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
           if (m_duplex)
-            err = dmrTX.writeData1(m_buffer + 3U, m_len - 3U);
+            err = dmrTX.writeData1(buffer, length);
         }
       }
       if (err == 0U) {
@@ -809,9 +813,9 @@ void CSerialPort::processMessage()
       if (m_dmrEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
           if (m_duplex)
-            err = dmrTX.writeData2(m_buffer + 3U, m_len - 3U);
+            err = dmrTX.writeData2(buffer, length);
           else
-            err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
+            err = dmrDMOTX.writeData(buffer, length);
         }
       }
       if (err == 0U) {
@@ -846,7 +850,7 @@ void CSerialPort::processMessage()
 
     case MMDVM_DMR_SHORTLC:
       if (m_dmrEnable)
-        err = dmrTX.writeShortLC(m_buffer + 3U, m_len - 3U);
+        err = dmrTX.writeShortLC(buffer, length);
       if (err != 0U) {
         DEBUG2("Received invalid DMR Short LC", err);
         sendNAK(err);
@@ -855,7 +859,7 @@ void CSerialPort::processMessage()
 
     case MMDVM_DMR_ABORT:
       if (m_dmrEnable)
-        err = dmrTX.writeAbort(m_buffer + 3U, m_len - 3U);
+        err = dmrTX.writeAbort(buffer, length);
       if (err != 0U) {
         DEBUG2("Received invalid DMR Abort", err);
         sendNAK(err);
@@ -865,7 +869,7 @@ void CSerialPort::processMessage()
     case MMDVM_YSF_DATA:
       if (m_ysfEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_YSF)
-          err = ysfTX.writeData(m_buffer + 3U, m_len - 3U);
+          err = ysfTX.writeData(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
@@ -879,7 +883,7 @@ void CSerialPort::processMessage()
     case MMDVM_P25_HDR:
       if (m_p25Enable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
-          err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+          err = p25TX.writeData(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
@@ -893,7 +897,7 @@ void CSerialPort::processMessage()
     case MMDVM_P25_LDU:
       if (m_p25Enable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
-          err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+          err = p25TX.writeData(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
@@ -907,7 +911,7 @@ void CSerialPort::processMessage()
     case MMDVM_NXDN_DATA:
       if (m_nxdnEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_NXDN)
-          err = nxdnTX.writeData(m_buffer + 3U, m_len - 3U);
+          err = nxdnTX.writeData(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
@@ -921,7 +925,7 @@ void CSerialPort::processMessage()
     case MMDVM_POCSAG_DATA:
       if (m_pocsagEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_POCSAG)
-          err = pocsagTX.writeData(m_buffer + 3U, m_len - 3U);
+          err = pocsagTX.writeData(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
