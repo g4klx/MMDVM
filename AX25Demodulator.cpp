@@ -53,10 +53,9 @@ const uint32_t PLL_FILTER_LEN = 7U;
 
 float32_t PLL_FILTER_COEFFS[] = {3.196252e-02F, 1.204223e-01F, 2.176819e-01F, 2.598666e-01F, 2.176819e-01F, 1.204223e-01F, 3.196252e-02F};
 
-CAX25Demodulator::CAX25Demodulator(q15_t* coeffs, uint16_t length) :
+CAX25Demodulator::CAX25Demodulator(int8_t n) :
 m_frame(),
-m_audioFilter(),
-m_audioState(),
+m_twist(n),
 m_lpfFilter(),
 m_lpfState(),
 m_delayLine(NULL),
@@ -75,10 +74,6 @@ m_hdlcState(AX25_IDLE)
 {
   m_delayLine = new bool[DELAY_LEN];
 
-  m_audioFilter.numTaps = length;
-  m_audioFilter.pState  = m_audioState;
-  m_audioFilter.pCoeffs = coeffs;
-
   m_lpfFilter.numTaps = LPF_FILTER_LEN;
   m_lpfFilter.pState  = m_lpfState;
   m_lpfFilter.pCoeffs = LPF_FILTER_COEFFS;
@@ -93,7 +88,7 @@ bool CAX25Demodulator::process(q15_t* samples, uint8_t length, CAX25Frame& frame
   bool result = false;
 
   q15_t fa[RX_BLOCK_SIZE];
-  ::arm_fir_fast_q15(&m_audioFilter, samples, fa, RX_BLOCK_SIZE);
+  m_twist.process(samples, fa, RX_BLOCK_SIZE);
 
   int16_t buffer[RX_BLOCK_SIZE];
   for (uint8_t i = 0; i < length; i++) {
@@ -261,5 +256,10 @@ bool CAX25Demodulator::HDLC(bool b)
   }
 
   return false;
+}
+
+void CAX25Demodulator::setTwist(int8_t n)
+{
+  m_twist.setTwist(n);
 }
 

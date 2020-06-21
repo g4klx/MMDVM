@@ -22,6 +22,7 @@
 #include "Config.h"
 
 #include "AX25Frame.h"
+#include "AX25Twist.h"
 
 enum AX25_STATE {
   AX25_IDLE,
@@ -31,14 +32,15 @@ enum AX25_STATE {
 
 class CAX25Demodulator {
 public:
-  CAX25Demodulator(q15_t* coeffs, uint16_t length);
+  CAX25Demodulator(int8_t n);
 
   bool process(q15_t* samples, uint8_t length, CAX25Frame& frame);
 
+  void setTwist(int8_t n);
+
 private:
   CAX25Frame           m_frame;
-  arm_fir_instance_q15 m_audioFilter;
-  q15_t                m_audioState[40U];   // NoTaps + BlockSize - 1, 9 + 20 - 1 plus some spare
+  CAX25Twist           m_twist;
   arm_fir_instance_q15 m_lpfFilter;
   q15_t                m_lpfState[120U];    // NoTaps + BlockSize - 1, 96 + 20 - 1 plus some spare
   bool*                m_delayLine;
