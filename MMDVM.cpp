@@ -63,6 +63,7 @@ CPOCSAGTX  pocsagTX;
 
 CFM        fm;
 CAX25RX    ax25RX;
+CAX25TX    ax25TX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
@@ -111,6 +112,9 @@ void loop()
 
   if (m_pocsagEnable && (m_modemState == STATE_POCSAG || pocsagTX.busy()))
     pocsagTX.process();
+
+  if (m_ax25Enable && (m_modemState == STATE_IDLE || m_modemState == STATE_FM))
+    ax25TX.process();
 
   if (m_fmEnable && m_modemState == STATE_FM)
     fm.process();

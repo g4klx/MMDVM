@@ -16,28 +16,26 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(AX25RX_H)
-#define  AX25RX_H
+#if !defined(AX25TX_H)
+#define  AX25TX_H
 
 #include "Config.h"
 
-#include "AX25Demodulator.h"
-
-class CAX25RX {
+class CAX25TX {
 public:
-  CAX25RX();
+  CAX25TX();
 
-  void samples(q15_t* samples, uint8_t length);
+  uint8_t writeData(const uint8_t* data, uint16_t length);
+
+  void process();
 
   void setParams(int8_t twist);
 
+  void setTXDelay(uint8_t delay);
+
+  uint8_t getSpace() const;
+
 private:
-  arm_fir_instance_q15 m_filter;
-  q15_t                m_state[160U];    // NoTaps + BlockSize - 1, 132 + 20 - 1 plus some spare
-  CAX25Demodulator     m_demod1;
-  CAX25Demodulator     m_demod2;
-  CAX25Demodulator     m_demod3;
-  uint16_t             m_lastFCS;
 };
 
 #endif

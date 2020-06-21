@@ -105,7 +105,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200617 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
+#define DESCRIPTION "20200621 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -244,7 +244,12 @@ void CSerialPort::getStatus()
   else
     reply[12U] = 0U;
 
-  writeInt(1U, reply, 13);
+  if (m_ax25Enable)
+    reply[13U] = ax25TX.getSpace();
+  else
+    reply[13U] = 0U;
+
+  writeInt(1U, reply, 14);
 }
 
 void CSerialPort::getVersion()
@@ -268,7 +273,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 {
-  if (length < 21U)
+  if (length < 24U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -340,6 +345,16 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 
   uint8_t nxdnTXHang    = data[20U];
 
+  uint8_t ax25TXLevel   = data[21U];
+
+  int8_t ax25RXTwist    = int8_t(data[22U]) - 128;
+  if (ax25RXTwist < -4 || ax25RXTwist > 10)
+    return 4U;
+
+  int8_t ax25TXTwist    = int8_t(data[23U]) - 128;
+  if (ax25TXTwist < -4 || ax25TXTwist > 10)
+    return 4U;
+
   setMode(modemState);
 
   m_dstarEnable  = dstarEnable;
@@ -358,6 +373,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   dmrDMOTX.setTXDelay(txDelay);
   nxdnTX.setTXDelay(txDelay);
   pocsagTX.setTXDelay(txDelay);
+  ax25TX.setTXDelay(txDelay);
 
   dmrTX.setColorCode(colorCode);
   dmrRX.setColorCode(colorCode);
@@ -368,8 +384,10 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   ysfTX.setParams(ysfLoDev, ysfTXHang);
   p25TX.setParams(p25TXHang);
   nxdnTX.setParams(nxdnTXHang);
+  ax25RX.setParams(ax25RXTwist);
+  ax25TX.setParams(ax25TXTwist);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, txDCOffset, rxDCOffset);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, ax25TXLevel, txDCOffset, rxDCOffset);
 
   io.start();
 
@@ -932,6 +950,17 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
           setMode(STATE_POCSAG);
       } else {
         DEBUG2("Received invalid POCSAG data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_AX25_DATA:
+      if (m_ax25Enable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_FM)
+          err = ax25TX.writeData(buffer, length);
+      }
+      if (err != 0U) {
+        DEBUG2("Received invalid AX.25 data", err);
         sendNAK(err);
       }
       break;

@@ -98,6 +98,7 @@ enum MMDVM_STATE {
 #include "CalRSSI.h"
 #include "CWIdTX.h"
 #include "AX25RX.h"
+#include "AX25TX.h"
 #include "Debug.h"
 #include "IO.h"
 #include "FM.h"
@@ -159,6 +160,7 @@ extern CPOCSAGTX pocsagTX;
 
 extern CFM     fm;
 extern CAX25RX ax25RX;
+extern CAX25TX ax25TX;
 
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
