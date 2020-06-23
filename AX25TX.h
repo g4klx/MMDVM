@@ -21,6 +21,8 @@
 
 #include "Config.h"
 
+#include "SerialRB.h"
+
 class CAX25TX {
 public:
   CAX25TX();

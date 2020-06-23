@@ -63,7 +63,8 @@ m_state(),
 m_demod1(3),
 m_demod2(6),
 m_demod3(9),
-m_lastFCS(0U)
+m_lastFCS(0U),
+m_count(0U)
 {
   m_filter.numTaps = FILTER_LEN;
   m_filter.pState  = m_state;
@@ -75,28 +76,38 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
   q15_t output[RX_BLOCK_SIZE];
   ::arm_fir_fast_q15(&m_filter, samples, output, RX_BLOCK_SIZE);
 
-  m_lastFCS = 0U;
+  m_count++;
+
   CAX25Frame frame;
 
   bool ret = m_demod1.process(output, length, frame);
-  if (ret && frame.m_fcs != m_lastFCS) {
+  if (ret) {
+    if (frame.m_fcs != m_lastFCS || m_count > 2U) {
+      m_lastFCS = frame.m_fcs;
+      m_count   = 0U;
+      serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+    }
     DEBUG1("Decoder 1 reported");
-    m_lastFCS = frame.m_fcs;
-    serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
   }
 
   ret = m_demod2.process(output, length, frame);
-  if (ret && frame.m_fcs != m_lastFCS) {
+  if (ret) {
+    if (frame.m_fcs != m_lastFCS || m_count > 2U) {
+      m_lastFCS = frame.m_fcs;
+      m_count   = 0U;
+      serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+    }
     DEBUG1("Decoder 2 reported");
-    m_lastFCS = frame.m_fcs;
-    serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
   }
 
   ret = m_demod3.process(output, length, frame);
-  if (ret && frame.m_fcs != m_lastFCS) {
+  if (ret) {
+    if (frame.m_fcs != m_lastFCS || m_count > 2U) {
+      m_lastFCS = frame.m_fcs;
+      m_count   = 0U;
+      serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+    }
     DEBUG1("Decoder 3 reported");
-    m_lastFCS = frame.m_fcs;
-    serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
   }
 }
 
