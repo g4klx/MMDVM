@@ -39,7 +39,7 @@ public:
 
 private:
   CAX25Twist m_twist;
-  uint8_t    m_poBuffer[560U];
+  uint8_t    m_poBuffer[600U];
   uint16_t   m_poLen;
   uint16_t   m_poPtr;
   uint16_t   m_txDelay;

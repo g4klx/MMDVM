@@ -29,8 +29,8 @@ const uint8_t AX25_MAX_ONES    = 5U;
 
 const uint16_t AX25_MIN_FRAME_LENGTH = 17U;        // Callsign (7) + Callsign (7) + Control (1) + Checksum (2)
 
-const uint16_t AX25_MAX_FRAME_LENGTH = 294U;       // Callsign (7) + Callsign (7) + 3 Digipeaters (21) +
-                                                   // Control (1) + Data (256) + Checksum (2)
+const uint16_t AX25_MAX_FRAME_LENGTH = 330U;       // Callsign (7) + Callsign (7) + 8 Digipeaters (56) +
+                                                   // Control (1) + PID (1) + Data (256) + Checksum (2)
 
 #endif
 
