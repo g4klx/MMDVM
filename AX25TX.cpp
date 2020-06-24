@@ -105,7 +105,7 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
 
   uint8_t ones = 0U;
   for (uint16_t i = 0U; i < (frame.m_length * 8U); i++) {
-    bool b1 = READ_BIT2(START_FLAG, i) != 0U;
+    bool b1 = READ_BIT2(frame.m_data, i) != 0U;
     bool b2 = NRZI(b1);
     WRITE_BIT1(m_poBuffer, m_poLen, b2);
     m_poLen++;
@@ -113,6 +113,7 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
     if (b1) {
       ones++;
       if (ones == AX25_MAX_ONES) {
+        // Bit stuffing
         bool b = NRZI(false);
         WRITE_BIT1(m_poBuffer, m_poLen, b);
         m_poLen++;
