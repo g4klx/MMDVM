@@ -21,7 +21,7 @@
 
 #include "Config.h"
 
-#include "SerialRB.h"
+#include "AX25Twist.h"
 
 class CAX25TX {
 public:
@@ -38,6 +38,16 @@ public:
   uint8_t getSpace() const;
 
 private:
+  CAX25Twist m_twist;
+  uint8_t    m_poBuffer[560U];
+  uint16_t   m_poLen;
+  uint16_t   m_poPtr;
+  uint16_t   m_txDelay;
+  uint16_t   m_tablePtr;
+  bool       m_nrzi;
+
+  void writeBit(bool b);
+  bool NRZI(bool b);
 };
 
 #endif

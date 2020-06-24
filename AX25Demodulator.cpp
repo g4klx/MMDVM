@@ -20,6 +20,7 @@
 #include "Config.h"
 #include "Globals.h"
 #include "AX25Demodulator.h"
+#include "AX25Defines.h"
 
 const float32_t SAMPLE_RATE = 24000.0F;
 const float32_t SYMBOL_RATE = 1200.0F;
@@ -178,7 +179,7 @@ bool CAX25Demodulator::PLL(bool input)
 
 bool CAX25Demodulator::HDLC(bool b)
 {
-  if (m_hdlcOnes == 5U) {
+  if (m_hdlcOnes == AX25_MAX_ONES) {
     if (b) {
       // flag byte
       m_hdlcFlag = true;
@@ -203,8 +204,8 @@ bool CAX25Demodulator::HDLC(bool b)
     bool result = false;
 
     switch (m_hdlcBuffer) {
-      case 0x7E:
-        if (m_frame.m_length >= 17U) {
+      case AX25_FRAME_END:
+        if (m_frame.m_length >= AX25_MIN_FRAME_LENGTH) {
           result = m_frame.checkCRC();
           if (!result)
               m_frame.m_length = 0U;
@@ -216,7 +217,7 @@ bool CAX25Demodulator::HDLC(bool b)
         m_hdlcBits = 0U;
         break;
 
-      case 0xFE:
+      case AX25_FRAME_ABORT:
         // Frame aborted
         m_frame.m_length = 0U;
         m_hdlcState = AX25_IDLE;

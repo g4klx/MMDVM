@@ -54,6 +54,15 @@ const uint16_t CCITT_TABLE[] = {
 	0xf78f,0xe606,0xd49d,0xc514,0xb1ab,0xa022,0x92b9,0x8330,
 	0x7bc7,0x6a4e,0x58d5,0x495c,0x3de3,0x2c6a,0x1ef1,0x0f78 };
 
+CAX25Frame::CAX25Frame(const uint8_t* data, uint16_t length) :
+m_data(),
+m_length(0U),
+m_fcs(0U)
+{
+  for (uint16_t i = 0U; i < length && i < (AX25_MAX_PACKET_LEN - 2U); i++)
+    m_data[m_length++] = data[i];
+}
+
 CAX25Frame::CAX25Frame() :
 m_data(),
 m_length(0U),
@@ -90,5 +99,24 @@ bool CAX25Frame::checkCRC()
   } else {
     return false;
   }
+}
+
+void CAX25Frame::addCRC()
+{
+  union {
+    uint16_t crc16;
+    uint8_t  crc8[2U];
+  };
+
+  crc16 = 0xFFFFU;
+  for (uint16_t i = 0U; i < m_length; i++)
+    crc16 = uint16_t(crc8[1U]) ^ CCITT_TABLE[crc8[0U] ^ m_data[i]];
+
+  crc16 = ~crc16;
+
+  m_fcs = crc16;
+
+  m_data[m_length++] = crc8[0U];
+  m_data[m_length++] = crc8[1U];
 }
 
