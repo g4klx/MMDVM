@@ -1,5 +1,6 @@
 /*
- *   Copyright (C) 2015-2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020 by Geoffrey Merck F4FXL - KC3FRA
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,38 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(POCSAGTX_H)
-#define  POCSAGTX_H
+#if !defined(TSAMPLEPACK_H)
+#define TSAMPLEPACK_H
 
-#include "Config.h"
-
-#include "RingBuffer.h"
-
-class CPOCSAGTX {
-public:
-  CPOCSAGTX();
-
-  uint8_t writeData(const uint8_t* data, uint16_t length);
-
-  void writeByte(uint8_t c);
-
-  void process();
-
-  void setTXDelay(uint8_t delay);
-
-  uint8_t getSpace() const;
-
-  bool busy();
-
-private:
-  CRingBuffer<uint8_t>            m_buffer;
-  arm_fir_instance_q15 m_modFilter;
-  q15_t                m_modState[170U];     // NoTaps + BlockSize - 1, 6 + 160 - 1 plus some spare
-  uint8_t              m_poBuffer[200U];
-  uint16_t             m_poLen;
-  uint16_t             m_poPtr;
-  uint16_t             m_txDelay;
+struct TSamplePairPack {
+  uint8_t byte0;
+  uint8_t byte1;
+  uint8_t byte2;
 };
 
 #endif
-

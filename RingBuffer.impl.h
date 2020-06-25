@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020 by Geoffrey Merck F4FXL - KC3FRA
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,20 +17,19 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "RingBuffer.h"
 
-#include "FMDownsampleRB.h"
-
-CFMDownsampleRB::CFMDownsampleRB(uint16_t length) :
+template <typename TDATATYPE> CRingBuffer<TDATATYPE>::CRingBuffer(uint16_t length) :
 m_length(length),
 m_head(0U),
 m_tail(0U),
 m_full(false),
 m_overflow(false)
 {
-  m_samples = new uint8_t[length];
+  m_buffer = new TDATATYPE[length];
 }
 
-uint16_t CFMDownsampleRB::getSpace() const
+template <typename TDATATYPE> uint16_t CRingBuffer<TDATATYPE>::getSpace() const
 {
   uint16_t n = 0U;
 
@@ -46,7 +46,7 @@ uint16_t CFMDownsampleRB::getSpace() const
   return n;
 }
 
-uint16_t CFMDownsampleRB::getData() const
+template <typename TDATATYPE> uint16_t CRingBuffer<TDATATYPE>::getData() const
 {
   if (m_tail == m_head)
     return m_full ? m_length : 0U;
@@ -56,14 +56,14 @@ uint16_t CFMDownsampleRB::getData() const
     return m_length - m_tail + m_head;
 }
 
-bool CFMDownsampleRB::put(uint8_t sample)
+template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::put(TDATATYPE item) volatile
 {
   if (m_full) {
     m_overflow = true;
     return false;
   }
 
-  m_samples[m_head] = sample;
+  m_buffer[m_head] = item;
 
   m_head++;
   if (m_head >= m_length)
@@ -75,12 +75,17 @@ bool CFMDownsampleRB::put(uint8_t sample)
   return true;
 }
 
-bool CFMDownsampleRB::get(uint8_t& sample)
+template <typename TDATATYPE> TDATATYPE CRingBuffer<TDATATYPE>::peek() const
+{
+  return m_buffer[m_tail];
+}
+
+template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::get(TDATATYPE& item) volatile
 {
   if (m_head == m_tail && !m_full)
     return false;
 
-  sample = m_samples[m_tail];
+  item = m_buffer[m_tail];
 
   m_full = false;
 
@@ -91,11 +96,19 @@ bool CFMDownsampleRB::get(uint8_t& sample)
   return true;
 }
 
-bool CFMDownsampleRB::hasOverflowed()
+template <typename TDATATYPE> bool CRingBuffer<TDATATYPE>::hasOverflowed()
 {
   bool overflow = m_overflow;
 
   m_overflow = false;
 
   return overflow;
+}
+
+template <typename TDATATYPE> void CRingBuffer<TDATATYPE>::reset()
+{
+  m_head = 0U;
+  m_tail = 0U;
+  m_full     = false;
+  m_overflow = false;
 }

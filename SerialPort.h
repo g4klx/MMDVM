@@ -21,7 +21,11 @@
 
 #include "Config.h"
 #include "Globals.h"
-#include "SerialRB.h"
+#include "RingBuffer.h"
+
+#if !defined(SERIAL_SPEED)
+#define SERIAL_SPEED 115200
+#endif
 
 
 class CSerialPort {
@@ -52,6 +56,10 @@ public:
 
   void writeAX25Data(const uint8_t* data, uint16_t length);
 
+  void writeFMData(const uint8_t* data, uint16_t length);
+  void writeFMStatus(uint8_t status);
+  void writeFMEOT();
+
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
 
@@ -66,7 +74,7 @@ private:
   uint16_t  m_ptr;
   uint16_t  m_len;
   bool      m_debug;
-  CSerialRB m_repeat;
+  CRingBuffer<uint8_t> m_repeat;
 
   void    sendACK();
   void    sendNAK(uint8_t err);
@@ -78,6 +86,7 @@ private:
   uint8_t setFMParams1(const uint8_t* data, uint16_t length);
   uint8_t setFMParams2(const uint8_t* data, uint16_t length);
   uint8_t setFMParams3(const uint8_t* data, uint16_t length);
+  uint8_t setFMParams4(const uint8_t* data, uint16_t length);
   void    processMessage(const uint8_t* data, uint16_t length);
 
   // Hardware versions

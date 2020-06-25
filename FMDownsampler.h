@@ -21,23 +21,22 @@
 #define FMDOWNSAMPLER_H
 
 #include "Config.h"
-#include "FMDownsampleRB.h"
+#include "RingBuffer.h"
+#include "FMSamplePairPack.h"
 
 class CFMDownsampler {
 public:
   CFMDownsampler(uint16_t length);
   void addSample(q15_t sample);
-  inline bool getPackedData(uint8_t& data){ return m_ringBuffer.get(data); };
-  inline bool hasOverflowed() { return m_ringBuffer.hasOverflowed(); };
+  bool getPackedData(TSamplePairPack& data);
+  uint16_t getData();
+  void reset();
 
 private:
-  CFMDownsampleRB m_ringBuffer;
-  union {
-    int32_t m_samplePack;
-    int8_t  m_samplePackBytes[4];
-  };
-  uint8_t m_packIndex;
-  uint8_t m_downSampleIndex;
+  CRingBuffer<TSamplePairPack> m_ringBuffer;
+  uint32_t                     m_samplePack;
+  uint8_t*                     m_samplePackPointer;
+  uint8_t                      m_sampleIndex;
 };
 
 #endif

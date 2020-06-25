@@ -21,8 +21,12 @@
 
 #include "Globals.h"
 
-#include "SampleRB.h"
-#include "RSSIRB.h"
+#include "RingBuffer.h"
+
+struct TSample {
+  volatile uint16_t sample;
+  volatile uint8_t control;
+};
 
 class CIO {
 public:
@@ -57,11 +61,11 @@ public:
   void selfTest();
 
 private:
-  bool                 m_started;
+  bool                  m_started;
 
-  CSampleRB            m_rxBuffer;
-  CSampleRB            m_txBuffer;
-  CRSSIRB              m_rssiBuffer;
+  CRingBuffer<TSample>  m_rxBuffer;
+  CRingBuffer<TSample>  m_txBuffer;
+  CRingBuffer<uint16_t> m_rssiBuffer;
 
   arm_biquad_casd_df1_inst_q31 m_dcFilter;
   q31_t                        m_dcState[4];

@@ -52,7 +52,7 @@ void CCalFM::process()
 {
   const TONE_TABLE* entry = NULL;
 
-  if (m_modemState!=m_lastState)
+  if (m_modemState != m_lastState)
   {
     switch (m_modemState) {
         case STATE_FMCAL10K:

@@ -1,5 +1,5 @@
 #!/usr/bin/make
-# makefile for the arduino due (works with arduino IDE 1.6.11)
+# makefile for the arduino due (works with arduino IDE 1.6.12)
 #
 # The original file can be found at https://github.com/pauldreik/arduino-due-makefile
 #
@@ -34,7 +34,7 @@ OBJCOPY:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-n
 
 C:=$(CC)
 #SAM:=arduino/sam/
-SAM:=$(ADIR)/packages/arduino/hardware/sam/1.6.11
+SAM:=$(ADIR)/packages/arduino/hardware/sam/1.6.12
 #CMSIS:=arduino/sam/system/CMSIS/
 #LIBSAM:=arduino/sam/system/libsam
 TMPDIR:=$(PWD)/build

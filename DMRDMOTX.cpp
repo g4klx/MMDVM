@@ -74,7 +74,7 @@ void CDMRDMOTX::process()
       m_poLen = m_txDelay;
     } else {
       for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
-        m_poBuffer[i] = m_fifo.get();
+        m_fifo.get(m_poBuffer[i]);
 
       for (unsigned int i = 0U; i < 39U; i++)
         m_poBuffer[i + DMR_FRAME_LENGTH_BYTES] = PR_FILL[i];

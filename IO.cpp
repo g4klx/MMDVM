@@ -265,6 +265,7 @@ void CIO::process()
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
     setPTTInt(m_pttInvert ? true : false);
+    DEBUG1("TX OFF");
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
@@ -273,15 +274,16 @@ void CIO::process()
     uint16_t rssi[RX_BLOCK_SIZE];
 
     for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-      uint16_t sample;
-      m_rxBuffer.get(sample, control[i]);
+      TSample sample;
+      m_rxBuffer.get(sample);
+      control[i] = sample.control;
       m_rssiBuffer.get(rssi[i]);
 
       // Detect ADC overflow
-      if (m_detect && (sample == 0U || sample == 4095U))
+      if (m_detect && (sample.sample == 0U || sample.sample == 4095U))
         m_adcOverflow++;
 
-      q15_t res1 = q15_t(sample) - m_rxDCOffset;
+      q15_t res1 = q15_t(sample.sample) - m_rxDCOffset;
       q31_t res2 = res1 * m_rxLevel;
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }
@@ -465,6 +467,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   if (!m_tx) {
     m_tx = true;
     setPTTInt(m_pttInvert ? false : true);
+    DEBUG1("TX ON");
   }
 
   q15_t txLevel = 0;
@@ -508,9 +511,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
       m_dacOverflow++;
 
     if (control == NULL)
-      m_txBuffer.put(res3, MARK_NONE);
+      m_txBuffer.put({res3, MARK_NONE});
     else
-      m_txBuffer.put(res3, control[i]);
+      m_txBuffer.put({res3, control[i]});
   }
 }
 
