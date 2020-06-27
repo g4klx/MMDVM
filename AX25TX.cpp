@@ -53,7 +53,7 @@ m_twist(-6),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(120U),
+m_txDelay(360U),
 m_tablePtr(0U),
 m_nrzi(false)
 {
@@ -140,9 +140,9 @@ void CAX25TX::writeBit(bool b)
   for (uint8_t i = 0U; i < AX25_RADIO_SYMBOL_LENGTH; i++) {
     in[i] = AUDIO_TABLE_DATA[m_tablePtr];
     if (b)
-      m_tablePtr += 6U;
-    else
       m_tablePtr += 11U;
+    else
+      m_tablePtr += 6U;
 
     if (m_tablePtr >= AUDIO_TABLE_LEN)
       m_tablePtr -= AUDIO_TABLE_LEN;
@@ -152,11 +152,6 @@ void CAX25TX::writeBit(bool b)
   m_twist.process(in, out, AX25_RADIO_SYMBOL_LENGTH);
 
   io.write(STATE_AX25, out, AX25_RADIO_SYMBOL_LENGTH);
-}
-
-void CAX25TX::setParams(int8_t twist)
-{
-  m_twist.setTwist(twist);
 }
 
 void CAX25TX::setTXDelay(uint8_t delay)

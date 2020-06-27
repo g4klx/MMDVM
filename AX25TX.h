@@ -31,8 +31,6 @@ public:
 
   void process();
 
-  void setParams(int8_t twist);
-
   void setTXDelay(uint8_t delay);
 
   uint8_t getSpace() const;

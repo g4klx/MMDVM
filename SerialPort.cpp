@@ -109,7 +109,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200625 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
+#define DESCRIPTION "20200627 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -360,9 +360,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   if (ax25RXTwist < -4 || ax25RXTwist > 10)
     return 4U;
 
-  int8_t ax25TXTwist    = int8_t(data[23U]) - 128;
-  if (ax25TXTwist < -4 || ax25TXTwist > 10)
-    return 4U;
+  uint8_t ax25TXDelay   = data[23U];
 
   setMode(modemState);
 
@@ -382,7 +380,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   dmrDMOTX.setTXDelay(txDelay);
   nxdnTX.setTXDelay(txDelay);
   pocsagTX.setTXDelay(txDelay);
-  ax25TX.setTXDelay(txDelay);
+  ax25TX.setTXDelay(ax25TXDelay);
 
   dmrTX.setColorCode(colorCode);
   dmrRX.setColorCode(colorCode);
@@ -394,7 +392,6 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   p25TX.setParams(p25TXHang);
   nxdnTX.setParams(nxdnTXHang);
   ax25RX.setParams(ax25RXTwist);
-  ax25TX.setParams(ax25TXTwist);
 
   io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, ax25TXLevel, txDCOffset, rxDCOffset);
 
