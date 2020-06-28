@@ -93,8 +93,10 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
   m_tablePtr = 0U;
 
   // Add TX delay (already NRZI)
-  for (uint16_t i = 0U; i < m_txDelay; i++, m_poLen++)
-    WRITE_BIT1(m_poBuffer, m_poLen, false);
+  for (uint16_t i = 0U; i < m_txDelay; i++, m_poLen++) {
+    bool preamble = NRZI(false);
+    WRITE_BIT1(m_poBuffer, m_poLen, preamble);
+  }
 
   // Add the Start Flag
   for (uint16_t i = 0U; i < 8U; i++, m_poLen++) {
@@ -115,7 +117,7 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
       if (ones == AX25_MAX_ONES) {
         // Bit stuffing
         bool b = NRZI(false);
-        WRITE_BIT1(m_poBuffer, m_poLen, b);
+        WRITE_BIT1(m_poBuffer, m_poLen, false);
         m_poLen++;
         ones = 0U;
       }
@@ -166,10 +168,14 @@ uint8_t CAX25TX::getSpace() const
 
 bool CAX25TX::NRZI(bool b)
 {
-    bool result = (b == m_nrzi);
+    if(!b)
+      m_nrzi ^= 1;
 
-    m_nrzi = b;
+    return m_nrzi;
+    // bool result = (b == m_nrzi);
 
-    return result;
+    // m_nrzi = b;
+
+    // return result;
 }
 
