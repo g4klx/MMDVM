@@ -92,7 +92,7 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
   m_nrzi     = false;
   m_tablePtr = 0U;
 
-  // Add TX delay (already NRZI)
+  // Add TX delay
   for (uint16_t i = 0U; i < m_txDelay; i++, m_poLen++) {
     bool preamble = NRZI(false);
     WRITE_BIT1(m_poBuffer, m_poLen, preamble);
@@ -117,7 +117,7 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
       if (ones == AX25_MAX_ONES) {
         // Bit stuffing
         bool b = NRZI(false);
-        WRITE_BIT1(m_poBuffer, m_poLen, false);
+        WRITE_BIT1(m_poBuffer, m_poLen, b);
         m_poLen++;
         ones = 0U;
       }
@@ -168,14 +168,9 @@ uint8_t CAX25TX::getSpace() const
 
 bool CAX25TX::NRZI(bool b)
 {
-    if(!b)
-      m_nrzi ^= 1;
+    if (!b)
+      m_nrzi = !m_nrzi;
 
     return m_nrzi;
-    // bool result = (b == m_nrzi);
-
-    // m_nrzi = b;
-
-    // return result;
 }
 
