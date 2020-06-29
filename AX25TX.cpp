@@ -49,7 +49,6 @@ const q15_t AUDIO_TABLE_DATA[] = {
 };
 
 CAX25TX::CAX25TX() :
-m_twist(-6),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
@@ -138,22 +137,25 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
 
 void CAX25TX::writeBit(bool b)
 {
-  q15_t in[AX25_RADIO_SYMBOL_LENGTH];
+  q15_t buffer[AX25_RADIO_SYMBOL_LENGTH];
   for (uint8_t i = 0U; i < AX25_RADIO_SYMBOL_LENGTH; i++) {
-    in[i] = AUDIO_TABLE_DATA[m_tablePtr];
-    if (b)
+    q15_t value = AUDIO_TABLE_DATA[m_tablePtr];
+
+    if (b) {
       m_tablePtr += 11U;
-    else
+    } else {
+      // De-emphasise the lower frequency by 6dB
+      value >>= 2;
       m_tablePtr += 6U;
+    }
+
+    buffer[i] = value;
 
     if (m_tablePtr >= AUDIO_TABLE_LEN)
       m_tablePtr -= AUDIO_TABLE_LEN;
   }
 
-  q15_t out[AX25_RADIO_SYMBOL_LENGTH];
-  m_twist.process(in, out, AX25_RADIO_SYMBOL_LENGTH);
-
-  io.write(STATE_AX25, out, AX25_RADIO_SYMBOL_LENGTH);
+  io.write(STATE_AX25, buffer, AX25_RADIO_SYMBOL_LENGTH);
 }
 
 void CAX25TX::setTXDelay(uint8_t delay)

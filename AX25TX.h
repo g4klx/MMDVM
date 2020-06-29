@@ -21,8 +21,6 @@
 
 #include "Config.h"
 
-#include "AX25Twist.h"
-
 class CAX25TX {
 public:
   CAX25TX();
@@ -36,7 +34,6 @@ public:
   uint8_t getSpace() const;
 
 private:
-  CAX25Twist m_twist;
   uint8_t    m_poBuffer[600U];
   uint16_t   m_poLen;
   uint16_t   m_poPtr;
