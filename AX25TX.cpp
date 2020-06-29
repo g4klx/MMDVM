@@ -142,11 +142,11 @@ void CAX25TX::writeBit(bool b)
     q15_t value = AUDIO_TABLE_DATA[m_tablePtr];
 
     if (b) {
-      m_tablePtr += 11U;
-    } else {
       // De-emphasise the lower frequency by 6dB
       value >>= 2;
       m_tablePtr += 6U;
+    } else {
+      m_tablePtr += 11U;
     }
 
     buffer[i] = value;
