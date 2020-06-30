@@ -54,7 +54,7 @@ m_useCOS(true),
 m_cosInvert(false),
 m_rfAudioBoost(1U),
 m_extAudioBoost(1U),
-m_downsampler(400U),// 100 ms of audio
+m_downSampler(400U),// 100 ms of audio
 m_extEnabled(false),
 m_rxLevel(1),
 m_inputRFRB(2401U),   // 100ms of audio + 1 sample
@@ -120,7 +120,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
       currentSample = m_blanking.process(currentSample);
       if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-        m_downsampler.addSample(currentSample);
+        m_downSampler.addSample(currentSample);
 
       currentSample *= currentBoost;
     } else {
@@ -177,7 +177,7 @@ void CFM::process()
   }
 
   if (m_extEnabled) {
-    uint16_t length = m_downsampler.getData();
+    uint16_t length = m_downSampler.getData();
 
     if (length >= FM_SERIAL_BLOCK_SIZE) {
       if (length > FM_SERIAL_BLOCK_SIZE)
@@ -186,7 +186,7 @@ void CFM::process()
       TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
 
       for (uint16_t j = 0U; j < length; j++)
-        m_downsampler.getPackedData(serialSamples[j]);
+        m_downSampler.getPackedData(serialSamples[j]);
 
       serial.writeFMData((uint8_t*)serialSamples, length * sizeof(TSamplePairPack));
     }
@@ -214,7 +214,7 @@ void CFM::reset()
   m_outputRFRB.reset();
   m_inputExtRB.reset();
 
-  m_downsampler.reset();
+  m_downSampler.reset();
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
@@ -325,7 +325,7 @@ void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
 
   if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted()) {
     m_outputRFRB.reset();
-    m_downsampler.reset();
+    m_downSampler.reset();
   }
 }
 

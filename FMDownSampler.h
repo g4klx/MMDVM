@@ -24,12 +24,16 @@
 #include "RingBuffer.h"
 #include "FMSamplePairPack.h"
 
-class CFMDownsampler {
+class CFMDownSampler {
 public:
-  CFMDownsampler(uint16_t length);
+  CFMDownSampler(uint16_t length);
+
   void addSample(q15_t sample);
+
   bool getPackedData(TSamplePairPack& data);
+
   uint16_t getData();
+
   void reset();
 
 private:
@@ -40,3 +44,4 @@ private:
 };
 
 #endif
+

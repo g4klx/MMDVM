@@ -18,9 +18,9 @@
  */
 
 #include "Config.h"
-#include "FMDownsampler.h"
+#include "FMDownSampler.h"
 
-CFMDownsampler::CFMDownsampler(uint16_t length) :
+CFMDownSampler::CFMDownSampler(uint16_t length) :
 m_ringBuffer(length),
 m_samplePack(0U),
 m_samplePackPointer(NULL),
@@ -29,7 +29,7 @@ m_sampleIndex(0U)
   m_samplePackPointer = (uint8_t*)&m_samplePack;
 }
 
-void CFMDownsampler::addSample(q15_t sample)
+void CFMDownSampler::addSample(q15_t sample)
 {
   uint32_t usample = uint32_t(int32_t(sample) + 2048);
   //only take one of three samples
@@ -54,21 +54,21 @@ void CFMDownsampler::addSample(q15_t sample)
   }
 
   m_sampleIndex++;
-  if(m_sampleIndex >= 6U)//did we pack two samples ?
+  if (m_sampleIndex >= 6U)//did we pack two samples ?
       m_sampleIndex = 0U;  
 }
 
-bool CFMDownsampler::getPackedData(TSamplePairPack& data)
+bool CFMDownSampler::getPackedData(TSamplePairPack& data)
 {
   return m_ringBuffer.get(data);
 }
 
-uint16_t CFMDownsampler::getData()
+uint16_t CFMDownSampler::getData()
 {
   return m_ringBuffer.getData();
 }
 
-void CFMDownsampler::reset()
+void CFMDownSampler::reset()
 {
   m_sampleIndex = 0U;
 }

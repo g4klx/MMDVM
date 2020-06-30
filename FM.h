@@ -29,7 +29,7 @@
 #include "FMTimer.h"
 #include "RingBuffer.h"
 #include "FMDirectForm1.h"
-#include "FMDownsampler.h"
+#include "FMDownSampler.h"
 #include "FMUpSampler.h"
 
 enum FM_STATE {
@@ -95,7 +95,7 @@ private:
   bool                 m_cosInvert;
   q15_t                m_rfAudioBoost;
   q15_t                m_extAudioBoost;
-  CFMDownsampler       m_downsampler;
+  CFMDownSampler       m_downSampler;
   bool                 m_extEnabled;
   q15_t                m_rxLevel;
   CRingBuffer<q15_t>   m_inputRFRB;
