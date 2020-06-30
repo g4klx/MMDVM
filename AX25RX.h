@@ -33,7 +33,7 @@ public:
 
 private:
   arm_fir_instance_q15 m_filter;
-  q15_t                m_state[160U];    // NoTaps + BlockSize - 1, 132 + 20 - 1 plus some spare
+  q15_t                m_state[160U];    // NoTaps + BlockSize - 1, 130 + 20 - 1 plus some spare
   CAX25Demodulator     m_demod1;
   CAX25Demodulator     m_demod2;
   CAX25Demodulator     m_demod3;
