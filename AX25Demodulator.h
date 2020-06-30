@@ -42,7 +42,7 @@ private:
   CAX25Frame           m_frame;
   CAX25Twist           m_twist;
   arm_fir_instance_q15 m_lpfFilter;
-  q15_t                m_lpfState[120U];    // NoTaps + BlockSize - 1, 96 + 20 - 1 plus some spare
+  q15_t                m_lpfState[70U];     // NoTaps + BlockSize - 1, 48 + 20 - 1 plus some spare
   bool*                m_delayLine;
   uint16_t             m_delayPos;
   bool                 m_nrziState;
