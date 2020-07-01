@@ -117,14 +117,24 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     }
 
     // Only let RF audio through when relaying RF audio
-    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-      currentSample = m_blanking.process(currentSample);
-      if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-        m_downSampler.addSample(currentSample);
+    if (m_duplex) {
+      if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+        currentSample = m_blanking.process(currentSample);
+        if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
+          m_downSampler.addSample(currentSample);
 
-      currentSample *= currentBoost;
+        currentSample *= currentBoost;
+      } else {
+        currentSample = 0;
+      }
     } else {
-      currentSample = 0;
+        if (m_state == FS_RELAYING_EXT) {
+          currentSample *= currentBoost;
+        } else {
+          if (m_extEnabled && m_state == FS_RELAYING_RF)
+            m_downSampler.addSample(currentSample);
+          return; 
+        }
     }
 
     if (!m_callsign.isRunning() && !m_extAck.isRunning())
@@ -282,42 +292,72 @@ uint8_t CFM::setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t
 
 void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
 {
+  if (m_duplex)
+    duplexStateMachine(validRFSignal, validExtSignal);
+  else
+    simplexStateMachine(validRFSignal, validExtSignal);
+}
+
+void CFM::simplexStateMachine(bool validRFSignal, bool validExtSignal)
+{
   switch (m_state) {
     case FS_LISTENING:
-      listeningState(validRFSignal, validExtSignal);
-      break;
-    case FS_KERCHUNK_RF:
-      kerchunkRFState(validRFSignal);
+      listeningStateSimplex(validRFSignal, validExtSignal);
       break;
     case FS_RELAYING_RF:
-      relayingRFState(validRFSignal);
-      break;
-    case FS_RELAYING_WAIT_RF:
-      relayingRFWaitState(validRFSignal);
-      break;
-    case FS_TIMEOUT_RF:
-      timeoutRFState(validRFSignal);
-      break;
-    case FS_TIMEOUT_WAIT_RF:
-      timeoutRFWaitState(validRFSignal);
-      break;
-    case FS_KERCHUNK_EXT:
-      kerchunkExtState(validExtSignal);
+      relayingRFStateSimplex(validRFSignal);
       break;
     case FS_RELAYING_EXT:
-      relayingExtState(validExtSignal);
+      relayingExtStateSimplex(validExtSignal);
+      break;
+    default:
+      break;
+  }
+
+  if (m_state == FS_LISTENING) {
+    m_outputRFRB.reset();
+    m_downSampler.reset();
+  }
+}
+
+void CFM::duplexStateMachine(bool validRFSignal, bool validExtSignal)
+{
+  switch (m_state) {
+    case FS_LISTENING:
+      listeningStateDuplex(validRFSignal, validExtSignal);
+      break;
+    case FS_KERCHUNK_RF:
+      kerchunkRFStateDuplex(validRFSignal);
+      break;
+    case FS_RELAYING_RF:
+      relayingRFStateDuplex(validRFSignal);
+      break;
+    case FS_RELAYING_WAIT_RF:
+      relayingRFWaitStateDuplex(validRFSignal);
+      break;
+    case FS_TIMEOUT_RF:
+      timeoutRFStateDuplex(validRFSignal);
+      break;
+    case FS_TIMEOUT_WAIT_RF:
+      timeoutRFWaitStateDuplex(validRFSignal);
+      break;
+    case FS_KERCHUNK_EXT:
+      kerchunkExtStateDuplex(validExtSignal);
+      break;
+    case FS_RELAYING_EXT:
+      relayingExtStateDuplex(validExtSignal);
       break;
     case FS_RELAYING_WAIT_EXT:
-      relayingExtWaitState(validExtSignal);
+      relayingExtWaitStateDuplex(validExtSignal);
       break;
     case FS_TIMEOUT_EXT:
-      timeoutExtState(validExtSignal);
+      timeoutExtStateDuplex(validExtSignal);
       break;
     case FS_TIMEOUT_WAIT_EXT:
-      timeoutExtWaitState(validExtSignal);
+      timeoutExtWaitStateDuplex(validExtSignal);
       break;
     case FS_HANG:
-      hangState(validRFSignal, validExtSignal);
+      hangStateDuplex(validRFSignal, validExtSignal);
       break;
     default:
       break;
@@ -346,7 +386,7 @@ void CFM::clock(uint8_t length)
   }
 }
 
-void CFM::listeningState(bool validRFSignal, bool validExtSignal)
+void CFM::listeningStateDuplex(bool validRFSignal, bool validExtSignal)
 {
   if (validRFSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
@@ -402,7 +442,27 @@ void CFM::listeningState(bool validRFSignal, bool validExtSignal)
   }
 }
 
-void CFM::kerchunkRFState(bool validSignal)
+void CFM::listeningStateSimplex(bool validRFSignal, bool validExtSignal)
+{
+  if (validRFSignal) {
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
+
+    io.setDecode(true);
+    io.setADCDetection(true);
+
+    m_statusTimer.start();
+    serial.writeFMStatus(m_state);
+  } else if (validExtSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+
+    m_statusTimer.start();
+    serial.writeFMStatus(m_state);
+  }
+}
+
+void CFM::kerchunkRFStateDuplex(bool validSignal)
 {
   if (validSignal) {
     if (m_kerchunkTimer.hasExpired()) {
@@ -444,7 +504,7 @@ void CFM::kerchunkRFState(bool validSignal)
   }
 }
 
-void CFM::relayingRFState(bool validSignal)
+void CFM::relayingRFStateDuplex(bool validSignal)
 {
   if (validSignal) {
     if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
@@ -475,7 +535,22 @@ void CFM::relayingRFState(bool validSignal)
   }
 }
 
-void CFM::relayingRFWaitState(bool validSignal)
+void CFM::relayingRFStateSimplex(bool validSignal)
+{
+  if (!validSignal) {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
+    DEBUG1("State to LISTENING");
+    m_state = FS_LISTENING;
+    m_ackDelayTimer.start();
+
+    if (m_extEnabled)
+      serial.writeFMEOT();
+  }
+}
+
+void CFM::relayingRFWaitStateDuplex(bool validSignal)
 {
   if (validSignal) {
     io.setDecode(true);
@@ -513,7 +588,7 @@ void CFM::relayingRFWaitState(bool validSignal)
   }
 }
 
-void CFM::kerchunkExtState(bool validSignal)
+void CFM::kerchunkExtStateDuplex(bool validSignal)
 {
   if (validSignal) {
     if (m_kerchunkTimer.hasExpired()) {
@@ -546,7 +621,7 @@ void CFM::kerchunkExtState(bool validSignal)
   }
 }
 
-void CFM::relayingExtState(bool validSignal)
+void CFM::relayingExtStateDuplex(bool validSignal)
 {
   if (validSignal) {
     if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
@@ -568,7 +643,15 @@ void CFM::relayingExtState(bool validSignal)
   }
 }
 
-void CFM::relayingExtWaitState(bool validSignal)
+void CFM::relayingExtStateSimplex(bool validSignal)
+{
+  if (!validSignal) {
+    DEBUG1("State to LISTENING");
+    m_state = FS_LISTENING;
+  }
+}
+
+void CFM::relayingExtWaitStateDuplex(bool validSignal)
 {
   if (validSignal) {
     DEBUG1("State to RELAYING_EXT");
@@ -603,7 +686,7 @@ void CFM::relayingExtWaitState(bool validSignal)
   }
 }
 
-void CFM::hangState(bool validRFSignal, bool validExtSignal)
+void CFM::hangStateDuplex(bool validRFSignal, bool validExtSignal)
 {
   if (validRFSignal) {
     io.setDecode(true);
@@ -643,7 +726,7 @@ void CFM::hangState(bool validRFSignal, bool validExtSignal)
   }
 }
 
-void CFM::timeoutRFState(bool validSignal)
+void CFM::timeoutRFStateDuplex(bool validSignal)
 {
   if (!validSignal) {
     io.setDecode(false);
@@ -664,7 +747,7 @@ void CFM::timeoutRFState(bool validSignal)
   }
 }
 
-void CFM::timeoutRFWaitState(bool validSignal)
+void CFM::timeoutRFWaitStateDuplex(bool validSignal)
 {
   if (validSignal) {
     io.setDecode(true);
@@ -693,7 +776,7 @@ void CFM::timeoutRFWaitState(bool validSignal)
   }
 }
 
-void CFM::timeoutExtState(bool validSignal)
+void CFM::timeoutExtStateDuplex(bool validSignal)
 {
   if (!validSignal) {
     DEBUG1("State to TIMEOUT_WAIT_EXT");
@@ -707,7 +790,7 @@ void CFM::timeoutExtState(bool validSignal)
   }
 }
 
-void CFM::timeoutExtWaitState(bool validSignal)
+void CFM::timeoutExtWaitStateDuplex(bool validSignal)
 {
   if (validSignal) {
     DEBUG1("State to TIMEOUT_EXT");

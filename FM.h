@@ -103,18 +103,25 @@ private:
   CFMUpSampler         m_inputExtRB;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
-  void listeningState(bool validRFSignal, bool validExtSignal);
-  void kerchunkRFState(bool validSignal);
-  void relayingRFState(bool validSignal);
-  void relayingRFWaitState(bool validSignal);
-  void timeoutRFState(bool validSignal);
-  void timeoutRFWaitState(bool validSignal);
-  void kerchunkExtState(bool validSignal);
-  void relayingExtState(bool validSignal);
-  void relayingExtWaitState(bool validSignal);
-  void timeoutExtState(bool validSignal);
-  void timeoutExtWaitState(bool validSignal);
-  void hangState(bool validRFSignal, bool validExtSignal);
+
+  void duplexStateMachine(bool validRFSignal, bool validExtSignal);
+  void listeningStateDuplex(bool validRFSignal, bool validExtSignal);
+  void kerchunkRFStateDuplex(bool validSignal);
+  void relayingRFStateDuplex(bool validSignal);
+  void relayingRFWaitStateDuplex(bool validSignal);
+  void timeoutRFStateDuplex(bool validSignal);
+  void timeoutRFWaitStateDuplex(bool validSignal);
+  void kerchunkExtStateDuplex(bool validSignal);
+  void relayingExtStateDuplex(bool validSignal);
+  void relayingExtWaitStateDuplex(bool validSignal);
+  void timeoutExtStateDuplex(bool validSignal);
+  void timeoutExtWaitStateDuplex(bool validSignal);
+  void hangStateDuplex(bool validRFSignal, bool validExtSignal);
+
+  void simplexStateMachine(bool validRFSignal, bool validExtSignal);
+  void listeningStateSimplex(bool validRFSignal, bool validExtSignal);
+  void relayingRFStateSimplex(bool validSignal);
+  void relayingExtStateSimplex(bool validSignal);
 
   void clock(uint8_t length);
 
