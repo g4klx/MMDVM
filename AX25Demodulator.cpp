@@ -41,6 +41,18 @@ q15_t LPF_FILTER_COEFFS[] = {
   -34,  -47,  -47,  -40,  -28,  -17,   -8,    -2
 };
 
+// Lock low-pass filter taps (80Hz Bessel)
+// scipy.signal:
+//      b, a = bessel(4, [80.0/(1200/2)], 'lowpass')
+//
+const uint8_t PLL_IIR_SIZE = 5U;
+
+const float32_t PLL_LOCK_B[] = {
+    1.077063e-03,4.308253e-03,6.462379e-03,4.308253e-03,1.077063e-03};
+
+const float32_t PLL_LOCK_A[] = {
+    1.000000e+00,-2.774567e+00,2.962960e+00,-1.437990e+00,2.668296e-01};
+
 // 64 Hz loop filter.
 // scipy.signal:
 //      loop_coeffs = firwin(9, [64.0/(1200/2)], width = None,
@@ -63,6 +75,9 @@ m_pllState(),
 m_pllLast(false),
 m_pllBits(1U),
 m_pllCount(0.0F),
+m_pllJitter(0.0F),
+m_pllDCD(false),
+m_iirHistory(),
 m_hdlcOnes(0U),
 m_hdlcFlag(false),
 m_hdlcBuffer(0U),
@@ -78,6 +93,9 @@ m_hdlcState(AX25_IDLE)
   m_pllFilter.numTaps = PLL_FILTER_LEN;
   m_pllFilter.pState  = m_pllState;
   m_pllFilter.pCoeffs = PLL_FILTER_COEFFS;
+
+  for (uint8_t i = 0U; i < PLL_IIR_SIZE; i++)
+    m_iirHistory[i] = 0.0F;
 }
 
 bool CAX25Demodulator::process(q15_t* samples, uint8_t length, CAX25Frame& frame)
@@ -154,9 +172,19 @@ bool CAX25Demodulator::PLL(bool input)
     if (m_pllCount > PLL_LIMIT)
       m_pllCount -= SAMPLES_PER_SYMBOL;
 
+    float32_t adjust = m_pllBits > 16U ? 5.0F : 0.0F;
     float32_t offset = m_pllCount / float32_t(m_pllBits);
     float32_t jitter;
     ::arm_fir_f32(&m_pllFilter, &offset, &jitter, 1U);
+
+    if (!m_duplex) {
+      float32_t absOffset = adjust;
+      if (offset < 0.0F)
+        absOffset -= offset;
+      else
+        absOffset += offset;
+      m_pllJitter = iir(absOffset);
+    }
 
     m_pllCount -= jitter / 2.0F;
     m_pllBits = 1U;
@@ -258,5 +286,31 @@ bool CAX25Demodulator::HDLC(bool b)
 void CAX25Demodulator::setTwist(int8_t n)
 {
   m_twist.setTwist(n);
+}
+
+bool CAX25Demodulator::isDCD()
+{
+  if (m_pllJitter <= (SAMPLES_PER_SYMBOL * 0.03F))
+    m_pllDCD = true;
+  else if (m_pllJitter >= (SAMPLES_PER_SYMBOL * 0.15F))
+    m_pllDCD = false;
+
+  return m_pllDCD;
+}
+
+float32_t CAX25Demodulator::iir(float32_t input)
+{
+  for (int8_t i = int8_t(PLL_IIR_SIZE) - 1; i != 0; i--)
+    m_iirHistory[i] = m_iirHistory[i - 1];
+
+  m_iirHistory[0] = input;
+  for (uint8_t i = 1U; i < PLL_IIR_SIZE; i++)
+    m_iirHistory[0] -= PLL_LOCK_A[i] * m_iirHistory[i];
+
+  float32_t result = 0.0F;
+  for (uint8_t i = 0U; i < PLL_IIR_SIZE; i++)
+    result += PLL_LOCK_B[i] * m_iirHistory[i];
+
+  return result;
 }
 

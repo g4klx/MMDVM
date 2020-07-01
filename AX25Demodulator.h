@@ -38,6 +38,8 @@ public:
 
   void setTwist(int8_t n);
 
+  bool isDCD();
+
 private:
   CAX25Frame           m_frame;
   CAX25Twist           m_twist;
@@ -51,6 +53,9 @@ private:
   bool                 m_pllLast;
   uint8_t              m_pllBits;
   float32_t            m_pllCount;
+  float32_t            m_pllJitter;
+  bool                 m_pllDCD;
+  float32_t            m_iirHistory[5U];
   uint16_t             m_hdlcOnes;
   bool                 m_hdlcFlag;
   uint16_t             m_hdlcBuffer;
@@ -61,6 +66,7 @@ private:
   bool NRZI(bool b);
   bool PLL(bool b);
   bool HDLC(bool b);
+  float32_t iir(float32_t input);
 };
 
 #endif

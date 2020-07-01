@@ -29,7 +29,9 @@ public:
 
   void samples(q15_t* samples, uint8_t length);
 
-  void setParams(int8_t twist);
+  void setParams(int8_t twist, uint8_t slotTime, uint8_t pPersist);
+
+  bool canTX() const;
 
 private:
   arm_fir_instance_q15 m_filter;
@@ -39,6 +41,17 @@ private:
   CAX25Demodulator     m_demod3;
   uint16_t             m_lastFCS;
   uint32_t             m_count;
+  uint32_t             m_slotTime;
+  uint32_t             m_slotCount;
+  uint8_t              m_pPersist;
+  bool                 m_canTX;
+  uint8_t              m_x;
+  uint8_t              m_a;
+  uint8_t              m_b;
+  uint8_t              m_c;
+  
+  void initRand();
+  uint8_t rand();
 };
 
 #endif

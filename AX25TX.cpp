@@ -63,6 +63,14 @@ void CAX25TX::process()
   if (m_poLen == 0U)
     return;
 
+  if (!m_duplex) {
+    if (m_poPtr == 0U) {
+      bool tx = ax25RX.canTX();
+      if (!tx)
+        return;
+    }
+  }
+
   uint16_t space = io.getSpace();
 
   while (space > AX25_RADIO_SYMBOL_LENGTH) {

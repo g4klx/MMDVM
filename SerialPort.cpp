@@ -109,7 +109,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200630 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
+#define DESCRIPTION "20200701 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -282,7 +282,7 @@ void CSerialPort::getVersion()
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 {
-  if (length < 24U)
+  if (length < 26U)
     return 4U;
 
   bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
@@ -362,6 +362,10 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 
   uint8_t ax25TXDelay   = data[23U];
 
+  uint8_t ax25SlotTime  = data[24U];
+
+  uint8_t ax25PPersist  = data[25U];
+
   setMode(modemState);
 
   m_dstarEnable  = dstarEnable;
@@ -391,7 +395,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   ysfTX.setParams(ysfLoDev, ysfTXHang);
   p25TX.setParams(p25TXHang);
   nxdnTX.setParams(nxdnTXHang);
-  ax25RX.setParams(ax25RXTwist);
+  ax25RX.setParams(ax25RXTwist, ax25SlotTime, ax25PPersist);
 
   io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, ax25TXLevel, txDCOffset, rxDCOffset);
 
