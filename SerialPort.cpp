@@ -1327,7 +1327,7 @@ void CSerialPort::writeFMData(const uint8_t* data, uint16_t length)
     writeInt(1U, reply, length + 4U);
   } else {
     reply[1U] = length + 3U;
-    reply[2U] = MMDVM_AX25_DATA;
+    reply[2U] = MMDVM_FM_DATA;
 
     for (uint8_t i = 0U; i < length; i++)
       reply[i + 3U] = data[i];
