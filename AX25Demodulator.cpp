@@ -177,14 +177,12 @@ bool CAX25Demodulator::PLL(bool input)
     float32_t jitter;
     ::arm_fir_f32(&m_pllFilter, &offset, &jitter, 1U);
 
-    if (!m_duplex) {
-      float32_t absOffset = adjust;
-      if (offset < 0.0F)
-        absOffset -= offset;
-      else
-        absOffset += offset;
-      m_pllJitter = iir(absOffset);
-    }
+    float32_t absOffset = adjust;
+    if (offset < 0.0F)
+      absOffset -= offset;
+    else
+      absOffset += offset;
+    m_pllJitter = iir(absOffset);
 
     m_pllCount -= jitter / 2.0F;
     m_pllBits = 1U;

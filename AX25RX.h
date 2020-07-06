@@ -44,6 +44,7 @@ private:
   uint32_t             m_slotTime;
   uint32_t             m_slotCount;
   uint8_t              m_pPersist;
+  bool                 m_dcd;
   bool                 m_canTX;
   uint8_t              m_x;
   uint8_t              m_a;

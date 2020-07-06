@@ -69,6 +69,7 @@ m_count(0U),
 m_slotTime(30U),
 m_slotCount(0U),
 m_pPersist(128U),
+m_dcd(false),
 m_canTX(false),
 m_x(1U),
 m_a(0xB7U),
@@ -121,19 +122,30 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
     DEBUG1("Decoder 3 reported");
   }
 
-  if (!m_duplex) {
-    m_slotCount += RX_BLOCK_SIZE;
-    if (m_slotCount >= m_slotTime) {
-      m_slotCount = 0U;
+  m_slotCount += RX_BLOCK_SIZE;
+  if (m_slotCount >= m_slotTime) {
+    m_slotCount = 0U;
 
-      bool dcd1 = m_demod1.isDCD();
-      bool dcd2 = m_demod2.isDCD();
-      bool dcd3 = m_demod3.isDCD();
+    bool dcd1 = m_demod1.isDCD();
+    bool dcd2 = m_demod2.isDCD();
+    bool dcd3 = m_demod3.isDCD();
     
-      if (dcd1 || dcd2 || dcd3)
-        m_canTX = false;
-      else
-        m_canTX = m_pPersist >= rand();
+    if (dcd1 || dcd2 || dcd3) {
+      if (!m_dcd) {
+        io.setDecode(true);
+        io.setADCDetection(true);
+        m_dcd = true;
+      }
+
+      m_canTX = false;
+    } else {
+      if (m_dcd) {
+        io.setDecode(false);
+        io.setADCDetection(false);
+        m_dcd = false;
+      }
+
+      m_canTX = m_pPersist >= rand();
     }
   }
 }
