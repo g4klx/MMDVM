@@ -307,8 +307,26 @@ void CFM::simplexStateMachine(bool validRFSignal, bool validExtSignal)
     case FS_RELAYING_RF:
       relayingRFStateSimplex(validRFSignal);
       break;
+    case FS_RELAYING_WAIT_RF:
+      relayingRFWaitStateSimplex(validRFSignal);
+      break;
+    case FS_TIMEOUT_RF:
+      timeoutRFStateSimplex(validRFSignal);
+      break;
+    case FS_TIMEOUT_WAIT_RF:
+      timeoutRFStateSimplex(validRFSignal);
+      break;
     case FS_RELAYING_EXT:
       relayingExtStateSimplex(validExtSignal);
+      break;
+    case FS_RELAYING_WAIT_EXT:
+      relayingExtWaitStateSimplex(validExtSignal);
+      break;
+    case FS_TIMEOUT_EXT:
+      timeoutExtStateSimplex(validExtSignal);
+      break;
+    case FS_TIMEOUT_WAIT_EXT:
+      timeoutExtWaitStateSimplex(validExtSignal);
       break;
     default:
       break;
@@ -451,11 +469,17 @@ void CFM::listeningStateSimplex(bool validRFSignal, bool validExtSignal)
     io.setDecode(true);
     io.setADCDetection(true);
 
+    m_timeoutTimer.start();
+
     m_statusTimer.start();
     serial.writeFMStatus(m_state);
   } else if (validExtSignal) {
     DEBUG1("State to RELAYING_EXT");
     m_state = FS_RELAYING_EXT;
+
+    insertSilence(50U);
+
+    m_timeoutTimer.start();
 
     m_statusTimer.start();
     serial.writeFMStatus(m_state);
@@ -537,12 +561,22 @@ void CFM::relayingRFStateDuplex(bool validSignal)
 
 void CFM::relayingRFStateSimplex(bool validSignal)
 {
-  if (!validSignal) {
+  if (validSignal) {
+    if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      DEBUG1("State to TIMEOUT_RF");
+      m_state = FS_TIMEOUT_RF;
+
+      m_timeoutTimer.stop();
+
+      if (m_extEnabled)
+        serial.writeFMEOT();
+    }
+  } else {
     io.setDecode(false);
     io.setADCDetection(false);
 
-    DEBUG1("State to LISTENING");
-    m_state = FS_LISTENING;
+    DEBUG1("State to RELAYING_WAIT_RF");
+    m_state = FS_RELAYING_WAIT_RF;
     m_ackDelayTimer.start();
 
     if (m_extEnabled)
@@ -585,6 +619,26 @@ void CFM::relayingRFWaitStateDuplex(bool validSignal)
   if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
     sendCallsign();
     m_callsignTimer.start();
+  }
+}
+
+void CFM::relayingRFWaitStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+    }
   }
 }
 
@@ -645,9 +699,17 @@ void CFM::relayingExtStateDuplex(bool validSignal)
 
 void CFM::relayingExtStateSimplex(bool validSignal)
 {
-  if (!validSignal) {
-    DEBUG1("State to LISTENING");
-    m_state = FS_LISTENING;
+  if (validSignal) {
+    if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      DEBUG1("State to TIMEOUT_EXT");
+      m_state = FS_TIMEOUT_EXT;
+
+      m_timeoutTimer.stop();
+    }
+  } else {
+    DEBUG1("State to RELAYING_WAIT_EXT");
+    m_state = FS_RELAYING_WAIT_EXT;
+    m_ackDelayTimer.start();
   }
 }
 
@@ -683,6 +745,23 @@ void CFM::relayingExtWaitStateDuplex(bool validSignal)
   if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
     sendCallsign();
     m_callsignTimer.start();
+  }
+}
+
+void CFM::relayingExtWaitStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+    }
   }
 }
 
@@ -747,6 +826,19 @@ void CFM::timeoutRFStateDuplex(bool validSignal)
   }
 }
 
+void CFM::timeoutRFStateSimplex(bool validSignal)
+{
+  if (!validSignal) {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
+    DEBUG1("State to TIMEOUT_WAIT_RF");
+    m_state = FS_TIMEOUT_WAIT_RF;
+
+    m_ackDelayTimer.start();
+  }
+}
+
 void CFM::timeoutRFWaitStateDuplex(bool validSignal)
 {
   if (validSignal) {
@@ -776,6 +868,25 @@ void CFM::timeoutRFWaitStateDuplex(bool validSignal)
   }
 }
 
+void CFM::timeoutRFWaitStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
+    DEBUG1("State to TIMEOUT_RF");
+    m_state = FS_TIMEOUT_RF;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+    }
+  }
+}
+
 void CFM::timeoutExtStateDuplex(bool validSignal)
 {
   if (!validSignal) {
@@ -787,6 +898,15 @@ void CFM::timeoutExtStateDuplex(bool validSignal)
   if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
     sendCallsign();
     m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutExtStateSimplex(bool validSignal)
+{
+  if (!validSignal) {
+    DEBUG1("State to TIMEOUT_WAIT_EXT");
+    m_state = FS_TIMEOUT_WAIT_EXT;
+    m_ackDelayTimer.start();
   }
 }
 
@@ -815,6 +935,23 @@ void CFM::timeoutExtWaitStateDuplex(bool validSignal)
     m_callsignTimer.start();
   }
 }
+
+void CFM::timeoutExtWaitStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to TIMEOUT_EXT");
+    m_state = FS_TIMEOUT_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+    }
+  }
+}
+
 void CFM::sendCallsign()
 {
   if (m_holdoffTimer.isRunning()) {

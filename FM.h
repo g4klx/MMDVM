@@ -121,7 +121,13 @@ private:
   void simplexStateMachine(bool validRFSignal, bool validExtSignal);
   void listeningStateSimplex(bool validRFSignal, bool validExtSignal);
   void relayingRFStateSimplex(bool validSignal);
+  void relayingRFWaitStateSimplex(bool validSignal);
+  void timeoutRFStateSimplex(bool validSignal);
+  void timeoutRFWaitStateSimplex(bool validSignal);
   void relayingExtStateSimplex(bool validSignal);
+  void relayingExtWaitStateSimplex(bool validSignal);
+  void timeoutExtStateSimplex(bool validSignal);
+  void timeoutExtWaitStateSimplex(bool validSignal);
 
   void clock(uint8_t length);
 
