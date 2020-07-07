@@ -41,7 +41,6 @@ m_callsignTimer(),
 m_timeoutTimer(),
 m_holdoffTimer(),
 m_kerchunkTimer(),
-m_kerchunkTX(true),
 m_ackMinTimer(),
 m_ackDelayTimer(),
 m_hangTimer(),
@@ -255,7 +254,7 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, bool kerchunkTX, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, bool useCOS, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
   m_useCOS    = useCOS;
   m_cosInvert = cosInvert;
@@ -265,7 +264,6 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_timeoutTimer.setTimeout(timeout, 0U);
 
   m_kerchunkTimer.setTimeout(kerchunkTime, 0U);
-  m_kerchunkTX = kerchunkTX;
 
   m_hangTimer.setTimeout(hangTime, 0U);
 
@@ -420,7 +418,7 @@ void CFM::listeningStateDuplex(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
-    if (m_state == FS_RELAYING_RF || (m_state == FS_KERCHUNK_RF && m_kerchunkTX)) {
+    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF) {
       insertSilence(50U);
 
       beginRelaying();
@@ -447,7 +445,7 @@ void CFM::listeningStateDuplex(bool validRFSignal, bool validExtSignal)
         sendCallsign();
     }
 
-    if (m_state == FS_RELAYING_EXT || (m_state == FS_KERCHUNK_EXT && m_kerchunkTX)) {
+    if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
       insertSilence(50U);
 
       beginRelaying();
@@ -493,19 +491,6 @@ void CFM::kerchunkRFStateDuplex(bool validSignal)
       DEBUG1("State to RELAYING_RF");
       m_state = FS_RELAYING_RF;
       m_kerchunkTimer.stop();
-      if (!m_kerchunkTX) {
-        insertSilence(50U);
-
-        beginRelaying();
-
-        m_callsignTimer.start();
-
-        io.setDecode(true);
-        io.setADCDetection(true);
-
-        m_statusTimer.start();
-        serial.writeFMStatus(m_state);
-      }
       if (m_callsignAtStart && m_callsignAtLatch) {
         sendCallsign();
         m_callsignTimer.start();
@@ -649,16 +634,6 @@ void CFM::kerchunkExtStateDuplex(bool validSignal)
       DEBUG1("State to RELAYING_EXT");
       m_state = FS_RELAYING_EXT;
       m_kerchunkTimer.stop();
-      if (!m_kerchunkTX) {
-        insertSilence(50U);
-
-        beginRelaying();
-
-        m_callsignTimer.start();
-
-        m_statusTimer.start();
-        serial.writeFMStatus(m_state);
-      }
       if (m_callsignAtStart && m_callsignAtLatch) {
         sendCallsign();
         m_callsignTimer.start();
