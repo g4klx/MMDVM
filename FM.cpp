@@ -117,10 +117,10 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
         currentSample += m_callsign.getLowAudio();
     }
 
+    currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
+
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
-
-    currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
 
     currentSample += m_ctcssTX.getAudio();
 
