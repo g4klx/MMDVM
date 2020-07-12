@@ -41,7 +41,7 @@ void CFMTimeout::setParams(uint8_t level)
 
 q15_t CFMTimeout::getAudio()
 {
-  q15_t sample = 0U;
+  q15_t sample = 0;
   if (!m_running)
     return sample;
 
@@ -52,8 +52,6 @@ q15_t CFMTimeout::getAudio()
     m_n++;
     if (m_n >= BUSY_AUDIO_LEN)
       m_n = 0U;
-  } else {
-    sample = 0U;
   }
 
   m_pos++;
