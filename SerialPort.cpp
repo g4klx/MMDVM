@@ -103,7 +103,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200712 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
+#define DESCRIPTION "20200713 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -267,11 +267,12 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   if (length < 21U)
     return 4U;
 
-  bool rxInvert  = (data[0U] & 0x01U) == 0x01U;
-  bool txInvert  = (data[0U] & 0x02U) == 0x02U;
-  bool pttInvert = (data[0U] & 0x04U) == 0x04U;
-  bool ysfLoDev  = (data[0U] & 0x08U) == 0x08U;
-  bool simplex   = (data[0U] & 0x80U) == 0x80U;
+  bool rxInvert        = (data[0U] & 0x01U) == 0x01U;
+  bool txInvert        = (data[0U] & 0x02U) == 0x02U;
+  bool pttInvert       = (data[0U] & 0x04U) == 0x04U;
+  bool ysfLoDev        = (data[0U] & 0x08U) == 0x08U;
+  bool useCOSAsLockout = (data[0U] & 0x20U) == 0x20U;
+  bool simplex         = (data[0U] & 0x80U) == 0x80U;
 
   m_debug = (data[0U] & 0x10U) == 0x10U;
 
@@ -363,7 +364,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint8_t length)
   p25TX.setParams(p25TXHang);
   nxdnTX.setParams(nxdnTXHang);
 
-  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, txDCOffset, rxDCOffset);
+  io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel, fmTXLevel, txDCOffset, rxDCOffset, useCOSAsLockout);
 
   io.start();
 
@@ -431,14 +432,14 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint8_t length)
   uint8_t  kerchunkTime   = data[6U];
   uint8_t  hangTime       = data[7U];
 
-  bool     useCOS         = (data[8U] & 0x01U) == 0x01U;
-  bool     cosInvert      = (data[8U] & 0x02U) == 0x02U;
+  uint8_t  accessMode     = data[8U] & 0x7FU;
+  bool     cosInvert      = (data[8U] & 0x80U) == 0x80U;
 
   uint8_t  rfAudioBoost   = data[9U];
   uint8_t  maxDev         = data[10U];
   uint8_t  rxLevel        = data[11U];
 
-  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold, ctcssLevel, kerchunkTime, hangTime, useCOS, cosInvert, rfAudioBoost, maxDev, rxLevel);
+  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold, ctcssLevel, kerchunkTime, hangTime, accessMode, cosInvert, rfAudioBoost, maxDev, rxLevel);
 }
 
 uint8_t CSerialPort::setMode(const uint8_t* data, uint8_t length)
