@@ -27,7 +27,7 @@ public:
 
   uint8_t setParams(uint8_t frequency, uint8_t level);
 
-  q15_t getAudio();
+  q15_t getAudio(bool reverse);
 
 private:
   q15_t*   m_values;

@@ -45,6 +45,7 @@ m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
 m_hangTimer(),
+m_reverseTimer(),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
@@ -57,6 +58,8 @@ m_rxLevel(1),
 m_inputRB(4800U),   // 200ms of audio
 m_outputRB(2400U)   // 100ms of audio
 {
+  m_reverseTimer.setTimeout(0U, 150U);
+
   insertDelay(100U);
 }
 
@@ -141,10 +144,9 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     if (!m_callsign.isRunning() && !m_rfAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
-    currentSample += m_ctcssTX.getAudio();
+    currentSample += m_ctcssTX.getAudio(m_reverseTimer.isRunning());
 
-    if (m_modemState == STATE_FM)
-      m_outputRB.put(currentSample);
+    m_outputRB.put(currentSample);
   }
 }
 
@@ -165,6 +167,7 @@ void CFM::reset()
   m_ackMinTimer.stop();
   m_ackDelayTimer.stop();
   m_hangTimer.stop();
+  m_reverseTimer.stop();
 
   m_ctcssRX.reset();
   m_rfAck.stop();
@@ -254,7 +257,10 @@ void CFM::stateMachine(bool validSignal)
   }
 
   if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isWanted() && !m_rfAck.isWanted()) {
+    if (!m_callsign.isWanted() && !m_rfAck.isWanted() && !m_reverseTimer.isRunning())
+      m_reverseTimer.start();
+
+    if (!m_callsign.isWanted() && !m_rfAck.isWanted() && m_reverseTimer.isRunning() && m_reverseTimer.hasExpired()) {
       DEBUG1("Change to STATE_IDLE");
       m_modemState = STATE_IDLE;
       m_callsignTimer.stop();
@@ -263,6 +269,7 @@ void CFM::stateMachine(bool validSignal)
       m_ackMinTimer.stop();
       m_ackDelayTimer.stop();
       m_hangTimer.stop();
+      m_reverseTimer.stop();
     }
   }
 }
@@ -276,6 +283,7 @@ void CFM::clock(uint8_t length)
   m_ackMinTimer.clock(length);
   m_ackDelayTimer.clock(length);
   m_hangTimer.clock(length);
+  m_reverseTimer.clock(length);
 }
 
 void CFM::listeningState(bool validSignal)
@@ -299,6 +307,7 @@ void CFM::listeningState(bool validSignal)
     beginRelaying();
 
     m_callsignTimer.start();
+    m_reverseTimer.stop();
 
     io.setDecode(true);
     io.setADCDetection(true);
