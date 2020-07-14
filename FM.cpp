@@ -75,44 +75,49 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     // ARMv7-M has hardware integer division 
     q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
-    uint8_t ctcssState = m_ctcssRX.process(currentSample);
-
     switch (m_accessMode) {
       case 0U:
         stateMachine(cos);
         break;
 
-      case 1U:
-        // Delay the audio by 100ms to better match the CTCSS detector output
-        m_inputRB.put(currentSample);
-        m_inputRB.get(currentSample);
+      case 1U: {
+          uint8_t ctcssState = m_ctcssRX.process(currentSample);
 
-        if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-          // Not enough samples to determine if you have CTCSS, just carry on
-        } else {
-          bool validCTCSS = CTCSS_VALID(ctcssState);
-          stateMachine(validCTCSS);
+          // Delay the audio by 100ms to better match the CTCSS detector output
+          m_inputRB.put(currentSample);
+          m_inputRB.get(currentSample);
+
+          if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
+            // Not enough samples to determine if you have CTCSS, just carry on
+          } else {
+            bool validCTCSS = CTCSS_VALID(ctcssState);
+            stateMachine(validCTCSS);
+          }
         }
         break;
 
-      case 2U:
-        if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-          // Not enough samples to determine if you have CTCSS, just carry on
-        } else {
-          bool validCTCSS = CTCSS_VALID(ctcssState);
-          stateMachine(validCTCSS && cos);
+      case 2U: {
+          uint8_t ctcssState = m_ctcssRX.process(currentSample);
+          if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
+            // Not enough samples to determine if you have CTCSS, just carry on
+          } else {
+            bool validCTCSS = CTCSS_VALID(ctcssState);
+            stateMachine(validCTCSS && cos);
+          }
         }
         break;
 
-      default:
-        if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-          // Not enough samples to determine if you have CTCSS, just carry on
-        } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
-          // We had enough samples for CTCSS and we are in some other mode than FM
-          bool validCTCSS = CTCSS_VALID(ctcssState);
-          stateMachine(validCTCSS && cos);
-        } else {
-          stateMachine(cos);
+      default: {
+          uint8_t ctcssState = m_ctcssRX.process(currentSample);
+          if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
+            // Not enough samples to determine if you have CTCSS, just carry on
+          } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
+            // We had enough samples for CTCSS and we are in some other mode than FM
+            bool validCTCSS = CTCSS_VALID(ctcssState);
+            stateMachine(validCTCSS && cos);
+          } else {
+            stateMachine(cos);
+          }
         }
         break;
     }
