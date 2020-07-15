@@ -84,6 +84,7 @@ m_fmTXLevel(128 * 128),
 m_ax25TXLevel(128 * 128),
 m_rxDCOffset(DC_OFFSET),
 m_txDCOffset(DC_OFFSET),
+m_useCOSAsLockout(false),
 m_ledCount(0U),
 m_ledValue(true),
 m_detect(false),
@@ -257,9 +258,8 @@ void CIO::process()
     return;
   }
 
-#if defined(USE_COS_AS_LOCKOUT)
-  m_lockout = getCOSInt();
-#endif
+  if (m_useCOSAsLockout)
+    m_lockout = getCOSInt();
 
   // Switch off the transmitter if needed
   if (m_txBuffer.getData() == 0U && m_tx) {
@@ -548,7 +548,7 @@ void CIO::setMode()
 #endif
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)
 {
   m_pttInvert = pttInvert;
 
@@ -565,6 +565,8 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
 
   m_rxDCOffset   = DC_OFFSET + rxDCOffset;
   m_txDCOffset   = DC_OFFSET + txDCOffset;
+
+  m_useCOSAsLockout = useCOSAsLockout;
   
   if (rxInvert)
     m_rxLevel = -m_rxLevel;
