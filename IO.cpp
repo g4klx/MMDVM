@@ -152,8 +152,8 @@ void CIO::selfTest()
   }
 
 #if defined(MODE_LEDS)
-  setDStarInt(false);
-  setDMRInt(true);
+  setDStarInt(true);
+  setDMRInt(false);
   setYSFInt(false);
   setP25Int(false);
   setNXDNInt(false);
@@ -161,7 +161,7 @@ void CIO::selfTest()
   setFMInt(false);
 
   delayInt(250);
-  setDStarInt(true);
+  setDMRInt(true);
 
   delayInt(250);
   setYSFInt(true);
