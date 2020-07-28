@@ -87,7 +87,7 @@ uint8_t CFMNoiseSquelch::process(q15_t sample)
       threshold = m_lowThreshold;
 
     m_result |= NS_READY;
-    if (value >= threshold)
+    if (value < threshold)
       m_result |= NS_VALID;
     else
       m_result &= ~NS_VALID;

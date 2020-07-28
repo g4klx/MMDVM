@@ -466,7 +466,7 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint16_t length)
   uint8_t  kerchunkTime   = data[6U];
   uint8_t  hangTime       = data[7U];
 
-  uint8_t  accessMode     = data[8U] & 0x7FU;
+  uint8_t  accessMode     = data[8U] & 0x0FU;
   bool     noiseSquelch   = (data[8U] & 0x40U) == 0x40U;
   bool     cosInvert      = (data[8U] & 0x80U) == 0x80U;
 
