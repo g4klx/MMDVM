@@ -62,6 +62,9 @@
 #elif defined(DRCC_DVM_NQF)
     #include "pins/pins_f4_drcc_nqf.h"
 
+#elif defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
+    #include "pins/pins_f4_stm32eda.h"
+
 #else
     #error "A valid board type macro need to be defined."
 

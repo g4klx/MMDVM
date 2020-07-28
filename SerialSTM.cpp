@@ -50,7 +50,7 @@ extern "C" {
 }
 
 /* ************* USART1 ***************** */
-#if defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_F7M) || defined(STM32F722_PI) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || (defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)) || defined(DRCC_DVM)
+#if defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_F7M) || defined(STM32F722_PI) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || (defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)) || defined(DRCC_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
 
 volatile uint8_t  TXSerialfifo1[TX_SERIAL_FIFO_SIZE];
 volatile uint8_t  RXSerialfifo1[RX_SERIAL_FIFO_SIZE];
@@ -841,7 +841,7 @@ void CSerialPort::beginInt(uint8_t n, int speed)
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          InitUSART3(speed);
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          InitUSART1(speed);
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          InitUSART2(speed);
@@ -869,7 +869,7 @@ int CSerialPort::availableInt(uint8_t n)
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return AvailUSART3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          return AvailUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return AvailUSART2();
@@ -895,7 +895,7 @@ int CSerialPort::availableForWriteInt(uint8_t n)
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return AvailForWriteUSART3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          return AvailForWriteUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return AvailForWriteUSART2();
@@ -921,7 +921,7 @@ uint8_t CSerialPort::readInt(uint8_t n)
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return ReadUSART3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          return ReadUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return ReadUSART2();
@@ -949,7 +949,7 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
          WriteUSART3(data, length);
          if (flush)
             TXSerialFlush3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          WriteUSART1(data, length);
          if (flush)
             TXSerialFlush1();
