@@ -109,7 +109,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20200714 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
+#define DESCRIPTION "20200728 (D-Star/DMR/System Fusion/P25/NXDN/POCSAG/FM/AX.25)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -452,7 +452,7 @@ uint8_t CSerialPort::setFMParams2(const uint8_t* data, uint16_t length)
 
 uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint16_t length)
 {
-  if (length < 12U)
+  if (length < 14U)
     return 4U;
 
   uint16_t timeout        = data[0U] * 5U;
@@ -467,13 +467,17 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint16_t length)
   uint8_t  hangTime       = data[7U];
 
   uint8_t  accessMode     = data[8U] & 0x7FU;
+  bool     noiseSquelch   = (data[8U] & 0x40U) == 0x40U;
   bool     cosInvert      = (data[8U] & 0x80U) == 0x80U;
 
   uint8_t  rfAudioBoost   = data[9U];
   uint8_t  maxDev         = data[10U];
   uint8_t  rxLevel        = data[11U];
 
-  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold, ctcssLevel, kerchunkTime, hangTime, accessMode, cosInvert, rfAudioBoost, maxDev, rxLevel);
+  uint8_t  squelchHighThreshold = data[12U];
+  uint8_t  squelchLowThreshold  = data[13U];
+
+  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold, ctcssLevel, kerchunkTime, hangTime, accessMode, cosInvert, noiseSquelch, squelchHighThreshold, squelchLowThreshold, rfAudioBoost, maxDev, rxLevel);
 }
 
 uint8_t CSerialPort::setFMParams4(const uint8_t* data, uint16_t length)

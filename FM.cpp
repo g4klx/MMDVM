@@ -39,6 +39,7 @@ m_rfAck(),
 m_extAck(),
 m_ctcssRX(),
 m_ctcssTX(),
+m_squelch(),
 m_timeoutTone(),
 m_state(FS_LISTENING),
 m_callsignAtStart(false),
@@ -60,6 +61,7 @@ m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_accessMode(1U),
 m_cosInvert(false),
+m_noiseSquelch(false),
 m_rfAudioBoost(1U),
 m_extAudioBoost(1U),
 m_downSampler(400U),// 100 ms of audio
@@ -86,6 +88,11 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
   for (; i < length; i++) {
     // ARMv7-M has hardware integer division 
     q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+
+    if (m_noiseSquelch) {
+      uint8_t squelchState = m_squelch.process(currentRFSample);
+      cos = NSQ_VALID(squelchState);
+    }
 
     q15_t currentExtSample;
     bool inputExt = m_inputExtRB.getSample(currentExtSample);//always consume the external input data so it does not overflow
@@ -281,6 +288,7 @@ void CFM::reset()
   m_inputExtRB.reset();
 
   m_downSampler.reset();
+  m_squelch.reset();
   
   m_needReverse = false;
 }
@@ -313,10 +321,11 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
-  m_accessMode = accessMode;
-  m_cosInvert  = cosInvert;
+  m_accessMode   = accessMode;
+  m_cosInvert    = cosInvert;
+  m_noiseSquelch = noiseSquelch;
 
   m_rfAudioBoost = q15_t(rfAudioBoost);
 
@@ -330,6 +339,8 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   m_blanking.setParams(maxDev, timeoutLevel);
 
   m_rxLevel = rxLevel; //q15_t(255)/q15_t(rxLevel >> 1);
+
+  m_squelch.setParams(squelchHighThreshold, squelchLowThreshold);
 
   uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold);
   if (ret != 0U)
