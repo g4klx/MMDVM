@@ -32,22 +32,20 @@ m_lowThreshold(0),
 m_count(0U),
 m_q0(0),
 m_q1(0),
-m_result(NS_NONE)
+m_state(false)
 {
 }
 
 void CFMNoiseSquelch::setParams(uint8_t highThreshold, uint8_t lowThreshold)
 {
-  m_highThreshold = q31_t(highThreshold);
-  m_lowThreshold  = q31_t(lowThreshold);
+  m_highThreshold = q31_t(highThreshold) * 20;
+  m_lowThreshold  = q31_t(lowThreshold) * 20;
 }
 
-uint8_t CFMNoiseSquelch::process(q15_t sample)
+bool CFMNoiseSquelch::process(q15_t sample)
 {
   //get more dynamic into the decoder by multiplying the sample by 1.5
   q31_t sample31 = q31_t(sample) +  (q31_t(sample) >> 1);
-
-  m_result &= ~NS_READY;
 
   q31_t q2 = m_q1;
   m_q1 = m_q0;
@@ -80,33 +78,29 @@ uint8_t CFMNoiseSquelch::process(q15_t sample)
     // value = m_q0 * m_q0 + m_q1 * m_q1 - m_q0 * m_q1 * m_coeffDivTwo * 2
     q31_t value = t2 + t4 - t9;
 
-    bool previousNSQValid = NSQ_VALID(m_result);
+    bool previousState = m_state;
 
     q31_t threshold = m_highThreshold;
-    if (previousNSQValid)
+    if (previousState)
       threshold = m_lowThreshold;
 
-    m_result |= NS_READY;
-    if (value < threshold)
-      m_result |= NS_VALID;
-    else
-      m_result &= ~NS_VALID;
+    m_state = value < threshold;
 
-    if (previousNSQValid != NSQ_VALID(m_result))
-      DEBUG4("Noise Squelch Value / Threshold / Valid", value, threshold, NSQ_VALID(m_result));
+    if (previousState != m_state)
+      DEBUG4("Noise Squelch Value / Threshold / Valid", value, threshold, m_state);
 
     m_count = 0U;
     m_q0 = 0;
     m_q1 = 0;
   }
 
-  return m_result;
+  return m_state;
 }
 
 void CFMNoiseSquelch::reset()
 {
   m_q0 = 0;
   m_q1 = 0;
-  m_result = NS_NONE;
-  m_count  = 0U;
+  m_state = false;
+  m_count = 0U;
 }

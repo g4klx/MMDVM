@@ -21,22 +21,13 @@
 
 #include "Config.h"
 
-const uint8_t CTS_NONE  = 0U;
-const uint8_t CTS_READY = 1U;
-const uint8_t CTS_VALID = 2U;
-
-#define CTCSS_READY(a) ((a & CTS_READY) != 0)
-#define CTCSS_NOT_READY(a) ((a & CTS_READY) == 0)
-#define CTCSS_VALID(a) ((a & CTS_VALID) != 0)
-#define CTCSS_NOT_VALID(a) ((a & CTS_VALID) == 0)
-
 class CFMCTCSSRX {
 public:
   CFMCTCSSRX();
 
   uint8_t setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold);
   
-  uint8_t process(q15_t sample);
+  bool process(q15_t sample);
 
   void reset();
 
@@ -47,7 +38,7 @@ private:
   uint16_t m_count;
   q31_t    m_q0;
   q31_t    m_q1;
-  uint8_t  m_result;
+  bool     m_state;
 };
 
 #endif

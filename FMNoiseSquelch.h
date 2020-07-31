@@ -21,22 +21,13 @@
 
 #include "Config.h"
 
-const uint8_t NS_NONE  = 0U;
-const uint8_t NS_READY = 1U;
-const uint8_t NS_VALID = 2U;
-
-#define NSQ_READY(a) ((a & NS_READY) != 0)
-#define NSQ_NOT_READY(a) ((a & NS_READY) == 0)
-#define NSQ_VALID(a) ((a & NS_VALID) != 0)
-#define NSQ_NOT_VALID(a) ((a & NS_VALID) == 0)
-
 class CFMNoiseSquelch {
 public:
   CFMNoiseSquelch();
 
   void setParams(uint8_t highThreshold, uint8_t lowThreshold);
   
-  uint8_t process(q15_t sample);
+  bool process(q15_t sample);
 
   void reset();
 
@@ -46,7 +37,7 @@ private:
   uint16_t m_count;
   q31_t    m_q0;
   q31_t    m_q1;
-  uint8_t  m_result;
+  bool     m_state;
 };
 
 #endif

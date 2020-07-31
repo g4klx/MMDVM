@@ -89,10 +89,8 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     // ARMv7-M has hardware integer division 
     q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
-    if (m_noiseSquelch) {
-      uint8_t squelchState = m_squelch.process(currentRFSample);
-      cos = NSQ_VALID(squelchState);
-    }
+    if (m_noiseSquelch)
+      cos = m_squelch.process(currentRFSample);
 
     q15_t currentExtSample;
     bool inputExt = m_inputExtRB.getSample(currentExtSample);//always consume the external input data so it does not overflow
@@ -107,55 +105,50 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
         break;
 
       case 1U: {
-          uint8_t ctcssState = m_ctcssRX.process(currentRFSample);
+          bool ctcss = m_ctcssRX.process(currentRFSample);
 
           // Delay the audio by 100ms to better match the CTCSS detector output
           m_inputRFRB.put(currentRFSample);
           m_inputRFRB.get(currentRFSample);
 
-          if (!inputExt && CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-            // Not enough samples to determine if you have CTCSS, just carry on
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
             continue;
-          } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
-            // We had enough samples for CTCSS and we are in some other mode than FM
-            bool validCTCSS = CTCSS_VALID(ctcssState);
-            stateMachine(validCTCSS, inputExt);
-            if (m_state == FS_LISTENING)
-              continue;
-           } else {
-              bool validCTCSS = CTCSS_VALID(ctcssState);
-              stateMachine(validCTCSS, inputExt);
-           }
-         }
-         break;
-
-      case 2U: {
-          uint8_t ctcssState = m_ctcssRX.process(currentRFSample);
-          if (!inputExt && CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-            // Not enough samples to determine if you have CTCSS, just carry on
-            continue;
-          } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
-            // We had enough samples for CTCSS and we are in some other mode than FM
-            bool validCTCSS = CTCSS_VALID(ctcssState);
-            stateMachine(validCTCSS && cos, inputExt);
+          } else if ((inputExt || ctcss) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss, inputExt);
             if (m_state == FS_LISTENING)
               continue;
           } else {
-            bool validCTCSS = CTCSS_VALID(ctcssState);
-            stateMachine(validCTCSS && cos, inputExt);
+            stateMachine(ctcss, inputExt);
+          }
+        }
+        break;
+
+      case 2U: {
+          bool ctcss = m_ctcssRX.process(currentRFSample);
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
+            continue;
+          } else if ((inputExt || (ctcss && cos)) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss && cos, inputExt);
+            if (m_state == FS_LISTENING)
+              continue;
+          } else {
+            stateMachine(ctcss && cos, inputExt);
           }
         }
         break;
 
       default: {
-          uint8_t ctcssState = m_ctcssRX.process(currentRFSample);
-          if (!inputExt && CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-            // Not enough samples to determine if you have CTCSS, just carry on
+          bool ctcss = m_ctcssRX.process(currentRFSample);
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
             continue;
-          } else if ((inputExt || CTCSS_READY(ctcssState)) && m_modemState != STATE_FM) {
-            // We had enough samples for CTCSS and we are in some other mode than FM
-            bool validCTCSS = CTCSS_VALID(ctcssState);
-            stateMachine(validCTCSS && cos, inputExt);
+          } else if ((inputExt || (ctcss && cos)) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss && cos, inputExt);
             if (m_state == FS_LISTENING)
               continue;
           } else {
