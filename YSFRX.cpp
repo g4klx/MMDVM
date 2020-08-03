@@ -36,7 +36,7 @@ const uint8_t NOAVEPTR = 99U;
 
 const uint16_t NOENDPTR = 9999U;
 
-const unsigned int MAX_SYNC_FRAMES = 4U + 1U;
+const unsigned int MAX_SYNC_FRAMES = 1U + 1U;
 
 CYSFRX::CYSFRX() :
 m_state(YSFRXS_NONE),
