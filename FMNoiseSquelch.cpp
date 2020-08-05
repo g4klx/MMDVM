@@ -49,7 +49,7 @@ void CFMNoiseSquelch::setParams(uint8_t highThreshold, uint8_t lowThreshold)
 
 bool CFMNoiseSquelch::process(q15_t sample)
 {
-  //get more dynamic into the decoder by multiplying the sample by 1.5
+  //get more dynamic into the decoder by multiplying the sample by 64
   q31_t sample31 = q31_t(sample) << 6; //+  (q31_t(sample) >> 1);
 
   q31_t q2 = m_q1;
