@@ -38,6 +38,8 @@ private:
   q31_t    m_q0;
   q31_t    m_q1;
   bool     m_state;
+  uint8_t  m_validCount;
+  uint8_t  m_invalidCount;
 };
 
 #endif
