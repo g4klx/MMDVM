@@ -26,9 +26,6 @@ const q31_t COEFF_DIV_TWO = 821806413;
 // 400Hz bandwidth
 const uint16_t N = 24000U / 400U;
 
-//const q63_t ALPHA = 1073741824; //0.5 as q31 but stored in a q64 to avoid overflow
-const q63_t ALPHA = 536870912; //0.25 as q31 but stored in a q64 to avoid overflow
-
 CFMNoiseSquelch::CFMNoiseSquelch() :
 m_highThreshold(0),
 m_lowThreshold(0),
