@@ -32,20 +32,22 @@ m_lowThreshold(0),
 m_count(0U),
 m_q0(0),
 m_q1(0),
-m_state(false)
+m_state(false),
+m_validCount(0U)
 {
+
 }
 
 void CFMNoiseSquelch::setParams(uint8_t highThreshold, uint8_t lowThreshold)
 {
-  m_highThreshold = q31_t(highThreshold) * 20;
-  m_lowThreshold  = q31_t(lowThreshold) * 20;
+  m_highThreshold = q31_t(highThreshold);
+  m_lowThreshold  = q31_t(lowThreshold);
 }
 
 bool CFMNoiseSquelch::process(q15_t sample)
 {
-  //get more dynamic into the decoder by multiplying the sample by 1.5
-  q31_t sample31 = q31_t(sample) +  (q31_t(sample) >> 1);
+  //get more dynamic into the decoder by multiplying the sample by 64
+  q31_t sample31 = q31_t(sample) << 6; //+  (q31_t(sample) >> 1);
 
   q31_t q2 = m_q1;
   m_q1 = m_q0;
@@ -84,10 +86,29 @@ bool CFMNoiseSquelch::process(q15_t sample)
     if (previousState)
       threshold = m_lowThreshold;
 
-    m_state = value < threshold;
+    if (!m_state) {
+      if (value < threshold)
+        m_validCount++;
+      else
+        m_validCount = 0U;
+    }
 
-    if (previousState != m_state)
+    if (m_state) {
+      if (value >= threshold)
+        m_invalidCount++;
+      else
+        m_invalidCount = 0U;
+    }
+
+    m_state = m_validCount >= 10U && m_invalidCount < 10U;
+
+    if(previousState && !m_state)
+      m_invalidCount = 0U;
+
+    if (previousState != m_state) {
       DEBUG4("Noise Squelch Value / Threshold / Valid", value, threshold, m_state);
+      DEBUG3("Valid Count / Invalid Count", m_validCount, m_invalidCount);
+    }
 
     m_count = 0U;
     m_q0 = 0;
