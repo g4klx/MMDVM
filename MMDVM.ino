@@ -60,7 +60,7 @@ CPOCSAGTX  pocsagTX;
 
 CFM        fm;
 CAX25RX    ax25RX;
-CAX25      ax25TX;
+CAX25TX    ax25TX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
