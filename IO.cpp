@@ -221,7 +221,7 @@ void CIO::start()
 
   m_started = true;
 
-  setMode();
+  setMode(STATE_IDLE);
 }
 
 void CIO::process()
@@ -233,8 +233,7 @@ void CIO::process()
       if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF || m_modemState == STATE_P25 || m_modemState == STATE_NXDN || m_modemState == STATE_POCSAG) {
         if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
-        m_modemState = STATE_IDLE;
-        setMode();
+        setMode(STATE_IDLE);
       }
 
       m_watchdog = 0U;
@@ -535,17 +534,34 @@ void CIO::setADCDetection(bool detect)
   m_detect = detect;
 }
 
-void CIO::setMode()
+void CIO::setMode(MMDVM_STATE state)
 {
+  if (state == m_modemState)
+    return;
+
 #if defined(MODE_LEDS)
-  setDStarInt(m_modemState == STATE_DSTAR);
-  setDMRInt(m_modemState   == STATE_DMR);
-  setYSFInt(m_modemState   == STATE_YSF);
-  setP25Int(m_modemState   == STATE_P25);
-  setNXDNInt(m_modemState  == STATE_NXDN);
-  setPOCSAGInt(m_modemState  == STATE_POCSAG);
-  setFMInt(m_modemState == STATE_FM);
+  switch (m_modemState) {
+    case STATE_DSTAR:  setDStarInt(false);  break;
+    case STATE_DMR:    setDMRInt(false);    break;
+    case STATE_YSF:    setYSFInt(false);    break;
+    case STATE_P25:    setP25Int(false);    break;
+    case STATE_NXDN:   setNXDNInt(false);   break;
+    case STATE_POCSAG: setPOCSAGInt(false); break;
+    case STATE_FM:     setFMInt(false);     break;
+  }
+
+  switch (state) {
+    case STATE_DSTAR:  setDStarInt(true);  break;
+    case STATE_DMR:    setDMRInt(true);    break;
+    case STATE_YSF:    setYSFInt(true);    break;
+    case STATE_P25:    setP25Int(true);    break;
+    case STATE_NXDN:   setNXDNInt(true);   break;
+    case STATE_POCSAG: setPOCSAGInt(true); break;
+    case STATE_FM:     setFMInt(true);     break;
+  }
 #endif
+
+  m_modemState = state;
 }
 
 void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)

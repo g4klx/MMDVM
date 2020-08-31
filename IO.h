@@ -42,7 +42,7 @@ public:
 
   void setDecode(bool dcd);
   void setADCDetection(bool detect);
-  void setMode();
+  void setMode(MMDVM_STATE state);
   
   void interrupt();
 
