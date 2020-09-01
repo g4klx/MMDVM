@@ -133,7 +133,7 @@ void CIO::selfTest()
 {
   bool ledValue = false;
 
-  for (uint8_t i = 0; i < 6; i++) {
+  for (uint8_t i = 0U; i < 6U; i++) {
     ledValue = !ledValue;
 
     // We exclude PTT to avoid trigger the transmitter
@@ -144,9 +144,15 @@ void CIO::selfTest()
     setDMRInt(ledValue);
     setYSFInt(ledValue);
     setP25Int(ledValue);
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
     setNXDNInt(ledValue);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
     setPOCSAGInt(ledValue);
+#endif
+#if !defined(USE_ALTERNATE_FM_LEDS)
     setFMInt(ledValue);
+#endif
 #endif
     delayInt(250);
   }
