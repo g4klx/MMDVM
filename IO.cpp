@@ -159,13 +159,20 @@ void CIO::selfTest()
   }
 
 #if defined(MODE_LEDS)
-  setDStarInt(true);
+  setDStarInt(false);
   setDMRInt(false);
   setYSFInt(false);
   setP25Int(false);
+#if !defined(USE_ALTERNATE_NXDN_LEDS)
   setNXDNInt(false);
+#endif
+#if !defined(USE_ALTERNATE_POCSAG_LEDS)
   setPOCSAGInt(false);
+#endif
+#if !defined(USE_ALTERNATE_FM_LEDS)
   setFMInt(false);
+#endif
+  setDStarInt(true);
 
   delayInt(250);
   setDMRInt(true);
