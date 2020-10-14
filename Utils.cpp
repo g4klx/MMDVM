@@ -30,6 +30,15 @@ uint8_t countBits8(uint8_t bits)
   return BITS_TABLE[bits];
 }
 
+uint8_t countBits16(uint16_t bits)
+{
+  uint8_t* p = (uint8_t*)&bits;
+  uint8_t n = 0U;
+  n += BITS_TABLE[p[0U]];
+  n += BITS_TABLE[p[1U]];
+  return n;
+}
+
 uint8_t countBits32(uint32_t bits)
 {
   uint8_t* p = (uint8_t*)&bits;

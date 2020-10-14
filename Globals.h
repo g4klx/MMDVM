@@ -50,6 +50,7 @@ enum MMDVM_STATE {
   STATE_P25       = 4,
   STATE_NXDN      = 5,
   STATE_POCSAG    = 6,
+  STATE_M17       = 7,
   STATE_FM        = 10,
 
   // Dummy states start at 90
@@ -84,6 +85,8 @@ enum MMDVM_STATE {
 #include "YSFTX.h"
 #include "P25RX.h"
 #include "P25TX.h"
+#include "M17RX.h"
+#include "M17TX.h"
 #include "NXDNRX.h"
 #include "NXDNTX.h"
 #include "POCSAGTX.h"
@@ -123,6 +126,7 @@ extern bool m_ysfEnable;
 extern bool m_p25Enable;
 extern bool m_nxdnEnable;
 extern bool m_pocsagEnable;
+extern bool m_m17Enable;
 extern bool m_fmEnable;
 
 extern bool m_duplex;
@@ -153,6 +157,9 @@ extern CNXDNRX nxdnRX;
 extern CNXDNTX nxdnTX;
 
 extern CPOCSAGTX pocsagTX;
+
+extern CM17RX m17RX;
+extern CM17TX m17TX;
 
 extern CFM fm;
 

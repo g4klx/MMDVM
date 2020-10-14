@@ -79,6 +79,7 @@ m_dmrTXLevel(128 * 128),
 m_ysfTXLevel(128 * 128),
 m_p25TXLevel(128 * 128),
 m_nxdnTXLevel(128 * 128),
+m_m17TXLevel(128 * 128),
 m_pocsagTXLevel(128 * 128),
 m_fmTXLevel(128 * 128),
 m_rxDCOffset(DC_OFFSET),
@@ -147,6 +148,9 @@ void CIO::selfTest()
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
     setNXDNInt(ledValue);
 #endif
+#if !defined(USE_ALTERNATE_M17_LEDS)
+    setM17Int(ledValue);
+#endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
     setPOCSAGInt(ledValue);
 #endif
@@ -164,6 +168,9 @@ void CIO::selfTest()
   setP25Int(false);
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
   setNXDNInt(false);
+#endif
+#if !defined(USE_ALTERNATE_M17_LEDS)
+  setM17Int(false);
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   setPOCSAGInt(false);
@@ -187,6 +194,11 @@ void CIO::selfTest()
   setNXDNInt(true);
 #endif
 
+#if !defined(USE_ALTERNATE_M17_LEDS)
+  delayInt(250);
+  setM17Int(true);
+#endif
+
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   delayInt(250);
   setPOCSAGInt(true);
@@ -203,6 +215,11 @@ void CIO::selfTest()
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   delayInt(250);
   setPOCSAGInt(false);
+#endif
+
+#if !defined(USE_ALTERNATE_M17_LEDS)
+  delayInt(250);
+  setM17Int(false);
 #endif
 
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
@@ -242,7 +259,7 @@ void CIO::process()
   if (m_started) {
     // Two seconds timeout
     if (m_watchdog >= 48000U) {
-      if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF || m_modemState == STATE_P25 || m_modemState == STATE_NXDN || m_modemState == STATE_POCSAG) {
+      if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF || m_modemState == STATE_P25 || m_modemState == STATE_NXDN || m_modemState == STATE_M17 || m_modemState == STATE_POCSAG) {
         if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
         setMode(STATE_IDLE);
@@ -353,7 +370,7 @@ void CIO::process()
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
 
-      if (m_dmrEnable || m_ysfEnable) {
+      if (m_dmrEnable || m_ysfEnable || m_m17Enable) {
         q15_t RRCVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_rrcFilter, samples, RRCVals, RX_BLOCK_SIZE);
 
@@ -366,6 +383,9 @@ void CIO::process()
           else
             dmrDMORX.samples(RRCVals, rssi, RX_BLOCK_SIZE);
         }
+
+        if (m_m17Enable)
+          m17RX.samples(RRCVals, rssi, RX_BLOCK_SIZE);
       }
 
       if (m_fmEnable) {
@@ -434,6 +454,16 @@ void CIO::process()
 
         nxdnRX.samples(NXDNVals, rssi, RX_BLOCK_SIZE);
       }
+    } else if (m_modemState == STATE_M17) {
+      if (m_m17Enable) {
+        q15_t M17Vals[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
+        ::arm_fir_fast_q15(&m_rrcFilter, dcSamples, M17Vals, RX_BLOCK_SIZE);
+#else
+        ::arm_fir_fast_q15(&m_rrcFilter, samples, M17Vals, RX_BLOCK_SIZE);
+#endif
+        m17RX.samples(M17Vals, rssi, RX_BLOCK_SIZE);
+      }
     } else if (m_modemState == STATE_FM) {
       bool cos = getCOSInt();
 #if defined(USE_DCBLOCKER)
@@ -482,6 +512,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
       break;
     case STATE_NXDN:
       txLevel = m_nxdnTXLevel;
+      break;
+    case STATE_M17:
+      txLevel = m_m17TXLevel;
       break;
     case STATE_POCSAG:
       txLevel = m_pocsagTXLevel;
@@ -540,6 +573,7 @@ void CIO::setMode(MMDVM_STATE state)
     case STATE_YSF:    setYSFInt(false);    break;
     case STATE_P25:    setP25Int(false);    break;
     case STATE_NXDN:   setNXDNInt(false);   break;
+    case STATE_M17:    setM17Int(false);   break;
     case STATE_POCSAG: setPOCSAGInt(false); break;
     case STATE_FM:     setFMInt(false);     break;
   }
@@ -550,6 +584,7 @@ void CIO::setMode(MMDVM_STATE state)
     case STATE_YSF:    setYSFInt(true);    break;
     case STATE_P25:    setP25Int(true);    break;
     case STATE_NXDN:   setNXDNInt(true);   break;
+    case STATE_M17:    setM17Int(true);    break;
     case STATE_POCSAG: setPOCSAGInt(true); break;
     case STATE_FM:     setFMInt(true);     break;
   }
@@ -558,7 +593,7 @@ void CIO::setMode(MMDVM_STATE state)
   m_modemState = state;
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)
 {
   m_pttInvert = pttInvert;
 
@@ -569,6 +604,7 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
   m_ysfTXLevel    = q15_t(ysfTXLevel * 128);
   m_p25TXLevel    = q15_t(p25TXLevel * 128);
   m_nxdnTXLevel   = q15_t(nxdnTXLevel * 128);
+  m_m17TXLevel    = q15_t(m17TXLevel * 128);
   m_pocsagTXLevel = q15_t(pocsagTXLevel * 128);
   m_fmTXLevel     = q15_t(fmTXLevel * 128);
 
@@ -586,6 +622,7 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
     m_ysfTXLevel    = -m_ysfTXLevel;
     m_p25TXLevel    = -m_p25TXLevel;
     m_nxdnTXLevel   = -m_nxdnTXLevel;
+    m_m17TXLevel    = -m_m17TXLevel;
     m_pocsagTXLevel = -m_pocsagTXLevel;
   }
 }

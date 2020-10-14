@@ -78,6 +78,9 @@
 // Use the YSF and P25 LEDs for NXDN
 // #define USE_ALTERNATE_NXDN_LEDS
 
+// Use the D-Star and P25 LEDs for M17
+// #define USE_ALTERNATE_M17_LEDS
+
 // Use the D-Star and DMR LEDs for POCSAG
 // #define USE_ALTERNATE_POCSAG_LEDS
 

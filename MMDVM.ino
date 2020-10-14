@@ -28,6 +28,7 @@ bool m_dmrEnable    = true;
 bool m_ysfEnable    = true;
 bool m_p25Enable    = true;
 bool m_nxdnEnable   = true;
+bool m_m17Enable    = true;
 bool m_pocsagEnable = true;
 bool m_fmEnable     = true;
 
@@ -54,6 +55,9 @@ CP25TX     p25TX;
 
 CNXDNRX    nxdnRX;
 CNXDNTX    nxdnTX;
+
+CM17RX     m17RX;
+CM17TX     m17TX;
 
 CPOCSAGTX  pocsagTX;
 
@@ -103,6 +107,9 @@ void loop()
 
   if (m_nxdnEnable && m_modemState == STATE_NXDN)
     nxdnTX.process();
+
+  if (m_m17Enable && m_modemState == STATE_M17)
+    m17TX.process();
 
   if (m_pocsagEnable && (m_modemState == STATE_POCSAG || pocsagTX.busy()))
     pocsagTX.process();
