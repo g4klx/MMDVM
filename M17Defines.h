@@ -30,18 +30,18 @@ const unsigned int M17_SYNC_LENGTH_BITS    = 16U;
 const unsigned int M17_SYNC_LENGTH_SYMBOLS = M17_SYNC_LENGTH_BITS / 2U;
 const unsigned int M17_SYNC_LENGTH_SAMPLES = M17_SYNC_LENGTH_SYMBOLS * M17_RADIO_SYMBOL_LENGTH;
 
-const uint8_t M17_SYNC_BYTES[]      = {0xCDU, 0xF5U};	// XXX
+const uint8_t M17_SYNC_BYTES[]      = {0x32U, 0x43U};
 const uint8_t M17_SYNC_BYTES_LENGTH = 2U;
 
-const uint16_t M17_SYNC_BITS      = 0xCDF5U;			// XXX
+const uint16_t M17_SYNC_BITS      = 0x3243U;
 
-// C     D      F      5					// XXX
-// 11 00 11 01  11 11  01 01					// XXX
-// -3 +1 -3 +3  -3 -3  +3 +3					// XXX
+// 3     2      4      3
+// 00 11 00 10  01 00  00 11
+// +1 -3 +1 -1  +3 +1  +1 -3
 
-const int8_t M17_SYNC_SYMBOLS_VALUES[] = {-3, +1, -3, +3, -3, -3, +3, +3};	// XXX
+const int8_t M17_SYNC_SYMBOLS_VALUES[] = {+1, -3, +1, -1, +3, +1, +1, -3};
 
-const uint16_t M17_SYNC_SYMBOLS = 0x014DU;			// XXX
+const uint8_t M17_SYNC_SYMBOLS = 0xAEU;
 
 #endif
 

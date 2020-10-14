@@ -204,7 +204,7 @@ void CM17RX::processData(q15_t sample)
 
 bool CM17RX::correlateSync()
 {
-  if (countBits16(m_bitBuffer[m_bitPtr] ^ M17_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS) {
+  if (countBits8(m_bitBuffer[m_bitPtr] ^ M17_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS) {
     uint16_t ptr = m_dataPtr + M17_FRAME_LENGTH_SAMPLES - M17_SYNC_LENGTH_SAMPLES + M17_RADIO_SYMBOL_LENGTH;
     if (ptr >= M17_FRAME_LENGTH_SAMPLES)
       ptr -= M17_FRAME_LENGTH_SAMPLES;

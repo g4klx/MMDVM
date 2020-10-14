@@ -37,7 +37,7 @@ public:
 
 private:
   M17RX_STATE m_state;
-  uint16_t    m_bitBuffer[M17_RADIO_SYMBOL_LENGTH];
+  uint8_t     m_bitBuffer[M17_RADIO_SYMBOL_LENGTH];
   q15_t       m_buffer[M17_FRAME_LENGTH_SAMPLES];
   uint16_t    m_bitPtr;
   uint16_t    m_dataPtr;
