@@ -225,6 +225,9 @@ static inline void GPIOInit()
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
   GPIOConfigPin(PORT_NXDN,   PIN_NXDN,   GPIO_CRL_MODE0_1);
 #endif
+#if !defined(USE_ALTERNATE_M17_LEDS)
+  GPIOConfigPin(PORT_M17,    PIN_M17,    GPIO_CRL_MODE0_1);
+#endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   GPIOConfigPin(PORT_POCSAG, PIN_POCSAG, GPIO_CRL_MODE0_1);
 #endif
@@ -447,6 +450,16 @@ void CIO::setNXDNInt(bool on)
   BB_P25 = !!on;
 #else
   BB_NXDN = !!on;
+#endif
+}
+
+void CIO::setM17Int(bool on)
+{
+#if defined(USE_ALTERNATE_M17_LEDS)
+  BB_DSTAR = !!on;
+  BB_P25   = !!on;
+#else
+  BB_M17 = !!on;
 #endif
 }
 

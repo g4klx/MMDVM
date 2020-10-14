@@ -107,6 +107,9 @@ void CIO::initInt()
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
   pinMode(PIN_NXDN,   OUTPUT);
 #endif
+#if !defined(USE_ALTERNATE_M17_LEDS)
+  pinMode(PIN_M17,    OUTPUT);
+#endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   pinMode(PIN_POCSAG, OUTPUT);
 #endif
@@ -251,6 +254,16 @@ void CIO::setNXDNInt(bool on)
   digitalWrite(PIN_P25, on ? HIGH : LOW);
 #else
   digitalWrite(PIN_NXDN, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setM17Int(bool on)
+{
+#if defined(USE_ALTERNATE_M17_LEDS)
+  digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+  digitalWrite(PIN_P25,   on ? HIGH : LOW);
+#else
+  digitalWrite(PIN_M17, on ? HIGH : LOW);
 #endif
 }
 

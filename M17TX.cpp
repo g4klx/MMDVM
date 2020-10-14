@@ -23,16 +23,16 @@
 
 #include "M17Defines.h"
 
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172, 237, 1927, 3120, 3073, 1447, -1431, -4544, -6442,
+// Generated using rcosdesign(0.5, 8, 5, 'sqrt') in MATLAB
+static q15_t RRC_0_5_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172, 237, 1927, 3120, 3073, 1447, -1431, -4544, -6442,
                                  -5735, -1633, 5651, 14822, 23810, 30367, 32767, 30367, 23810, 14822, 5651, -1633, -5735, -6442,
                                  -4544, -1431, 1447, 3073, 3120, 1927, 237, -1172, -1795, -1548, -720, 219, 850}; // numTaps = 45, L = 5
-const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
+const uint16_t RRC_0_5_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t M17_LEVELA =  948;
-const q15_t M17_LEVELB =  316;
-const q15_t M17_LEVELC = -316;
-const q15_t M17_LEVELD = -948;
+const q15_t M17_LEVELA =  1683;
+const q15_t M17_LEVELB =  561;
+const q15_t M17_LEVELC = -561;
+const q15_t M17_LEVELD = -1683;
 
 const uint8_t M17_START_SYNC = 0x77U;
 const uint8_t M17_END_SYNC   = 0xFFU;
@@ -52,11 +52,10 @@ m_txCount(0U)
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
 
   m_modFilter.L           = M17_RADIO_SYMBOL_LENGTH;
-  m_modFilter.phaseLength = RRC_0_2_FILTER_PHASE_LEN;
-  m_modFilter.pCoeffs     = RRC_0_2_FILTER;
+  m_modFilter.phaseLength = RRC_0_5_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = RRC_0_5_FILTER;
   m_modFilter.pState      = m_modState;
 }
-
 
 void CM17TX::process()
 {
