@@ -106,7 +106,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20201014 (D-Star/DMR/System Fusion/P25/NXDN/M17/POCSAG/FM)"
+#define DESCRIPTION "20201015 (D-Star/DMR/System Fusion/P25/NXDN/M17/POCSAG/FM)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
