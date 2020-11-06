@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2016,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -162,7 +162,7 @@ void CCalDStarTX::process()
   m_count = (m_count + 1U) % (30U * 21U);
 }
 
-uint8_t CCalDStarTX::write(const uint8_t* data, uint8_t length)
+uint8_t CCalDStarTX::write(const uint8_t* data, uint16_t length)
 {
   if (length != 1U)
     return 4U;

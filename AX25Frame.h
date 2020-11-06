@@ -16,29 +16,28 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMCTCSSRX_H)
-#define  FMCTCSSRX_H
+#if !defined(AX25Frame_H)
+#define  AX25Frame_H
 
 #include "Config.h"
 
-class CFMCTCSSRX {
+const uint16_t AX25_MAX_PACKET_LEN = 300U;
+
+class CAX25Frame {
 public:
-  CFMCTCSSRX();
+  CAX25Frame(const uint8_t* data, uint16_t length);
+  CAX25Frame();
 
-  uint8_t setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold);
-  
-  bool process(q15_t sample);
+  bool append(uint16_t c);
 
-  void reset();
+  bool checkCRC();
 
-private:
-  q63_t    m_coeffDivTwo;
-  q31_t    m_highThreshold;
-  q31_t    m_lowThreshold;
-  uint16_t m_count;
-  q31_t    m_q0;
-  q31_t    m_q1;
-  bool     m_state;
+  void addCRC();
+
+  uint8_t  m_data[AX25_MAX_PACKET_LEN];
+  uint16_t m_length;
+  uint16_t m_fcs;
 };
 
 #endif
+

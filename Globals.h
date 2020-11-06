@@ -28,6 +28,7 @@
 #include "STM32Utils.h"
 #else
 #include <Arduino.h>
+#undef PI //Undefine PI to get rid of annoying warning as it is also defined in arm_math.h.
 #endif
 
 #if defined(__SAM3X8E__) || defined(STM32F105xC)
@@ -52,6 +53,7 @@ enum MMDVM_STATE {
   STATE_POCSAG    = 6,
   STATE_M17       = 7,
   STATE_FM        = 10,
+  STATE_AX25      = 11,
 
   // Dummy states start at 90
   STATE_NXDNCAL1K = 91,
@@ -99,6 +101,8 @@ enum MMDVM_STATE {
 #include "CalPOCSAG.h"
 #include "CalRSSI.h"
 #include "CWIdTX.h"
+#include "AX25RX.h"
+#include "AX25TX.h"
 #include "Debug.h"
 #include "IO.h"
 #include "FM.h"
@@ -128,6 +132,7 @@ extern bool m_nxdnEnable;
 extern bool m_pocsagEnable;
 extern bool m_m17Enable;
 extern bool m_fmEnable;
+extern bool m_ax25Enable;
 
 extern bool m_duplex;
 
@@ -161,7 +166,10 @@ extern CPOCSAGTX pocsagTX;
 extern CM17RX m17RX;
 extern CM17TX m17TX;
 
-extern CFM fm;
+extern CFM     fm;
+
+extern CAX25RX ax25RX;
+extern CAX25TX ax25TX;
 
 extern CCalDStarRX calDStarRX;
 extern CCalDStarTX calDStarTX;
@@ -175,3 +183,4 @@ extern CCalRSSI    calRSSI;
 extern CCWIdTX cwIdTX;
 
 #endif
+

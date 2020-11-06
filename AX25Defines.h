@@ -16,29 +16,21 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMCTCSSRX_H)
-#define  FMCTCSSRX_H
+#if !defined(AX25DEFINES_H)
+#define  AX25DEFINES_H
 
-#include "Config.h"
+const uint8_t AX25_RADIO_SYMBOL_LENGTH = 20U;      // At 24 kHz sample rate
 
-class CFMCTCSSRX {
-public:
-  CFMCTCSSRX();
+const uint8_t AX25_FRAME_START = 0x7EU;
+const uint8_t AX25_FRAME_END   = 0x7EU;
+const uint8_t AX25_FRAME_ABORT = 0xFEU;
 
-  uint8_t setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold);
-  
-  bool process(q15_t sample);
+const uint8_t AX25_MAX_ONES    = 5U;
 
-  void reset();
+const uint16_t AX25_MIN_FRAME_LENGTH = 17U;        // Callsign (7) + Callsign (7) + Control (1) + Checksum (2)
 
-private:
-  q63_t    m_coeffDivTwo;
-  q31_t    m_highThreshold;
-  q31_t    m_lowThreshold;
-  uint16_t m_count;
-  q31_t    m_q0;
-  q31_t    m_q1;
-  bool     m_state;
-};
+const uint16_t AX25_MAX_FRAME_LENGTH = 330U;       // Callsign (7) + Callsign (7) + 8 Digipeaters (56) +
+                                                   // Control (1) + PID (1) + Data (256) + Checksum (2)
 
 #endif
+

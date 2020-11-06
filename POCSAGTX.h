@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015-2019 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015-2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@
 
 #include "Config.h"
 
-#include "SerialRB.h"
+#include "RingBuffer.h"
 
 class CPOCSAGTX {
 public:
   CPOCSAGTX();
 
-  uint8_t writeData(const uint8_t* data, uint8_t length);
+  uint8_t writeData(const uint8_t* data, uint16_t length);
 
   void writeByte(uint8_t c);
 
@@ -40,7 +40,7 @@ public:
   bool busy();
 
 private:
-  CSerialRB            m_buffer;
+  CRingBuffer<uint8_t>            m_buffer;
   arm_fir_instance_q15 m_modFilter;
   q15_t                m_modState[170U];     // NoTaps + BlockSize - 1, 6 + 160 - 1 plus some spare
   uint8_t              m_poBuffer[200U];

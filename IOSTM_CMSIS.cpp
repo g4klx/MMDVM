@@ -370,8 +370,7 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  uint8_t control  = MARK_NONE;
-  uint16_t sample  = DC_OFFSET;
+  TSample sample = {DC_OFFSET, MARK_NONE};
 #if defined(SEND_RSSI_DATA)
   uint16_t rawRSSI = 0U;
 #endif
@@ -388,12 +387,12 @@ void CIO::interrupt()
     *rssi_adon = 1;
 #endif
     
-    m_txBuffer.get(sample, control);
-    DAC->DHR12R1 = sample;  // Send the value to the DAC
+    m_txBuffer.get(sample);
+    DAC->DHR12R1 = sample.sample;  // Send the value to the DAC
 
     // Read value from ADC1 and ADC2
-    sample  = ADC1->DR;   // read conversion result; EOC is cleared by this read
-    m_rxBuffer.put(sample, control);
+    sample.sample  = ADC1->DR;   // read conversion result; EOC is cleared by this read
+    m_rxBuffer.put(sample);
 #if defined(SEND_RSSI_DATA)
     rawRSSI = ADC2->DR;
     m_rssiBuffer.put(rawRSSI);

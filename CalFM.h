@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2015,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *   Copyright (C) 2020 by Phil Taylor M0VSE
  *
@@ -35,7 +35,7 @@ public:
   void fm25kcal();
   void fm30kcal();
 
-  uint8_t write(const uint8_t* data, uint8_t length);
+  uint8_t write(const uint8_t* data, uint16_t length);
 
 private:
   uint16_t  m_frequency;

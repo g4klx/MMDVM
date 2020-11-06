@@ -21,7 +21,11 @@
 
 #include "Config.h"
 #include "Globals.h"
-#include "SerialRB.h"
+#include "RingBuffer.h"
+
+#if !defined(SERIAL_SPEED)
+#define SERIAL_SPEED 115200
+#endif
 
 
 class CSerialPort {
@@ -53,6 +57,12 @@ public:
   void writeM17Data(const uint8_t* data, uint8_t length);
   void writeM17Lost();
 
+  void writeAX25Data(const uint8_t* data, uint16_t length);
+
+  void writeFMData(const uint8_t* data, uint16_t length);
+  void writeFMStatus(uint8_t status);
+  void writeFMEOT();
+
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
 
@@ -63,22 +73,24 @@ public:
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4);
 
 private:
-  uint8_t   m_buffer[256U];
-  uint8_t   m_ptr;
-  uint8_t   m_len;
+  uint8_t   m_buffer[512U];
+  uint16_t  m_ptr;
+  uint16_t  m_len;
   bool      m_debug;
-  CSerialRB m_repeat;
+  CRingBuffer<uint8_t> m_repeat;
 
   void    sendACK();
   void    sendNAK(uint8_t err);
   void    getStatus();
   void    getVersion();
-  uint8_t setConfig(const uint8_t* data, uint8_t length);
-  uint8_t setMode(const uint8_t* data, uint8_t length);
+  uint8_t setConfig(const uint8_t* data, uint16_t length);
+  uint8_t setMode(const uint8_t* data, uint16_t length);
   void    setMode(MMDVM_STATE modemState);
-  uint8_t setFMParams1(const uint8_t* data, uint8_t length);
-  uint8_t setFMParams2(const uint8_t* data, uint8_t length);
-  uint8_t setFMParams3(const uint8_t* data, uint8_t length);
+  uint8_t setFMParams1(const uint8_t* data, uint16_t length);
+  uint8_t setFMParams2(const uint8_t* data, uint16_t length);
+  uint8_t setFMParams3(const uint8_t* data, uint16_t length);
+  uint8_t setFMParams4(const uint8_t* data, uint16_t length);
+  void    processMessage(const uint8_t* data, uint16_t length);
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);

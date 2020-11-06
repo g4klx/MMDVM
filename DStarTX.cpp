@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -216,12 +216,13 @@ void CDStarTX::process()
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = BIT_SYNC;
     } else {
+      uint8_t dummy;
       // Pop the type byte off
-      m_buffer.get();
+      m_buffer.get(dummy);
 
       uint8_t header[DSTAR_HEADER_LENGTH_BYTES];
       for (uint8_t i = 0U; i < DSTAR_HEADER_LENGTH_BYTES; i++)
-        header[i] = m_buffer.get();
+        m_buffer.get(header[i]);
 
       uint8_t buffer[86U];
       txHeader(header, buffer + 2U);
@@ -239,17 +240,19 @@ void CDStarTX::process()
  
   if (type == DSTAR_DATA && m_poLen == 0U) {
     // Pop the type byte off
-    m_buffer.get();
+    uint8_t dummy;
+    m_buffer.get(dummy);
 
     for (uint8_t i = 0U; i < DSTAR_DATA_LENGTH_BYTES; i++)
-      m_poBuffer[m_poLen++] = m_buffer.get();
+      m_buffer.get(m_poBuffer[m_poLen++]);
 
     m_poPtr = 0U;
   }
 
   if (type == DSTAR_EOT && m_poLen == 0U) {
     // Pop the type byte off
-    m_buffer.get();
+    uint8_t dummy;
+    m_buffer.get(dummy);
 
     for (uint8_t j = 0U; j < 3U; j++) {
       for (uint8_t i = 0U; i < DSTAR_EOT_LENGTH_BYTES; i++)
@@ -277,7 +280,7 @@ void CDStarTX::process()
   }
 }
 
-uint8_t CDStarTX::writeHeader(const uint8_t* header, uint8_t length)
+uint8_t CDStarTX::writeHeader(const uint8_t* header, uint16_t length)
 {
   if (length != DSTAR_HEADER_LENGTH_BYTES)
     return 4U;
@@ -296,7 +299,7 @@ uint8_t CDStarTX::writeHeader(const uint8_t* header, uint8_t length)
   return 0U;
 }
 
-uint8_t CDStarTX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CDStarTX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length != DSTAR_DATA_LENGTH_BYTES)
     return 4U;

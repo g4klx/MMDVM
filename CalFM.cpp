@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2015,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *   Copyright (C) 2020 by Phil Taylor M0VSE
  *
@@ -52,7 +52,7 @@ void CCalFM::process()
 {
   const TONE_TABLE* entry = NULL;
 
-  if (m_modemState!=m_lastState)
+  if (m_modemState != m_lastState)
   {
     switch (m_modemState) {
         case STATE_FMCAL10K:
@@ -116,7 +116,7 @@ void CCalFM::process()
 }
 
 
-uint8_t CCalFM::write(const uint8_t* data, uint8_t length)
+uint8_t CCalFM::write(const uint8_t* data, uint16_t length)
 {
   if (length != 1U)
     return 4U;

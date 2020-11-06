@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2018,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -73,7 +73,8 @@ void CYSFTX::process()
         m_poBuffer[m_poLen++] = YSF_START_SYNC;
     } else {
       for (uint8_t i = 0U; i < YSF_FRAME_LENGTH_BYTES; i++) {
-        uint8_t c = m_buffer.get();
+        uint8_t c = 0U;
+        m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }
     }
@@ -116,7 +117,7 @@ void CYSFTX::process()
   }
 }
 
-uint8_t CYSFTX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CYSFTX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length != (YSF_FRAME_LENGTH_BYTES + 1U))
     return 4U;

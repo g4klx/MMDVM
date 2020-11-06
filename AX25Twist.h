@@ -16,29 +16,24 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMCTCSSRX_H)
-#define  FMCTCSSRX_H
+#if !defined(AX25Twist_H)
+#define  AX25Twist_H
 
 #include "Config.h"
 
-class CFMCTCSSRX {
+
+class CAX25Twist {
 public:
-  CFMCTCSSRX();
+  CAX25Twist(int8_t n);
 
-  uint8_t setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold);
-  
-  bool process(q15_t sample);
+  void process(q15_t* in, q15_t* out, uint8_t length);
 
-  void reset();
+  void setTwist(int8_t n);
 
 private:
-  q63_t    m_coeffDivTwo;
-  q31_t    m_highThreshold;
-  q31_t    m_lowThreshold;
-  uint16_t m_count;
-  q31_t    m_q0;
-  q31_t    m_q1;
-  bool     m_state;
+  arm_fir_instance_q15 m_filter;
+  q15_t                m_state[40U];   // NoTaps + BlockSize - 1, 9 + 20 - 1 plus some spare
 };
 
 #endif
+

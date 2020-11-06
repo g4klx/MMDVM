@@ -31,6 +31,7 @@ bool m_nxdnEnable   = true;
 bool m_m17Enable    = true;
 bool m_pocsagEnable = true;
 bool m_fmEnable     = true;
+bool m_ax25Enable   = true;
 
 bool m_duplex = true;
 
@@ -62,6 +63,8 @@ CM17TX     m17TX;
 CPOCSAGTX  pocsagTX;
 
 CFM        fm;
+CAX25RX    ax25RX;
+CAX25TX    ax25TX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
@@ -113,6 +116,9 @@ void loop()
 
   if (m_pocsagEnable && (m_modemState == STATE_POCSAG || pocsagTX.busy()))
     pocsagTX.process();
+
+  if (m_ax25Enable && (m_modemState == STATE_IDLE || m_modemState == STATE_FM))
+    ax25TX.process();
 
   if (m_fmEnable && m_modemState == STATE_FM)
     fm.process();

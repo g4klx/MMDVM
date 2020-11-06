@@ -20,6 +20,11 @@
 #include "Globals.h"
 #include "FM.h"
 
+const uint16_t FM_TX_BLOCK_SIZE = 100U;
+const uint16_t FM_SERIAL_BLOCK_SIZE = 84U;//this is the number of sample pairs to send over serial. One sample pair is 3bytes.
+                                          //three times this value shall never exceed 252
+const uint16_t FM_SERIAL_BLOCK_SIZE_BYTES = FM_SERIAL_BLOCK_SIZE * 3U;
+
 /*
  * Access Mode values are:
  *   0 - Carrier access with COS
@@ -31,8 +36,10 @@
 CFM::CFM() :
 m_callsign(),
 m_rfAck(),
+m_extAck(),
 m_ctcssRX(),
 m_ctcssTX(),
+m_squelch(),
 m_timeoutTone(),
 m_state(FS_LISTENING),
 m_callsignAtStart(false),
@@ -45,25 +52,32 @@ m_kerchunkTimer(),
 m_ackMinTimer(),
 m_ackDelayTimer(),
 m_hangTimer(),
+m_statusTimer(),
 m_reverseTimer(),
+m_needReverse(false),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_accessMode(1U),
 m_cosInvert(false),
+m_noiseSquelch(false),
 m_rfAudioBoost(1U),
-m_downsampler(128U),//Size might need adjustement
+m_extAudioBoost(1U),
+m_downSampler(400U),// 100 ms of audio
+m_extEnabled(false),
 m_rxLevel(1),
-m_inputRB(4800U),   // 200ms of audio
-m_outputRB(2400U)   // 100ms of audio
+m_inputRFRB(2401U),   // 100ms of audio + 1 sample
+m_outputRFRB(2400U),  // 100ms of audio
+m_inputExtRB()
 {
+  m_statusTimer.setTimeout(1U, 0U);
   m_reverseTimer.setTimeout(0U, 150U);
 
   insertDelay(100U);
 }
 
-void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
   if (m_cosInvert)
     cos = !cos;
@@ -73,50 +87,72 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
   uint8_t i = 0U;
   for (; i < length; i++) {
     // ARMv7-M has hardware integer division 
-    q15_t currentSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+    q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+
+    if (m_noiseSquelch)
+      cos = m_squelch.process(currentRFSample);
+
+    q15_t currentExtSample;
+    bool inputExt = m_inputExtRB.getSample(currentExtSample);//always consume the external input data so it does not overflow
+    inputExt = inputExt && m_extEnabled;
 
     switch (m_accessMode) {
       case 0U:
-        stateMachine(cos);
+        if (!inputExt && !cos && m_modemState != STATE_FM)
+          continue;
+        else
+          stateMachine(cos, inputExt);
         break;
 
       case 1U: {
-          uint8_t ctcssState = m_ctcssRX.process(currentSample);
+          bool ctcss = m_ctcssRX.process(currentRFSample);
 
           // Delay the audio by 100ms to better match the CTCSS detector output
-          m_inputRB.put(currentSample);
-          m_inputRB.get(currentSample);
+          m_inputRFRB.put(currentRFSample);
+          m_inputRFRB.get(currentRFSample);
 
-          if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-            // Not enough samples to determine if you have CTCSS, just carry on
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
+            continue;
+          } else if ((inputExt || ctcss) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss, inputExt);
+            if (m_state == FS_LISTENING)
+              continue;
           } else {
-            bool validCTCSS = CTCSS_VALID(ctcssState);
-            stateMachine(validCTCSS);
+            stateMachine(ctcss, inputExt);
           }
         }
         break;
 
       case 2U: {
-          uint8_t ctcssState = m_ctcssRX.process(currentSample);
-          if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-            // Not enough samples to determine if you have CTCSS, just carry on
+          bool ctcss = m_ctcssRX.process(currentRFSample);
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
+            continue;
+          } else if ((inputExt || (ctcss && cos)) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss && cos, inputExt);
+            if (m_state == FS_LISTENING)
+              continue;
           } else {
-            bool validCTCSS = CTCSS_VALID(ctcssState);
-            stateMachine(validCTCSS && cos);
+            stateMachine(ctcss && cos, inputExt);
           }
         }
         break;
 
       default: {
-          uint8_t ctcssState = m_ctcssRX.process(currentSample);
-          if (CTCSS_NOT_READY(ctcssState) && m_modemState != STATE_FM) {
-            // Not enough samples to determine if you have CTCSS, just carry on
-          } else if (CTCSS_READY(ctcssState) && m_modemState != STATE_FM) {
-            // We had enough samples for CTCSS and we are in some other mode than FM
-            bool validCTCSS = CTCSS_VALID(ctcssState);
-            stateMachine(validCTCSS && cos);
+          bool ctcss = m_ctcssRX.process(currentRFSample);
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
+            continue;
+          } else if ((inputExt || (ctcss && cos)) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss && cos, inputExt);
+            if (m_state == FS_LISTENING)
+              continue;
           } else {
-            stateMachine(cos);
+            stateMachine(cos, inputExt);
           }
         }
         break;
@@ -125,19 +161,44 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
     if (m_modemState != STATE_FM)
       continue;
 
-    // Only let audio through when relaying audio
-    if (m_state == FS_RELAYING || m_state == FS_KERCHUNK) {  
-      // m_downsampler.addSample(currentSample);
-      currentSample = m_blanking.process(currentSample);
-      currentSample *= m_rfAudioBoost;
-    } else {
-      currentSample = 0;
+    if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted() && !m_reverseTimer.isRunning())
+      continue;
+
+    q15_t currentSample = currentRFSample;
+    q15_t currentBoost  = m_rfAudioBoost;
+    if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+      currentSample = currentExtSample;
+      currentBoost  = m_extAudioBoost;
     }
 
-    if (!m_callsign.isRunning())
+    // Only let RF audio through when relaying RF audio
+    if (m_duplex) {
+      if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+        currentSample = m_blanking.process(currentSample);
+        if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
+          m_downSampler.addSample(currentSample);
+
+        currentSample *= currentBoost;
+      } else {
+        currentSample = 0;
+      }
+    } else {
+        if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+          currentSample *= currentBoost;
+        } else {
+          if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
+            m_downSampler.addSample(currentSample);
+          continue; 
+        }
+    }
+
+    if (!m_callsign.isRunning() && !m_extAck.isRunning())
       currentSample += m_rfAck.getHighAudio();
-    
-    if (!m_rfAck.isRunning()) {
+
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+      currentSample += m_extAck.getHighAudio();
+
+    if (!m_rfAck.isRunning() && !m_extAck.isRunning()) {
       if (m_state == FS_LISTENING)
         currentSample += m_callsign.getHighAudio();
       else
@@ -146,20 +207,55 @@ void CFM::samples(bool cos, const q15_t* samples, uint8_t length)
 
     currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
 
-    if (!m_callsign.isRunning() && !m_rfAck.isRunning())
+    if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
 
     currentSample += m_ctcssTX.getAudio(m_reverseTimer.isRunning());
 
-    m_outputRB.put(currentSample);
+    m_outputRFRB.put(currentSample);
   }
 }
 
 void CFM::process()
 {
-  q15_t sample;
-  while (io.getSpace() >= 3U && m_outputRB.get(sample))
-    io.write(STATE_FM, &sample, 1U);
+  uint16_t space = io.getSpace();
+  uint16_t length = m_outputRFRB.getData();
+
+  if (space > 10U && length >= FM_TX_BLOCK_SIZE ) {
+    space -= 2U;
+    if (length > FM_TX_BLOCK_SIZE)
+      length = FM_TX_BLOCK_SIZE;
+    if (space > FM_TX_BLOCK_SIZE)
+      space = FM_TX_BLOCK_SIZE;
+    if (length > space)
+      length = space;
+
+    q15_t samples[FM_TX_BLOCK_SIZE];
+
+    for (uint16_t i = 0U; i < length; i++) {
+      q15_t sample = 0;
+      m_outputRFRB.get(sample);
+      samples[i] = sample;
+    }
+
+    io.write(STATE_FM, samples, length);
+  }
+
+  if (m_extEnabled) {
+    uint16_t length = m_downSampler.getData();
+
+    if (length >= FM_SERIAL_BLOCK_SIZE) {
+      if (length > FM_SERIAL_BLOCK_SIZE)
+        length = FM_SERIAL_BLOCK_SIZE;
+        
+      TSamplePairPack serialSamples[FM_SERIAL_BLOCK_SIZE];
+
+      for (uint16_t j = 0U; j < length; j++)
+        m_downSampler.getPackedData(serialSamples[j]);
+
+      serial.writeFMData((uint8_t*)serialSamples, length * sizeof(TSamplePairPack));
+    }
+  }
 }
 
 void CFM::reset()
@@ -172,14 +268,22 @@ void CFM::reset()
   m_ackMinTimer.stop();
   m_ackDelayTimer.stop();
   m_hangTimer.stop();
+  m_statusTimer.stop();
   m_reverseTimer.stop();
 
   m_ctcssRX.reset();
   m_rfAck.stop();
+  m_extAck.stop();
   m_callsign.stop();
   m_timeoutTone.stop();
 
-  m_outputRB.reset();
+  m_outputRFRB.reset();
+  m_inputExtRB.reset();
+
+  m_downSampler.reset();
+  m_squelch.reset();
+  
+  m_needReverse = false;
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
@@ -210,21 +314,26 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool cosInvert, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
-  m_accessMode = accessMode;
-  m_cosInvert  = cosInvert;
+  m_accessMode   = accessMode;
+  m_cosInvert    = cosInvert;
+  m_noiseSquelch = noiseSquelch;
 
   m_rfAudioBoost = q15_t(rfAudioBoost);
 
   m_timeoutTimer.setTimeout(timeout, 0U);
+
   m_kerchunkTimer.setTimeout(kerchunkTime, 0U);
+
   m_hangTimer.setTimeout(hangTime, 0U);
 
   m_timeoutTone.setParams(timeoutLevel);
   m_blanking.setParams(maxDev, timeoutLevel);
 
   m_rxLevel = rxLevel; //q15_t(255)/q15_t(rxLevel >> 1);
+
+  m_squelch.setParams(squelchHighThreshold, squelchLowThreshold);
 
   uint8_t ret = m_ctcssRX.setParams(ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold);
   if (ret != 0U)
@@ -233,48 +342,118 @@ uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFreque
   return m_ctcssTX.setParams(ctcssFrequency, ctcssLevel);
 }
 
-void CFM::stateMachine(bool validSignal)
+uint8_t CFM::setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t frequency, uint8_t level)
+{
+  m_extEnabled = true;
+
+  m_extAudioBoost = q15_t(audioBoost);
+
+  return m_extAck.setParams(ack, speed, frequency, level, level);
+}
+
+void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
+{
+  if (m_duplex)
+    duplexStateMachine(validRFSignal, validExtSignal);
+  else
+    simplexStateMachine(validRFSignal, validExtSignal);
+}
+
+void CFM::simplexStateMachine(bool validRFSignal, bool validExtSignal)
 {
   switch (m_state) {
     case FS_LISTENING:
-      listeningState(validSignal);
+      listeningStateSimplex(validRFSignal, validExtSignal);
       break;
-    case FS_KERCHUNK:
-      kerchunkState(validSignal);
+    case FS_RELAYING_RF:
+      relayingRFStateSimplex(validRFSignal);
       break;
-    case FS_RELAYING:
-      relayingState(validSignal);
+    case FS_RELAYING_WAIT_RF:
+      relayingRFWaitStateSimplex(validRFSignal);
       break;
-    case FS_RELAYING_WAIT:
-      relayingWaitState(validSignal);
+    case FS_TIMEOUT_RF:
+      timeoutRFStateSimplex(validRFSignal);
       break;
-    case FS_TIMEOUT:
-      timeoutState(validSignal);
+    case FS_TIMEOUT_WAIT_RF:
+      timeoutRFStateSimplex(validRFSignal);
       break;
-    case FS_TIMEOUT_WAIT:
-      timeoutWaitState(validSignal);
+    case FS_RELAYING_EXT:
+      relayingExtStateSimplex(validExtSignal);
       break;
-    case FS_HANG:
-      hangState(validSignal);
+    case FS_RELAYING_WAIT_EXT:
+      relayingExtWaitStateSimplex(validExtSignal);
+      break;
+    case FS_TIMEOUT_EXT:
+      timeoutExtStateSimplex(validExtSignal);
+      break;
+    case FS_TIMEOUT_WAIT_EXT:
+      timeoutExtWaitStateSimplex(validExtSignal);
       break;
     default:
       break;
   }
 
-  if (m_state == FS_LISTENING && m_modemState == STATE_FM) {
-    if (!m_callsign.isWanted() && !m_rfAck.isWanted() && !m_reverseTimer.isRunning())
+  if (m_state == FS_LISTENING) {
+    if (!m_reverseTimer.isRunning() && m_needReverse)
       m_reverseTimer.start();
 
-    if (!m_callsign.isWanted() && !m_rfAck.isWanted() && m_reverseTimer.isRunning() && m_reverseTimer.hasExpired()) {
-      DEBUG1("Change to STATE_IDLE");
-      m_modemState = STATE_IDLE;
-      m_callsignTimer.stop();
-      m_timeoutTimer.stop();
-      m_kerchunkTimer.stop();
-      m_ackMinTimer.stop();
-      m_ackDelayTimer.stop();
-      m_hangTimer.stop();
+    if (m_reverseTimer.isRunning() && m_reverseTimer.hasExpired()) {
       m_reverseTimer.stop();
+      m_needReverse = false;
+    }
+  }
+}
+
+void CFM::duplexStateMachine(bool validRFSignal, bool validExtSignal)
+{
+  switch (m_state) {
+    case FS_LISTENING:
+      listeningStateDuplex(validRFSignal, validExtSignal);
+      break;
+    case FS_KERCHUNK_RF:
+      kerchunkRFStateDuplex(validRFSignal);
+      break;
+    case FS_RELAYING_RF:
+      relayingRFStateDuplex(validRFSignal);
+      break;
+    case FS_RELAYING_WAIT_RF:
+      relayingRFWaitStateDuplex(validRFSignal);
+      break;
+    case FS_TIMEOUT_RF:
+      timeoutRFStateDuplex(validRFSignal);
+      break;
+    case FS_TIMEOUT_WAIT_RF:
+      timeoutRFWaitStateDuplex(validRFSignal);
+      break;
+    case FS_KERCHUNK_EXT:
+      kerchunkExtStateDuplex(validExtSignal);
+      break;
+    case FS_RELAYING_EXT:
+      relayingExtStateDuplex(validExtSignal);
+      break;
+    case FS_RELAYING_WAIT_EXT:
+      relayingExtWaitStateDuplex(validExtSignal);
+      break;
+    case FS_TIMEOUT_EXT:
+      timeoutExtStateDuplex(validExtSignal);
+      break;
+    case FS_TIMEOUT_WAIT_EXT:
+      timeoutExtWaitStateDuplex(validExtSignal);
+      break;
+    case FS_HANG:
+      hangStateDuplex(validRFSignal, validExtSignal);
+      break;
+    default:
+      break;
+  }
+
+  if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted()) {
+    if (!m_reverseTimer.isRunning() && m_needReverse)
+      m_reverseTimer.start();
+
+    if (m_reverseTimer.isRunning() && m_reverseTimer.hasExpired()) {
+      m_reverseTimer.stop();
+      m_needReverse = false;
     }
   }
 }
@@ -288,46 +467,107 @@ void CFM::clock(uint8_t length)
   m_ackMinTimer.clock(length);
   m_ackDelayTimer.clock(length);
   m_hangTimer.clock(length);
+  m_statusTimer.clock(length);
   m_reverseTimer.clock(length);
+
+  if (m_statusTimer.isRunning() && m_statusTimer.hasExpired()) {
+    serial.writeFMStatus(m_state);
+    m_statusTimer.start();
+  }
 }
 
-void CFM::listeningState(bool validSignal)
+void CFM::listeningStateDuplex(bool validRFSignal, bool validExtSignal)
 {
-  if (validSignal) {
+  if (validRFSignal) {
     if (m_kerchunkTimer.getTimeout() > 0U) {
-      DEBUG1("State to KERCHUNK");
-      m_state = FS_KERCHUNK;
+      DEBUG1("State to KERCHUNK_RF");
+      m_state = FS_KERCHUNK_RF;
       m_kerchunkTimer.start();
       if (m_callsignAtStart && !m_callsignAtLatch)
         sendCallsign();
     } else {
-      DEBUG1("State to RELAYING");
-      m_state = FS_RELAYING;
+      DEBUG1("State to RELAYING_RF");
+      m_state = FS_RELAYING_RF;
       if (m_callsignAtStart)
         sendCallsign();
     }
 
-    insertSilence(50U);
+    if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF) {
+      insertSilence(50U);
 
-    beginRelaying();
+      beginRelaying();
 
-    m_callsignTimer.start();
-    m_reverseTimer.stop();
+      m_callsignTimer.start();
+      m_reverseTimer.stop();
+
+      io.setDecode(true);
+      io.setADCDetection(true);
+
+      m_statusTimer.start();
+      serial.writeFMStatus(m_state);
+    }
+  } else if (validExtSignal) {
+    if (m_kerchunkTimer.getTimeout() > 0U) {
+      DEBUG1("State to KERCHUNK_EXT");
+      m_state = FS_KERCHUNK_EXT;
+      m_kerchunkTimer.start();
+      if (m_callsignAtStart && !m_callsignAtLatch)
+        sendCallsign();
+    } else {
+      DEBUG1("State to RELAYING_EXT");
+      m_state = FS_RELAYING_EXT;
+      if (m_callsignAtStart)
+        sendCallsign();
+    }
+
+    if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+      insertSilence(50U);
+
+      beginRelaying();
+
+      m_callsignTimer.start();
+      m_reverseTimer.stop();
+
+      m_statusTimer.start();
+      serial.writeFMStatus(m_state);
+    }
+  }
+}
+
+void CFM::listeningStateSimplex(bool validRFSignal, bool validExtSignal)
+{
+  if (validRFSignal) {
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
 
     io.setDecode(true);
     io.setADCDetection(true);
 
-    DEBUG1("Change to STATE_FM");
-    m_modemState = STATE_FM;
+    m_timeoutTimer.start();
+    m_reverseTimer.stop();
+
+    m_statusTimer.start();
+    serial.writeFMStatus(m_state);
+  } else if (validExtSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+
+    insertSilence(50U);
+
+    m_timeoutTimer.start();
+    m_reverseTimer.stop();
+
+    m_statusTimer.start();
+    serial.writeFMStatus(m_state);
   }
 }
 
-void CFM::kerchunkState(bool validSignal)
+void CFM::kerchunkRFStateDuplex(bool validSignal)
 {
   if (validSignal) {
     if (m_kerchunkTimer.hasExpired()) {
-      DEBUG1("State to RELAYING");
-      m_state = FS_RELAYING;
+      DEBUG1("State to RELAYING_RF");
+      m_state = FS_RELAYING_RF;
       m_kerchunkTimer.stop();
       if (m_callsignAtStart && m_callsignAtLatch) {
         sendCallsign();
@@ -344,26 +584,36 @@ void CFM::kerchunkState(bool validSignal)
     m_timeoutTimer.stop();
     m_ackMinTimer.stop();
     m_callsignTimer.stop();
+    m_statusTimer.stop();
+    m_needReverse = true;
+    if (m_extEnabled)
+      serial.writeFMEOT();
   }
 }
 
-void CFM::relayingState(bool validSignal)
+void CFM::relayingRFStateDuplex(bool validSignal)
 {
   if (validSignal) {
     if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
-      DEBUG1("State to TIMEOUT");
-      m_state = FS_TIMEOUT;
+      DEBUG1("State to TIMEOUT_RF");
+      m_state = FS_TIMEOUT_RF;
       m_ackMinTimer.stop();
       m_timeoutTimer.stop();
       m_timeoutTone.start();
+
+      if (m_extEnabled)
+        serial.writeFMEOT();
     }
   } else {
     io.setDecode(false);
     io.setADCDetection(false);
 
-    DEBUG1("State to RELAYING_WAIT");
-    m_state = FS_RELAYING_WAIT;
+    DEBUG1("State to RELAYING_WAIT_RF");
+    m_state = FS_RELAYING_WAIT_RF;
     m_ackDelayTimer.start();
+
+    if (m_extEnabled)
+      serial.writeFMEOT();
   }
 
   if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
@@ -372,14 +622,39 @@ void CFM::relayingState(bool validSignal)
   }
 }
 
-void CFM::relayingWaitState(bool validSignal)
+void CFM::relayingRFStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      DEBUG1("State to TIMEOUT_RF");
+      m_state = FS_TIMEOUT_RF;
+
+      m_timeoutTimer.stop();
+
+      if (m_extEnabled)
+        serial.writeFMEOT();
+    }
+  } else {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
+    DEBUG1("State to RELAYING_WAIT_RF");
+    m_state = FS_RELAYING_WAIT_RF;
+    m_ackDelayTimer.start();
+
+    if (m_extEnabled)
+      serial.writeFMEOT();
+  }
+}
+
+void CFM::relayingRFWaitStateDuplex(bool validSignal)
 {
   if (validSignal) {
     io.setDecode(true);
     io.setADCDetection(true);
 
-    DEBUG1("State to RELAYING");
-    m_state = FS_RELAYING;
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
     m_ackDelayTimer.stop();
   } else {
     if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
@@ -388,12 +663,12 @@ void CFM::relayingWaitState(bool validSignal)
 
       if (m_ackMinTimer.isRunning()) {
         if (m_ackMinTimer.hasExpired()) {
-          DEBUG1("Send ack");
+          DEBUG1("Send RF ack");
           m_rfAck.start();
           m_ackMinTimer.stop();
         }
       } else {
-          DEBUG1("Send ack");
+          DEBUG1("Send RF ack");
           m_rfAck.start();
           m_ackMinTimer.stop();
       }
@@ -410,44 +685,62 @@ void CFM::relayingWaitState(bool validSignal)
   }
 }
 
-void CFM::hangState(bool validSignal)
+void CFM::relayingRFWaitStateSimplex(bool validSignal)
 {
   if (validSignal) {
     io.setDecode(true);
     io.setADCDetection(true);
 
-    DEBUG1("State to RELAYING");
-    m_state = FS_RELAYING;
-    DEBUG1("Stop ack");
-    m_rfAck.stop();
-    beginRelaying();
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
+    m_ackDelayTimer.stop();
   } else {
-    if (m_hangTimer.isRunning() && m_hangTimer.hasExpired()) {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
       DEBUG1("State to LISTENING");
       m_state = FS_LISTENING;
-      m_hangTimer.stop();
-
-      if (m_callsignAtEnd)
-        sendCallsign();
-
-      m_callsignTimer.stop();
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
     }
-  }
-
-  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
-    sendCallsign();
-    m_callsignTimer.start();
   }
 }
 
-void CFM::timeoutState(bool validSignal)
+void CFM::kerchunkExtStateDuplex(bool validSignal)
 {
-  if (!validSignal) {
-    io.setDecode(false);
-    io.setADCDetection(false);
+  if (validSignal) {
+    if (m_kerchunkTimer.hasExpired()) {
+      DEBUG1("State to RELAYING_EXT");
+      m_state = FS_RELAYING_EXT;
+      m_kerchunkTimer.stop();
+      if (m_callsignAtStart && m_callsignAtLatch) {
+        sendCallsign();
+        m_callsignTimer.start();
+      }
+    }
+  } else {
+    DEBUG1("State to LISTENING");
+    m_state = FS_LISTENING;
+    m_kerchunkTimer.stop();
+    m_timeoutTimer.stop();
+    m_ackMinTimer.stop();
+    m_callsignTimer.stop();
+    m_statusTimer.stop();
+    m_needReverse = true;
+  }
+}
 
-    DEBUG1("State to TIMEOUT_WAIT");
-    m_state = FS_TIMEOUT_WAIT;
+void CFM::relayingExtStateDuplex(bool validSignal)
+{
+  if (validSignal) {
+    if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      DEBUG1("State to TIMEOUT_EXT");
+      m_state = FS_TIMEOUT_EXT;
+      m_ackMinTimer.stop();
+      m_timeoutTimer.stop();
+      m_timeoutTone.start();
+    }
+  } else {
+    DEBUG1("State to RELAYING_WAIT_EXT");
+    m_state = FS_RELAYING_WAIT_EXT;
     m_ackDelayTimer.start();
   }
 
@@ -457,21 +750,163 @@ void CFM::timeoutState(bool validSignal)
   }
 }
 
-void CFM::timeoutWaitState(bool validSignal)
+void CFM::relayingExtStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
+      DEBUG1("State to TIMEOUT_EXT");
+      m_state = FS_TIMEOUT_EXT;
+
+      m_timeoutTimer.stop();
+    }
+  } else {
+    DEBUG1("State to RELAYING_WAIT_EXT");
+    m_state = FS_RELAYING_WAIT_EXT;
+    m_ackDelayTimer.start();
+  }
+}
+
+void CFM::relayingExtWaitStateDuplex(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to HANG");
+      m_state = FS_HANG;
+
+      if (m_ackMinTimer.isRunning()) {
+        if (m_ackMinTimer.hasExpired()) {
+          DEBUG1("Send Ext ack");
+          m_extAck.start();
+          m_ackMinTimer.stop();
+        }
+      } else {
+          DEBUG1("Send Ext ack");
+          m_extAck.start();
+          m_ackMinTimer.stop();
+      }
+
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+      m_hangTimer.start();
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::relayingExtWaitStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+      m_needReverse = true;
+    }
+  }
+}
+
+void CFM::hangStateDuplex(bool validRFSignal, bool validExtSignal)
+{
+  if (validRFSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
+    DEBUG1("State to RELAYING_RF");
+    m_state = FS_RELAYING_RF;
+    DEBUG1("Stop ack");
+    m_rfAck.stop();
+    m_extAck.stop();
+    beginRelaying();
+  } else if (validExtSignal) {
+    DEBUG1("State to RELAYING_EXT");
+    m_state = FS_RELAYING_EXT;
+    DEBUG1("Stop ack");
+    m_rfAck.stop();
+    m_extAck.stop();
+    beginRelaying();
+  } else {
+    if (m_hangTimer.isRunning() && m_hangTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_hangTimer.stop();
+      m_statusTimer.stop();
+
+      if (m_callsignAtEnd)
+        sendCallsign();
+
+      m_callsignTimer.stop();
+      m_needReverse = true;
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutRFStateDuplex(bool validSignal)
+{
+  if (!validSignal) {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
+    DEBUG1("State to TIMEOUT_WAIT_RF");
+    m_state = FS_TIMEOUT_WAIT_RF;
+
+    if (m_callsignAtEnd)
+        sendCallsign();
+
+    m_ackDelayTimer.start();
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutRFStateSimplex(bool validSignal)
+{
+  if (!validSignal) {
+    io.setDecode(false);
+    io.setADCDetection(false);
+
+    DEBUG1("State to TIMEOUT_WAIT_RF");
+    m_state = FS_TIMEOUT_WAIT_RF;
+
+    m_ackDelayTimer.start();
+  }
+}
+
+void CFM::timeoutRFWaitStateDuplex(bool validSignal)
 {
   if (validSignal) {
     io.setDecode(true);
     io.setADCDetection(true);
 
-    DEBUG1("State to TIMEOUT");
-    m_state = FS_TIMEOUT;
+    DEBUG1("State to TIMEOUT_RF");
+    m_state = FS_TIMEOUT_RF;
     m_ackDelayTimer.stop();
   } else {
     if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
       DEBUG1("State to HANG");
       m_state = FS_HANG;
       m_timeoutTone.stop();
-      DEBUG1("Send ack");
+      DEBUG1("Send RF ack");
       m_rfAck.start();
       m_ackDelayTimer.stop();
       m_ackMinTimer.stop();
@@ -483,6 +918,91 @@ void CFM::timeoutWaitState(bool validSignal)
   if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
     sendCallsign();
     m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutRFWaitStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
+
+    DEBUG1("State to TIMEOUT_RF");
+    m_state = FS_TIMEOUT_RF;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+    }
+  }
+}
+
+void CFM::timeoutExtStateDuplex(bool validSignal)
+{
+  if (!validSignal) {
+    DEBUG1("State to TIMEOUT_WAIT_EXT");
+    m_state = FS_TIMEOUT_WAIT_EXT;
+    m_ackDelayTimer.start();
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutExtStateSimplex(bool validSignal)
+{
+  if (!validSignal) {
+    DEBUG1("State to TIMEOUT_WAIT_EXT");
+    m_state = FS_TIMEOUT_WAIT_EXT;
+    m_ackDelayTimer.start();
+  }
+}
+
+void CFM::timeoutExtWaitStateDuplex(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to TIMEOUT_EXT");
+    m_state = FS_TIMEOUT_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to HANG");
+      m_state = FS_HANG;
+      m_timeoutTone.stop();
+      DEBUG1("Send Ext ack");
+      m_extAck.start();
+      m_ackDelayTimer.stop();
+      m_ackMinTimer.stop();
+      m_timeoutTimer.stop();
+      m_hangTimer.start();
+    }
+  }
+
+  if (m_callsignTimer.isRunning() && m_callsignTimer.hasExpired()) {
+    sendCallsign();
+    m_callsignTimer.start();
+  }
+}
+
+void CFM::timeoutExtWaitStateSimplex(bool validSignal)
+{
+  if (validSignal) {
+    DEBUG1("State to TIMEOUT_EXT");
+    m_state = FS_TIMEOUT_EXT;
+    m_ackDelayTimer.stop();
+  } else {
+    if (m_ackDelayTimer.isRunning() && m_ackDelayTimer.hasExpired()) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_ackDelayTimer.stop();
+      m_timeoutTimer.stop();
+      m_needReverse = true;
+    }
   }
 }
 
@@ -506,12 +1026,25 @@ void CFM::beginRelaying()
   m_ackMinTimer.start();
 }
 
+uint8_t CFM::getSpace() const
+{
+  // The amount of free space for receiving external audio, in frames.
+  return m_inputExtRB.getSpace() / FM_SERIAL_BLOCK_SIZE_BYTES;
+}
+
+uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
+{
+  //todo check if length is a multiple of 3
+  m_inputExtRB.addData(data, length);
+  return 0U;
+}
+
 void CFM::insertDelay(uint16_t ms)
 {
   uint32_t nSamples = ms * 24U;
 
   for (uint32_t i = 0U; i < nSamples; i++)
-    m_inputRB.put(0);
+    m_inputRFRB.put(0);
 }
 
 void CFM::insertSilence(uint16_t ms)
@@ -519,5 +1052,5 @@ void CFM::insertSilence(uint16_t ms)
   uint32_t nSamples = ms * 24U;
 
   for (uint32_t i = 0U; i < nSamples; i++)
-    m_outputRB.put(0);
+    m_outputRFRB.put(0);
 }

@@ -35,8 +35,16 @@
 // For 19.2 MHz
 // #define EXTERNAL_OSC 19200000
 
+// Use a higher baudrate for host communication. Required for FM network !
+#define SERIAL_SPEED 115200 //suitable for most older boards (Arduino, Due STM32F1_POG etc). External FM will NOT work with this !
+// #define SERIAL_SPEED 230400 // Only works on newer board M4, M7, Teensy. External FM might work with this
+// #define SERIAL_SPEED 460800 // Only works on newer board M4, M7, Teensy. External FM should work with this
+
+// Allow the use of the COS line to lockout the modem
+// #define USE_COS_AS_LOCKOUT
+
 // Use pins to output the current mode via LEDs
-// #define MODE_LEDS
+#define MODE_LEDS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
@@ -79,12 +87,13 @@
 // #define USE_ALTERNATE_NXDN_LEDS
 
 // Use the D-Star and P25 LEDs for M17
-// #define USE_ALTERNATE_M17_LEDS
+#define USE_ALTERNATE_M17_LEDS
 
 // Use the D-Star and DMR LEDs for POCSAG
-// #define USE_ALTERNATE_POCSAG_LEDS
+#define USE_ALTERNATE_POCSAG_LEDS
 
 // Use the D-Star and YSF LEDs for FM
 #define USE_ALTERNATE_FM_LEDS
 
 #endif
+

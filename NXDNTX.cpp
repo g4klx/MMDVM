@@ -81,7 +81,8 @@ void CNXDNTX::process()
       m_poBuffer[m_poLen++] = NXDN_PREAMBLE[2U];
     } else {
       for (uint8_t i = 0U; i < NXDN_FRAME_LENGTH_BYTES; i++) {
-        uint8_t c = m_buffer.get();
+        uint8_t c = 0U;
+        m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }
     }
@@ -122,7 +123,7 @@ void CNXDNTX::process()
   }
 }
 
-uint8_t CNXDNTX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CNXDNTX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length != (NXDN_FRAME_LENGTH_BYTES + 1U))
     return 4U;

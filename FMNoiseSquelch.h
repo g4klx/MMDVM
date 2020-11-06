@@ -16,29 +16,30 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMCTCSSRX_H)
-#define  FMCTCSSRX_H
+#if !defined(FMNOISESQUELCH_H)
+#define  FMNOISESQUELCH_H
 
 #include "Config.h"
 
-class CFMCTCSSRX {
+class CFMNoiseSquelch {
 public:
-  CFMCTCSSRX();
+  CFMNoiseSquelch();
 
-  uint8_t setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold);
+  void setParams(uint8_t highThreshold, uint8_t lowThreshold);
   
   bool process(q15_t sample);
 
   void reset();
 
 private:
-  q63_t    m_coeffDivTwo;
   q31_t    m_highThreshold;
   q31_t    m_lowThreshold;
   uint16_t m_count;
   q31_t    m_q0;
   q31_t    m_q1;
   bool     m_state;
+  uint8_t  m_validCount;
+  uint8_t  m_invalidCount;
 };
 
 #endif

@@ -164,15 +164,14 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  uint8_t control = MARK_NONE;
-  uint16_t sample = DC_OFFSET;
+   TSample sample = {DC_OFFSET, MARK_NONE};
 
-  m_txBuffer.get(sample, control);
-  *(int16_t *)&(DAC0_DAT0L) = sample;
+  m_txBuffer.get(sample);
+  *(int16_t *)&(DAC0_DAT0L) = sample.sample;
 
   if ((ADC0_SC1A & ADC_SC1_COCO) == ADC_SC1_COCO) {
-    sample = ADC0_RA;
-    m_rxBuffer.put(sample, control);
+    sample.sample = ADC0_RA;
+    m_rxBuffer.put(sample);
   }
     
 #if defined(SEND_RSSI_DATA)

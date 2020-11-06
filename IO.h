@@ -21,8 +21,12 @@
 
 #include "Globals.h"
 
-#include "SampleRB.h"
-#include "RSSIRB.h"
+#include "RingBuffer.h"
+
+struct TSample {
+  volatile uint16_t sample;
+  volatile uint8_t control;
+};
 
 class CIO {
 public:
@@ -42,7 +46,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -57,11 +61,11 @@ public:
   void selfTest();
 
 private:
-  bool                 m_started;
+  bool                  m_started;
 
-  CSampleRB            m_rxBuffer;
-  CSampleRB            m_txBuffer;
-  CRSSIRB              m_rssiBuffer;
+  CRingBuffer<TSample>  m_rxBuffer;
+  CRingBuffer<TSample>  m_txBuffer;
+  CRingBuffer<uint16_t> m_rssiBuffer;
 
   arm_biquad_casd_df1_inst_q31 m_dcFilter;
   q31_t                        m_dcState[4];
@@ -90,6 +94,7 @@ private:
   q15_t                m_m17TXLevel;
   q15_t                m_pocsagTXLevel;
   q15_t                m_fmTXLevel;
+  q15_t                m_ax25TXLevel;
 
   uint16_t             m_rxDCOffset;
   uint16_t             m_txDCOffset;

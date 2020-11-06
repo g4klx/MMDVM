@@ -75,9 +75,11 @@ void CP25TX::process()
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = P25_START_SYNC;
     } else {
-      uint8_t length = m_buffer.get();
+      uint8_t length;
+      m_buffer.get(length);
       for (uint8_t i = 0U; i < length; i++) {
-        uint8_t c = m_buffer.get();
+        uint8_t c = 0U;
+        m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }
     }
@@ -118,7 +120,7 @@ void CP25TX::process()
   }
 }
 
-uint8_t CP25TX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CP25TX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length < (P25_TERM_FRAME_LENGTH_BYTES + 1U))
     return 4U;

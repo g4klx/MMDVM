@@ -90,6 +90,7 @@ m_nxdnTXLevel(128 * 128),
 m_m17TXLevel(128 * 128),
 m_pocsagTXLevel(128 * 128),
 m_fmTXLevel(128 * 128),
+m_ax25TXLevel(128 * 128),
 m_rxDCOffset(DC_OFFSET),
 m_txDCOffset(DC_OFFSET),
 m_useCOSAsLockout(false),
@@ -306,6 +307,7 @@ void CIO::process()
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
     setPTTInt(m_pttInvert ? true : false);
+    DEBUG1("TX OFF");
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
@@ -314,15 +316,16 @@ void CIO::process()
     uint16_t rssi[RX_BLOCK_SIZE];
 
     for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-      uint16_t sample;
-      m_rxBuffer.get(sample, control[i]);
+      TSample sample;
+      m_rxBuffer.get(sample);
+      control[i] = sample.control;
       m_rssiBuffer.get(rssi[i]);
 
       // Detect ADC overflow
-      if (m_detect && (sample == 0U || sample == 4095U))
+      if (m_detect && (sample.sample == 0U || sample.sample == 4095U))
         m_adcOverflow++;
 
-      q15_t res1 = q15_t(sample) - m_rxDCOffset;
+      q15_t res1 = q15_t(sample.sample) - m_rxDCOffset;
       q31_t res2 = res1 * m_rxLevel;
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }
@@ -421,6 +424,14 @@ void CIO::process()
         fm.samples(cos, samples, RX_BLOCK_SIZE);
 #endif
       }
+
+      if (m_ax25Enable) {
+#if defined(USE_DCBLOCKER)
+        ax25RX.samples(dcSamples, RX_BLOCK_SIZE);
+#else
+        ax25RX.samples(samples, RX_BLOCK_SIZE);
+#endif
+      }
     } else if (m_modemState == STATE_DSTAR) {
       if (m_dstarEnable) {
         q15_t GMSKVals[RX_BLOCK_SIZE];
@@ -493,8 +504,12 @@ void CIO::process()
       bool cos = getCOSInt();
 #if defined(USE_DCBLOCKER)
       fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
+      if (m_ax25Enable)
+        ax25RX.samples(dcSamples, RX_BLOCK_SIZE);
 #else
       fm.samples(cos, samples, RX_BLOCK_SIZE);
+      if (m_ax25Enable)
+        ax25RX.samples(samples, RX_BLOCK_SIZE);
 #endif
     } else if (m_modemState == STATE_DSTARCAL) {
       q15_t GMSKVals[RX_BLOCK_SIZE];
@@ -519,6 +534,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   if (!m_tx) {
     m_tx = true;
     setPTTInt(m_pttInvert ? false : true);
+    DEBUG1("TX ON");
   }
 
   q15_t txLevel = 0;
@@ -547,6 +563,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
     case STATE_FM:
       txLevel = m_fmTXLevel;
       break;
+    case STATE_AX25:
+      txLevel = m_ax25TXLevel;
+      break;
     default:
       txLevel = m_cwIdTXLevel;
       break;
@@ -562,9 +581,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
       m_dacOverflow++;
 
     if (control == NULL)
-      m_txBuffer.put(res3, MARK_NONE);
+      m_txBuffer.put({res3, MARK_NONE});
     else
-      m_txBuffer.put(res3, control[i]);
+      m_txBuffer.put({res3, control[i]});
   }
 }
 
@@ -618,7 +637,7 @@ void CIO::setMode(MMDVM_STATE state)
   m_modemState = state;
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)
 {
   m_pttInvert = pttInvert;
 
@@ -632,6 +651,7 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
   m_m17TXLevel    = q15_t(m17TXLevel * 128);
   m_pocsagTXLevel = q15_t(pocsagTXLevel * 128);
   m_fmTXLevel     = q15_t(fmTXLevel * 128);
+  m_ax25TXLevel   = q15_t(ax25TXLevel * 128);
 
   m_rxDCOffset   = DC_OFFSET + rxDCOffset;
   m_txDCOffset   = DC_OFFSET + txDCOffset;

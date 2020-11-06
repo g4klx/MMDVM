@@ -1,6 +1,5 @@
 /*
  *   Copyright (C) 2020 by Jonathan Naylor G4KLX
- *   Copyright (C) 2020 by Geoffrey Merck F4FXL - KC3FRA
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,27 +16,34 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMDOWNSAMPLER_H)
-#define FMDOWNSAMPLER_H
+#if !defined(AX25TX_H)
+#define  AX25TX_H
 
 #include "Config.h"
-#include "FMDownsampleRB.h"
 
-class CFMDownsampler {
+class CAX25TX {
 public:
-  CFMDownsampler(uint16_t length);
-  void addSample(q15_t sample);
-  inline bool getPackedData(uint8_t& data){ return m_ringBuffer.get(data); };
-  inline bool hasOverflowed() { return m_ringBuffer.hasOverflowed(); };
+  CAX25TX();
+
+  uint8_t writeData(const uint8_t* data, uint16_t length);
+
+  void process();
+
+  void setTXDelay(uint8_t delay);
+
+  uint8_t getSpace() const;
 
 private:
-  CFMDownsampleRB m_ringBuffer;
-  union {
-    int32_t m_samplePack;
-    int8_t  m_samplePackBytes[4];
-  };
-  uint8_t m_packIndex;
-  uint8_t m_downSampleIndex;
+  uint8_t    m_poBuffer[600U];
+  uint16_t   m_poLen;
+  uint16_t   m_poPtr;
+  uint16_t   m_txDelay;
+  uint16_t   m_tablePtr;
+  bool       m_nrzi;
+
+  void writeBit(bool b);
+  bool NRZI(bool b);
 };
 
 #endif
+

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2015,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -208,7 +208,7 @@ void CCalDMR::dmrdmo1k()
   }
 }
 
-uint8_t CCalDMR::write(const uint8_t* data, uint8_t length)
+uint8_t CCalDMR::write(const uint8_t* data, uint16_t length)
 {
   if (length != 1U)
     return 4U;

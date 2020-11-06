@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@
 
 #include "Config.h"
 
-#include "SerialRB.h"
+#include "RingBuffer.h"
 
 class CYSFTX {
 public:
   CYSFTX();
 
-  uint8_t writeData(const uint8_t* data, uint8_t length);
+  uint8_t writeData(const uint8_t* data, uint16_t length);
 
   void process();
 
@@ -38,7 +38,7 @@ public:
   void setParams(bool on, uint8_t txHang);
 
 private:
-  CSerialRB                        m_buffer;
+  CRingBuffer<uint8_t>                        m_buffer;
   arm_fir_interpolate_instance_q15 m_modFilter;
   q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
   uint8_t                          m_poBuffer[1200U];

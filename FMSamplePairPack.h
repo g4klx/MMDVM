@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020 by Geoffrey Merck F4FXL - KC3FRA
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,29 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMCTCSSRX_H)
-#define  FMCTCSSRX_H
+#if !defined(TSAMPLEPACK_H)
+#define TSAMPLEPACK_H
 
-#include "Config.h"
-
-class CFMCTCSSRX {
-public:
-  CFMCTCSSRX();
-
-  uint8_t setParams(uint8_t frequency, uint8_t highThreshold, uint8_t lowThreshold);
-  
-  bool process(q15_t sample);
-
-  void reset();
-
-private:
-  q63_t    m_coeffDivTwo;
-  q31_t    m_highThreshold;
-  q31_t    m_lowThreshold;
-  uint16_t m_count;
-  q31_t    m_q0;
-  q31_t    m_q1;
-  bool     m_state;
+struct TSamplePairPack {
+  uint8_t byte0;
+  uint8_t byte1;
+  uint8_t byte2;
 };
 
 #endif

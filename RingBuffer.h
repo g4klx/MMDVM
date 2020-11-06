@@ -1,5 +1,6 @@
 /*
  *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020 by Geoffrey Merck F4FXL - KC3FRA
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,8 +17,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(FMDOWNSAMPLERB_H)
-#define  FMDOWNSAMPLERB_H
+#if !defined(RINGBUFFER_H)
+#define  RINGBUFFER_H
 
 #if defined(STM32F4XX)
 #include "stm32f4xx.h"
@@ -28,6 +29,7 @@
 #include <cstddef>
 #else
 #include <Arduino.h>
+#undef PI
 #endif
 
 #if defined(__SAM3X8E__) || defined(STM32F105xC)
@@ -42,27 +44,34 @@
 
 #include <arm_math.h>
 
-class CFMDownsampleRB {
+template <typename TDATATYPE>
+class CRingBuffer {
 public:
-  CFMDownsampleRB(uint16_t length);
+  CRingBuffer(uint16_t length = 370U);
   
   uint16_t getSpace() const;
   
   uint16_t getData() const;
 
-  bool put(uint8_t sample);
+  bool put(TDATATYPE item) volatile;
 
-  bool get(uint8_t& sample);
+  bool get(TDATATYPE& item) volatile;
+
+  TDATATYPE peek() const;
 
   bool hasOverflowed();
 
+  void reset();
+
 private:
-  uint16_t          m_length;
-  volatile uint8_t* m_samples;
-  volatile uint16_t m_head;
-  volatile uint16_t m_tail;
-  volatile bool     m_full;
-  bool              m_overflow;
+  uint16_t              m_length;
+  TDATATYPE*            m_buffer;
+  volatile uint16_t     m_head;
+  volatile uint16_t     m_tail;
+  volatile bool         m_full;
+  bool                  m_overflow;
 };
+
+#include "RingBuffer.impl.h"
 
 #endif
