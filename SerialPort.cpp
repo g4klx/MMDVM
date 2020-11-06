@@ -122,7 +122,7 @@ const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, GITVERSION);
 const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, __TIME__, __DATE__);
 #endif
 
-const uint8_t PROTOCOL_VERSION   = 1U;
+const uint8_t PROTOCOL_VERSION   = 2U;
 
 
 CSerialPort::CSerialPort() :
