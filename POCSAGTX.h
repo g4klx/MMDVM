@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_POCSAG)
+
 #if !defined(POCSAGTX_H)
 #define  POCSAGTX_H
-
-#include "Config.h"
 
 #include "RingBuffer.h"
 
@@ -48,6 +50,8 @@ private:
   uint16_t             m_poPtr;
   uint16_t             m_txDelay;
 };
+
+#endif
 
 #endif
 

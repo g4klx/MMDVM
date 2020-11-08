@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #include "Globals.h"
 #include "DStarTX.h"
 
@@ -445,4 +448,6 @@ uint8_t CDStarTX::getSpace() const
 {
   return m_buffer.getSpace() / (DSTAR_DATA_LENGTH_BYTES + 1U);
 }
+
+#endif
 

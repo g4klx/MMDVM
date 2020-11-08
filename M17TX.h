@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_M17)
+
 #if !defined(M17TX_H)
 #define  M17TX_H
-
-#include "Config.h"
 
 #include "RingBuffer.h"
 
@@ -51,6 +53,8 @@ private:
   void writeByte(uint8_t c);
   void writeSilence();
 };
+
+#endif
 
 #endif
 

@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_YSF)
+
 #include "Globals.h"
 #include "YSFTX.h"
 
@@ -189,3 +192,6 @@ void CYSFTX::setParams(bool on, uint8_t txHang)
   m_loDev  = on;
   m_txHang = txHang * 1200U;
 }
+
+#endif
+

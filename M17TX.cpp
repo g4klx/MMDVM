@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_M17)
+
 #include "Globals.h"
 #include "M17TX.h"
 
@@ -182,3 +185,6 @@ void CM17TX::setParams(uint8_t txHang)
 {
   m_txHang = txHang * 1200U;
 }
+
+#endif
+

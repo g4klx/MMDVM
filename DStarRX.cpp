@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #include "Globals.h"
 #include "DStarRX.h"
 #include "Utils.h"
@@ -715,3 +718,6 @@ bool CDStarRX::checksum(const uint8_t* header) const
 
   return crc8[0U] == header[DSTAR_HEADER_LENGTH_BYTES - 2U] && crc8[1U] == header[DSTAR_HEADER_LENGTH_BYTES - 1U];
 }
+
+#endif
+

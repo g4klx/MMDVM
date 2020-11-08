@@ -18,9 +18,11 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_POCSAG)
+
 #include "Globals.h"
 #include "CalPOCSAG.h"
-
 
 CCalPOCSAG::CCalPOCSAG() :
 m_state(POCSAGCAL_IDLE)
@@ -48,3 +50,6 @@ uint8_t CCalPOCSAG::write(const uint8_t* data, uint16_t length)
 
   return 0U;
 }
+
+#endif
+

@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_M17)
+
 #if !defined(M17RX_H)
 #define  M17RX_H
 
-#include "Config.h"
 #include "M17Defines.h"
 
 enum M17RX_STATE {
@@ -64,6 +67,8 @@ private:
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSIData(uint8_t* data);
 };
+
+#endif
 
 #endif
 

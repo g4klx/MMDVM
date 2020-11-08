@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #if !defined(CALDSTARTX_H)
 #define  CALDSTARTX_H
 
-#include "Config.h"
 #include "DStarDefines.h"
 
 class CCalDStarTX {
@@ -34,6 +37,8 @@ private:
   bool      m_transmit;
   uint16_t  m_count;
 };
+
+#endif
 
 #endif
 

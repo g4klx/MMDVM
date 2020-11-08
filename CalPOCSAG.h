@@ -17,10 +17,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_POCSAG)
+
 #if !defined(CALPOCSAG_H)
 #define  CALPOCSAG_H
-
-#include "Config.h"
 
 enum POCSAGCAL {
   POCSAGCAL_IDLE,
@@ -40,3 +42,6 @@ private:
 };
 
 #endif
+
+#endif
+

@@ -38,42 +38,65 @@ bool m_duplex = true;
 bool m_tx  = false;
 bool m_dcd = false;
 
-CDStarRX   dstarRX;
-CDStarTX   dstarTX;
-
-CDMRIdleRX dmrIdleRX;
-CDMRRX     dmrRX;
-CDMRTX     dmrTX;
-
-CDMRDMORX  dmrDMORX;
-CDMRDMOTX  dmrDMOTX;
-
-CYSFRX     ysfRX;
-CYSFTX     ysfTX;
-
-CP25RX     p25RX;
-CP25TX     p25TX;
-
-CNXDNRX    nxdnRX;
-CNXDNTX    nxdnTX;
-
-CM17RX     m17RX;
-CM17TX     m17TX;
-
-CPOCSAGTX  pocsagTX;
-
-CFM        fm;
-CAX25RX    ax25RX;
-CAX25TX    ax25TX;
+#if defined(MODE_DSTAR)
+CDStarRX dstarRX;
+CDStarTX dstarTX;
 
 CCalDStarRX calDStarRX;
 CCalDStarTX calDStarTX;
-CCalDMR     calDMR;
-CCalFM      calFM;
-CCalP25     calP25;
-CCalNXDN    calNXDN;
-CCalPOCSAG  calPOCSAG;
-CCalRSSI    calRSSI;
+#endif
+
+#if defined(MODE_DMR)
+CDMRIdleRX dmrIdleRX;
+CDMRRX dmrRX;
+CDMRTX dmrTX;
+
+CDMRDMORX dmrDMORX;
+CDMRDMOTX dmrDMOTX;
+
+CCalDMR calDMR;
+#endif
+
+#if defined(MODE_YSF)
+CYSFRX ysfRX;
+CYSFTX ysfTX;
+#endif
+
+#if defined(MODE_P25)
+CP25RX p25RX;
+CP25TX p25TX;
+
+CCalP25 calP25;
+#endif
+
+#if defined(MODE_NXDN)
+CNXDNRX nxdnRX;
+CNXDNTX nxdnTX;
+
+CCalNXDN calNXDN;
+#endif
+
+#if defined(MODE_M17)
+CM17RX m17RX;
+CM17TX m17TX;
+#endif
+
+#if defined(MODE_POCSAG)
+CPOCSAGTX  pocsagTX;
+CCalPOCSAG calPOCSAG;
+#endif
+
+#if defined(MODE_FM)
+CFM    fm;
+CCalFM calFM;
+#endif
+
+#if defined(MODE_AX25)
+CAX25RX ax25RX;
+CAX25TX ax25TX;
+#endif
+
+CCalRSSI calRSSI;
 
 CCWIdTX cwIdTX;
 
@@ -92,55 +115,86 @@ void loop()
   io.process();
 
   // The following is for transmitting
+#if defined(MODE_DSTAR)
   if (m_dstarEnable && m_modemState == STATE_DSTAR)
     dstarTX.process();
+#endif
 
+#if defined(MODE_DMR)
   if (m_dmrEnable && m_modemState == STATE_DMR) {
     if (m_duplex)
       dmrTX.process();
     else
       dmrDMOTX.process();
   }
+#endif
 
+#if defined(MODE_YSF)
   if (m_ysfEnable && m_modemState == STATE_YSF)
     ysfTX.process();
+#endif
 
+#if defined(MODE_P25)
   if (m_p25Enable && m_modemState == STATE_P25)
     p25TX.process();
+#endif
 
+#if defined(MODE_NXDN)
   if (m_nxdnEnable && m_modemState == STATE_NXDN)
     nxdnTX.process();
+#endif
 
+#if defined(MODE_M17)
   if (m_m17Enable && m_modemState == STATE_M17)
     m17TX.process();
+#endif
 
+#if defined(MODE_POCSAG)
   if (m_pocsagEnable && (m_modemState == STATE_POCSAG || pocsagTX.busy()))
     pocsagTX.process();
+#endif
 
+#if defined(MODE_AX25)
   if (m_ax25Enable && (m_modemState == STATE_IDLE || m_modemState == STATE_FM))
     ax25TX.process();
+#endif
 
+#if defined(MODE_FM)
   if (m_fmEnable && m_modemState == STATE_FM)
     fm.process();
+#endif
 
+#if defined(MODE_DSTAR)
   if (m_modemState == STATE_DSTARCAL)
     calDStarTX.process();
+#endif
 
+#if defined(MODE_DMR)
   if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
     calDMR.process();
+#endif
 
+#if defined(MODE_FM)
   if (m_modemState == STATE_FMCAL10K || m_modemState == STATE_FMCAL12K || m_modemState == STATE_FMCAL15K || m_modemState == STATE_FMCAL20K || m_modemState == STATE_FMCAL25K || m_modemState == STATE_FMCAL30K)
     calFM.process();
+#endif
 
+#if defined(MODE_P25)
   if (m_modemState == STATE_P25CAL1K)
     calP25.process();
+#endif
 
+#if defined(MODE_NXDN)
   if (m_modemState == STATE_NXDNCAL1K)
     calNXDN.process();
+#endif
 
+#if defined(MODE_POCSAG)
   if (m_modemState == STATE_POCSAGCAL)
     calPOCSAG.process();
+#endif
 
   if (m_modemState == STATE_IDLE)
     cwIdTX.process();
 }
+

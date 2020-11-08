@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_POCSAG)
+
 #include "Globals.h"
 #include "POCSAGTX.h"
 
@@ -147,3 +150,6 @@ uint8_t CPOCSAGTX::getSpace() const
 {
   return m_buffer.getSpace() / POCSAG_FRAME_LENGTH_BYTES;
 }
+
+#endif
+

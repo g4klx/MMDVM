@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #include "Globals.h"
 #include "CalDStarTX.h"
 
@@ -180,4 +183,6 @@ uint8_t CCalDStarTX::write(const uint8_t* data, uint16_t length)
 
   return 0U;
 }
+
+#endif
 

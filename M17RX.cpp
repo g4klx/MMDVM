@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_M17)
+
 #include "Globals.h"
 #include "M17RX.h"
 #include "Utils.h"
@@ -402,3 +405,6 @@ void CM17RX::writeRSSIData(uint8_t* data)
   m_rssiAccum = 0U;
   m_rssiCount = 0U;
 }
+
+#endif
+

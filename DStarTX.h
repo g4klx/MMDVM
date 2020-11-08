@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #if !defined(DSTARTX_H)
 #define  DSTARTX_H
-
-#include "Config.h"
 
 #include "RingBuffer.h"
 
@@ -49,6 +51,8 @@ private:
   void txHeader(const uint8_t* in, uint8_t* out) const;
   void writeByte(uint8_t c);
 };
+
+#endif
 
 #endif
 

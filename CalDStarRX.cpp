@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #include "Globals.h"
 #include "CalDStarRX.h"
 #include "Utils.h"
@@ -125,4 +128,6 @@ void CCalDStarRX::process(q15_t value)
     }
   }
 }
+
+#endif
 

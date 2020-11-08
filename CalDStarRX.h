@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #if !defined(CALDSTARRX_H)
 #define  CALDSTARRX_H
 
-#include "Config.h"
 #include "DStarDefines.h"
 
 class CCalDStarRX {
@@ -37,6 +40,8 @@ private:
 
   void    process(q15_t value);
 };
+
+#endif
 
 #endif
 

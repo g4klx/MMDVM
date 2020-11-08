@@ -36,32 +36,48 @@ public:
 
   void process();
 
+#if defined(MODE_DSTAR)
   void writeDStarHeader(const uint8_t* header, uint8_t length);
   void writeDStarData(const uint8_t* data, uint8_t length);
   void writeDStarLost();
   void writeDStarEOT();
+#endif
 
+#if defined(MODE_DMR)
   void writeDMRData(bool slot, const uint8_t* data, uint8_t length);
   void writeDMRLost(bool slot);
+#endif
 
+#if defined(MODE_YSF)
   void writeYSFData(const uint8_t* data, uint8_t length);
   void writeYSFLost();
+#endif
 
+#if defined(MODE_P25)
   void writeP25Hdr(const uint8_t* data, uint8_t length);
   void writeP25Ldu(const uint8_t* data, uint8_t length);
   void writeP25Lost();
+#endif
 
+#if defined(MODE_NXDN)
   void writeNXDNData(const uint8_t* data, uint8_t length);
   void writeNXDNLost();
+#endif
 
+#if defined(MODE_M17)
   void writeM17Data(const uint8_t* data, uint8_t length);
   void writeM17Lost();
+#endif
 
+#if defined(MODE_AX25)
   void writeAX25Data(const uint8_t* data, uint16_t length);
+#endif
 
+#if defined(MODE_FM)
   void writeFMData(const uint8_t* data, uint16_t length);
   void writeFMStatus(uint8_t status);
   void writeFMEOT();
+#endif
 
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
@@ -86,11 +102,14 @@ private:
   uint8_t setConfig(const uint8_t* data, uint16_t length);
   uint8_t setMode(const uint8_t* data, uint16_t length);
   void    setMode(MMDVM_STATE modemState);
+  void    processMessage(const uint8_t* data, uint16_t length);
+
+#if defined(MODE_FM)
   uint8_t setFMParams1(const uint8_t* data, uint16_t length);
   uint8_t setFMParams2(const uint8_t* data, uint16_t length);
   uint8_t setFMParams3(const uint8_t* data, uint16_t length);
   uint8_t setFMParams4(const uint8_t* data, uint16_t length);
-  void    processMessage(const uint8_t* data, uint16_t length);
+#endif
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);

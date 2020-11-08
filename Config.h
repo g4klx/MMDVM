@@ -19,6 +19,39 @@
 #if !defined(CONFIG_H)
 #define  CONFIG_H
 
+// Allow for the selection of which modes to compile into the firmware. This is particularly useful for processors
+// which have limited code space and processing power like the STM32F103, which is found on older/cheaper boards.
+
+// Enable D-Star support, the D-Star correlator improves the sensitivity of D-Star enormously but uses quite a lot
+// of processing power.
+// #define MODE_DSTAR
+#define USE_DSTAR_CORRELATOR
+
+// Enable DMR support
+#define MODE_DMR
+
+// Enable System Fusion support
+// #define MODE_YSF
+
+// Enable P25 phase 1 support, the boxcar filter sometimes improves the performance of P25 receive on some systems.
+#define MODE_P25
+#define USE_P25_BOXCAR
+
+// Enable NXDN support
+#define MODE_NXDN
+
+// Enable M17 support
+// #define MODE_M17
+
+// Enable POCSAG support
+// #define MODE_POCSAG
+
+// Enable FM support
+#define MODE_FM
+
+// Enable AX.25 support
+#define MODE_AX25
+
 // Allow for the use of high quality external clock oscillators
 // The number is the frequency of the oscillator in Hertz.
 //
@@ -44,7 +77,7 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode via LEDs
-#define MODE_LEDS
+// #define MODE_LEDS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA

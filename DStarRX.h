@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DSTAR)
+
 #if !defined(DSTARRX_H)
 #define  DSTARRX_H
 
-#include "Config.h"
 #include "DStarDefines.h"
 
 enum DSRX_STATE {
@@ -65,6 +68,8 @@ private:
   void    traceBack();
   bool    checksum(const uint8_t* header) const;
 };
+
+#endif
 
 #endif
 
