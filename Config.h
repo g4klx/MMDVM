@@ -24,14 +24,14 @@
 
 // Enable D-Star support, the D-Star correlator improves the sensitivity of D-Star enormously but uses quite a lot
 // of processing power.
-// #define MODE_DSTAR
+#define MODE_DSTAR
 #define USE_DSTAR_CORRELATOR
 
 // Enable DMR support
 #define MODE_DMR
 
 // Enable System Fusion support
-// #define MODE_YSF
+#define MODE_YSF
 
 // Enable P25 phase 1 support, the boxcar filter sometimes improves the performance of P25 receive on some systems.
 #define MODE_P25
@@ -41,15 +41,15 @@
 #define MODE_NXDN
 
 // Enable M17 support
-// #define MODE_M17
+#define MODE_M17
 
 // Enable POCSAG support
-// #define MODE_POCSAG
+#define MODE_POCSAG
 
 // Enable FM support
 #define MODE_FM
 
-// Enable AX.25 support
+// Enable AX.25 support, this is only enabled if MODE_FM is also defined.
 #define MODE_AX25
 
 // Allow for the use of high quality external clock oscillators

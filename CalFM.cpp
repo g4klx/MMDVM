@@ -19,6 +19,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "CalFM.h"
 
@@ -125,3 +128,6 @@ uint8_t CCalFM::write(const uint8_t* data, uint16_t length)
 
   return 0U;
 }
+
+#endif
+

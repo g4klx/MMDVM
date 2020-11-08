@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FMCTCSSTX.h"
 
@@ -126,3 +129,6 @@ q15_t CFMCTCSSTX::getAudio(bool reverse)
   else
     return sample;
 }
+
+#endif
+

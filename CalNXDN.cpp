@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_NXDN)
+
 #include "Globals.h"
 #include "CalNXDN.h"
 
@@ -92,4 +95,6 @@ uint8_t CCalNXDN::write(const uint8_t* data, uint16_t length)
 
   return 0U;
 }
+
+#endif
 

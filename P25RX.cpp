@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2018 by Bryan Biedenkapp <gatekeep@gmail.com>
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_P25)
+
 #include "Globals.h"
 #include "P25RX.h"
 #include "Utils.h"
@@ -535,3 +538,6 @@ void CP25RX::writeRSSILdu(uint8_t* ldu)
   m_rssiAccum = 0U;
   m_rssiCount = 0U;
 }
+
+#endif
+

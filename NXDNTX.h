@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_NXDN)
+
 #if !defined(NXDNTX_H)
 #define  NXDNTX_H
-
-#include "Config.h"
 
 #include "RingBuffer.h"
 
@@ -55,3 +57,6 @@ private:
 };
 
 #endif
+
+#endif
+

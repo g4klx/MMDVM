@@ -19,6 +19,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DMR)
+
 #include "Globals.h"
 #include "DMRSlotType.h"
 
@@ -414,3 +417,6 @@ uint32_t CDMRTX::getFrameCount()
 {
   return m_frameCount;
 }
+
+#endif
+

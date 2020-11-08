@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DMR)
+
 #include "Globals.h"
 #include "DMRSlotType.h"
 
@@ -284,4 +287,6 @@ void CDMRSlotType::encode(uint8_t colorCode, uint8_t dataType, uint8_t* frame) c
   frame[19U] = (frame[19U] & 0xF0U) | ((slotType[1U] >> 2) & 0x0FU);
   frame[20U] = (frame[20U] & 0x03U) | ((slotType[1U] << 6) & 0xC0U) | ((slotType[2U] >> 2) & 0x3CU);
 }
+
+#endif
 

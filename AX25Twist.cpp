@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_AX25)
+
 #include "Globals.h"
 #include "AX25Twist.h"
 
@@ -308,4 +311,6 @@ void CAX25Twist::setTwist(int8_t n)
   m_filter.pState  = m_state;
   m_filter.pCoeffs = coeffs[twist];
 }
+
+#endif
 

@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FMNOISESQUELCH_H)
 #define  FMNOISESQUELCH_H
-
-#include "Config.h"
 
 class CFMNoiseSquelch {
 public:
@@ -43,3 +45,6 @@ private:
 };
 
 #endif
+
+#endif
+

@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FM.h"
 
@@ -1054,3 +1057,6 @@ void CFM::insertSilence(uint16_t ms)
   for (uint32_t i = 0U; i < nSamples; i++)
     m_outputRFRB.put(0);
 }
+
+#endif
+

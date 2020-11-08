@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FMTimeout.h"
 
@@ -72,3 +75,6 @@ void CFMTimeout::stop()
 {
   m_running = false;
 }
+
+#endif
+

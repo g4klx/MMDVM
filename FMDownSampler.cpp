@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "FMDownSampler.h"
 
 CFMDownSampler::CFMDownSampler(uint16_t length) :
@@ -72,3 +75,6 @@ void CFMDownSampler::reset()
 {
   m_sampleIndex = 0U;
 }
+
+#endif
+

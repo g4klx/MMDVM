@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_AX25)
+
 #if !defined(AX25RX_H)
 #define  AX25RX_H
-
-#include "Config.h"
 
 #include "AX25Demodulator.h"
 
@@ -54,6 +56,8 @@ private:
   void initRand();
   uint8_t rand();
 };
+
+#endif
 
 #endif
 

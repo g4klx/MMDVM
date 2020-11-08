@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DMR)
+
 #if !defined(DMRRX_H)
 #define  DMRRX_H
 
-#include "Config.h"
 #include "DMRSlotRX.h"
 
 class CDMRRX {
@@ -37,6 +40,8 @@ private:
   CDMRSlotRX m_slot1RX;
   CDMRSlotRX m_slot2RX;
 };
+
+#endif
 
 #endif
 

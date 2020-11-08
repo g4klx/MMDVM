@@ -17,10 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DMR)
+
 #if !defined(CALDMR_H)
 #define  CALDMR_H
 
-#include "Config.h"
 #include "DMRDefines.h"
 
 enum DMRCAL1K {
@@ -50,6 +53,8 @@ private:
   uint8_t   m_dmr1k[DMR_FRAME_LENGTH_BYTES + 1U];
   uint8_t   m_audioSeq;
 };
+
+#endif
 
 #endif
 

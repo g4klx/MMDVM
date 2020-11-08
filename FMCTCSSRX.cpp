@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FMCTCSSRX.h"
 
@@ -173,3 +176,6 @@ void CFMCTCSSRX::reset()
   m_state = false;
   m_count = 0U;
 }
+
+#endif
+

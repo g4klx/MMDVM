@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FMBlanking_H)
 #define  FMBlanking_H
-
-#include "Config.h"
 
 class CFMBlanking {
 public:
@@ -39,3 +41,6 @@ private:
 };
 
 #endif
+
+#endif
+

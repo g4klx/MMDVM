@@ -18,10 +18,13 @@
  */
 
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FMUPSAMPLER_H)
 #define FMUPSAMPLER_H
 
-#include "Config.h"
 #include "RingBuffer.h"
 #include "FMSamplePairPack.h"
 
@@ -46,3 +49,6 @@ private:
 };
 
 #endif
+
+#endif
+

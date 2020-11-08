@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FMCTCSSRX_H)
 #define  FMCTCSSRX_H
-
-#include "Config.h"
 
 class CFMCTCSSRX {
 public:
@@ -42,3 +44,6 @@ private:
 };
 
 #endif
+
+#endif
+

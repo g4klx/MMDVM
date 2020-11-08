@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_AX25)
+
 #include "Globals.h"
 #include "AX25Demodulator.h"
 #include "AX25Defines.h"
@@ -311,4 +314,6 @@ float32_t CAX25Demodulator::iir(float32_t input)
 
   return result;
 }
+
+#endif
 

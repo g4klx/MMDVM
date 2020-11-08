@@ -18,10 +18,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(CALFM_H)
 #define  CALFM_H
-
-#include "Config.h"
 
 class CCalFM {
 public:
@@ -46,6 +48,8 @@ private:
   uint8_t   m_audioSeq;
   uint8_t   m_lastState;
 };
+
+#endif
 
 #endif
 

@@ -17,10 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FMDOWNSAMPLER_H)
 #define FMDOWNSAMPLER_H
 
-#include "Config.h"
 #include "RingBuffer.h"
 #include "FMSamplePairPack.h"
 
@@ -42,6 +45,8 @@ private:
   uint8_t*                     m_samplePackPointer;
   uint8_t                      m_sampleIndex;
 };
+
+#endif
 
 #endif
 

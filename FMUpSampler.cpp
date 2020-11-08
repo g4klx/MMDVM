@@ -17,6 +17,10 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "FMUpSampler.h"
 
 const uint32_t FM_UPSAMPLE_MASK = 0x00000FFFU;
@@ -95,3 +99,6 @@ uint16_t CFMUpSampler::getSpace() const
   //return available space in bytes
   return m_samples.getSpace() * sizeof(TSamplePairPack);
 }
+
+#endif
+

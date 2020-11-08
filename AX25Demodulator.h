@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_AX25)
+
 #if !defined(AX25Demodulator_H)
 #define  AX25Demodulator_H
-
-#include "Config.h"
 
 #include "AX25Frame.h"
 #include "AX25Twist.h"
@@ -68,6 +70,8 @@ private:
   bool HDLC(bool b);
   float32_t iir(float32_t input);
 };
+
+#endif
 
 #endif
 

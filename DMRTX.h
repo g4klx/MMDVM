@@ -17,10 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DMR)
+
 #if !defined(DMRTX_H)
 #define  DMRTX_H
 
-#include "Config.h"
 #include "DMRDefines.h"
 
 #include "RingBuffer.h"
@@ -80,6 +83,8 @@ private:
   void createCal();
   void writeByte(uint8_t c, uint8_t control);
 };
+
+#endif
 
 #endif
 

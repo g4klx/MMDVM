@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_NXDN)
+
 #include "Globals.h"
 #include "NXDNTX.h"
 
@@ -200,3 +203,6 @@ void CNXDNTX::setParams(uint8_t txHang)
 {
   m_txHang = txHang * 600U;
 }
+
+#endif
+

@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FMKeyer_H)
 #define  FMKeyer_H
-
-#include "Config.h"
 
 class CFMKeyer {
 public:
@@ -52,3 +54,6 @@ private:
 };
 
 #endif
+
+#endif
+

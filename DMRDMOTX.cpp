@@ -19,6 +19,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DMR)
+
 #include "Globals.h"
 #include "DMRSlotType.h"
 
@@ -160,4 +163,6 @@ void CDMRDMOTX::setTXDelay(uint8_t delay)
   if (m_txDelay > 1200U)
     m_txDelay = 1200U;
 }
+
+#endif
 

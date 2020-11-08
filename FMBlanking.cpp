@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FMBlanking.h"
 
@@ -80,3 +83,6 @@ q15_t CFMBlanking::process(q15_t sample)
 
   return sample;
 }
+
+#endif
+

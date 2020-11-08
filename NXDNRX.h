@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_NXDN)
+
 #if !defined(NXDNRX_H)
 #define  NXDNRX_H
 
-#include "Config.h"
 #include "NXDNDefines.h"
 
 enum NXDNRX_STATE {
@@ -64,6 +67,8 @@ private:
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSIData(uint8_t* data);
 };
+
+#endif
 
 #endif
 

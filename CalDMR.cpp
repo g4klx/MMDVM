@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DMR)
+
 #include "Globals.h"
 #include "CalDMR.h"
 
@@ -220,4 +223,6 @@ uint8_t CCalDMR::write(const uint8_t* data, uint16_t length)
 
   return 0U;
 }
+
+#endif
 

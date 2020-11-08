@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_AX25)
+
 #if !defined(AX25Frame_H)
 #define  AX25Frame_H
-
-#include "Config.h"
 
 const uint16_t AX25_MAX_PACKET_LEN = 300U;
 
@@ -38,6 +40,8 @@ public:
   uint16_t m_length;
   uint16_t m_fcs;
 };
+
+#endif
 
 #endif
 

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DMR)
+
 #if !defined(DMRIDLERX_H)
 #define  DMRIDLERX_H
 
-#include "Config.h"
 #include "DMRDefines.h"
 
 class CDMRIdleRX {
@@ -46,6 +49,8 @@ private:
   void processSample(q15_t sample);
   void samplesToBits(uint16_t start, uint8_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
 };
+
+#endif
 
 #endif
 

@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FM_H)
 #define  FM_H
-
-#include "Config.h"
 
 #include "FMBlanking.h"
 #include "FMCTCSSRX.h"
@@ -143,3 +145,6 @@ private:
 };
 
 #endif
+
+#endif
+

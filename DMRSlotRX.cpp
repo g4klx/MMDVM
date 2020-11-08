@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_DMR)
+
 #include "Globals.h"
 #include "DMRSlotRX.h"
 #include "DMRSlotType.h"
@@ -400,3 +403,6 @@ void CDMRSlotRX::writeRSSIData(uint8_t* frame)
   serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 1U);
 #endif
 }
+
+#endif
+

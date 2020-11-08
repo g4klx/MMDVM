@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_AX25)
+
 #include "Globals.h"
 #include "AX25TX.h"
 
@@ -183,4 +186,6 @@ bool CAX25TX::NRZI(bool b)
 
     return m_nrzi;
 }
+
+#endif
 

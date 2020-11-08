@@ -16,11 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(AX25Twist_H)
-#define  AX25Twist_H
-
 #include "Config.h"
 
+#if defined(MODE_AX25)
+
+#if !defined(AX25Twist_H)
+#define  AX25Twist_H
 
 class CAX25Twist {
 public:
@@ -34,6 +35,8 @@ private:
   arm_fir_instance_q15 m_filter;
   q15_t                m_state[40U];   // NoTaps + BlockSize - 1, 9 + 20 - 1 plus some spare
 };
+
+#endif
 
 #endif
 

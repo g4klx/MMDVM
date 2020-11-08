@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_P25)
+
 #include "Globals.h"
 #include "P25TX.h"
 
@@ -198,3 +201,6 @@ void CP25TX::setParams(uint8_t txHang)
 {
   m_txHang = txHang * 1200U;
 }
+
+#endif
+

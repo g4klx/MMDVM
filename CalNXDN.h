@@ -17,10 +17,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_NXDN)
+
 #if !defined(CALNXDN_H)
 #define  CALNXDN_H
-
-#include "Config.h"
 
 enum NXDNCAL1K {
   NXDNCAL1K_IDLE,
@@ -40,6 +42,8 @@ private:
   NXDNCAL1K m_state;
   uint8_t   m_audioSeq;
 };
+
+#endif
 
 #endif
 

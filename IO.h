@@ -67,31 +67,37 @@ private:
   CRingBuffer<TSample>  m_txBuffer;
   CRingBuffer<uint16_t> m_rssiBuffer;
 
+#if defined(USE_DCBLOCKER)
   arm_biquad_casd_df1_inst_q31 m_dcFilter;
   q31_t                        m_dcState[4];
+#endif
 
 #if defined(MODE_DSTAR)
   arm_fir_instance_q15 m_gaussianFilter;
   q15_t                m_gaussianState[40U];      // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
 #endif
 
-  arm_fir_instance_q15 m_boxcarFilter;
-  arm_fir_instance_q15 m_nxdnFilter;
-  arm_fir_instance_q15 m_nxdnISincFilter;
-
 #if defined(MODE_DMR) || defined(MODE_YSF)
   arm_fir_instance_q15 m_rrc02Filter;
   q15_t                m_rrc02State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+#endif
+
+#if defined(MODE_P25)
+  arm_fir_instance_q15 m_boxcarFilter;
+  q15_t                m_boxcarState[30U];        // NoTaps + BlockSize - 1,  6 + 20 - 1 plus some spare
+#endif
+
+#if defined(MODE_NXDN)
+  arm_fir_instance_q15 m_nxdnFilter;
+  arm_fir_instance_q15 m_nxdnISincFilter;
+  q15_t                m_nxdnState[110U];         // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
+  q15_t                m_nxdnISincState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
 #endif
 
 #if defined(MODE_M17)
   arm_fir_instance_q15 m_rrc05Filter;
   q15_t                m_rrc05State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
 #endif
-
-  q15_t                m_boxcarState[30U];        // NoTaps + BlockSize - 1,  6 + 20 - 1 plus some spare
-  q15_t                m_nxdnState[110U];         // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
-  q15_t                m_nxdnISincState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
 
   bool                 m_pttInvert;
   q15_t                m_rxLevel;

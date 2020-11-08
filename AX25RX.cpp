@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_AX25)
+
 #include "Globals.h"
 #include "AX25RX.h"
 
@@ -203,3 +206,6 @@ uint8_t CAX25RX::rand()
 
   return uint8_t(m_c);             //low order bits of other variables
 }
+
+#endif
+

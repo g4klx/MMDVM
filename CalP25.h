@@ -17,10 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_P25)
+
 #if !defined(CALP25_H)
 #define  CALP25_H
 
-#include "Config.h"
 #include "P25Defines.h"
 
 enum P25CAL1K {
@@ -41,6 +44,8 @@ private:
   bool      m_transmit;
   P25CAL1K  m_state;
 };
+
+#endif
 
 #endif
 

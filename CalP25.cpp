@@ -18,6 +18,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_P25)
+
 #include "Globals.h"
 #include "CalP25.h"
 
@@ -95,4 +98,6 @@ uint8_t CCalP25::write(const uint8_t* data, uint16_t length)
 
   return 0U;
 }
+
+#endif
 

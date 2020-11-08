@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -15,6 +15,10 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#include "Config.h"
+
+#if defined(MODE_DMR)
 
 #if !defined(DMRSLOTTYPE_H)
 #define  DMRSLOTTYPE_H
@@ -32,6 +36,8 @@ private:
   uint8_t  decode2087(const uint8_t* data) const;
   uint32_t getSyndrome1987(uint32_t pattern) const;
 };
+
+#endif
 
 #endif
 

@@ -29,6 +29,10 @@ THE SOFTWARE.
 
 // based on https://raw.githubusercontent.com/berndporr/iir_fixed_point/master/DirectFormI.h
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #include <cstdint>
 
 #ifndef DIRECTFORMI_H_
@@ -109,3 +113,6 @@ private:
 };
 
 #endif /* DIRECTFORMI_H */
+
+#endif
+

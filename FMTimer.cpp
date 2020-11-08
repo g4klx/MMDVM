@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FMTimer.h"
 
@@ -68,3 +71,6 @@ bool CFMTimer::hasExpired() const
 
   return false;
 }
+
+#endif
+

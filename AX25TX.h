@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_AX25)
+
 #if !defined(AX25TX_H)
 #define  AX25TX_H
-
-#include "Config.h"
 
 class CAX25TX {
 public:
@@ -44,6 +46,8 @@ private:
   void writeBit(bool b);
   bool NRZI(bool b);
 };
+
+#endif
 
 #endif
 

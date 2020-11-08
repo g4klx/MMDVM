@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FMNoiseSquelch.h"
 
@@ -125,3 +128,6 @@ void CFMNoiseSquelch::reset()
   m_state = false;
   m_count = 0U;
 }
+
+#endif
+

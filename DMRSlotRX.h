@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,10 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_DMR)
+
 #if !defined(DMRSLOTRX_H)
 #define  DMRSLOTRX_H
 
-#include "Config.h"
 #include "DMRDefines.h"
 
 enum DMRRX_STATE {
@@ -70,3 +73,6 @@ private:
 };
 
 #endif
+
+#endif
+

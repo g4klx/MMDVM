@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_AX25)
+
 #include "Globals.h"
 #include "AX25Frame.h"
 
@@ -119,4 +122,6 @@ void CAX25Frame::addCRC()
   m_data[m_length++] = crc8[0U];
   m_data[m_length++] = crc8[1U];
 }
+
+#endif
 

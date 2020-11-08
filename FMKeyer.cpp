@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_FM)
+
 #include "Globals.h"
 #include "FMKeyer.h"
 
@@ -214,3 +217,6 @@ bool CFMKeyer::isRunning() const
 {
   return m_poPos > 0U || m_dotPos > 0U || m_audioPos > 0U;
 }
+
+#endif
+

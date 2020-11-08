@@ -112,7 +112,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20201106 (D-Star/DMR/System Fusion/P25/NXDN/M17/POCSAG/FM/AX.25)"
+#define DESCRIPTION "20201108 (D-Star/DMR/System Fusion/P25/NXDN/M17/POCSAG/FM/AX.25)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -204,6 +204,7 @@ void CSerialPort::getStatus()
   reply[5U] = 0U;
 #endif
 
+#if defined(MODE_DMR)
   if (m_dmrEnable) {
     if (m_duplex) {
       reply[6U] = dmrTX.getSpace1();
@@ -216,6 +217,10 @@ void CSerialPort::getStatus()
     reply[6U] = 0U;
     reply[7U] = 0U;
   }
+#else
+  reply[6U] = 0U;
+  reply[7U] = 0U;
+#endif
 
 #if defined(MODE_YSF)
   if (m_ysfEnable)
@@ -226,15 +231,23 @@ void CSerialPort::getStatus()
   reply[8U] = 0U;
 #endif
 
+#if defined(MODE_P25)
   if (m_p25Enable)
     reply[9U] = p25TX.getSpace();
   else
     reply[9U] = 0U;
+#else
+  reply[9U] = 0U;
+#endif
 
+#if defined(MODE_NXDN)
   if (m_nxdnEnable)
     reply[10U] = nxdnTX.getSpace();
   else
     reply[10U] = 0U;
+#else
+  reply[10U] = 0U;
+#endif
 
 #if defined(MODE_M17)
   if (m_m17Enable)
@@ -254,15 +267,23 @@ void CSerialPort::getStatus()
   reply[12U] = 0U;
 #endif
 
+#if defined(MODE_FM)
   if (m_fmEnable)
     reply[13U] = fm.getSpace();
   else
     reply[13U] = 0U;
+#else
+  reply[13U] = 0U;
+#endif
 
+#if defined(MODE_AX25)
   if (m_ax25Enable)
     reply[14U] = ax25TX.getSpace();
   else
     reply[14U] = 0U;
+#else
+  reply[14U] = 0U;
+#endif
 
   writeInt(1U, reply, 15);
 }
@@ -390,32 +411,48 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 #if defined(MODE_YSF)
   ysfTX.setTXDelay(txDelay);
 #endif
+#if defined(MODE_P25)
   p25TX.setTXDelay(txDelay);
+#endif
+#if defined(MODE_DMR)
   dmrDMOTX.setTXDelay(txDelay);
+#endif
+#if defined(MODE_NXDN)
   nxdnTX.setTXDelay(txDelay);
+#endif
 #if defined(MODE_M17)
   m17TX.setTXDelay(txDelay);
 #endif
 #if defined(MODE_POCSAG)
   pocsagTX.setTXDelay(txDelay);
 #endif
+#if defined(MODE_AX25)
   ax25TX.setTXDelay(ax25TXDelay);
+#endif
 
+#if defined(MODE_DMR)
   dmrTX.setColorCode(colorCode);
   dmrRX.setColorCode(colorCode);
   dmrRX.setDelay(dmrDelay);
   dmrDMORX.setColorCode(colorCode);
   dmrIdleRX.setColorCode(colorCode);
+#endif
 
 #if defined(MODE_YSF)
   ysfTX.setParams(ysfLoDev, ysfTXHang);
 #endif
+#if defined(MODE_P25)
   p25TX.setParams(p25TXHang);
+#endif
+#if defined(MODE_NXDN)
   nxdnTX.setParams(nxdnTXHang);
+#endif
 #if defined(MODE_M17)
   m17TX.setParams(m17TXHang);
 #endif
+#if defined(MODE_AX25)
   ax25RX.setParams(ax25RXTwist, ax25SlotTime, ax25PPersist);
+#endif
 
   io.setParameters(rxInvert, txInvert, pttInvert, rxLevel, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, m17TXLevel, pocsagTXLevel, fmTXLevel, ax25TXLevel, txDCOffset, rxDCOffset, useCOSAsLockout);
 
@@ -424,7 +461,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   return 0U;
 }
 
-#if defined(MODE_AX25)
+#if defined(MODE_FM)
 uint8_t CSerialPort::setFMParams1(const uint8_t* data, uint16_t length)
 {
   if (length < 8U)
@@ -633,30 +670,38 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
     dstarRX.reset();
 #endif
 
+#if defined(MODE_DMR)
   if (modemState != STATE_DMR) {
     dmrIdleRX.reset();
     dmrDMORX.reset();
     dmrRX.reset();
   }
+#endif
 
 #if defined(MODE_YSF)
   if (modemState != STATE_YSF)
     ysfRX.reset();
 #endif
 
+#if defined(MODE_P25)
   if (modemState != STATE_P25)
     p25RX.reset();
+#endif
 
+#if defined(MODE_NXDN)
   if (modemState != STATE_NXDN)
     nxdnRX.reset();
+#endif
 
 #if defined(MODE_M17)
   if (modemState != STATE_M17)
     m17RX.reset();
 #endif
 
+#if defined(MODE_FM)
   if (modemState != STATE_FM)
     fm.reset();
+#endif
 
   cwIdTX.reset();
 
@@ -822,14 +867,22 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
       if (m_modemState == STATE_DSTARCAL)
         err = calDStarTX.write(buffer, length);
 #endif
+#if defined(MODE_DMR)
       if (m_modemState == STATE_DMRCAL || m_modemState == STATE_LFCAL || m_modemState == STATE_DMRCAL1K || m_modemState == STATE_DMRDMO1K)
         err = calDMR.write(buffer, length);
+#endif
+#if defined(MODE_FM)
       if (m_modemState == STATE_FMCAL10K || m_modemState == STATE_FMCAL12K || m_modemState == STATE_FMCAL15K || m_modemState == STATE_FMCAL20K || m_modemState == STATE_FMCAL25K || m_modemState == STATE_FMCAL30K)
         err = calFM.write(buffer, length);
+#endif
+#if defined(MODE_P25)
       if (m_modemState == STATE_P25CAL1K)
         err = calP25.write(buffer, length);
+#endif
+#if defined(MODE_NXDN)
       if (m_modemState == STATE_NXDNCAL1K)
         err = calNXDN.write(buffer, length);
+#endif
 #if defined(MODE_POCSAG)
       if (m_modemState == STATE_POCSAGCAL)
         err = calPOCSAG.write(buffer, length);
@@ -896,6 +949,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
       break;
 #endif
 
+#if defined(MODE_DMR)
     case MMDVM_DMR_DATA1:
       if (m_dmrEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
@@ -968,6 +1022,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
         sendNAK(err);
       }
       break;
+#endif
 
 #if defined(MODE_YSF)
     case MMDVM_YSF_DATA:
@@ -985,6 +1040,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
       break;
 #endif
 
+#if defined(MODE_P25)
     case MMDVM_P25_HDR:
       if (m_p25Enable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
@@ -1012,7 +1068,9 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
         sendNAK(err);
       }
       break;
+#endif
 
+#if defined(MODE_NXDN)
     case MMDVM_NXDN_DATA:
       if (m_nxdnEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_NXDN)
@@ -1026,6 +1084,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
         sendNAK(err);
       }
       break;
+#endif
 
 #if defined(MODE_M17)
     case MMDVM_M17_DATA:
@@ -1059,6 +1118,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
       break;
 #endif
 
+#if defined(MODE_FM)
     case MMDVM_FM_DATA:
       if (m_fmEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_FM)
@@ -1072,7 +1132,9 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
         sendNAK(err);
       }
       break;
+#endif
 
+#if defined(MODE_AX25)
     case MMDVM_AX25_DATA:
       if (m_ax25Enable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_FM)
@@ -1083,6 +1145,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
         sendNAK(err);
       }
       break;
+#endif
 
     case MMDVM_TRANSPARENT:
     case MMDVM_QSO_INFO:
@@ -1188,6 +1251,7 @@ void CSerialPort::writeDStarEOT()
 }
 #endif
 
+#if defined(MODE_DMR)
 void CSerialPort::writeDMRData(bool slot, const uint8_t* data, uint8_t length)
 {
   if (m_modemState != STATE_DMR && m_modemState != STATE_IDLE)
@@ -1227,6 +1291,7 @@ void CSerialPort::writeDMRLost(bool slot)
 
   writeInt(1U, reply, 3);
 }
+#endif
 
 #if defined(MODE_YSF)
 void CSerialPort::writeYSFData(const uint8_t* data, uint8_t length)
@@ -1270,6 +1335,7 @@ void CSerialPort::writeYSFLost()
 }
 #endif
 
+#if defined(MODE_P25)
 void CSerialPort::writeP25Hdr(const uint8_t* data, uint8_t length)
 {
   if (m_modemState != STATE_P25 && m_modemState != STATE_IDLE)
@@ -1332,7 +1398,9 @@ void CSerialPort::writeP25Lost()
 
   writeInt(1U, reply, 3);
 }
+#endif
 
+#if defined(MODE_NXDN)
 void CSerialPort::writeNXDNData(const uint8_t* data, uint8_t length)
 {
   if (m_modemState != STATE_NXDN && m_modemState != STATE_IDLE)
@@ -1372,6 +1440,7 @@ void CSerialPort::writeNXDNLost()
 
   writeInt(1U, reply, 3);
 }
+#endif
 
 #if defined(MODE_M17)
 void CSerialPort::writeM17Data(const uint8_t* data, uint8_t length)
@@ -1415,6 +1484,7 @@ void CSerialPort::writeM17Lost()
 }
 #endif
 
+#if defined(MODE_FM)
 void CSerialPort::writeFMData(const uint8_t* data, uint16_t length)
 {
   if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
@@ -1481,7 +1551,9 @@ void CSerialPort::writeFMEOT()
 
   writeInt(1U, reply, 3U);
 }
+#endif
 
+#if defined(MODE_AX25)
 void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
 {
   if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
@@ -1513,6 +1585,7 @@ void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
     writeInt(1U, reply, length + 3U);
   }
 }
+#endif
 
 void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
 {

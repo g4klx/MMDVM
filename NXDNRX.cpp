@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2018,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
  */
 
 #include "Config.h"
+
+#if defined(MODE_NXDN)
+
 #include "Globals.h"
 #include "NXDNRX.h"
 #include "Utils.h"
@@ -402,4 +405,6 @@ void CNXDNRX::writeRSSIData(uint8_t* data)
   m_rssiAccum = 0U;
   m_rssiCount = 0U;
 }
+
+#endif
 

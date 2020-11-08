@@ -16,10 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "Config.h"
+
+#if defined(MODE_FM)
+
 #if !defined(FMTimeout_H)
 #define  FMTimeout_H
-
-#include "Config.h"
 
 class CFMTimeout {
 public:
@@ -40,3 +42,6 @@ private:
 };
 
 #endif
+
+#endif
+
