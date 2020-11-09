@@ -24,8 +24,8 @@
 #include "GitVersion.h"
 #endif
 
-
 #include "SerialPort.h"
+#include "Version.h"
 
 const uint8_t MMDVM_FRAME_START  = 0xE0U;
 
@@ -112,14 +112,12 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20201109 (D-Star/DMR/System Fusion/P25/NXDN/M17/POCSAG/FM/AX.25)"
-
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
-const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, GITVERSION);
+const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, GITVERSION);
 #else
 #define concat(h, a, b, c, d) h " " a " " b " (Build: " c " " d ")"
-const char HARDWARE[] = concat(HW_TYPE, DESCRIPTION, TCXO, __TIME__, __DATE__);
+const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, __TIME__, __DATE__);
 #endif
 
 const uint8_t PROTOCOL_VERSION   = 2U;
