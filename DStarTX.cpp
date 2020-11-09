@@ -201,7 +201,7 @@ m_txDelay(60U)       // 100ms
 {
   ::memset(m_modState, 0x00U, 20U * sizeof(q15_t));
 
-  m_modFilter.L           = DSTAR_RADIO_BIT_LENGTH;
+  m_modFilter.L           = DSTAR_RADIO_SYMBOL_LENGTH;
   m_modFilter.phaseLength = GAUSSIAN_0_35_FILTER_PHASE_LEN;
   m_modFilter.pCoeffs     = GAUSSIAN_0_35_FILTER;
   m_modFilter.pState      = m_modState;
@@ -219,8 +219,8 @@ void CDStarTX::process()
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = BIT_SYNC;
     } else {
-      uint8_t dummy;
       // Pop the type byte off
+      uint8_t dummy;
       m_buffer.get(dummy);
 
       uint8_t header[DSTAR_HEADER_LENGTH_BYTES];
@@ -258,8 +258,8 @@ void CDStarTX::process()
     m_buffer.get(dummy);
 
     for (uint8_t j = 0U; j < 3U; j++) {
-      for (uint8_t i = 0U; i < DSTAR_EOT_LENGTH_BYTES; i++)
-        m_poBuffer[m_poLen++] = DSTAR_EOT_BYTES[i];
+      for (uint8_t i = 0U; i < DSTAR_END_SYNC_LENGTH_BYTES; i++)
+        m_poBuffer[m_poLen++] = DSTAR_END_SYNC_BYTES[i];
     }
      
     m_poPtr = 0U;
@@ -268,11 +268,11 @@ void CDStarTX::process()
   if (m_poLen > 0U) {
     uint16_t space = io.getSpace();
     
-    while (space > (8U * DSTAR_RADIO_BIT_LENGTH)) {
+    while (space > (8U * DSTAR_RADIO_SYMBOL_LENGTH)) {
       uint8_t c = m_poBuffer[m_poPtr++];
       writeByte(c);
 
-      space -= 8U * DSTAR_RADIO_BIT_LENGTH;
+      space -= 8U * DSTAR_RADIO_SYMBOL_LENGTH;
       
       if (m_poPtr >= m_poLen) {
         m_poPtr = 0U;
@@ -418,7 +418,7 @@ void CDStarTX::txHeader(const uint8_t* in, uint8_t* out) const
 void CDStarTX::writeByte(uint8_t c)
 {
   q15_t inBuffer[8U];
-  q15_t outBuffer[DSTAR_RADIO_BIT_LENGTH * 8U];
+  q15_t outBuffer[DSTAR_RADIO_SYMBOL_LENGTH * 8U];
 
   uint8_t mask = 0x01U;
 
@@ -433,7 +433,7 @@ void CDStarTX::writeByte(uint8_t c)
 
   ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 8U);
   
-  io.write(STATE_DSTAR, outBuffer, DSTAR_RADIO_BIT_LENGTH * 8U);
+  io.write(STATE_DSTAR, outBuffer, DSTAR_RADIO_SYMBOL_LENGTH * 8U);
 }
 
 void CDStarTX::setTXDelay(uint8_t delay)

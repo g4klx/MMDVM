@@ -22,34 +22,32 @@
 // Allow for the selection of which modes to compile into the firmware. This is particularly useful for processors
 // which have limited code space and processing power like the STM32F103, which is found on older/cheaper boards.
 
-// Enable D-Star support, the D-Star correlator improves the sensitivity of D-Star enormously but uses quite a lot
-// of processing power.
+// Enable D-Star support.
 #define MODE_DSTAR
-#define USE_DSTAR_CORRELATOR
 
-// Enable DMR support
+// Enable DMR support.
 #define MODE_DMR
 
-// Enable System Fusion support
+// Enable System Fusion support.
 #define MODE_YSF
 
 // Enable P25 phase 1 support.
 #define MODE_P25
 
-// Enable NXDN support, the boxcar filter sometimes improves the performance of P25 receive on some systems
+// Enable NXDN support, the boxcar filter sometimes improves the performance of NXDN receive on some systems.
 #define MODE_NXDN
 #define USE_NXDN_BOXCAR
 
-// Enable M17 support
+// Enable M17 support.
 #define MODE_M17
 
-// Enable POCSAG support
+// Enable POCSAG support.
 #define MODE_POCSAG
 
-// Enable FM support
+// Enable FM support.
 #define MODE_FM
 
-// Enable AX.25 support, this is only enabled if MODE_FM is also defined.
+// Enable AX.25 support, this is only enabled if FM is also enabled.
 #define MODE_AX25
 
 // Allow for the use of high quality external clock oscillators
