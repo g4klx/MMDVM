@@ -33,12 +33,12 @@
 // Enable System Fusion support
 #define MODE_YSF
 
-// Enable P25 phase 1 support, the boxcar filter sometimes improves the performance of P25 receive on some systems.
+// Enable P25 phase 1 support.
 #define MODE_P25
-#define USE_P25_BOXCAR
 
-// Enable NXDN support
+// Enable NXDN support, the boxcar filter sometimes improves the performance of P25 receive on some systems
 #define MODE_NXDN
+#define USE_NXDN_BOXCAR
 
 // Enable M17 support
 #define MODE_M17
