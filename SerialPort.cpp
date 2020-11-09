@@ -306,13 +306,46 @@ void CSerialPort::getVersion()
 
   reply[3U] = PROTOCOL_VERSION;
 
-  reply[4U] = io.getCPU();
+  // Return two bytes of mode capabilities
+  reply[4U] = 0x00U;
+#if defined(MODE_DSTAR)
+  reply[4U] |= 0x01U;
+#endif
+#if defined(MODE_DMR)
+  reply[4U] |= 0x02U;
+#endif
+#if defined(MODE_YSF)
+  reply[4U] |= 0x04U;
+#endif
+#if defined(MODE_P25)
+  reply[4U] |= 0x08U;
+#endif
+#if defined(MODE_NXDN)
+  reply[4U] |= 0x10U;
+#endif
+#if defined(MODE_M17)
+  reply[4U] |= 0x20U;
+#endif
+#if defined(MODE_FM)
+  reply[4U] |= 0x40U;
+#endif
+
+  reply[5U] = 0x00U;
+#if defined(MODE_POCSAG)
+  reply[5U] |= 0x01U;
+#endif
+#if defined(MODE_AX25)
+  reply[5U] |= 0x02U;
+#endif
+
+  // CPU type/manufacturer. 0=Atmel ARM, 1=NXP ARM, 2=St-Micro ARM
+  reply[6U] = io.getCPU();
 
   // Reserve 16 bytes for the UDID
-  ::memcpy(reply + 5U, 0x00U, 16U);
-  io.getUDID(reply + 5U);
+  ::memcpy(reply + 7U, 0x00U, 16U);
+  io.getUDID(reply + 7U);
 
-  uint8_t count = 21U;
+  uint8_t count = 23U;
   for (uint8_t i = 0U; HARDWARE[i] != 0x00U; i++, count++)
     reply[count] = HARDWARE[i];
 
