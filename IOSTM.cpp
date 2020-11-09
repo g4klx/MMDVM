@@ -545,4 +545,21 @@ void CIO::delayInt(unsigned int dly)
   }
 }
 
+uint8_t CIO::getCPU() const
+{
+  return 2U;
+}
+
+void CIO::getUDID(uint8_t* buffer)
+{
+#if defined(STM32F4XX)
+  ::memcpy(buffer, (void *)0x1FFF7A10, 12U);
+#elif defined(STM32F722xx)
+  ::memcpy(buffer, (void *)0x1FF07A10, 12U);
+#elif defined(STM32F767xx)
+  ::memcpy(buffer, (void *)0x1FF0F420, 12U);
 #endif
+}
+
+#endif
+

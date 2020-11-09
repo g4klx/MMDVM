@@ -291,4 +291,24 @@ void CIO::delayInt(unsigned int dly)
   delay(dly);
 }
 
+uint8_t CIO::getCPU() const
+{
+  return 0U;
+}
+
+// Code taken from https://github.com/emagii/at91sam3s/blob/master/examples/eefc_uniqueid/main.c
+void CIO::getUDID(uint8_t* buffer)
+{
+  EFC->EEFC_FCR = (0x5A << 24) | EFC_FCMD_STUI;
+
+  ::memcpy(buffer, (void *)IFLASH_ADDR, 16U);
+
+  EFC->EEFC_FCR = (0x5A << 24) | EFC_FCMD_SPUI;
+
+  do {
+    status = EFC->EEFC_FSR ;
+  } while ((status & EEFC_FSR_FRDY) != EEFC_FSR_FRDY);
+}
+
 #endif
+

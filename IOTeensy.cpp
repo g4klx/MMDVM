@@ -275,4 +275,15 @@ void CIO::delayInt(unsigned int dly)
   delay(dly);
 }
 
+uint8_t CIO::getCPU() const
+{
+  return 1U;
+}
+
+void CIO::getUDID(uint8_t* buffer)
+{
+  ::memcpy(buffer, (void *)0x4058, 16U);
+}
+
 #endif
+

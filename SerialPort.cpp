@@ -112,7 +112,7 @@ const uint8_t MMDVM_DEBUG5       = 0xF5U;
 #define	HW_TYPE	"MMDVM"
 #endif
 
-#define DESCRIPTION "20201108 (D-Star/DMR/System Fusion/P25/NXDN/M17/POCSAG/FM/AX.25)"
+#define DESCRIPTION "20201109 (D-Star/DMR/System Fusion/P25/NXDN/M17/POCSAG/FM/AX.25)"
 
 #if defined(GITVERSION)
 #define concat(h, a, b, c) h " " a " " b " GitID #" c ""
@@ -290,7 +290,7 @@ void CSerialPort::getStatus()
 
 void CSerialPort::getVersion()
 {
-  uint8_t reply[150U];
+  uint8_t reply[200U];
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
@@ -298,7 +298,13 @@ void CSerialPort::getVersion()
 
   reply[3U] = PROTOCOL_VERSION;
 
-  uint8_t count = 4U;
+  reply[4U] = io.getCPU();
+
+  // Reserve 16 bytes for the UDID
+  ::memcpy(reply + 5U, 0x00U, 16U);
+  io.getUDID(reply + 5U);
+
+  uint8_t count = 21U;
   for (uint8_t i = 0U; HARDWARE[i] != 0x00U; i++, count++)
     reply[count] = HARDWARE[i];
 

@@ -23,7 +23,6 @@
 #include "Globals.h"
 #include "IO.h"
 
-
 #if defined(STM32F1)
 
 #if defined(STM32F1_POG)
@@ -485,4 +484,17 @@ void CIO::delayInt(unsigned int dly)
   delay(dly);
 }
 
+uint8_t CIO::getCPU() const
+{
+  return 2U;
+}
+
+void CIO::getUDID(uint8_t* buffer)
+{
+#if defined(STM32F105xC)
+  ::memcpy(buffer, (void *)0x1FFFF7E8, 12U);
 #endif
+}
+
+#endif
+
