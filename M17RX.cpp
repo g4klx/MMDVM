@@ -26,10 +26,10 @@
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_BIT_START_ERRS = 2U;
-const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 4U;
+const uint8_t MAX_SYNC_BIT_START_ERRS = 1U;
+const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 3U;
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 3U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -39,7 +39,7 @@ const uint8_t NOAVEPTR = 99U;
 
 const uint16_t NOENDPTR = 9999U;
 
-const unsigned int MAX_SYNC_FRAMES = 1U + 1U;
+const unsigned int MAX_SYNC_FRAMES = 3U + 1U;
 
 CM17RX::CM17RX() :
 m_state(M17RXS_NONE),
