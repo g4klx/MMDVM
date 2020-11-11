@@ -906,7 +906,8 @@ void CSerialPort::process()
       space = avail;
 
     for (uint16_t i = 0U; i < space; i++) {
-      uint8_t c = m_repeat.get();
+      uint8_t c = 0U;
+      m_repeat.get(c);
       writeInt(3U, &c, 1U);
     }
   }
