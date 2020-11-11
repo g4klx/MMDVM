@@ -58,7 +58,7 @@
 // Frequencies such as 10.0 Mhz (48000 * 208.333) or 20 Mhz (48000 * 416.666) are not suitable.
 //
 // For 12 MHz
-#define EXTERNAL_OSC 12000000
+// #define EXTERNAL_OSC 12000000
 // For 12.288 MHz
 // #define EXTERNAL_OSC 12288000
 // For 14.4 MHz
@@ -75,7 +75,7 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode via LEDs
-// #define MODE_LEDS
+#define MODE_LEDS
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
@@ -85,7 +85,7 @@
 #define STM32F1_POG
 #else
 // For the ZUM V1.0 and V1.0.1 boards pin layout
-#define ARDUINO_DUE_ZUM_V10
+// #define ARDUINO_DUE_ZUM_V10
 #endif
 
 // For the SP8NTH board
@@ -102,10 +102,10 @@
 // #define VK6MST_TEENSY_PI3_SHIELD_I2C
 
 // Pass RSSI information to the host
-// #define SEND_RSSI_DATA
+#define SEND_RSSI_DATA
 
 // Use the modem as a serial repeater for Nextion displays
-// #define SERIAL_REPEATER
+#define SERIAL_REPEATER
 
 // To reduce CPU load, you can remove the DC blocker by commenting out the next line
 #define USE_DCBLOCKER
