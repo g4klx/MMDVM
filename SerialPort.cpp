@@ -82,6 +82,7 @@ const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
 
 const uint8_t MMDVM_SERIAL_DATA  = 0x80U;
+const uint8_t MMDVM_I2C_DATA     = 0x81U;
 
 const uint8_t MMDVM_TRANSPARENT  = 0x90U;
 const uint8_t MMDVM_QSO_INFO     = 0x91U;
@@ -131,9 +132,12 @@ m_buffer(),
 m_ptr(0U),
 m_len(0U),
 m_debug(false),
-m_repeat(),
-m_lastAvail(0),
-m_lastAvailCount(0U)
+m_serialData(),
+m_lastSerialAvail(0),
+m_lastSerialAvailCount(0U),
+m_i2CData(),
+m_lastI2CAvail(0),
+m_lastI2CAvailCount(0U)
 {
 }
 
@@ -850,6 +854,9 @@ void CSerialPort::start()
 #if defined(SERIAL_REPEATER)
   beginInt(3U, 9600);
 #endif
+#if defined(I2C_REPEATER)
+  beginInt(10U, 9600);
+#endif
 }
 
 void CSerialPort::process()
@@ -904,34 +911,67 @@ void CSerialPort::process()
 
 #if defined(SERIAL_REPEATER)
   // Write any outgoing serial data
-  uint16_t space = m_repeat.getData();
-  if (space > 0U) {
+  uint16_t serialSpace = m_serialData.getData();
+  if (serialSpace > 0U) {
     int avail = availableForWriteInt(3U);
-    if (avail < space)
-      space = avail;
+    if (avail < serialSpace)
+      serialSpace = avail;
 
-    for (uint16_t i = 0U; i < space; i++) {
+    for (uint16_t i = 0U; i < serialSpace; i++) {
       uint8_t c = 0U;
-      m_repeat.get(c);
+      m_serialData.get(c);
       writeInt(3U, &c, 1U);
     }
   }
 
   // Read any incoming serial data, and send out in batches
-  int avail = availableForReadInt(3U);
-  if ((avail > 0 && avail == m_lastAvail && m_lastAvailCount >= MAX_SERIAL_COUNT) || (avail >= MAX_SERIAL_DATA)) {
+  int serialAvail = availableForReadInt(3U);
+  if ((serialAvail > 0 && serialAvail == m_lastSerialAvail && m_lastSerialAvailCount >= MAX_SERIAL_COUNT) || (serialAvail >= MAX_SERIAL_DATA)) {
     uint8_t buffer[MAX_SERIAL_DATA];
-    for (int i = 0; i < avail && i < MAX_SERIAL_DATA; i++) {
+    for (int i = 0; i < serialAvail && i < MAX_SERIAL_DATA; i++) {
       buffer[i] = readInt(3U);
-      m_lastAvail--;
+      m_lastSerialAvail--;
     }
-    writeSerialData(buffer, avail - m_lastAvail);
-    m_lastAvailCount = 0U;
-  } else if (avail > 0U && avail == m_lastAvail) {
-    m_lastAvailCount++;
+    writeSerialData(buffer, serialAvail - m_lastSerialAvail);
+    m_lastSerialAvailCount = 0U;
+  } else if (serialAvail > 0U && serialAvail == m_lastSerialAvail) {
+    m_lastSerialAvailCount++;
   } else {
-    m_lastAvail      = avail;
-    m_lastAvailCount = 0U;
+    m_lastSerialAvail      = serialAvail;
+    m_lastSerialAvailCount = 0U;
+  }
+#endif
+
+#if defined(I2C_REPEATER)
+  // Write any outgoing serial data
+  uint16_t i2CSpace = m_i2CData.getData();
+  if (i2CSpace > 0U) {
+    int avail = availableForWriteInt(10U);
+    if (avail < i2CSpace)
+      i2CSpace = avail;
+
+    for (uint16_t i = 0U; i < i2CSpace; i++) {
+      uint8_t c = 0U;
+      m_i2CData.get(c);
+      writeInt(10U, &c, 1U);
+    }
+  }
+
+  // Read any incoming serial data, and send out in batches
+  int i2CAvail = availableForReadInt(10U);
+  if ((i2CAvail > 0 && i2CAvail == m_lastI2CAvail && m_lastI2CAvailCount >= MAX_SERIAL_COUNT) || (i2CAvail >= MAX_SERIAL_DATA)) {
+    uint8_t buffer[MAX_SERIAL_DATA];
+    for (int i = 0; i < i2CAvail && i < MAX_SERIAL_DATA; i++) {
+      buffer[i] = readInt(10U);
+      m_lastI2CAvail--;
+    }
+    writeI2CData(buffer, i2CAvail - m_lastI2CAvail);
+    m_lastI2CAvailCount = 0U;
+  } else if (i2CAvail > 0U && i2CAvail == m_lastI2CAvail) {
+    m_lastI2CAvailCount++;
+  } else {
+    m_lastI2CAvail      = i2CAvail;
+    m_lastI2CAvailCount = 0U;
   }
 #endif
 }
@@ -1304,7 +1344,15 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
 #if defined(SERIAL_REPEATER)
     case MMDVM_SERIAL_DATA: {
       for (uint8_t i = 3U; i < m_len; i++)
-        m_repeat.put(m_buffer[i]);
+        m_serialData.put(m_buffer[i]);
+      }
+      break;
+#endif
+
+#if defined(I2C_REPEATER)
+    case MMDVM_I2C_DATA: {
+      for (uint8_t i = 3U; i < m_len; i++)
+        m_i2CData.put(m_buffer[i]);
       }
       break;
 #endif
@@ -1744,6 +1792,25 @@ void CSerialPort::writeSerialData(const uint8_t* data, uint8_t length)
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
   reply[2U] = MMDVM_SERIAL_DATA;
+
+  uint8_t count = 3U;
+  for (uint8_t i = 0U; i < length; i++, count++)
+    reply[count] = data[i];
+
+  reply[1U] = count;
+
+  writeInt(1U, reply, count);
+}
+#endif
+
+#if defined(I2C_REPEATER)
+void CSerialPort::writeI2CData(const uint8_t* data, uint8_t length)
+{
+  uint8_t reply[255U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_I2C_DATA;
 
   uint8_t count = 3U;
   for (uint8_t i = 0U; i < length; i++, count++)

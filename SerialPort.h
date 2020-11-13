@@ -83,6 +83,10 @@ public:
   void writeSerialData(const uint8_t* data, uint8_t length);
 #endif
 
+#if defined(I2C_REPEATER)
+  void writeI2CData(const uint8_t* data, uint8_t length);
+#endif
+
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
 
@@ -97,9 +101,12 @@ private:
   uint16_t  m_ptr;
   uint16_t  m_len;
   bool      m_debug;
-  CRingBuffer<uint8_t> m_repeat;
-  int       m_lastAvail;
-  uint16_t  m_lastAvailCount;
+  CRingBuffer<uint8_t> m_serialData;
+  int       m_lastSerialAvail;
+  uint16_t  m_lastSerialAvailCount;
+  CRingBuffer<uint8_t> m_i2CData;
+  int       m_lastI2CAvail;
+  uint16_t  m_lastI2CAvailCount;
 
   void    sendACK();
   void    sendNAK(uint8_t err);
