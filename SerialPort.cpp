@@ -81,7 +81,7 @@ const uint8_t MMDVM_FM_EOT       = 0x67U;
 const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
 
-const uint8_t MMDVM_SERIAL       = 0x80U;
+const uint8_t MMDVM_SERIAL_DATA  = 0x80U;
 
 const uint8_t MMDVM_TRANSPARENT  = 0x90U;
 const uint8_t MMDVM_QSO_INFO     = 0x91U;
@@ -122,13 +122,18 @@ const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, __TIME__, __DATE__);
 
 const uint8_t PROTOCOL_VERSION   = 2U;
 
+// Parameters for batching serial data
+const int      MAX_SERIAL_DATA  = 250;
+const uint16_t MAX_SERIAL_COUNT = 100U;
 
 CSerialPort::CSerialPort() :
 m_buffer(),
 m_ptr(0U),
 m_len(0U),
 m_debug(false),
-m_repeat()
+m_repeat(),
+m_lastAvail(0),
+m_lastAvailCount(0U)
 {
 }
 
@@ -849,7 +854,7 @@ void CSerialPort::start()
 
 void CSerialPort::process()
 {
-  while (availableInt(1U)) {
+  while (availableForReadInt(1U)) {
     uint8_t c = readInt(1U);
 
     if (m_ptr == 0U) {
@@ -912,9 +917,22 @@ void CSerialPort::process()
     }
   }
 
-  // Read any incoming serial data
-  while (availableInt(3U))
-    readInt(3U);
+  // Read any incoming serial data, and send out in batches
+  int avail = availableForReadInt(3U);
+  if ((avail > 0 && avail == m_lastAvail && m_lastAvailCount >= MAX_SERIAL_COUNT) || (avail >= MAX_SERIAL_DATA)) {
+    uint8_t buffer[MAX_SERIAL_DATA];
+    for (int i = 0; i < avail && i < MAX_SERIAL_DATA; i++) {
+      buffer[i] = readInt(3U);
+      m_lastAvail--;
+    }
+    writeSerialData(buffer, avail - m_lastAvail);
+    m_lastAvailCount = 0U;
+  } else if (avail > 0U && avail == m_lastAvail) {
+    m_lastAvailCount++;
+  } else {
+    m_lastAvail      = avail;
+    m_lastAvailCount = 0U;
+  }
 #endif
 }
 
@@ -1284,7 +1302,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
       break;
 
 #if defined(SERIAL_REPEATER)
-    case MMDVM_SERIAL: {
+    case MMDVM_SERIAL_DATA: {
       for (uint8_t i = 3U; i < m_len; i++)
         m_repeat.put(m_buffer[i]);
       }
@@ -1715,6 +1733,25 @@ void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
 
     writeInt(1U, reply, length + 3U);
   }
+}
+#endif
+
+#if defined(SERIAL_REPEATER)
+void CSerialPort::writeSerialData(const uint8_t* data, uint8_t length)
+{
+  uint8_t reply[255U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_SERIAL_DATA;
+
+  uint8_t count = 3U;
+  for (uint8_t i = 0U; i < length; i++, count++)
+    reply[count] = data[i];
+
+  reply[1U] = count;
+
+  writeInt(1U, reply, count);
 }
 #endif
 

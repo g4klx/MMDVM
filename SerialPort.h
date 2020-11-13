@@ -79,6 +79,10 @@ public:
   void writeFMEOT();
 #endif
 
+#if defined(SERIAL_REPEATER)
+  void writeSerialData(const uint8_t* data, uint8_t length);
+#endif
+
   void writeCalData(const uint8_t* data, uint8_t length);
   void writeRSSIData(const uint8_t* data, uint8_t length);
 
@@ -94,6 +98,8 @@ private:
   uint16_t  m_len;
   bool      m_debug;
   CRingBuffer<uint8_t> m_repeat;
+  int       m_lastAvail;
+  uint16_t  m_lastAvailCount;
 
   void    sendACK();
   void    sendNAK(uint8_t err);
@@ -113,7 +119,7 @@ private:
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);
-  int     availableInt(uint8_t n);
+  int     availableForReadInt(uint8_t n);
   int     availableForWriteInt(uint8_t n);
   uint8_t readInt(uint8_t n);
   void    writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool flush = false);

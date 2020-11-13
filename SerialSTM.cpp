@@ -327,7 +327,7 @@ void CSerialPort::beginInt(uint8_t n, int speed)
    }
 }
 
-int CSerialPort::availableInt(uint8_t n)
+int CSerialPort::availableForReadInt(uint8_t n)
 {
    switch (n) {
       case 1U:
