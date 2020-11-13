@@ -108,7 +108,7 @@
 #define SERIAL_REPEATER
 
 // Use the modem as an I2C repeater for OLED displays
-#define I2C_REPEATER
+// #define I2C_REPEATER
 
 // To reduce CPU load, you can remove the DC blocker by commenting out the next line
 #define USE_DCBLOCKER
