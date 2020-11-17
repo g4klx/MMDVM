@@ -105,8 +105,6 @@ private:
   int       m_lastSerialAvail;
   uint16_t  m_lastSerialAvailCount;
   CRingBuffer<uint8_t> m_i2CData;
-  int       m_lastI2CAvail;
-  uint16_t  m_lastI2CAvailCount;
 
   void    sendACK();
   void    sendNAK(uint8_t err);
@@ -115,7 +113,7 @@ private:
   uint8_t setConfig(const uint8_t* data, uint16_t length);
   uint8_t setMode(const uint8_t* data, uint16_t length);
   void    setMode(MMDVM_STATE modemState);
-  void    processMessage(const uint8_t* data, uint16_t length);
+  void    processMessage(uint8_t type, const uint8_t* data, uint16_t length);
 
 #if defined(MODE_FM)
   uint8_t setFMParams1(const uint8_t* data, uint16_t length);

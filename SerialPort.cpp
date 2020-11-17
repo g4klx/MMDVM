@@ -135,9 +135,7 @@ m_debug(false),
 m_serialData(),
 m_lastSerialAvail(0),
 m_lastSerialAvailCount(0U),
-m_i2CData(),
-m_lastI2CAvail(0),
-m_lastI2CAvailCount(0U)
+m_i2CData()
 {
 }
 
@@ -888,7 +886,7 @@ void CSerialPort::process()
 
       // The full packet has been received, process it
       if (m_ptr == m_len)
-        processMessage(m_buffer + 3U, m_len - 3U);
+        processMessage(m_buffer[2U], m_buffer + 3U, m_len - 3U);
     } else {
       // Any other bytes are added to the buffer
       m_buffer[m_ptr] = c;
@@ -897,9 +895,9 @@ void CSerialPort::process()
       // The full packet has been received, process it
       if (m_ptr == m_len) {
         if (m_len > 255U)
-          processMessage(m_buffer + 4U, m_len - 4U);
+          processMessage(m_buffer[3U], m_buffer + 4U, m_len - 4U);
         else
-          processMessage(m_buffer + 3U, m_len - 3U);
+          processMessage(m_buffer[2U], m_buffer + 3U, m_len - 3U);
       }
     }
   }
@@ -956,31 +954,14 @@ void CSerialPort::process()
       writeInt(10U, &c, 1U);
     }
   }
-
-  // Read any incoming serial data, and send out in batches
-  int i2CAvail = availableForReadInt(10U);
-  if ((i2CAvail > 0 && i2CAvail == m_lastI2CAvail && m_lastI2CAvailCount >= MAX_SERIAL_COUNT) || (i2CAvail >= MAX_SERIAL_DATA)) {
-    uint8_t buffer[MAX_SERIAL_DATA];
-    for (int i = 0; i < i2CAvail && i < MAX_SERIAL_DATA; i++) {
-      buffer[i] = readInt(10U);
-      m_lastI2CAvail--;
-    }
-    writeI2CData(buffer, i2CAvail - m_lastI2CAvail);
-    m_lastI2CAvailCount = 0U;
-  } else if (i2CAvail > 0U && i2CAvail == m_lastI2CAvail) {
-    m_lastI2CAvailCount++;
-  } else {
-    m_lastI2CAvail      = i2CAvail;
-    m_lastI2CAvailCount = 0U;
-  }
 #endif
 }
 
-void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
+void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t length)
 {
   uint8_t err = 2U;
 
-  switch (m_buffer[2U]) {
+  switch (type) {
     case MMDVM_GET_STATUS:
       getStatus();
       break;
@@ -1176,12 +1157,12 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
     case MMDVM_DMR_START:
       if (m_dmrEnable) {
         err = 4U;
-        if (m_len == 4U) {
-          if (m_buffer[3U] == 0x01U && m_modemState == STATE_DMR) {
+        if (length == 1U) {
+          if (buffer[0U] == 0x01U && m_modemState == STATE_DMR) {
             if (!m_tx)
               dmrTX.setStart(true);
             err = 0U;
-          } else if (m_buffer[3U] == 0x00U && m_modemState == STATE_DMR) {
+          } else if (buffer[0U] == 0x00U && m_modemState == STATE_DMR) {
             if (m_tx)
               dmrTX.setStart(false);
             err = 0U;
@@ -1311,7 +1292,7 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
     case MMDVM_FM_DATA:
       if (m_fmEnable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_FM)
-          err = fm.writeData(m_buffer + 3U, m_len - 3U);
+          err = fm.writeData(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
@@ -1343,16 +1324,16 @@ void CSerialPort::processMessage(const uint8_t* buffer, uint16_t length)
 
 #if defined(SERIAL_REPEATER)
     case MMDVM_SERIAL_DATA: {
-      for (uint8_t i = 3U; i < m_len; i++)
-        m_serialData.put(m_buffer[i]);
+      for (uint16_t i = 0U; i < length; i++)
+        m_serialData.put(buffer[i]);
       }
       break;
 #endif
 
 #if defined(I2C_REPEATER)
     case MMDVM_I2C_DATA: {
-      for (uint8_t i = 3U; i < m_len; i++)
-        m_i2CData.put(m_buffer[i]);
+      for (uint16_t i = 0U; i < length; i++)
+        m_i2CData.put(buffer[i]);
       }
       break;
 #endif
