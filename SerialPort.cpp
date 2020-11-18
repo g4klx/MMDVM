@@ -350,7 +350,7 @@ void CSerialPort::getVersion()
   reply[6U] = io.getCPU();
 
   // Reserve 16 bytes for the UDID
-  ::memcpy(reply + 7U, 0x00U, 16U);
+  ::memset(reply + 7U, 0x00U, 16U);
   io.getUDID(reply + 7U);
 
   uint8_t count = 23U;
@@ -1317,19 +1317,20 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 #if defined(I2C_REPEATER)
     case MMDVM_I2C_DATA: {
         uint8_t type = buffer[0U];
-        uint8_t err = 4U;
         switch (type) {
           case I2C_COMMAND:
-            err = i2C1.writeCommand(buffer + 1U, length - 1U);
+            err = i2c1.writeCommand(buffer + 1U, length - 1U);
             break;
           case I2C_DATA:
-            err = i2C1.writeData(buffer + 1U, length - 1U);
+            err = i2c1.writeData(buffer + 1U, length - 1U);
+            break;
+          default:
+            DEBUG2("Received invalid I2C type", type);
+            err = 4U;
             break;
         }
-        if (err != 0U) {
-          DEBUG2("Received invalid I2C data", err);
+        if (err != 0U)
           sendNAK(err);
-        }
       }
       break;
 #endif

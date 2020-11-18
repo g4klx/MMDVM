@@ -192,11 +192,11 @@ void CIO::initInt()
 #endif
 
 #if defined(MODE_OLED)
-  I2C3Init();
+  oled.init();
 #endif
 
 #if defined(I2C_REPEATER)
-  I2C1Init();
+  i2c1.init();
 #endif
 }
 

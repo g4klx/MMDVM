@@ -20,27 +20,27 @@
 
 #if defined(MODE_OLED) || defined(I2C_REPEATER)
 
-#if !defined(I2CPORT_H)
-#define  I2CPORT_H
+#include "I2CPort.h"
 
-#include <cstdint>
+CI2CPort::CI2CPort(uint8_t n) :
+m_ok(false)
+{
+}
 
+bool CI2CPort::init()
+{
+  return false;
+}
 
-class CI2CPort {
-public:
-  CI2CPort(uint8_t n);
+uint8_t CI2CPort::writeCommand(const uint8_t* data, uint8_t length)
+{
+  return 6U;
+}
 
-  bool init();
-
-  uint8_t writeCommand(const uint8_t* data, uint8_t length);
-
-  uint8_t writeData(const uint8_t* data, uint8_t length);
-
-private:
-  bool m_ok;
-};
-
-#endif
+uint8_t CI2CPort::writeData(const uint8_t* data, uint8_t length)
+{
+  return 6U;
+}
 
 #endif
 

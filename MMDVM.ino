@@ -40,8 +40,10 @@ bool m_dcd = false;
 
 #if defined(MODE_OLED)
 CI2COLED oled;
-CI2CPort i2C1;
-CI2CPort i2C3;
+#endif
+
+#if defined(I2C_REPEATER)
+CI2CPort i2C1(1U);
 #endif
 
 #if defined(MODE_DSTAR)

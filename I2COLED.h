@@ -23,15 +23,20 @@
 #if !defined(I2COLED_H)
 #define  I2COLED_H
 
-#include "Globals.h"
+#include <cstdint>
+
+#include "I2CPort.h"
 
 class CI2COLED {
 public:
   CI2COLED();
 
-  void setMode(MMDVM_STATE state);
+  bool init();
+
+  void setMode(uint8_t state);
 
 private:
+  CI2CPort i2c;
 };
 
 #endif

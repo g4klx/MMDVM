@@ -18,29 +18,23 @@
 
 #include "Config.h"
 
-#if defined(MODE_OLED) || defined(I2C_REPEATER)
+#if defined(MODE_OLED)
 
-#if !defined(I2CPORT_H)
-#define  I2CPORT_H
+#include "I2COLED.h"
 
-#include <cstdint>
+CI2COLED::CI2COLED() :
+i2c(3U)
+{
+}
 
+bool CI2COLED::init()
+{
+  return i2c.init();
+}
 
-class CI2CPort {
-public:
-  CI2CPort(uint8_t n);
-
-  bool init();
-
-  uint8_t writeCommand(const uint8_t* data, uint8_t length);
-
-  uint8_t writeData(const uint8_t* data, uint8_t length);
-
-private:
-  bool m_ok;
-};
-
-#endif
+void CI2COLED::setMode(uint8_t state)
+{
+}
 
 #endif
 

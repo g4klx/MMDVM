@@ -217,6 +217,7 @@ static inline void GPIOInit()
   GPIOConfigPin(PORT_LED,    PIN_LED,    GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_COS,    PIN_COS,    GPIO_CRL_CNF0_1);
   
+#if defined(MODE_LEDS)
   GPIOConfigPin(PORT_DSTAR,  PIN_DSTAR,  GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_DMR,    PIN_DMR,    GPIO_CRL_MODE0_1);
   GPIOConfigPin(PORT_YSF,    PIN_YSF,    GPIO_CRL_MODE0_1);
@@ -229,6 +230,7 @@ static inline void GPIOInit()
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   GPIOConfigPin(PORT_POCSAG, PIN_POCSAG, GPIO_CRL_MODE0_1);
+#endif
 #endif
 
   GPIOConfigPin(PORT_RX, PIN_RX, 0);
@@ -358,10 +360,10 @@ void CIO::initInt()
   FancyLEDEffect();
 #endif
 #if defined(MODE_OLED)
-  I2C3Init();
+  oled.init();
 #endif
 #if defined(I2C_REPEATER)
-  I2C1Init();
+  i2c1.init();
 #endif
 }
 
@@ -427,6 +429,7 @@ void CIO::setCOSInt(bool on)
   BB_COSLED = !!on;
 }
 
+#if defined(MODE_LEDS)
 void CIO::setDStarInt(bool on)
 {
   BB_DSTAR = !!on;
@@ -484,6 +487,7 @@ void CIO::setFMInt(bool on)
   BB_YSF   = !!on;
 #endif
 }
+#endif
 
 void CIO::delayInt(unsigned int dly)
 {
