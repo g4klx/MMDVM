@@ -100,6 +100,8 @@ enum MMDVM_STATE {
 #include "CalNXDN.h"
 #include "CalPOCSAG.h"
 #include "CalRSSI.h"
+#include "I2CPort.h"
+#include "I2COLED.h"
 #include "CWIdTX.h"
 #include "AX25RX.h"
 #include "AX25TX.h"
@@ -141,6 +143,12 @@ extern bool m_dcd;
 
 extern CSerialPort serial;
 extern CIO io;
+
+#if defined(MODE_OLED)
+extern CI2COLED oled;
+extern CI2CPort i2C1;
+extern CI2CPort i2C3;
+#endif
 
 #if defined(MODE_DSTAR)
 extern CDStarRX dstarRX;

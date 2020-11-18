@@ -760,6 +760,10 @@ void CIO::setMode(MMDVM_STATE state)
   }
 #endif
 
+#if defined(MODE_OLED)
+  oled.setMode(state);
+#endif
+
   m_modemState = state;
 }
 

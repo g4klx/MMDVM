@@ -190,6 +190,14 @@ void CIO::initInt()
 #endif
 
 #endif
+
+#if defined(MODE_OLED)
+  I2C3Init();
+#endif
+
+#if defined(I2C_REPEATER)
+  I2C1Init();
+#endif
 }
 
 void CIO::startInt()

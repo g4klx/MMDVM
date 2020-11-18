@@ -75,7 +75,10 @@
 // #define USE_COS_AS_LOCKOUT
 
 // Use pins to output the current mode via LEDs
-#define MODE_LEDS
+// #define MODE_LEDS
+
+// Use an OLED to show the current mode via a small screen (64x32) on I2C3
+#define MODE_OLED
 
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
@@ -105,10 +108,10 @@
 #define SEND_RSSI_DATA
 
 // Use the modem as a serial repeater for Nextion displays
-#define SERIAL_REPEATER
+// #define SERIAL_REPEATER
 
-// Use the modem as an I2C repeater for OLED displays
-// #define I2C_REPEATER
+// Use the modem as an I2C repeater for an OLED display on I2C1
+#define I2C_REPEATER
 
 // To reduce CPU load, you can remove the DC blocker by commenting out the next line
 #define USE_DCBLOCKER
@@ -121,13 +124,17 @@
 // #define USE_ALTERNATE_NXDN_LEDS
 
 // Use the D-Star and P25 LEDs for M17
-#define USE_ALTERNATE_M17_LEDS
+// #define USE_ALTERNATE_M17_LEDS
 
 // Use the D-Star and DMR LEDs for POCSAG
-#define USE_ALTERNATE_POCSAG_LEDS
+// #define USE_ALTERNATE_POCSAG_LEDS
 
 // Use the D-Star and YSF LEDs for FM
-#define USE_ALTERNATE_FM_LEDS
+// #define USE_ALTERNATE_FM_LEDS
+
+#if defined(MODE_OLED)
+#undef MODE_LEDS
+#endif
 
 #endif
 

@@ -357,6 +357,12 @@ void CIO::initInt()
 #if defined(STM32F1_POG)
   FancyLEDEffect();
 #endif
+#if defined(MODE_OLED)
+  I2C3Init();
+#endif
+#if defined(I2C_REPEATER)
+  I2C1Init();
+#endif
 }
 
 void CIO::startInt()

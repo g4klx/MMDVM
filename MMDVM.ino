@@ -38,6 +38,12 @@ bool m_duplex = true;
 bool m_tx  = false;
 bool m_dcd = false;
 
+#if defined(MODE_OLED)
+CI2COLED oled;
+CI2CPort i2C1;
+CI2CPort i2C3;
+#endif
+
 #if defined(MODE_DSTAR)
 CDStarRX dstarRX;
 CDStarTX dstarTX;

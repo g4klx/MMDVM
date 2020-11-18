@@ -127,6 +127,10 @@ const uint8_t PROTOCOL_VERSION   = 2U;
 const int      MAX_SERIAL_DATA  = 250;
 const uint16_t MAX_SERIAL_COUNT = 100U;
 
+// I2C types
+const uint8_t I2C_COMMAND = 0x00U;
+const uint8_t I2C_DATA    = 0x40U;
+
 CSerialPort::CSerialPort() :
 m_buffer(),
 m_ptr(0U),
@@ -134,8 +138,7 @@ m_len(0U),
 m_debug(false),
 m_serialData(),
 m_lastSerialAvail(0),
-m_lastSerialAvailCount(0U),
-m_i2CData()
+m_lastSerialAvailCount(0U)
 {
 }
 
@@ -852,9 +855,6 @@ void CSerialPort::start()
 #if defined(SERIAL_REPEATER)
   beginInt(3U, 9600);
 #endif
-#if defined(I2C_REPEATER)
-  beginInt(10U, 9600);
-#endif
 }
 
 void CSerialPort::process()
@@ -937,22 +937,6 @@ void CSerialPort::process()
   } else {
     m_lastSerialAvail      = serialAvail;
     m_lastSerialAvailCount = 0U;
-  }
-#endif
-
-#if defined(I2C_REPEATER)
-  // Write any outgoing serial data
-  uint16_t i2CSpace = m_i2CData.getData();
-  if (i2CSpace > 0U) {
-    int avail = availableForWriteInt(10U);
-    if (avail < i2CSpace)
-      i2CSpace = avail;
-
-    for (uint16_t i = 0U; i < i2CSpace; i++) {
-      uint8_t c = 0U;
-      m_i2CData.get(c);
-      writeInt(10U, &c, 1U);
-    }
   }
 #endif
 }
@@ -1332,8 +1316,20 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 
 #if defined(I2C_REPEATER)
     case MMDVM_I2C_DATA: {
-      for (uint16_t i = 0U; i < length; i++)
-        m_i2CData.put(buffer[i]);
+        uint8_t type = buffer[0U];
+        uint8_t err = 4U;
+        switch (type) {
+          case I2C_COMMAND:
+            err = i2C1.writeCommand(buffer + 1U, length - 1U);
+            break;
+          case I2C_DATA:
+            err = i2C1.writeData(buffer + 1U, length - 1U);
+            break;
+        }
+        if (err != 0U) {
+          DEBUG2("Received invalid I2C data", err);
+          sendNAK(err);
+        }
       }
       break;
 #endif
