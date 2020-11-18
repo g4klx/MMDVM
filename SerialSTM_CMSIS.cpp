@@ -128,6 +128,16 @@ int CSerialPort::availableForReadInt(uint8_t n)
   }
 }
 
+int CSerialPort::availableForWriteInt(uint8_t n)
+{
+  switch (n) {
+    case 1U:
+      return !RINGBUFF_FULL(txBuffer1);
+    default:
+      return false;
+  }
+}
+
 uint8_t CSerialPort::readInt(uint8_t n)
 {
   switch (n) {

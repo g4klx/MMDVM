@@ -32,7 +32,7 @@
 #define RINGBUFF_WRITE(ringBuff, dataIn) (ringBuff).data[RINGBUFF_MASK(ringBuff) & ringBuff.wrIdx++] = (dataIn)
 #define RINGBUFF_READ(ringBuff)          ((ringBuff).data[RINGBUFF_MASK(ringBuff) & ((ringBuff).rdIdx++)])
 #define RINGBUFF_EMPTY(ringBuff)         ((ringBuff).rdIdx == (ringBuff).wrIdx)
-#define RINGBUFF_FULL(ringBuff)          ((RINGBUFF_MASK(ringBuff) & ringFifo.rdIdx) == (RINGBUFF_MASK(ringBuff) & ringFifo.wrIdx))
+#define RINGBUFF_FULL(ringBuff)          ((RINGBUFF_MASK(ringBuff) & ringBuff.rdIdx) == (RINGBUFF_MASK(ringBuff) & ringBuff.wrIdx))
 #define RINGBUFF_COUNT(ringBuff)         (RINGBUFF_MASK(ringBuff) & ((ringBuff).wrIdx - (ringBuff).rdIdx))
 
 /* Buffer type                                                                  */
