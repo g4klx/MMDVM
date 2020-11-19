@@ -25,6 +25,8 @@
 
 #include <cstdint>
 
+const uint16_t I2C_TX_FIFO_SIZE = 512U;
+
 
 class CI2CPort {
 public:
@@ -32,13 +34,17 @@ public:
 
   bool init();
 
-  uint8_t writeCommand(const uint8_t* data, uint8_t length);
-
-  uint8_t writeData(const uint8_t* data, uint8_t length);
+  uint8_t write(const uint8_t* data, uint8_t length);
 
 private:
   uint8_t m_n;
   bool    m_ok;
+  volatile uint8_t  m_fifo[I2C_TX_FIFO_SIZE];
+  volatile uint16_t m_fifoHead;
+  volatile uint16_t m_fifoTail;
+
+  uint16_t fifoLevel();
+  bool     fifoPut(uint8_t next);
 };
 
 #endif

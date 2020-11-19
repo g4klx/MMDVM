@@ -35,7 +35,10 @@ const uint16_t I2C_ADDR     = 0U;		// XXX FIXME
 
 CI2CPort::CI2CPort(uint8_t n) :
 m_n(n),
-m_ok(false)
+m_ok(false),
+m_fifo(),
+m_fifoHead(0U),
+m_fifoTail(0U)
 {
 }
 
@@ -69,14 +72,14 @@ bool CI2CPort::init()
   NVIC_InitTypeDef NVIC_InitStructure;
   I2C_InitTypeDef  I2C_InitStructure;
 
-  RCC_APB1PeriphClockCmd(i2CClock,             ENABLE);
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,  ENABLE);
+  RCC_AHB1PeriphClockCmd(i2CClock,             ENABLE);
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+  // RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_AFIO,  ENABLE);
 
   // Configure I2C GPIOs
   GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_10 | GPIO_Pin_11;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF_OD;
+  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 
   // Configure the I2C event interrupt
@@ -107,25 +110,48 @@ bool CI2CPort::init()
   I2C_ITConfig(i2CPort, I2C_IT_BUF, ENABLE);
   I2C_ITConfig(i2CPort, I2C_IT_ERR, ENABLE);
 
+  m_fifoHead = 0U;
+  m_fifoTail = 0U;
+
   m_ok = true;
 
   return true;
 }
 
-uint8_t CI2CPort::writeCommand(const uint8_t* data, uint8_t length)
+uint8_t CI2CPort::write(const uint8_t* data, uint8_t length)
 {
   if (!m_ok)
     return 6U;
 
-  return 6U;
+  for (uint16_t i = 0U; i < length; i++)
+    fifoPut(data[i]);
+
+  return 0U;
 }
 
-uint8_t CI2CPort::writeData(const uint8_t* data, uint8_t length)
+uint16_t CI2CPort::fifoLevel()
 {
-  if (!m_ok)
-    return 6U;
+  uint32_t tail = m_fifoTail;
+  uint32_t head = m_fifoHead;
 
-  return 6U;
+  if (tail > head)
+    return I2C_TX_FIFO_SIZE + head - tail;
+  else
+    return head - tail;
+}
+
+bool CI2CPort::fifoPut(uint8_t next)
+{
+  if (fifoLevel() >= I2C_TX_FIFO_SIZE)
+    return false;
+
+  m_fifo[m_fifoHead] = next;
+
+  m_fifoHead++;
+  if (m_fifoHead >= I2C_TX_FIFO_SIZE)
+    m_fifoHead = 0U;
+
+  return true;
 }
 
 #endif

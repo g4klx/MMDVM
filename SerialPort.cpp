@@ -127,9 +127,6 @@ const uint8_t PROTOCOL_VERSION   = 2U;
 const int      MAX_SERIAL_DATA  = 250;
 const uint16_t MAX_SERIAL_COUNT = 100U;
 
-// I2C types
-const uint8_t I2C_COMMAND = 0x00U;
-const uint8_t I2C_DATA    = 0x40U;
 
 CSerialPort::CSerialPort() :
 m_buffer(),
@@ -1316,21 +1313,11 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 
 #if defined(I2C_REPEATER)
     case MMDVM_I2C_DATA: {
-        uint8_t type = buffer[0U];
-        switch (type) {
-          case I2C_COMMAND:
-            err = i2c1.writeCommand(buffer + 1U, length - 1U);
-            break;
-          case I2C_DATA:
-            err = i2c1.writeData(buffer + 1U, length - 1U);
-            break;
-          default:
-            DEBUG2("Received invalid I2C type", type);
-            err = 4U;
-            break;
-        }
-        if (err != 0U)
+        err = i2c1.write(buffer, length);
+        if (err != 0U) {
+          DEBUG2("Received invalid I2C data", err);
           sendNAK(err);
+        }
       }
       break;
 #endif
