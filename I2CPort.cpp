@@ -23,22 +23,40 @@
 #include "I2CPort.h"
 
 CI2CPort::CI2CPort(uint8_t n) :
+m_n(n),
 m_ok(false)
 {
 }
 
 bool CI2CPort::init()
 {
-  return false;
+  switch (m_n) {
+    case 1U:
+      break;
+    case 2U:
+      break;
+    case 3U:
+      break;
+    default:
+      return m_ok;
+  }
+
+  return m_ok;
 }
 
 uint8_t CI2CPort::writeCommand(const uint8_t* data, uint8_t length)
 {
+  if (!m_ok)
+    return 6U;
+
   return 6U;
 }
 
 uint8_t CI2CPort::writeData(const uint8_t* data, uint8_t length)
 {
+  if (!m_ok)
+    return 6U;
+
   return 6U;
 }
 

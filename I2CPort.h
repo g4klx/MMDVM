@@ -37,7 +37,8 @@ public:
   uint8_t writeData(const uint8_t* data, uint8_t length);
 
 private:
-  bool m_ok;
+  uint8_t m_n;
+  bool    m_ok;
 };
 
 #endif
