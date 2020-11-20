@@ -33,6 +33,7 @@ DSTAR    PB6    output
 DMR      PB5    output
 YSF      PB7    output
 POCSAG   PC10   output
+FM       PB14   output
 
 RX       PB0    analog input
 RSSI     PB1    analog input
@@ -44,7 +45,6 @@ EXT_CLK  PA15   input
 #define PIN_COS           GPIO_Pin_13
 #define PORT_COS          GPIOB
 #define RCC_Per_COS       RCC_AHB1Periph_GPIOB
-
 
 #define PIN_PTT           GPIO_Pin_12
 #define PORT_PTT          GPIOB
@@ -81,6 +81,10 @@ EXT_CLK  PA15   input
 #define PIN_POCSAG        GPIO_Pin_10
 #define PORT_POCSAG       GPIOC
 #define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOC
+
+#define PIN_FM            GPIO_Pin_14
+#define PORT_FM           GPIOB
+#define RCC_Per_FM        RCC_AHB1Periph_GPIOB
 
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
