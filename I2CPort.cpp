@@ -1,3 +1,4 @@
+
 /*
  *   Copyright (C) 2020 by Jonathan Naylor G4KLX
  *
@@ -30,8 +31,53 @@
 #include "stm32f7xx_i2c.h"
 #endif
 
+#include "Globals.h"
+
 const uint32_t I2C_CLK_FREQ = 100000U;	// XXX FIXME
 const uint16_t I2C_ADDR     = 0U;		// XXX FIXME
+
+
+extern "C" {
+#if defined(I2C_REPEATER)
+  void I2C1_EV_IRQHandler(void)
+  {
+    i2C1.eventHandler();
+  }
+
+  void I2C1_ER_IRQHandler(void)
+  {
+    if (I2C_GetITStatus(I2C1, I2C_IT_AF))
+      I2C_ClearITPendingBit(I2C1, I2C_IT_AF);
+  }
+#endif
+
+#ifdef notdef
+  void I2C2_EV_IRQHandler(void)
+  {
+    i2C2.eventHandler();
+  }
+
+  void I2C2_ER_IRQHandler(void)
+  {
+    if (I2C_GetITStatus(I2C2, I2C_IT_AF))
+      I2C_ClearITPendingBit(I2C2, I2C_IT_AF);
+  }
+#endif
+
+#if defined(MODE_OLED)
+  void I2C3_EV_IRQHandler(void)
+  {
+    i2C3.eventHandler();
+  }
+
+  void I2C3_ER_IRQHandler(void)
+  {
+    if (I2C_GetITStatus(I2C3, I2C_IT_AF))
+      I2C_ClearITPendingBit(I2C3, I2C_IT_AF);
+  }
+#endif
+}
+
 
 CI2CPort::CI2CPort(uint8_t n) :
 m_n(n),
@@ -127,6 +173,75 @@ uint8_t CI2CPort::write(const uint8_t* data, uint8_t length)
     fifoPut(data[i]);
 
   return 0U;
+}
+
+void CI2CPort::eventHandler()
+{
+  I2C_TypeDef* i2CPort = NULL;
+
+  switch (m_n) {
+    case 1U:
+      i2CPort = I2C1;
+      break;
+    case 2U:
+      i2CPort = I2C2;
+      break;
+    case 3U:
+      i2CPort = I2C3;
+      break;
+    default:
+      return;
+  }
+
+  uint32_t event = I2C_GetLastEvent(i2CPort);
+
+  switch (event) {
+    case I2C_EVENT_SLAVE_TRANSMITTER_ADDRESS_MATCHED:
+    case I2C_EVENT_SLAVE_BYTE_TRANSMITTED:
+      if (fifoLevel() > 0U) {
+        I2C_SendData(i2CPort, m_fifo[m_fifoTail]);
+        m_fifoTail++;
+        if (m_fifoTail >= I2C_TX_FIFO_SIZE)
+          m_fifoTail = 0U;
+      } else
+        I2C_SendData(i2CPort, 0U);
+      break;
+
+    case I2C_EVENT_SLAVE_STOP_DETECTED:
+      clearFlag();
+      break;
+  }
+}
+
+void CI2CPort::clearFlag()
+{
+  I2C_TypeDef* i2CPort = NULL;
+
+  switch (m_n) {
+    case 1U:
+      i2CPort = I2C1;
+      break;
+    case 2U:
+      i2CPort = I2C2;
+      break;
+    case 3U:
+      i2CPort = I2C3;
+      break;
+    default:
+      return;
+  }
+
+  // Clear ADDR flag
+  while((i2CPort->SR1 & I2C_SR1_ADDR) == I2C_SR1_ADDR) {
+    i2CPort->SR1;
+    i2CPort->SR2;
+  }
+
+  // Clear STOPF flag
+  while((i2CPort->SR1 & I2C_SR1_STOPF) == I2C_SR1_STOPF) {
+    i2CPort->SR1;
+    i2CPort->CR1 |= 0x1;
+  }
 }
 
 uint16_t CI2CPort::fifoLevel()

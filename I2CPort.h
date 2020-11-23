@@ -36,6 +36,8 @@ public:
 
   uint8_t write(const uint8_t* data, uint8_t length);
 
+  void eventHandler();
+
 private:
   uint8_t m_n;
   bool    m_ok;
@@ -45,6 +47,7 @@ private:
 
   uint16_t fifoLevel();
   bool     fifoPut(uint8_t next);
+  void     clearFlag();
 };
 
 #endif

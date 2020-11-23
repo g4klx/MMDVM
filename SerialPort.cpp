@@ -1313,7 +1313,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 
 #if defined(I2C_REPEATER)
     case MMDVM_I2C_DATA: {
-        err = i2c1.write(buffer, length);
+        err = i2C1.write(buffer, length);
         if (err != 0U) {
           DEBUG2("Received invalid I2C data", err);
           sendNAK(err);

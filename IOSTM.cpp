@@ -196,7 +196,7 @@ void CIO::initInt()
 #endif
 
 #if defined(I2C_REPEATER)
-  i2c1.init();
+  i2C1.init();
 #endif
 }
 

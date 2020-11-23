@@ -25,8 +25,6 @@
 
 #include <cstdint>
 
-#include "I2CPort.h"
-
 class CI2COLED {
 public:
   CI2COLED();
@@ -36,7 +34,6 @@ public:
   void setMode(int state);
 
 private:
-  CI2CPort m_i2c;
   uint8_t* m_oledBuffer;
 
   void write(const char* text);
