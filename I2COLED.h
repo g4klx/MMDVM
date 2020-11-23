@@ -33,10 +33,20 @@ public:
 
   bool init();
 
-  void setMode(uint8_t state);
+  void setMode(int state);
 
 private:
-  CI2CPort i2c;
+  CI2CPort m_i2c;
+  uint8_t* m_oledBuffer;
+
+  void write(uint8_t size, const char* text);
+  void clear();
+  void display();
+
+  void sendCommand(uint8_t c);
+  void sendCommand(uint8_t c0, uint8_t c1);
+  void sendCommand(uint8_t c0, uint8_t c1, uint8_t c2);
+  void sendData(const uint8_t* c, uint16_t length);
 };
 
 #endif
