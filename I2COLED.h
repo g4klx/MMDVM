@@ -39,7 +39,10 @@ private:
   CI2CPort m_i2c;
   uint8_t* m_oledBuffer;
 
-  void write(uint8_t size, const char* text);
+  void write(const char* text);
+  void write(uint8_t x, uint8_t y, char c, uint8_t size);
+  void drawPixel(uint8_t x, uint8_t y);
+  void fillRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
   void clear();
   void display();
 

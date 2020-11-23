@@ -33,6 +33,10 @@ const uint16_t OLED_BUFFER_SIZE = OLED_HEIGHT * OLED_WIDTH / 8U;
 const uint8_t SSD_Command_Mode = 0x00U;  /* C0 and DC bit are 0         */
 const uint8_t SSD_Data_Mode    = 0x40U;  /* C0 bit is 0 and DC bit is 1 */
 
+const uint8_t SSD1306_Set_Lower_Column_Start_Address  = 0x00U;
+const uint8_t SSD1306_Set_Higher_Column_Start_Address = 0x10U;
+const uint8_t SSD1306_Set_Start_Line                  = 0x40U;
+
 const uint8_t CHAR_HEIGHT = 5U;
 const uint8_t CHAR_WIDTH  = 7U;
 
@@ -294,6 +298,11 @@ const uint8_t FONT[] = {
   0x00U, 0x3CU, 0x3CU, 0x3CU, 0x3CU,
   0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
 
+// Arduino Compatible Macro
+#define _BV(bit) (1 << (bit))
+
+
+
 CI2COLED::CI2COLED() :
 m_i2c(3U),
 m_oledBuffer(NULL)
@@ -351,29 +360,38 @@ void CI2COLED::setMode(int state)
   clear();
 
   switch (MMDVM_STATE(state)) {
+    case STATE_IDLE:
+      write("Idle");
+      break;
     case STATE_DSTAR:
-      write(3U, "D-Star");
+      write("D-Star");
       break;
     case STATE_DMR:
-      write(3U, "DMR");
+      write("DMR");
       break;
     case STATE_YSF:
-      write(3U, "YSF");
+      write("YSF");
       break;
     case STATE_P25:
-      write(3U, "P25");
+      write("P25");
       break;
     case STATE_NXDN:
-      write(3U, "NXDN");
+      write("NXDN");
       break;
     case STATE_FM:
-      write(3U, "FM");
+      write("FM");
       break;
     case STATE_M17:
-      write(3U, "M17");
+      write("M17");
+      break;
+    case STATE_POCSAG:
+      write("POCSAG");
+      break;
+    case STATE_AX25:
+      write("AX.25");
       break;
     default:
-      write(3U, "Idle");
+      write("Calibrate");
       break;
   }
 
@@ -436,12 +454,74 @@ void CI2COLED::clear()
   ::memset(m_oledBuffer, 0x00U, OLED_BUFFER_SIZE);
 }
 
-void CI2COLED::write(uint8_t scale, const char* text)
+void CI2COLED::write(const char* text)
 {
+  size_t len = ::strlen(text);
+
+  uint16_t scale = OLED_WIDTH / (len * (CHAR_WIDTH + 1U));
+  if (scale == 0U) scale = 1U;
+
+  uint8_t charHeight = CHAR_HEIGHT * scale;
+  uint8_t charWidth  = (CHAR_WIDTH + 1U) * scale;
+
+  uint8_t x = (OLED_HEIGHT - charHeight) / 2U;
+  uint8_t y = (OLED_WIDTH  - charWidth)  / 2U;
+
+  for (size_t i = 0U; i < len; i++) {
+    write(x, y, text[i], scale);
+    y += charWidth;
+  }
+}
+
+void CI2COLED::write(uint8_t x, uint8_t y, char c, uint8_t size)
+{
+  for (uint8_t i = 0U; i < 6U; i++) {
+    uint8_t line;
+    if (i == 5U)
+      line = 0x00U;
+    else
+      line = FONT[(c * 5) + i];
+
+    for (uint8_t j = 0U; j < 8U; j++) {
+      if (line & 0x1) {
+        if (size == 1U) // default size
+          drawPixel(x + i, y + j);
+        else  // big size
+          fillRect(x + (i * size), y + (j * size), size, size);
+      }
+
+      line >>= 1;
+    }
+  }
+}
+
+void CI2COLED::fillRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height)
+{
+  for (uint8_t i = x; i < (x + height - 1U); i++) {
+    for (uint8_t j = y; j < (y + width - 1U); j++)
+      drawPixel(i, j);
+  }
+}
+
+void CI2COLED::drawPixel(uint8_t x, uint8_t y)
+{
+  // Get where to do the change in the buffer
+  uint8_t* p = m_oledBuffer + (x + (y / 8U) * OLED_WIDTH);
+
+  // x is which column
+  *p |= _BV((y % 8));
 }
 
 void CI2COLED::display()
 {
+  sendCommand(SSD1306_Set_Lower_Column_Start_Address | 0x0); // low col = 0
+  sendCommand(SSD1306_Set_Higher_Column_Start_Address | 0x0); // hi col = 0
+  sendCommand(SSD1306_Set_Start_Line | 0x0); // line #0
+
+  // loop trough all OLED buffer and 
+  // send a bunch of 16 data byte in one xmission
+  for (uint16_t i = 0U; i < OLED_BUFFER_SIZE; i += 16U)
+    sendData(m_oledBuffer + i, 16U);
 }
 
 #endif
