@@ -47,7 +47,6 @@ private:
 
   uint16_t fifoLevel();
   bool     fifoPut(uint8_t next);
-  void     clearFlag();
 };
 
 #endif

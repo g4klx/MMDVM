@@ -92,6 +92,7 @@ bool CI2CPort::init()
 {
   I2C_TypeDef* i2CPort = NULL;
   uint32_t i2CClock = 0U;
+  uint32_t i2CPins = 0U;
   uint8_t i2CIrq = 0U;
 
   switch (m_n) {
@@ -99,16 +100,19 @@ bool CI2CPort::init()
       i2CPort  = I2C1;
       i2CIrq   = I2C1_EV_IRQn;
       i2CClock = RCC_APB1Periph_I2C1;
+      i2CPins  = GPIO_Pin_8 | GPIO_Pin_9;	// PB8 PB9, P25 NXDN LEDs
       break;
     case 2U:
       i2CPort  = I2C2;
       i2CIrq   = I2C2_EV_IRQn;
       i2CClock = RCC_APB1Periph_I2C2;
+      i2CPins  = GPIO_Pin_10 | GPIO_Pin_11;
       break;
     case 3U:
       i2CPort  = I2C3;
       i2CIrq   = I2C3_EV_IRQn;
       i2CClock = RCC_APB1Periph_I2C3;
+      i2CPins  = GPIO_Pin_8 | GPIO_Pin_9;	// PA8 PC9 XXX FIXME
       break;
     default:
       return false;
@@ -123,7 +127,7 @@ bool CI2CPort::init()
   // RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_AFIO,  ENABLE);
 
   // Configure I2C GPIOs
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_10 | GPIO_Pin_11;
+  GPIO_InitStructure.GPIO_Pin   = i2CPins;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
@@ -196,51 +200,17 @@ void CI2CPort::eventHandler()
   uint32_t event = I2C_GetLastEvent(i2CPort);
 
   switch (event) {
-    case I2C_EVENT_SLAVE_TRANSMITTER_ADDRESS_MATCHED:
-    case I2C_EVENT_SLAVE_BYTE_TRANSMITTED:
+    case I2C_EVENT_MASTER_BYTE_TRANSMITTED:
       if (fifoLevel() > 0U) {
         I2C_SendData(i2CPort, m_fifo[m_fifoTail]);
         m_fifoTail++;
         if (m_fifoTail >= I2C_TX_FIFO_SIZE)
           m_fifoTail = 0U;
-      } else
-        I2C_SendData(i2CPort, 0U);
+      }
       break;
 
-    case I2C_EVENT_SLAVE_STOP_DETECTED:
-      clearFlag();
-      break;
-  }
-}
-
-void CI2CPort::clearFlag()
-{
-  I2C_TypeDef* i2CPort = NULL;
-
-  switch (m_n) {
-    case 1U:
-      i2CPort = I2C1;
-      break;
-    case 2U:
-      i2CPort = I2C2;
-      break;
-    case 3U:
-      i2CPort = I2C3;
-      break;
     default:
-      return;
-  }
-
-  // Clear ADDR flag
-  while((i2CPort->SR1 & I2C_SR1_ADDR) == I2C_SR1_ADDR) {
-    i2CPort->SR1;
-    i2CPort->SR2;
-  }
-
-  // Clear STOPF flag
-  while((i2CPort->SR1 & I2C_SR1_STOPF) == I2C_SR1_STOPF) {
-    i2CPort->SR1;
-    i2CPort->CR1 |= 0x1;
+      break;
   }
 }
 
