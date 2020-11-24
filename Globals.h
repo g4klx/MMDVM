@@ -146,7 +146,6 @@ extern CIO io;
 
 #if defined(MODE_OLED)
 extern CI2COLED oled;
-extern CI2CPort i2C3;
 #endif
 
 #if defined(I2C_REPEATER)

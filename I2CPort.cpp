@@ -23,219 +23,217 @@
 
 #include "I2CPort.h"
 
-#if defined(STM32F4XX)
-#include "stm32f4xx.h"
-#include "stm32f4xx_i2c.h"
-#elif defined(STM32F7XX)
-#include "stm32f7xx.h"
-#include "stm32f7xx_i2c.h"
-#endif
-
 #include "Globals.h"
 
-const uint32_t I2C_CLK_FREQ = 100000U;	// XXX FIXME
-const uint16_t I2C_ADDR     = 0U;		// XXX FIXME
-
-
-extern "C" {
-#if defined(I2C_REPEATER)
-  void I2C1_EV_IRQHandler(void)
-  {
-    i2C1.eventHandler();
-  }
-
-  void I2C1_ER_IRQHandler(void)
-  {
-    if (I2C_GetITStatus(I2C1, I2C_IT_AF))
-      I2C_ClearITPendingBit(I2C1, I2C_IT_AF);
-  }
-#endif
-
-#ifdef notdef
-  void I2C2_EV_IRQHandler(void)
-  {
-    i2C2.eventHandler();
-  }
-
-  void I2C2_ER_IRQHandler(void)
-  {
-    if (I2C_GetITStatus(I2C2, I2C_IT_AF))
-      I2C_ClearITPendingBit(I2C2, I2C_IT_AF);
-  }
-#endif
-
-#if defined(MODE_OLED)
-  void I2C3_EV_IRQHandler(void)
-  {
-    i2C3.eventHandler();
-  }
-
-  void I2C3_ER_IRQHandler(void)
-  {
-    if (I2C_GetITStatus(I2C3, I2C_IT_AF))
-      I2C_ClearITPendingBit(I2C3, I2C_IT_AF);
-  }
-#endif
-}
+//GPIO and I2C Peripheral (I2C3 Configuration)
+#define RCC_AHB1Periph_GPIO_SCL   RCC_AHB1Periph_GPIOA  //Bus for GPIO Port of SCL
+#define RCC_AHB1Periph_GPIO_SDA   RCC_AHB1Periph_GPIOC  //Bus for GPIO Port of SDA
+#define GPIO_AF_I2Cx              GPIO_AF_I2C3    //Alternate function for GPIO pins
+#define GPIO_SCL                  GPIOA
+#define GPIO_SDA                  GPIOC
+#define GPIO_Pin_SCL              GPIO_Pin_8
+#define GPIO_Pin_SDA              GPIO_Pin_9
+#define GPIO_PinSource_SCL        GPIO_PinSource8
+#define GPIO_PinSource_SDA        GPIO_PinSource9
 
 
 CI2CPort::CI2CPort(uint8_t n) :
-m_n(n),
-m_ok(false),
-m_fifo(),
-m_fifoHead(0U),
-m_fifoTail(0U)
+m_port(NULL),
+m_clock(0x00U),
+m_ok(true),
+m_addr(0x00U)
 {
+  switch (n) {
+    case 1U:
+      m_port         = I2C1;
+      m_clock        = RCC_APB1Periph_I2C1;
+      m_busSCL       = RCC_AHB1Periph_GPIOB;
+      m_busSDA       = RCC_AHB1Periph_GPIOB;
+      m_af           = GPIO_AF_I2C1;
+      m_gpioSCL      = GPIOB;
+      m_gpioSDA      = GPIOB;
+      m_pinSCL       = GPIO_Pin_8;
+      m_pinSDA       = GPIO_Pin_9;
+      m_pinSourceSCL = GPIO_PinSource8;
+      m_pinSourceSDA = GPIO_PinSource9;
+      break;
+    case 3U:
+      m_port         = I2C3;
+      m_clock        = RCC_APB1Periph_I2C3;
+      m_busSCL       = RCC_AHB1Periph_GPIOA;
+      m_busSDA       = RCC_AHB1Periph_GPIOC;
+      m_af           = GPIO_AF_I2C3;
+      m_gpioSCL      = GPIOA;
+      m_gpioSDA      = GPIOC;
+      m_pinSCL       = GPIO_Pin_8;
+      m_pinSDA       = GPIO_Pin_9;
+      m_pinSourceSCL = GPIO_PinSource8;
+      m_pinSourceSDA = GPIO_PinSource9;
+      break;
+    default:
+      m_ok = false;
+      break;
+  }
 }
 
 bool CI2CPort::init()
 {
-  I2C_TypeDef* i2CPort = NULL;
-  uint32_t i2CClock = 0U;
-  uint32_t i2CPins = 0U;
-  uint8_t i2CIrq = 0U;
-
-  switch (m_n) {
-    case 1U:
-      i2CPort  = I2C1;
-      i2CIrq   = I2C1_EV_IRQn;
-      i2CClock = RCC_APB1Periph_I2C1;
-      i2CPins  = GPIO_Pin_8 | GPIO_Pin_9;	// PB8 PB9, P25 NXDN LEDs
-      break;
-    case 2U:
-      i2CPort  = I2C2;
-      i2CIrq   = I2C2_EV_IRQn;
-      i2CClock = RCC_APB1Periph_I2C2;
-      i2CPins  = GPIO_Pin_10 | GPIO_Pin_11;
-      break;
-    case 3U:
-      i2CPort  = I2C3;
-      i2CIrq   = I2C3_EV_IRQn;
-      i2CClock = RCC_APB1Periph_I2C3;
-      i2CPins  = GPIO_Pin_8 | GPIO_Pin_9;	// PA8 PC9 XXX FIXME
-      break;
-    default:
-      return false;
-  }
-
-  GPIO_InitTypeDef GPIO_InitStructure;
-  NVIC_InitTypeDef NVIC_InitStructure;
-  I2C_InitTypeDef  I2C_InitStructure;
-
-  RCC_AHB1PeriphClockCmd(i2CClock,             ENABLE);
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-  // RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_AFIO,  ENABLE);
-
-  // Configure I2C GPIOs
-  GPIO_InitStructure.GPIO_Pin   = i2CPins;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-  // Configure the I2C event interrupt
-  NVIC_InitStructure.NVIC_IRQChannel                   = i2CIrq;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 15;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 15;
-  NVIC_InitStructure.NVIC_IRQChannelCmd                = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-
-  // Configure the I2C error interrupt
-  NVIC_InitStructure.NVIC_IRQChannel = i2CIrq;
-  NVIC_Init(&NVIC_InitStructure);
-
-  // I2C configuration
-  I2C_InitStructure.I2C_Mode                = I2C_Mode_I2C;
-  I2C_InitStructure.I2C_DutyCycle           = I2C_DutyCycle_2;
-  I2C_InitStructure.I2C_OwnAddress1         = I2C_ADDR << 1;
-  I2C_InitStructure.I2C_Ack                 = I2C_Ack_Enable;
-  I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-  I2C_InitStructure.I2C_ClockSpeed          = I2C_CLK_FREQ;
+  if (!m_ok)
+    return false;
 
   // Enable I2C
-  I2C_Cmd(i2CPort, ENABLE);
-  // Apply I2C configuration
-  I2C_Init(i2CPort, &I2C_InitStructure);
+  RCC_APB1PeriphClockCmd(m_clock, ENABLE);
 
-  I2C_ITConfig(i2CPort, I2C_IT_EVT, ENABLE);
-  I2C_ITConfig(i2CPort, I2C_IT_BUF, ENABLE);
-  I2C_ITConfig(i2CPort, I2C_IT_ERR, ENABLE);
+  // Reset the Peripheral
+  RCC_APB1PeriphResetCmd(m_clock, ENABLE);
+  RCC_APB1PeriphResetCmd(m_clock, DISABLE);
+  
+  // Enable the GPIOs for the SCL/SDA Pins
+  RCC_AHB1PeriphClockCmd(m_busSCL | m_busSDA, ENABLE);
+  
+  // Configure and initialize the GPIOs
+  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitStructure.GPIO_Pin   = m_pinSCL;
+  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+  GPIO_Init(m_gpioSCL, &GPIO_InitStructure);
 
-  m_fifoHead = 0U;
-  m_fifoTail = 0U;
+  GPIO_InitStructure.GPIO_Pin = m_pinSDA;
+  GPIO_Init(m_gpioSDA, &GPIO_InitStructure);
+  
+  // Connect GPIO pins to peripheral
+  GPIO_PinAFConfig(m_gpioSCL, m_pinSourceSCL, m_af);
+  GPIO_PinAFConfig(m_gpioSDA, m_pinSourceSDA, m_af);
+  
+  // Configure and Initialize the I2C
+  I2C_InitTypeDef I2C_InitStructure;
+  I2C_InitStructure.I2C_Mode                = I2C_Mode_I2C;
+  I2C_InitStructure.I2C_DutyCycle           = I2C_DutyCycle_2;
+  I2C_InitStructure.I2C_OwnAddress1         = 0x00U;		//We are the master. We don't need this
+  I2C_InitStructure.I2C_Ack                 = I2C_Ack_Enable;
+  I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+  I2C_InitStructure.I2C_ClockSpeed          = 50000U;	//400kHz (Fast Mode) (
+  
+  // Initialize the Peripheral
+  I2C_Init(m_port, &I2C_InitStructure);
+
+  // I2C Peripheral Enable
+  I2C_Cmd(m_port, ENABLE);
 
   m_ok = true;
 
   return true;
 }
 
-uint8_t CI2CPort::write(const uint8_t* data, uint8_t length)
+uint8_t CI2CPort::write(uint8_t addr, const uint8_t* data, uint16_t length)
 {
   if (!m_ok)
     return 6U;
 
-  for (uint16_t i = 0U; i < length; i++)
-    fifoPut(data[i]);
+  // Generate a Start condition
+  bool ret = start();
+  if (!ret)
+    return 7U;
+  
+  // Set I2C device address if needed
+  if (addr != m_addr) {
+    ret = setAddr(addr, I2C_Direction_Transmitter);
+    if (!ret)
+      return 7U;
+
+    m_addr = addr;
+  }
+
+  // Unstretch the clock by just reading SR2 (Physically the clock is continued to be strectehed because we have not written anything to the DR yet.)
+  (void) m_port->SR2; 
+  
+  // Start Writing Data
+  while (length--) {
+    ret = write(*data++);
+    if (!ret)
+      return 7U;
+  }
+  
+  // Wait for the data on the shift register to be transmitted completely
+  ret = waitSR1FlagsSet(I2C_SR1_BTF);
+  if (!ret)
+    return 7U;
+
+  // Here TXE=BTF=1. Therefore the clock stretches again.
+  
+  // Order a stop condition at the end of the current tranmission (or if the clock is being streched, generate stop immediatelly)
+  m_port->CR1 |= I2C_CR1_STOP;
+
+  // Stop condition resets the TXE and BTF automatically.
+  
+  // Wait to be sure that line is iddle
+  ret = waitLineIdle();  
+  if (!ret)
+    return 7U;
 
   return 0U;
 }
 
-void CI2CPort::eventHandler()
+bool CI2CPort::write(uint8_t c)
 {
-  I2C_TypeDef* i2CPort = NULL;
-
-  switch (m_n) {
-    case 1U:
-      i2CPort = I2C1;
-      break;
-    case 2U:
-      i2CPort = I2C2;
-      break;
-    case 3U:
-      i2CPort = I2C3;
-      break;
-    default:
-      return;
-  }
-
-  uint32_t event = I2C_GetLastEvent(i2CPort);
-
-  switch (event) {
-    case I2C_EVENT_MASTER_BYTE_TRANSMITTED:
-      if (fifoLevel() > 0U) {
-        I2C_SendData(i2CPort, m_fifo[m_fifoTail]);
-        m_fifoTail++;
-        if (m_fifoTail >= I2C_TX_FIFO_SIZE)
-          m_fifoTail = 0U;
-      }
-      break;
-
-    default:
-      break;
-  }
+  // Write the byte to the DR
+  m_port->DR = c;
+  
+  // Wait till the content of DR is transferred to the shift Register.
+  return waitSR1FlagsSet(I2C_SR1_TXE);
 }
 
-uint16_t CI2CPort::fifoLevel()
+bool CI2CPort::setAddr(uint8_t addr, uint8_t dir)
 {
-  uint32_t tail = m_fifoTail;
-  uint32_t head = m_fifoHead;
-
-  if (tail > head)
-    return I2C_TX_FIFO_SIZE + head - tail;
-  else
-    return head - tail;
+  // Write address to the DR (to the bus)
+  m_port->DR = (addr << 1) | dir;
+  
+  // Wait till ADDR is set (ADDR is set when the slave sends ACK to the address).
+  // Clock streches till ADDR is Reset. To reset the hardware i)Read the SR1 ii)Wait till ADDR is Set iii)Read SR2
+  // Note1:Spec_p602 recommends the waiting operation
+  // Note2:We don't read SR2 here. Therefore the clock is going to be streched even after return from this function
+  return waitSR1FlagsSet(I2C_SR1_ADDR); 
 }
 
-bool CI2CPort::fifoPut(uint8_t next)
+bool CI2CPort::start()
+{  
+  // Generate a start condition. (As soon as the line becomes idle, a Start condition will be generated)
+  m_port->CR1 |= I2C_CR1_START;
+  
+  // When start condition is generated SB is set and clock is stretched.
+  // To activate the clock again i)read SR1 ii)write something to DR (e.g. address)
+  return waitSR1FlagsSet(I2C_SR1_SB);  //Wait till SB is set
+}
+
+bool CI2CPort::waitSR1FlagsSet(uint32_t flags)
 {
-  if (fifoLevel() >= I2C_TX_FIFO_SIZE)
-    return false;
+  // Wait till the specified SR1 Bits are set
+  // More than 1 Flag can be "or"ed. This routine reads only SR1.
+  uint32_t timeOut = HSI_VALUE;
+  
+  while(((m_port->SR1) & flags) != flags) {
+    if (!(timeOut--))
+      return false;
+  } 
 
-  m_fifo[m_fifoHead] = next;
+  return true;
+}
 
-  m_fifoHead++;
-  if (m_fifoHead >= I2C_TX_FIFO_SIZE)
-    m_fifoHead = 0U;
+bool CI2CPort::waitLineIdle()
+{
+  // Wait till the Line becomes idle.
+  uint32_t timeOut = HSI_VALUE;
 
+  // Check to see if the Line is busy
+  // This bit is set automatically when a start condition is broadcasted on the line (even from another master)
+  // and is reset when stop condition is detected.
+  while((m_port->SR2) & (I2C_SR2_BUSY)) {
+    if (!(timeOut--))
+      return false;
+  }
+  
   return true;
 }
 

@@ -23,9 +23,13 @@
 #if !defined(I2CPORT_H)
 #define  I2CPORT_H
 
-#include <cstdint>
-
-const uint16_t I2C_TX_FIFO_SIZE = 512U;
+#if defined(STM32F4XX)
+#include "stm32f4xx.h"
+#include "stm32f4xx_i2c.h"
+#elif defined(STM32F7XX)
+#include "stm32f7xx.h"
+#include "stm32f7xx_i2c.h"
+#endif
 
 
 class CI2CPort {
@@ -34,19 +38,28 @@ public:
 
   bool init();
 
-  uint8_t write(const uint8_t* data, uint8_t length);
-
-  void eventHandler();
+  uint8_t write(uint8_t addr, const uint8_t* data, uint16_t length);
 
 private:
-  uint8_t m_n;
-  bool    m_ok;
-  volatile uint8_t  m_fifo[I2C_TX_FIFO_SIZE];
-  volatile uint16_t m_fifoHead;
-  volatile uint16_t m_fifoTail;
-
-  uint16_t fifoLevel();
-  bool     fifoPut(uint8_t next);
+  I2C_TypeDef*  m_port;
+  uint32_t      m_clock;
+  uint32_t      m_busSCL;
+  uint32_t      m_busSDA;
+  uint8_t       m_af;
+  GPIO_TypeDef* m_gpioSCL;
+  GPIO_TypeDef* m_gpioSDA;
+  uint32_t      m_pinSCL;
+  uint32_t      m_pinSDA;
+  uint16_t      m_pinSourceSCL;
+  uint16_t      m_pinSourceSDA;
+  bool          m_ok;
+  uint8_t       m_addr;
+  
+  bool setAddr(uint8_t addr, uint8_t dir);
+  bool write(uint8_t c);
+  bool start();
+  bool waitSR1FlagsSet(uint32_t flags);
+  bool waitLineIdle();
 };
 
 #endif

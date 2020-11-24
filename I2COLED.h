@@ -23,7 +23,7 @@
 #if !defined(I2COLED_H)
 #define  I2COLED_H
 
-#include <cstdint>
+#include "I2CPort.h"
 
 class CI2COLED {
 public:
@@ -34,6 +34,7 @@ public:
   void setMode(int state);
 
 private:
+  CI2CPort m_i2c;
   uint8_t* m_oledBuffer;
 
   void write(const char* text);

@@ -305,6 +305,7 @@ const uint8_t FONT[] = {
 
 
 CI2COLED::CI2COLED() :
+m_i2c(3U),
 m_oledBuffer(NULL)
 {
   m_oledBuffer = new uint8_t[OLED_BUFFER_SIZE];
@@ -314,7 +315,7 @@ m_oledBuffer(NULL)
 
 bool CI2COLED::init()
 {
-  bool ret = i2C3.init();
+  bool ret = m_i2c.init();
   if (!ret)
     return false;
 
@@ -400,53 +401,49 @@ void CI2COLED::setMode(int state)
 
 void CI2COLED::sendCommand(uint8_t c0, uint8_t c1, uint8_t c2)
 {
-  uint8_t buff[5U];
+  uint8_t buff[4U];
 
-  buff[0U] = OLED_ADDRESS;
-  buff[1U] = SSD_Command_Mode;
-  buff[2U] = c0;
-  buff[3U] = c1;
-  buff[4U] = c2;
+  buff[0U] = SSD_Command_Mode;
+  buff[1U] = c0;
+  buff[2U] = c1;
+  buff[3U] = c2;
 
   // Write Data on I2C
-  i2C3.write(buff, 5U);
+  m_i2c.write(OLED_ADDRESS, buff, 4U);
 }
 
 void CI2COLED::sendCommand(uint8_t c0, uint8_t c1)
 {
-  uint8_t buff[4U];
+  uint8_t buff[3U];
 
-  buff[0U] = OLED_ADDRESS;
-  buff[1U] = SSD_Command_Mode;
-  buff[2U] = c0;
-  buff[3U] = c1;
+  buff[0U] = SSD_Command_Mode;
+  buff[1U] = c0;
+  buff[2U] = c1;
 
   // Write Data on I2C
-  i2C3.write(buff, 4U);
+  m_i2c.write(OLED_ADDRESS, buff, 3U);
 }
 
 void CI2COLED::sendCommand(uint8_t c)
 {
-  uint8_t buff[3U];
+  uint8_t buff[2U];
 
-  buff[0U] = OLED_ADDRESS;
-  buff[1U] = SSD_Command_Mode;
-  buff[2U] = c;
+  buff[0U] = SSD_Command_Mode;
+  buff[1U] = c;
 
   // Write Data on I2C
-  i2C3.write(buff, 3U);
+  m_i2c.write(OLED_ADDRESS, buff, 2U);
 }
 
 void CI2COLED::sendData(const uint8_t* data, uint16_t length)
 {
-  uint8_t buff[2U];
+  uint8_t buff[1U];
 
-  buff[0U] = OLED_ADDRESS;
-  buff[1U] = SSD_Data_Mode;
+  buff[0U] = SSD_Data_Mode;
 
   // Write Data on I2C
-  i2C3.write(buff, 2U);
-  i2C3.write(data, length);
+  m_i2c.write(OLED_ADDRESS, buff, 1U);
+  m_i2c.write(OLED_ADDRESS, data, length);
 }
 
 void CI2COLED::clear()
