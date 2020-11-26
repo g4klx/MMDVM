@@ -27,6 +27,7 @@
 
 enum M17RX_STATE {
   M17RXS_NONE,
+  M17RXS_HEADER,
   M17RXS_DATA
 };
 
@@ -52,6 +53,7 @@ private:
   q31_t       m_maxCorr;
   uint16_t    m_lostCount;
   uint8_t     m_countdown;
+  M17RX_STATE m_nextState;
   q15_t       m_centre[16U];
   q15_t       m_centreVal;
   q15_t       m_threshold[16U];
@@ -61,10 +63,12 @@ private:
   uint16_t    m_rssiCount;
 
   void processNone(q15_t sample);
+  void processHeader(q15_t sample);
   void processData(q15_t sample);
-  bool correlateSync();
+  bool correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes);
   void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void writeRSSIHeader(uint8_t* data);
   void writeRSSIData(uint8_t* data);
 };
 
