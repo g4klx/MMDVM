@@ -306,7 +306,12 @@ void CIO::getUDID(uint8_t* buffer)
     status = EFC1->EEFC_FSR;
   } while ( (status & EEFC_FSR_FRDY) == EEFC_FSR_FRDY );
 
-  ::memcpy(buffer, (void *)IFLASH1_ADDR, 16U);
+  for (uint8_t i = 0; i < 16; i+=4) {
+    buffer[i + 0] = *(uint32_t *)(IFLASH1_ADDR + i) >> 24;
+    buffer[i + 1] = *(uint32_t *)(IFLASH1_ADDR + i) >> 16;
+    buffer[i + 2] = *(uint32_t *)(IFLASH1_ADDR + i) >>  8;
+    buffer[i + 3] = *(uint32_t *)(IFLASH1_ADDR + i) >>  0;
+  }
 
   EFC1->EEFC_FCR = (0x5A << 24) | EFC_FCMD_SPUI;
   do {
