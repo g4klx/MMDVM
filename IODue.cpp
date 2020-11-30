@@ -299,15 +299,24 @@ uint8_t CIO::getCPU() const
 // Code taken from https://github.com/emagii/at91sam3s/blob/master/examples/eefc_uniqueid/main.c
 void CIO::getUDID(uint8_t* buffer)
 {
-  EFC->EEFC_FCR = (0x5A << 24) | EFC_FCMD_STUI;
+  uint32_t status;
 
-  ::memcpy(buffer, (void *)IFLASH_ADDR, 16U);
-
-  EFC->EEFC_FCR = (0x5A << 24) | EFC_FCMD_SPUI;
-
+  EFC1->EEFC_FCR = (0x5A << 24) | EFC_FCMD_STUI;
   do {
-    status = EFC->EEFC_FSR ;
-  } while ((status & EEFC_FSR_FRDY) != EEFC_FSR_FRDY);
+    status = EFC1->EEFC_FSR;
+  } while ( (status & EEFC_FSR_FRDY) == EEFC_FSR_FRDY );
+
+  for (uint8_t i = 0; i < 16; i+=4) {
+    buffer[i + 0] = *(uint32_t *)(IFLASH1_ADDR + i) >> 24;
+    buffer[i + 1] = *(uint32_t *)(IFLASH1_ADDR + i) >> 16;
+    buffer[i + 2] = *(uint32_t *)(IFLASH1_ADDR + i) >>  8;
+    buffer[i + 3] = *(uint32_t *)(IFLASH1_ADDR + i) >>  0;
+  }
+
+  EFC1->EEFC_FCR = (0x5A << 24) | EFC_FCMD_SPUI;
+  do {
+    status = EFC1->EEFC_FSR;
+  } while ( (status & EEFC_FSR_FRDY) != EEFC_FSR_FRDY );
 }
 
 #endif
