@@ -41,8 +41,8 @@ const uint32_t DATA_SYNC_MASK = 0x00FFFFFFU;
 const uint8_t  DATA_SYNC_ERRS = 2U;
 
 // D-Star bit order version of 0x55 0x55 0xC8 0x7A
-const uint32_t END_SYNC_DATA = 0xAAAA135EU;
-const uint32_t END_SYNC_MASK = 0xFFFFFFFFU;
+const uint64_t END_SYNC_DATA = 0x0000AAAAAAAA135EU;
+const uint64_t END_SYNC_MASK = 0x0000FFFFFFFFFFFFU;
 const uint8_t  END_SYNC_ERRS = 1U;
 
 const uint8_t BIT_MASK_TABLE0[] = {0x7FU, 0xBFU, 0xDFU, 0xEFU, 0xF7U, 0xFBU, 0xFDU, 0xFEU};
@@ -242,6 +242,7 @@ m_pll(0U),
 m_prev(false),
 m_rxState(DSRXS_NONE),
 m_patternBuffer(0x00U),
+m_patternBuffer64(0x00U),
 m_rxBuffer(),
 m_rxBufferBits(0U),
 m_dataBits(0U),
@@ -263,6 +264,7 @@ void CDStarRX::reset()
   m_prev          = false;
   m_rxState       = DSRXS_NONE;
   m_patternBuffer = 0x00U;
+  m_patternBuffer64 = 0x00U;
   m_rxBufferBits  = 0U;
   m_dataBits      = 0U;
   m_rssiAccum     = 0U;
@@ -314,6 +316,10 @@ void CDStarRX::processNone(bool bit)
   if (bit)
     m_patternBuffer |= 0x01U;
 
+  m_patternBuffer64 <<= 1;
+  if (bit)
+    m_patternBuffer64 |= 0x01U;
+
   // Fuzzy matching of the frame sync sequence
   if (countBits32((m_patternBuffer & FRAME_SYNC_MASK) ^ FRAME_SYNC_DATA) <= FRAME_SYNC_ERRS) {
     DEBUG1("DStarRX: found frame sync in None");
@@ -357,6 +363,10 @@ void CDStarRX::processHeader(bool bit)
   if (bit)
     m_patternBuffer |= 0x01U;
 
+  m_patternBuffer64 <<= 1;
+  if (bit)
+    m_patternBuffer64 |= 0x01U;
+
   WRITE_BIT2(m_rxBuffer, m_rxBufferBits, bit);
   m_rxBufferBits++;
 
@@ -389,11 +399,15 @@ void CDStarRX::processData(bool bit)
   if (bit)
     m_patternBuffer |= 0x01U;
 
+  m_patternBuffer64 <<= 1;
+  if (bit)
+    m_patternBuffer64 |= 0x01U;
+
   WRITE_BIT2(m_rxBuffer, m_rxBufferBits, bit);
   m_rxBufferBits++;
 
   // Fuzzy matching of the end frame sequences
-  if (countBits32((m_patternBuffer & END_SYNC_MASK) ^ END_SYNC_DATA) <= END_SYNC_ERRS) {
+  if (countBits64((m_patternBuffer64 & END_SYNC_MASK) ^ END_SYNC_DATA) <= END_SYNC_ERRS) {
     DEBUG1("DStarRX: Found end sync in Data");
 
     io.setDecode(false);
