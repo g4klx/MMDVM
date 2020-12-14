@@ -28,18 +28,18 @@
 const unsigned int MAX_FRAMES = 150U;
 
 // D-Star bit order version of 0x55 0x55 0x6E 0x0A
-const uint32_t FRAME_SYNC_DATA = 0x00557650U;
-const uint32_t FRAME_SYNC_MASK = 0x00FFFFFFU;
-const uint8_t  FRAME_SYNC_ERRS = 1U;
+const uint64_t FRAME_SYNC_DATA = 0x0000000000557650U;
+const uint64_t FRAME_SYNC_MASK = 0x0000000000FFFFFFU;
+const uint8_t  FRAME_SYNC_ERRS = 2U;
 
 // D-Star bit order version of 0x55 0x2D 0x16
-const uint32_t DATA_SYNC_DATA = 0x00AAB468U;
-const uint32_t DATA_SYNC_MASK = 0x00FFFFFFU;
+const uint64_t DATA_SYNC_DATA = 0x0000000000AAB468U;
+const uint64_t DATA_SYNC_MASK = 0x0000000000FFFFFFU;
 const uint8_t  DATA_SYNC_ERRS = 2U;
 
 // D-Star bit order version of 0x55 0x55 0xC8 0x7A
-const uint32_t END_SYNC_DATA = 0xAAAA135EU;
-const uint32_t END_SYNC_MASK = 0xFFFFFFFFU;
+const uint64_t END_SYNC_DATA = 0x0000AAAAAAAA135EU;
+const uint64_t END_SYNC_MASK = 0x0000FFFFFFFFFFFFU;
 const uint8_t  END_SYNC_ERRS = 1U;
 
 const uint8_t BIT_MASK_TABLE0[] = {0x7FU, 0xBFU, 0xDFU, 0xEFU, 0xF7U, 0xFBU, 0xFDU, 0xFEU};
@@ -398,7 +398,7 @@ void CDStarRX::processHeader(q15_t sample)
 void CDStarRX::processData()
 {
   // Fuzzy matching of the end frame sequences
-  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_END_SYNC_MASK) ^ DSTAR_END_SYNC_DATA) <= END_SYNC_ERRS) {
+  if (countBits64((m_bitBuffer[m_bitPtr] & DSTAR_END_SYNC_MASK) ^ DSTAR_END_SYNC_DATA) <= END_SYNC_ERRS) {
     DEBUG1("DStarRX: Found end sync in Data");
 
     io.setDecode(false);
@@ -507,7 +507,7 @@ void CDStarRX::writeRSSIData(unsigned char* data)
 
 bool CDStarRX::correlateFrameSync()
 {
-  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_FRAME_SYNC_MASK) ^ DSTAR_FRAME_SYNC_DATA) <= FRAME_SYNC_ERRS) {
+  if (countBits64((m_bitBuffer[m_bitPtr] & DSTAR_FRAME_SYNC_MASK) ^ DSTAR_FRAME_SYNC_DATA) <= FRAME_SYNC_ERRS) {
     uint16_t ptr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_FRAME_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
     if (ptr >= DSTAR_DATA_LENGTH_SAMPLES)
       ptr -= DSTAR_DATA_LENGTH_SAMPLES;
@@ -543,7 +543,7 @@ bool CDStarRX::correlateDataSync()
   if (m_rxState == DSRXS_DATA)
     maxErrs = DATA_SYNC_ERRS;
 
-  if (countBits32((m_bitBuffer[m_bitPtr] & DSTAR_DATA_SYNC_MASK) ^ DSTAR_DATA_SYNC_DATA) <= maxErrs) {
+  if (countBits64((m_bitBuffer[m_bitPtr] & DSTAR_DATA_SYNC_MASK) ^ DSTAR_DATA_SYNC_DATA) <= maxErrs) {
     uint16_t ptr = m_dataPtr + DSTAR_DATA_LENGTH_SAMPLES - DSTAR_DATA_SYNC_LENGTH_SAMPLES + DSTAR_RADIO_SYMBOL_LENGTH;
     if (ptr >= DSTAR_DATA_LENGTH_SAMPLES)
       ptr -= DSTAR_DATA_LENGTH_SAMPLES;
