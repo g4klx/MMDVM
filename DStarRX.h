@@ -41,7 +41,7 @@ public:
 
 private:
   DSRX_STATE   m_rxState;
-  uint32_t     m_bitBuffer[DSTAR_RADIO_SYMBOL_LENGTH];
+  uint64_t     m_bitBuffer[DSTAR_RADIO_SYMBOL_LENGTH];
   q15_t        m_headerBuffer[DSTAR_FEC_SECTION_LENGTH_SAMPLES + 2U * DSTAR_RADIO_SYMBOL_LENGTH];
   q15_t        m_dataBuffer[DSTAR_DATA_LENGTH_SAMPLES];
   uint16_t     m_bitPtr;
