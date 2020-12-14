@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2020 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -40,8 +40,7 @@ private:
   uint32_t     m_pll;
   bool         m_prev;
   DSRX_STATE   m_rxState;
-  uint32_t     m_patternBuffer;
-  uint64_t     m_patternBuffer64;
+  uint64_t     m_patternBuffer;
   uint8_t      m_rxBuffer[100U];
   unsigned int m_rxBufferBits;
   unsigned int m_dataBits;
