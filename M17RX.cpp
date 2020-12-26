@@ -125,8 +125,8 @@ void CM17RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
 
 void CM17RX::processNone(q15_t sample)
 {
-  bool ret1 = correlateSync(M17_HEADER_SYNC_SYMBOLS, M17_HEADER_SYNC_SYMBOLS_VALUES, M17_HEADER_SYNC_BYTES);
-  bool ret2 = correlateSync(M17_DATA_SYNC_SYMBOLS, M17_DATA_SYNC_SYMBOLS_VALUES, M17_DATA_SYNC_BYTES);
+  bool ret1 = correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES);
+  bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS,     M17_STREAM_SYNC_SYMBOLS_VALUES,     M17_STREAM_SYNC_BYTES);
 
   if (ret1 || ret2) {
     // On the first sync, start the countdown to the state change
@@ -166,10 +166,10 @@ void CM17RX::processHeader(q15_t sample)
 {
   if (m_minSyncPtr < m_maxSyncPtr) {
     if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_HEADER_SYNC_SYMBOLS, M17_HEADER_SYNC_SYMBOLS_VALUES, M17_HEADER_SYNC_BYTES);
+      correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES);
   } else {
     if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_HEADER_SYNC_SYMBOLS, M17_HEADER_SYNC_SYMBOLS_VALUES, M17_HEADER_SYNC_BYTES);
+      correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES);
   }
 
   if (m_dataPtr == m_endPtr) {
@@ -200,10 +200,10 @@ void CM17RX::processData(q15_t sample)
 {
   if (m_minSyncPtr < m_maxSyncPtr) {
     if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_DATA_SYNC_SYMBOLS, M17_DATA_SYNC_SYMBOLS_VALUES, M17_DATA_SYNC_BYTES);
+      correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES);
   } else {
     if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_DATA_SYNC_SYMBOLS, M17_DATA_SYNC_SYMBOLS_VALUES, M17_DATA_SYNC_BYTES);
+      correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES);
   }
 
   if (m_dataPtr == m_endPtr) {
