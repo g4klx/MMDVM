@@ -30,29 +30,39 @@ const unsigned int M17_SYNC_LENGTH_BITS    = 16U;
 const unsigned int M17_SYNC_LENGTH_SYMBOLS = M17_SYNC_LENGTH_BITS / 2U;
 const unsigned int M17_SYNC_LENGTH_SAMPLES = M17_SYNC_LENGTH_SYMBOLS * M17_RADIO_SYMBOL_LENGTH;
 
-const uint8_t M17_HEADER_SYNC_BYTES[] = {0x5DU, 0xDDU};
-const uint8_t M17_DATA_SYNC_BYTES[]   = {0xDDU, 0xDDU};
+const uint8_t M17_LINK_SETUP_SYNC_BYTES[] = {0x55U, 0xF7U};
+const uint8_t M17_STREAM_SYNC_BYTES[]     = {0xFFU, 0x5DU};
+const uint8_t M17_PACKET_SYNC_BYTES[]     = {0x75U, 0xFFU};
 
 const uint8_t M17_SYNC_BYTES_LENGTH = 2U;
 
-const uint16_t M17_HEADER_SYNC_BITS = 0x5DDDU;
-const uint16_t M17_DAYA_SYNC_BITS   = 0xDDDDU;
+const uint16_t M17_LINK_SETUP_SYNC_BITS = 0x55F7U;
+const uint16_t M17_STREAM_SYNC_BITS     = 0xFF5DU;
+const uint16_t M17_PACKET_SYNC_BITS     = 0x75FFU;
 
-// 5     D      D      D
-// 01 01 11 01  11 01  11 01
-// +3 +3 -3 +3  -3 +3  -3 +3
+// 5     5     F     7
+// 01 01 01 01 11 11 01 11
+// +3 +3 +3 +3 -3 -3 +3 -3
 
-const int8_t M17_HEADER_SYNC_SYMBOLS_VALUES[] = {+3, +3, -3, +3, -3, +3, -3, +3};
+const int8_t M17_LINK_SETUP_SYNC_SYMBOLS_VALUES[] = {+3, +3, +3, +3, -3, -3, +3, -3};
 
-const uint8_t M17_HEADER_SYNC_SYMBOLS = 0xD5U;
+const uint8_t M17_LINK_SETUP_SYNC_SYMBOLS = 0xF2U;
 
-// D     D      D      D
-// 11 01 11 01  11 01  11 01
-// -3 +3 -3 +3  -3 +3  -3 +3
+// F     F     5     D
+// 11 11 11 11 01 01 11 01
+// -3 -3 -3 -3 +3 +3 -3 +3
 
-const int8_t M17_DATA_SYNC_SYMBOLS_VALUES[] = {-3, +3, -3, +3, -3, +3, -3, +3};
+const int8_t M17_STREAM_SYNC_SYMBOLS_VALUES[] = {-3, -3, -3, -3, +3, +3, -3, +3};
 
-const uint8_t M17_DATA_SYNC_SYMBOLS = 0x55U;
+const uint8_t M17_STREAM_SYNC_SYMBOLS = 0x0DU;
+
+// 7     5     F     F
+// 01 11 01 01 11 11 11 11
+// +3 -3 +3 +3 -3 -3 -3 -3
+
+const int8_t M17_PACKET_SYNC_SYMBOLS_VALUES[] = {+3, -3, +3, +3, -3, -3, -3, -3};
+
+const uint8_t M17_PACKET_SYNC_SYMBOLS = 0xB0U;
 
 #endif
 
