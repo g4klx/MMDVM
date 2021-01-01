@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -105,8 +105,11 @@ void CM17RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
     case M17RXS_HEADER:
       processHeader(sample);
       break;
-    case M17RXS_DATA:
-      processData(sample);
+    case M17RXS_STREAM:
+      processStream(sample);
+      break;
+    case M17RXS_PACKET:
+      processPacket(sample);
       break;
     default:
       processNone(sample);
@@ -127,8 +130,9 @@ void CM17RX::processNone(q15_t sample)
 {
   bool ret1 = correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES);
   bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS,     M17_STREAM_SYNC_SYMBOLS_VALUES,     M17_STREAM_SYNC_BYTES);
+  bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS,     M17_PACKET_SYNC_SYMBOLS_VALUES,     M17_PACKET_SYNC_BYTES);
 
-  if (ret1 || ret2) {
+  if (ret1 || ret2 || ret3) {
     // On the first sync, start the countdown to the state change
     if (m_countdown == 0U) {
       m_rssiAccum = 0U;
@@ -141,7 +145,9 @@ void CM17RX::processNone(q15_t sample)
 
       m_countdown = 5U;
       
-      m_nextState = ret1 ? M17RXS_HEADER : M17RXS_DATA;
+      if (ret1) m_nextState = M17RXS_HEADER;
+      if (ret2) m_nextState = M17RXS_STREAM;
+      if (ret3) m_nextState = M17RXS_PACKET;
     }
   }
 
@@ -191,12 +197,12 @@ void CM17RX::processHeader(q15_t sample)
     m_lostCount--;
     frame[0U] = 0x01U;
     writeRSSIHeader(frame);
-    m_state   = M17RXS_DATA;
+    m_state   = M17RXS_NONE;
     m_maxCorr = 0;
   }
 }
 
-void CM17RX::processData(q15_t sample)
+void CM17RX::processStream(q15_t sample)
 {
   if (m_minSyncPtr < m_maxSyncPtr) {
     if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
@@ -220,15 +226,15 @@ void CM17RX::processData(q15_t sample)
 
     calculateLevels(m_startPtr, M17_FRAME_LENGTH_SYMBOLS);
 
-    DEBUG4("M17RX: data sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+    DEBUG4("M17RX: stream sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
 
     uint8_t frame[M17_FRAME_LENGTH_BYTES + 3U];
     samplesToBits(m_startPtr, M17_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
 
-    // We've not seen a data sync for too long, signal RXLOST and change to RX_NONE
+    // We've not seen a stream sync for too long, signal RXLOST and change to RX_NONE
     m_lostCount--;
     if (m_lostCount == 0U) {
-      DEBUG1("M17RX: sync timed out, lost lock");
+      DEBUG1("M17RX: stream sync timed out, lost lock");
 
       io.setDecode(false);
       io.setADCDetection(false);
@@ -242,7 +248,62 @@ void CM17RX::processData(q15_t sample)
       m_nextState  = M17RXS_NONE;
       m_maxCorr    = 0;
     } else {
-      frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+      frame[0U]  = 0x00U;
+      frame[0U] |= m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+      writeRSSIData(frame);
+      m_maxCorr = 0;
+    }
+  }
+}
+
+void CM17RX::processPacket(q15_t sample)
+{
+  if (m_minSyncPtr < m_maxSyncPtr) {
+    if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
+      correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES);
+  } else {
+    if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
+      correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES);
+  }
+
+  if (m_dataPtr == m_endPtr) {
+    // Only update the centre and threshold if they are from a good sync
+    if (m_lostCount == MAX_SYNC_FRAMES) {
+      m_minSyncPtr = m_syncPtr + M17_FRAME_LENGTH_SAMPLES - 1U;
+      if (m_minSyncPtr >= M17_FRAME_LENGTH_SAMPLES)
+        m_minSyncPtr -= M17_FRAME_LENGTH_SAMPLES;
+
+      m_maxSyncPtr = m_syncPtr + 1U;
+      if (m_maxSyncPtr >= M17_FRAME_LENGTH_SAMPLES)
+        m_maxSyncPtr -= M17_FRAME_LENGTH_SAMPLES;
+    }
+
+    calculateLevels(m_startPtr, M17_FRAME_LENGTH_SYMBOLS);
+
+    DEBUG4("M17RX: packet sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+
+    uint8_t frame[M17_FRAME_LENGTH_BYTES + 3U];
+    samplesToBits(m_startPtr, M17_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
+
+    // We've not seen a packet sync for too long, signal RXLOST and change to RX_NONE
+    m_lostCount--;
+    if (m_lostCount == 0U) {
+      DEBUG1("M17RX: packet sync timed out, lost lock");
+
+      io.setDecode(false);
+      io.setADCDetection(false);
+
+      serial.writeM17Lost();
+
+      m_state      = M17RXS_NONE;
+      m_endPtr     = NOENDPTR;
+      m_averagePtr = NOAVEPTR;
+      m_countdown  = 0U;
+      m_nextState  = M17RXS_NONE;
+      m_maxCorr    = 0;
+    } else {
+      frame[0U]  = 0x02U;
+      frame[0U] |= m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
       writeRSSIData(frame);
       m_maxCorr = 0;
     }
