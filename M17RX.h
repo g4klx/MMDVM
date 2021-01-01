@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -28,7 +28,8 @@
 enum M17RX_STATE {
   M17RXS_NONE,
   M17RXS_HEADER,
-  M17RXS_DATA
+  M17RXS_STREAM,
+  M17RXS_PACKET
 };
 
 class CM17RX {
@@ -64,7 +65,8 @@ private:
 
   void processNone(q15_t sample);
   void processHeader(q15_t sample);
-  void processData(q15_t sample);
+  void processStream(q15_t sample);
+  void processPacket(q15_t sample);
   bool correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes);
   void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
