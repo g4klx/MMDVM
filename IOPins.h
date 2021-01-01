@@ -62,6 +62,9 @@
 #elif defined(DRCC_DVM_NQF)
     #include "pins/pins_f4_drcc_nqf.h"
 
+#elif defined(DRCC_DVM_HHP446)
+    #include "pins/pins_f4_drcc_hhp446.h"
+
 #elif defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
     #include "pins/pins_f4_stm32eda.h"
 
