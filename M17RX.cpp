@@ -26,10 +26,11 @@
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_BIT_START_ERRS = 1U;
-const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 3U;
+const uint8_t MAX_SYNC_BIT_START_ERRS = 0U;
+const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 2U;
 
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 2U;
+const uint8_t MAX_SYNC_SYMBOL_START_ERRS = 0U;
+const uint8_t MAX_SYNC_SYMBOL_RUN_ERRS   = 1U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -102,8 +103,8 @@ void CM17RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
     m_buffer[m_dataPtr] = sample;
 
     switch (m_state) {
-    case M17RXS_HEADER:
-      processHeader(sample);
+    case M17RXS_LINK_SETUP:
+      processLinkSetup(sample);
       break;
     case M17RXS_STREAM:
       processStream(sample);
@@ -128,9 +129,9 @@ void CM17RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
 
 void CM17RX::processNone(q15_t sample)
 {
-  bool ret1 = correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES);
-  bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS,     M17_STREAM_SYNC_SYMBOLS_VALUES,     M17_STREAM_SYNC_BYTES);
-  bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS,     M17_PACKET_SYNC_SYMBOLS_VALUES,     M17_PACKET_SYNC_BYTES);
+  bool ret1 = correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES, MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
+  bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS,     M17_STREAM_SYNC_SYMBOLS_VALUES,     M17_STREAM_SYNC_BYTES,     MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
+  bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS,     M17_PACKET_SYNC_SYMBOLS_VALUES,     M17_PACKET_SYNC_BYTES,     MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
 
   if (ret1 || ret2 || ret3) {
     // On the first sync, start the countdown to the state change
@@ -145,7 +146,7 @@ void CM17RX::processNone(q15_t sample)
 
       m_countdown = 5U;
       
-      if (ret1) m_nextState = M17RXS_HEADER;
+      if (ret1) m_nextState = M17RXS_LINK_SETUP;
       if (ret2) m_nextState = M17RXS_STREAM;
       if (ret3) m_nextState = M17RXS_PACKET;
     }
@@ -168,16 +169,8 @@ void CM17RX::processNone(q15_t sample)
   }
 }
 
-void CM17RX::processHeader(q15_t sample)
+void CM17RX::processLinkSetup(q15_t sample)
 {
-  if (m_minSyncPtr < m_maxSyncPtr) {
-    if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES);
-  } else {
-    if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES);
-  }
-
   if (m_dataPtr == m_endPtr) {
     m_minSyncPtr = m_syncPtr + M17_FRAME_LENGTH_SAMPLES - 1U;
     if (m_minSyncPtr >= M17_FRAME_LENGTH_SAMPLES)
@@ -189,7 +182,7 @@ void CM17RX::processHeader(q15_t sample)
 
     calculateLevels(m_startPtr, M17_FRAME_LENGTH_SYMBOLS);
 
-    DEBUG4("M17RX: header sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+    DEBUG4("M17RX: link setup sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
 
     uint8_t frame[M17_FRAME_LENGTH_BYTES + 3U];
     samplesToBits(m_startPtr, M17_FRAME_LENGTH_SYMBOLS, frame, 8U, m_centreVal, m_thresholdVal);
@@ -197,8 +190,13 @@ void CM17RX::processHeader(q15_t sample)
     m_lostCount--;
     frame[0U] = 0x01U;
     writeRSSIHeader(frame);
-    m_state   = M17RXS_NONE;
-    m_maxCorr = 0;
+
+    m_state      = M17RXS_NONE;
+    m_endPtr     = NOENDPTR;
+    m_averagePtr = NOAVEPTR;
+    m_countdown  = 0U;
+    m_nextState  = M17RXS_NONE;
+    m_maxCorr    = 0;
   }
 }
 
@@ -206,10 +204,10 @@ void CM17RX::processStream(q15_t sample)
 {
   if (m_minSyncPtr < m_maxSyncPtr) {
     if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES);
+      correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES, MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
   } else {
     if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES);
+      correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES, MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
   }
 
   if (m_dataPtr == m_endPtr) {
@@ -260,10 +258,10 @@ void CM17RX::processPacket(q15_t sample)
 {
   if (m_minSyncPtr < m_maxSyncPtr) {
     if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES);
+      correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES, MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
   } else {
     if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-      correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES);
+      correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES, MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
   }
 
   if (m_dataPtr == m_endPtr) {
@@ -310,9 +308,9 @@ void CM17RX::processPacket(q15_t sample)
   }
 }
 
-bool CM17RX::correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes)
+bool CM17RX::correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes, uint8_t maxSymbolErrs, uint8_t maxBitErrs)
 {
-  if (countBits8(m_bitBuffer[m_bitPtr] ^ syncSymbols) <= MAX_SYNC_SYMBOLS_ERRS) {
+  if (countBits8(m_bitBuffer[m_bitPtr] ^ syncSymbols) <= maxSymbolErrs) {
     uint16_t ptr = m_dataPtr + M17_FRAME_LENGTH_SAMPLES - M17_SYNC_LENGTH_SAMPLES + M17_RADIO_SYMBOL_LENGTH;
     if (ptr >= M17_FRAME_LENGTH_SAMPLES)
       ptr -= M17_FRAME_LENGTH_SAMPLES;
@@ -364,17 +362,11 @@ bool CM17RX::correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, 
       uint8_t sync[M17_SYNC_BYTES_LENGTH];
       samplesToBits(startPtr, M17_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
 
-      uint8_t maxErrs;
-      if (m_state == M17RXS_NONE)
-        maxErrs = MAX_SYNC_BIT_START_ERRS;
-      else
-        maxErrs = MAX_SYNC_BIT_RUN_ERRS;
-
       uint8_t errs = 0U;
       for (uint8_t i = 0U; i < M17_SYNC_BYTES_LENGTH; i++)
         errs += countBits8(sync[i] ^ syncBytes[i]);
 
-      if (errs <= maxErrs) {
+      if (errs <= maxBitErrs) {
         m_maxCorr   = corr;
         m_lostCount = MAX_SYNC_FRAMES;
         m_syncPtr   = m_dataPtr;
