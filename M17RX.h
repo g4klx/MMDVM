@@ -27,7 +27,7 @@
 
 enum M17RX_STATE {
   M17RXS_NONE,
-  M17RXS_HEADER,
+  M17RXS_LINK_SETUP,
   M17RXS_STREAM,
   M17RXS_PACKET
 };
@@ -64,10 +64,10 @@ private:
   uint16_t    m_rssiCount;
 
   void processNone(q15_t sample);
-  void processHeader(q15_t sample);
+  void processLinkSetup(q15_t sample);
   void processStream(q15_t sample);
   void processPacket(q15_t sample);
-  bool correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes);
+  bool correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes, uint8_t maxSymbolErrs, uint8_t maxBitErrs);
   void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSIHeader(uint8_t* data);
