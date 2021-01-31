@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,10 +23,7 @@
 #if !defined(I2CPORT_H)
 #define  I2CPORT_H
 
-#if defined(STM32F4XX)
-#include "stm32f4xx.h"
-#include "stm32f4xx_i2c.h"
-#elif defined(STM32F7XX)
+#if defined(STM32F7XX)
 #include "stm32f7xx.h"
 #include "stm32f7xx_i2c.h"
 #endif
@@ -57,8 +54,7 @@ private:
   
   bool setAddr(uint8_t addr, uint8_t dir);
   bool write(uint8_t c);
-  bool start();
-  bool waitSR1FlagsSet(uint32_t flags);
+  bool waitISRFlagsSet(uint32_t flags);
   bool waitLineIdle();
 };
 

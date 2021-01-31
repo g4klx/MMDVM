@@ -1,6 +1,5 @@
-
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,17 +24,6 @@
 
 #include "Globals.h"
 
-//GPIO and I2C Peripheral (I2C3 Configuration)
-#define RCC_AHB1Periph_GPIO_SCL   RCC_AHB1Periph_GPIOA  //Bus for GPIO Port of SCL
-#define RCC_AHB1Periph_GPIO_SDA   RCC_AHB1Periph_GPIOC  //Bus for GPIO Port of SDA
-#define GPIO_AF_I2Cx              GPIO_AF_I2C3    //Alternate function for GPIO pins
-#define GPIO_SCL                  GPIOA
-#define GPIO_SDA                  GPIOC
-#define GPIO_Pin_SCL              GPIO_Pin_8
-#define GPIO_Pin_SDA              GPIO_Pin_9
-#define GPIO_PinSource_SCL        GPIO_PinSource8
-#define GPIO_PinSource_SDA        GPIO_PinSource9
-
 
 CI2CPort::CI2CPort(uint8_t n) :
 m_port(NULL),
@@ -49,7 +37,7 @@ m_addr(0x00U)
       m_clock        = RCC_APB1Periph_I2C1;
       m_busSCL       = RCC_AHB1Periph_GPIOB;
       m_busSDA       = RCC_AHB1Periph_GPIOB;
-      m_af           = GPIO_AF_I2C1;
+      m_af           = GPIO_AF4_I2C1;
       m_gpioSCL      = GPIOB;
       m_gpioSDA      = GPIOB;
       m_pinSCL       = GPIO_Pin_8;
@@ -62,7 +50,7 @@ m_addr(0x00U)
       m_clock        = RCC_APB1Periph_I2C3;
       m_busSCL       = RCC_AHB1Periph_GPIOA;
       m_busSDA       = RCC_AHB1Periph_GPIOC;
-      m_af           = GPIO_AF_I2C3;
+      m_af           = GPIO_AF4_I2C3;
       m_gpioSCL      = GPIOA;
       m_gpioSDA      = GPIOC;
       m_pinSCL       = GPIO_Pin_8;
@@ -95,7 +83,7 @@ bool CI2CPort::init()
   GPIO_InitTypeDef GPIO_InitStructure;
   GPIO_InitStructure.GPIO_Pin   = m_pinSCL;
   GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_Speed = GPIO_High_Speed;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
   GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
   GPIO_Init(m_gpioSCL, &GPIO_InitStructure);
@@ -109,12 +97,13 @@ bool CI2CPort::init()
   
   // Configure and Initialize the I2C
   I2C_InitTypeDef I2C_InitStructure;
+  I2C_InitStructure.I2C_Timing              = 50000U;  //400kHz (Fast Mode)
+  I2C_InitStructure.I2C_AnalogFilter        = I2C_AnalogFilter_Enable;
+  I2C_InitStructure.I2C_DigitalFilter       = 7U;
   I2C_InitStructure.I2C_Mode                = I2C_Mode_I2C;
-  I2C_InitStructure.I2C_DutyCycle           = I2C_DutyCycle_2;
   I2C_InitStructure.I2C_OwnAddress1         = 0x00U;		//We are the master. We don't need this
   I2C_InitStructure.I2C_Ack                 = I2C_Ack_Enable;
   I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-  I2C_InitStructure.I2C_ClockSpeed          = 50000U;	//400kHz (Fast Mode) (
   
   // Initialize the Peripheral
   I2C_Init(m_port, &I2C_InitStructure);
@@ -132,39 +121,37 @@ uint8_t CI2CPort::write(uint8_t addr, const uint8_t* data, uint16_t length)
   if (!m_ok)
     return 6U;
 
-  // Generate a Start condition
-  bool ret = start();
-  if (!ret)
-    return 7U;
+  // Generate a start condition. (As soon as the line becomes idle, a Start condition will be generated)
+  m_port->CR2 |= I2C_CR2_START;
   
   // Set I2C device address if needed
   if (addr != m_addr) {
-    ret = setAddr(addr, I2C_Direction_Transmitter);
+    bool ret = setAddr(addr, I2C_Direction_Transmitter);
     if (!ret)
       return 7U;
 
     m_addr = addr;
   }
 
-  // Unstretch the clock by just reading SR2 (Physically the clock is continued to be strectehed because we have not written anything to the DR yet.)
-  (void) m_port->SR2; 
+  // Unstretch the clock by just reading ISR (Physically the clock is continued to be strectehed because we have not written anything to the TXDR yet.)
+  (void)m_port->ISR; 
   
   // Start Writing Data
   while (length--) {
-    ret = write(*data++);
+    bool ret = write(*data++);
     if (!ret)
       return 7U;
   }
   
   // Wait for the data on the shift register to be transmitted completely
-  ret = waitSR1FlagsSet(I2C_SR1_BTF);
+  bool ret = waitISRFlagsSet(I2C_ISR_TC);
   if (!ret)
     return 7U;
 
   // Here TXE=BTF=1. Therefore the clock stretches again.
   
   // Order a stop condition at the end of the current tranmission (or if the clock is being streched, generate stop immediatelly)
-  m_port->CR1 |= I2C_CR1_STOP;
+  m_port->CR2 |= I2C_CR2_STOP;
 
   // Stop condition resets the TXE and BTF automatically.
   
@@ -178,42 +165,31 @@ uint8_t CI2CPort::write(uint8_t addr, const uint8_t* data, uint16_t length)
 
 bool CI2CPort::write(uint8_t c)
 {
-  // Write the byte to the DR
-  m_port->DR = c;
+  // Write the byte to the TXDR
+  m_port->TXDR = c;
   
-  // Wait till the content of DR is transferred to the shift Register.
-  return waitSR1FlagsSet(I2C_SR1_TXE);
+  // Wait till the content of TXDR is transferred to the shift Register.
+  return waitISRFlagsSet(I2C_ISR_TXE);
 }
 
 bool CI2CPort::setAddr(uint8_t addr, uint8_t dir)
 {
-  // Write address to the DR (to the bus)
-  m_port->DR = (addr << 1) | dir;
+  // Write address to the TXDR (to the bus)
+  m_port->TXDR = (addr << 1) | dir;
   
   // Wait till ADDR is set (ADDR is set when the slave sends ACK to the address).
   // Clock streches till ADDR is Reset. To reset the hardware i)Read the SR1 ii)Wait till ADDR is Set iii)Read SR2
   // Note1:Spec_p602 recommends the waiting operation
-  // Note2:We don't read SR2 here. Therefore the clock is going to be streched even after return from this function
-  return waitSR1FlagsSet(I2C_SR1_ADDR); 
+  return waitISRFlagsSet(I2C_ISR_ADDR); 
 }
 
-bool CI2CPort::start()
-{  
-  // Generate a start condition. (As soon as the line becomes idle, a Start condition will be generated)
-  m_port->CR1 |= I2C_CR1_START;
-  
-  // When start condition is generated SB is set and clock is stretched.
-  // To activate the clock again i)read SR1 ii)write something to DR (e.g. address)
-  return waitSR1FlagsSet(I2C_SR1_SB);  //Wait till SB is set
-}
-
-bool CI2CPort::waitSR1FlagsSet(uint32_t flags)
+bool CI2CPort::waitISRFlagsSet(uint32_t flags)
 {
-  // Wait till the specified SR1 Bits are set
-  // More than 1 Flag can be "or"ed. This routine reads only SR1.
+  // Wait till the specified ISR Bits are set
+  // More than 1 Flag can be "or"ed.
   uint32_t timeOut = HSI_VALUE;
   
-  while(((m_port->SR1) & flags) != flags) {
+  while ((m_port->ISR & flags) != flags) {
     if (!(timeOut--))
       return false;
   } 
@@ -227,9 +203,9 @@ bool CI2CPort::waitLineIdle()
   uint32_t timeOut = HSI_VALUE;
 
   // Check to see if the Line is busy
-  // This bit is set automatically when a start condition is broadcasted on the line (even from another master)
+  // This bit is set automatically when a start condition is broadcast on the line (even from another master)
   // and is reset when stop condition is detected.
-  while((m_port->SR2) & (I2C_SR2_BUSY)) {
+  while (m_port->ISR & I2C_ISR_BUSY) {
     if (!(timeOut--))
       return false;
   }
