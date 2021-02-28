@@ -52,10 +52,8 @@ private:
   bool          m_ok;
   uint8_t       m_addr;
   
-  bool setAddr(uint8_t addr, uint8_t dir);
-  bool write(uint8_t c);
   bool waitISRFlagsSet(uint32_t flags);
-  bool waitLineIdle();
+  void configureDataTransfer(uint8_t size);
 };
 
 #endif

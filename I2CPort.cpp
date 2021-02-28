@@ -24,6 +24,7 @@
 
 #include "Globals.h"
 
+const uint16_t MAX_NBYTES_SIZE = 255U;
 
 CI2CPort::CI2CPort(uint8_t n) :
 m_port(NULL),
@@ -97,11 +98,11 @@ bool CI2CPort::init()
   
   // Configure and Initialize the I2C
   I2C_InitTypeDef I2C_InitStructure;
-  I2C_InitStructure.I2C_Timing              = 50000U;  //400kHz (Fast Mode)
+  I2C_InitStructure.I2C_Timing              = 0x0010061AU;	// 400kHz (Fast Mode)
   I2C_InitStructure.I2C_AnalogFilter        = I2C_AnalogFilter_Enable;
-  I2C_InitStructure.I2C_DigitalFilter       = 7U;
+  I2C_InitStructure.I2C_DigitalFilter       = 0U;		// No digital filter
   I2C_InitStructure.I2C_Mode                = I2C_Mode_I2C;
-  I2C_InitStructure.I2C_OwnAddress1         = 0x00U;		//We are the master. We don't need this
+  I2C_InitStructure.I2C_OwnAddress1         = 0x00U;		// We are the master. We don't need this
   I2C_InitStructure.I2C_Ack                 = I2C_Ack_Enable;
   I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
   
@@ -121,66 +122,47 @@ uint8_t CI2CPort::write(uint8_t addr, const uint8_t* data, uint16_t length)
   if (!m_ok)
     return 6U;
 
-  // Generate a start condition. (As soon as the line becomes idle, a Start condition will be generated)
-  m_port->CR2 |= I2C_CR2_START;
-  
-  // Set I2C device address if needed
-  if (addr != m_addr) {
-    bool ret = setAddr(addr, I2C_Direction_Transmitter);
-    if (!ret)
-      return 7U;
+  // Wait for the I2C transmitter to become free
+  if (waitISRFlagsSet(I2C_ISR_BUSY))
+    return 6U;
 
-    m_addr = addr;
-  }
+  // Configure the data transfer
+  uint16_t size;
+  if (length > MAX_NBYTES_SIZE)
+    size = MAX_NBYTES_SIZE;
+  else
+    size = length;
+  configureDataTransfer(size);
 
-  // Unstretch the clock by just reading ISR (Physically the clock is continued to be strectehed because we have not written anything to the TXDR yet.)
-  (void)m_port->ISR; 
-  
   // Start Writing Data
-  while (length--) {
-    bool ret = write(*data++);
-    if (!ret)
-      return 7U;
+  while (length > 0U) {
+    // Wait for the TXIS flag to be set
+    if (waitISRFlagsSet(I2C_ISR_TXIS))
+      return 6U;
+
+    // Write the byte to the TXDR
+    m_port->TXDR = *data++;
+    length--;
+    size--;
+
+    // Configure the data transfer
+    if (size == 0U && length > 0U) {
+      if (length > MAX_NBYTES_SIZE)
+        size = MAX_NBYTES_SIZE;
+      else
+        size = length;
+      configureDataTransfer(size);
+    }
   }
-  
-  // Wait for the data on the shift register to be transmitted completely
-  bool ret = waitISRFlagsSet(I2C_ISR_TC);
-  if (!ret)
-    return 7U;
 
-  // Here TXE=BTF=1. Therefore the clock stretches again.
-  
-  // Order a stop condition at the end of the current tranmission (or if the clock is being streched, generate stop immediatelly)
-  m_port->CR2 |= I2C_CR2_STOP;
+  if (waitISRFlagsSet(I2C_ISR_STOPF))
+    return 6U;
 
-  // Stop condition resets the TXE and BTF automatically.
+  m_port->ISR &= ~I2C_ISR_STOPF;
   
-  // Wait to be sure that line is iddle
-  ret = waitLineIdle();  
-  if (!ret)
-    return 7U;
+  m_port->CR2 &= (uint32_t)~((uint32_t)(I2C_CR2_SADD | I2C_CR2_HEAD10R | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_RD_WRN));
 
   return 0U;
-}
-
-bool CI2CPort::write(uint8_t c)
-{
-  // Write the byte to the TXDR
-  m_port->TXDR = c;
-  
-  // Wait till the content of TXDR is transferred to the shift Register.
-  return waitISRFlagsSet(I2C_ISR_TXE);
-}
-
-bool CI2CPort::setAddr(uint8_t addr, uint8_t dir)
-{
-  // Write address to the TXDR (to the bus)
-  m_port->TXDR = (addr << 1) | dir;
-  
-  // Wait till ADDR is set (ADDR is set when the slave sends ACK to the address).
-  // Clock streches till ADDR is Reset. To reset the hardware i)Read the SR1 ii)Wait till ADDR is Set iii)Read SR2
-  // Note1:Spec_p602 recommends the waiting operation
-  return waitISRFlagsSet(I2C_ISR_ADDR); 
 }
 
 bool CI2CPort::waitISRFlagsSet(uint32_t flags)
@@ -197,20 +179,19 @@ bool CI2CPort::waitISRFlagsSet(uint32_t flags)
   return true;
 }
 
-bool CI2CPort::waitLineIdle()
+void CI2CPort::configureDataTransfer(uint8_t size)
 {
-  // Wait till the Line becomes idle.
-  uint32_t timeOut = HSI_VALUE;
-
-  // Check to see if the Line is busy
-  // This bit is set automatically when a start condition is broadcast on the line (even from another master)
-  // and is reset when stop condition is detected.
-  while (m_port->ISR & I2C_ISR_BUSY) {
-    if (!(timeOut--))
-      return false;
-  }
-  
-  return true;
+  m_port->CR2 &= ~(I2C_CR2_SADD    |
+                   I2C_CR2_NBYTES  |
+                   I2C_CR2_RELOAD  |
+                   I2C_CR2_AUTOEND |
+                   (I2C_CR2_RD_WRN & (uint32_t)(I2C_Generate_Start_Write >> (31U - I2C_CR2_RD_WRN_Pos))) |
+                   I2C_CR2_START   |
+                   I2C_CR2_STOP);
+  m_port->CR2 |= (uint32_t)(((uint32_t)m_addr & I2C_CR2_SADD) |
+                 (((uint32_t)size << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES) |
+                 (uint32_t)I2C_CR2_RELOAD |
+                 (uint32_t)I2C_Generate_Start_Write);
 }
 
 #endif
