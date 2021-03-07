@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include "FM.h"
 
 const uint16_t FM_TX_BLOCK_SIZE = 100U;
-const uint16_t FM_SERIAL_BLOCK_SIZE = 84U;//this is the number of sample pairs to send over serial. One sample pair is 3bytes.
+const uint16_t FM_SERIAL_BLOCK_SIZE = 80U;//this is the number of sample pairs to send over serial. One sample pair is 3bytes.
                                           //three times this value shall never exceed 252
 const uint16_t FM_SERIAL_BLOCK_SIZE_BYTES = FM_SERIAL_BLOCK_SIZE * 3U;
 
