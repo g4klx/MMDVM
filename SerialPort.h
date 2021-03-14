@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -65,8 +65,9 @@ public:
 #endif
 
 #if defined(MODE_M17)
-  void writeM17Header(const uint8_t* data, uint8_t length);
-  void writeM17Data(const uint8_t* data, uint8_t length);
+  void writeM17LinkSetup(const uint8_t* data, uint8_t length);
+  void writeM17Stream(const uint8_t* data, uint8_t length);
+  void writeM17Packet(const uint8_t* data, uint8_t length);
   void writeM17Lost();
 #endif
 

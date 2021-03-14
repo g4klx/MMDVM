@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2013,2015-2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2013,2015-2021 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -63,9 +63,10 @@ const uint8_t MMDVM_P25_LOST     = 0x32U;
 const uint8_t MMDVM_NXDN_DATA    = 0x40U;
 const uint8_t MMDVM_NXDN_LOST    = 0x41U;
 
-const uint8_t MMDVM_M17_HEADER   = 0x45U;
-const uint8_t MMDVM_M17_DATA     = 0x46U;
-const uint8_t MMDVM_M17_LOST     = 0x47U;
+const uint8_t MMDVM_M17_LINK_SETUP = 0x45U;
+const uint8_t MMDVM_M17_STREAM     = 0x46U;
+const uint8_t MMDVM_M17_PACKET     = 0x47U;
+const uint8_t MMDVM_M17_LOST       = 0x48U;
 
 const uint8_t MMDVM_POCSAG_DATA  = 0x50U;
 
@@ -1258,7 +1259,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 #endif
 
 #if defined(MODE_M17)
-    case MMDVM_M17_HEADER:
+    case MMDVM_M17_LINK_SETUP:
       if (m_m17Enable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_M17)
           err = m17TX.writeData(buffer, length);
@@ -1267,12 +1268,12 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         if (m_modemState == STATE_IDLE)
           setMode(STATE_M17);
       } else {
-        DEBUG2("Received invalid M17 header", err);
+        DEBUG2("Received invalid M17 link setup data", err);
         sendNAK(err);
       }
       break;
 
-    case MMDVM_M17_DATA:
+    case MMDVM_M17_STREAM:
       if (m_m17Enable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_M17)
           err = m17TX.writeData(buffer, length);
@@ -1281,7 +1282,21 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         if (m_modemState == STATE_IDLE)
           setMode(STATE_M17);
       } else {
-        DEBUG2("Received invalid M17 data", err);
+        DEBUG2("Received invalid M17 stream data", err);
+        sendNAK(err);
+      }
+      break;
+
+    case MMDVM_M17_PACKET:
+      if (m_m17Enable) {
+        if (m_modemState == STATE_IDLE || m_modemState == STATE_M17)
+          err = m17TX.writeData(buffer, length);
+      }
+      if (err == 0U) {
+        if (m_modemState == STATE_IDLE)
+          setMode(STATE_M17);
+      } else {
+        DEBUG2("Received invalid M17 packet data", err);
         sendNAK(err);
       }
       break;
@@ -1636,7 +1651,7 @@ void CSerialPort::writeNXDNLost()
 #endif
 
 #if defined(MODE_M17)
-void CSerialPort::writeM17Header(const uint8_t* data, uint8_t length)
+void CSerialPort::writeM17LinkSetup(const uint8_t* data, uint8_t length)
 {
   if (m_modemState != STATE_M17 && m_modemState != STATE_IDLE)
     return;
@@ -1648,7 +1663,7 @@ void CSerialPort::writeM17Header(const uint8_t* data, uint8_t length)
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
-  reply[2U] = MMDVM_M17_HEADER;
+  reply[2U] = MMDVM_M17_LINK_SETUP;
 
   uint8_t count = 3U;
   for (uint8_t i = 0U; i < length; i++, count++)
@@ -1659,7 +1674,7 @@ void CSerialPort::writeM17Header(const uint8_t* data, uint8_t length)
   writeInt(1U, reply, count);
 }
 
-void CSerialPort::writeM17Data(const uint8_t* data, uint8_t length)
+void CSerialPort::writeM17Stream(const uint8_t* data, uint8_t length)
 {
   if (m_modemState != STATE_M17 && m_modemState != STATE_IDLE)
     return;
@@ -1671,7 +1686,30 @@ void CSerialPort::writeM17Data(const uint8_t* data, uint8_t length)
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 0U;
-  reply[2U] = MMDVM_M17_DATA;
+  reply[2U] = MMDVM_M17_STREAM;
+
+  uint8_t count = 3U;
+  for (uint8_t i = 0U; i < length; i++, count++)
+    reply[count] = data[i];
+
+  reply[1U] = count;
+
+  writeInt(1U, reply, count);
+}
+
+void CSerialPort::writeM17Packet(const uint8_t* data, uint8_t length)
+{
+  if (m_modemState != STATE_M17 && m_modemState != STATE_IDLE)
+    return;
+
+  if (!m_m17Enable)
+    return;
+
+  uint8_t reply[130U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 0U;
+  reply[2U] = MMDVM_M17_PACKET;
 
   uint8_t count = 3U;
   for (uint8_t i = 0U; i < length; i++, count++)

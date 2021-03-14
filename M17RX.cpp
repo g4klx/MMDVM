@@ -174,9 +174,9 @@ void CM17RX::processData(q15_t sample)
       bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS,     M17_STREAM_SYNC_SYMBOLS_VALUES,     M17_STREAM_SYNC_BYTES,     MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
       bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS,     M17_PACKET_SYNC_SYMBOLS_VALUES,     M17_PACKET_SYNC_BYTES,     MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
 
-      if (ret1) m_nextState = M17RXS_LINK_SETUP;
-      if (ret2) m_nextState = M17RXS_STREAM;
-      if (ret3) m_nextState = M17RXS_PACKET;
+      if (ret1) m_state = M17RXS_LINK_SETUP;
+      if (ret2) m_state = M17RXS_STREAM;
+      if (ret3) m_state = M17RXS_PACKET;
     }
   } else {
     if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr) {
@@ -184,9 +184,9 @@ void CM17RX::processData(q15_t sample)
       bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS,     M17_STREAM_SYNC_SYMBOLS_VALUES,     M17_STREAM_SYNC_BYTES,     MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
       bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS,     M17_PACKET_SYNC_SYMBOLS_VALUES,     M17_PACKET_SYNC_BYTES,     MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
 
-      if (ret1) m_nextState = M17RXS_LINK_SETUP;
-      if (ret2) m_nextState = M17RXS_STREAM;
-      if (ret3) m_nextState = M17RXS_PACKET;
+      if (ret1) m_state = M17RXS_LINK_SETUP;
+      if (ret2) m_state = M17RXS_STREAM;
+      if (ret3) m_state = M17RXS_PACKET;
     }
   }
 
@@ -204,11 +204,7 @@ void CM17RX::processData(q15_t sample)
 
     calculateLevels(m_startPtr, M17_FRAME_LENGTH_SYMBOLS);
 
-    M17RX_STATE state = m_nextState;
-    if (state == M17RXS_NONE)
-      state = m_state;
-
-    switch (state) {
+    switch (m_state) {
       case M17RXS_LINK_SETUP:
         DEBUG4("M17RX: link setup sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
         break;
@@ -243,13 +239,19 @@ void CM17RX::processData(q15_t sample)
       frame[0U]  = 0x00U;
       frame[0U] |= m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 
-      writeRSSIData(frame);
+      switch (m_state) {
+        case M17RXS_LINK_SETUP:
+          writeRSSILinkSetup(frame);
+          break;
+        case M17RXS_STREAM:
+          writeRSSIStream(frame);
+          break;
+        case M17RXS_PACKET:
+          writeRSSIPacket(frame);
+          break;
+      }
 
-      m_maxCorr = 0;
-
-      if (m_nextState != M17RXS_NONE)
-        m_state = m_nextState;
-
+      m_maxCorr   = 0;
       m_nextState = M17RXS_NONE;
     }
   }
@@ -429,7 +431,7 @@ void CM17RX::samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint
   }
 }
 
-void CM17RX::writeRSSIHeader(uint8_t* data)
+void CM17RX::writeRSSILinkSetup(uint8_t* data)
 {
 #if defined(SEND_RSSI_DATA)
   if (m_rssiCount > 0U) {
@@ -438,19 +440,19 @@ void CM17RX::writeRSSIHeader(uint8_t* data)
     data[121U] = (rssi >> 8) & 0xFFU;
     data[122U] = (rssi >> 0) & 0xFFU;
 
-    serial.writeM17Header(data, M17_FRAME_LENGTH_BYTES + 3U);
+    serial.writeM17LinkSetup(data, M17_FRAME_LENGTH_BYTES + 3U);
   } else {
-    serial.writeM17Header(data, M17_FRAME_LENGTH_BYTES + 1U);
+    serial.writeM17LinkSetup(data, M17_FRAME_LENGTH_BYTES + 1U);
   }
 #else
-  serial.writeM17Header(data, M17_FRAME_LENGTH_BYTES + 1U);
+  serial.writeM17LinkSetup(data, M17_FRAME_LENGTH_BYTES + 1U);
 #endif
 
   m_rssiAccum = 0U;
   m_rssiCount = 0U;
 }
 
-void CM17RX::writeRSSIData(uint8_t* data)
+void CM17RX::writeRSSIStream(uint8_t* data)
 {
 #if defined(SEND_RSSI_DATA)
   if (m_rssiCount > 0U) {
@@ -459,12 +461,33 @@ void CM17RX::writeRSSIData(uint8_t* data)
     data[121U] = (rssi >> 8) & 0xFFU;
     data[122U] = (rssi >> 0) & 0xFFU;
 
-    serial.writeM17Data(data, M17_FRAME_LENGTH_BYTES + 3U);
+    serial.writeM17Stream(data, M17_FRAME_LENGTH_BYTES + 3U);
   } else {
-    serial.writeM17Data(data, M17_FRAME_LENGTH_BYTES + 1U);
+    serial.writeM17Stream(data, M17_FRAME_LENGTH_BYTES + 1U);
   }
 #else
-  serial.writeM17Data(data, M17_FRAME_LENGTH_BYTES + 1U);
+  serial.writeM17Stream(data, M17_FRAME_LENGTH_BYTES + 1U);
+#endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
+}
+
+void CM17RX::writeRSSIPacket(uint8_t* data)
+{
+#if defined(SEND_RSSI_DATA)
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
+
+    data[121U] = (rssi >> 8) & 0xFFU;
+    data[122U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeM17Packet(data, M17_FRAME_LENGTH_BYTES + 3U);
+  } else {
+    serial.writeM17Packet(data, M17_FRAME_LENGTH_BYTES + 1U);
+  }
+#else
+  serial.writeM17Packet(data, M17_FRAME_LENGTH_BYTES + 1U);
 #endif
 
   m_rssiAccum = 0U;
