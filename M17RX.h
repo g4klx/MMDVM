@@ -64,14 +64,13 @@ private:
   uint16_t    m_rssiCount;
 
   void processNone(q15_t sample);
-  void processLinkSetup(q15_t sample);
-  void processStream(q15_t sample);
-  void processPacket(q15_t sample);
+  void processData(q15_t sample);
   bool correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes, uint8_t maxSymbolErrs, uint8_t maxBitErrs);
   void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
-  void writeRSSIHeader(uint8_t* data);
-  void writeRSSIData(uint8_t* data);
+  void writeRSSILinkSetup(uint8_t* data);
+  void writeRSSIStream(uint8_t* data);
+  void writeRSSIPacket(uint8_t* data);
 };
 
 #endif
