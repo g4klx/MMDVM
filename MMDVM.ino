@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -40,10 +40,6 @@ bool m_dcd = false;
 
 #if defined(MODE_OLED)
 CI2COLED oled;
-#endif
-
-#if defined(I2C_REPEATER)
-CI2CPort i2C1(1U);
 #endif
 
 #if defined(MODE_DSTAR)

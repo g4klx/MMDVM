@@ -21,7 +21,7 @@
 #if defined(MODE_OLED)
 
 #include "I2COLED.h"
-#include "I2CPort.h"
+#include "I2C3.h"
 
 #include "Globals.h"
 

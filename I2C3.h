@@ -20,8 +20,8 @@
 
 #if defined(MODE_OLED)
 
-#if !defined(I2CPORT_H)
-#define  I2CPORT_H
+#if !defined(I2C3_H)
+#define  I2C3_H
 
 #if defined(STM32F7XX)
 #include "stm32f7xx.h"
@@ -29,9 +29,9 @@
 #endif
 
 
-class CI2CPort {
+class CI2C3 {
 public:
-  CI2CPort();
+  CI2C3();
 
   bool init();
 

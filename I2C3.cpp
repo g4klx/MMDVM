@@ -20,17 +20,17 @@
 
 #if defined(MODE_OLED)
 
-#include "I2CPort.h"
+#include "I2C3.h"
 
 #include "Globals.h"
 
 const uint16_t MAX_NBYTES_SIZE = 255U;
 
-CI2CPort::CI2CPort()
+CI2C3::CI2C3()
 {
 }
 
-bool CI2CPort::init()
+bool CI2C3::init()
 {
   // Enable I2C3
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C3, ENABLE);
@@ -77,7 +77,7 @@ bool CI2CPort::init()
   return true;
 }
 
-uint8_t CI2CPort::write(uint8_t addr, const uint8_t* data, uint16_t length)
+uint8_t CI2C3::write(uint8_t addr, const uint8_t* data, uint16_t length)
 {
   // Wait for the I2C transmitter to become free
   if (waitISRFlagsSet(I2C_ISR_BUSY))
@@ -122,7 +122,7 @@ uint8_t CI2CPort::write(uint8_t addr, const uint8_t* data, uint16_t length)
   return 0U;
 }
 
-bool CI2CPort::waitISRFlagsSet(uint32_t flags)
+bool CI2C3::waitISRFlagsSet(uint32_t flags)
 {
   // Wait till the specified ISR Bits are set
   // More than 1 Flag can be "or"ed.
@@ -136,7 +136,7 @@ bool CI2CPort::waitISRFlagsSet(uint32_t flags)
   return true;
 }
 
-void CI2CPort::configureDataTransfer(uint8_t size)
+void CI2C3::configureDataTransfer(uint8_t size)
 {
   I2C3->CR2 &= ~(I2C_CR2_SADD    |
                    I2C_CR2_NBYTES  |

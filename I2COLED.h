@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #if !defined(I2COLED_H)
 #define  I2COLED_H
 
-#include "I2CPort.h"
+#include "I2C3.h"
 
 class CI2COLED {
 public:
@@ -34,7 +34,7 @@ public:
   void setMode(int state);
 
 private:
-  CI2CPort m_i2c;
+  CI2C3    m_i2c;
   uint8_t* m_oledBuffer;
 
   void write(const char* text);
