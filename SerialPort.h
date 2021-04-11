@@ -93,6 +93,7 @@ public:
   void writeDebug(const char* text, int16_t n1, int16_t n2);
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3);
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4);
+  void writeDebugDump(const uint8_t* data, uint16_t length);
 
 private:
   uint8_t   m_buffer[512U];

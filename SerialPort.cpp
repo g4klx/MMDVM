@@ -94,6 +94,7 @@ const uint8_t MMDVM_DEBUG2       = 0xF2U;
 const uint8_t MMDVM_DEBUG3       = 0xF3U;
 const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
+const uint8_t MMDVM_DEBUG_DUMP   = 0xFAU;
 
 #if EXTERNAL_OSC == 12000000
 #define TCXO "12.0000 MHz"
@@ -2012,5 +2013,31 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
   reply[1U] = count;
 
   writeInt(1U, reply, count, true);
+}
+
+void CSerialPort::writeDebugDump(const uint8_t* data, uint16_t length)
+{
+  uint8_t reply[512U];
+
+  reply[0U] = MMDVM_FRAME_START;
+
+  if (length > 252U) {
+    reply[1U] = 0U;
+    reply[2U] = (length + 4U) - 255U;
+    reply[3U] = MMDVM_DEBUG_DUMP;
+
+    for (uint8_t i = 0U; i < length; i++)
+      reply[i + 4U] = data[i];
+
+    writeInt(1U, reply, length + 4U);
+  } else {
+    reply[1U] = length + 3U;
+    reply[2U] = MMDVM_DEBUG_DUMP;
+
+    for (uint8_t i = 0U; i < length; i++)
+      reply[i + 3U] = data[i];
+
+    writeInt(1U, reply, length + 3U);
+  }
 }
 
