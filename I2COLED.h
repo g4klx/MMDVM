@@ -29,7 +29,7 @@ class CI2COLED {
 public:
   CI2COLED();
 
-  bool init();
+  void init();
 
   void setMode(int state);
 

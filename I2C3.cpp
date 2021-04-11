@@ -30,7 +30,7 @@ CI2C3::CI2C3()
 {
 }
 
-bool CI2C3::init()
+void CI2C3::init()
 {
   // Enable I2C3
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C3, ENABLE);
@@ -73,8 +73,6 @@ bool CI2C3::init()
 
   // I2C Peripheral Enable
   I2C_Cmd(I2C3, ENABLE);
-
-  return true;
 }
 
 uint8_t CI2C3::write(uint8_t addr, const uint8_t* data, uint16_t length)

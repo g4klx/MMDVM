@@ -313,11 +313,9 @@ m_oledBuffer(NULL)
   clear();
 }
 
-bool CI2COLED::init()
+void CI2COLED::init()
 {
-  bool ret = m_i2c.init();
-  if (!ret)
-    return false;
+  m_i2c.init();
 
   // Initialise the VG-6432TSWEG02 OLED display
   sendCommand(0xAEU);    /*display off*/
@@ -352,8 +350,6 @@ bool CI2COLED::init()
   sendCommand(0x8DU, 0x10U);  /*set charge pump enable*/
 
   sendCommand(0xAFU);    /*display ON*/
-
-  return true;
 }
 
 void CI2COLED::setMode(int state)

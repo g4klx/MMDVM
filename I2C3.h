@@ -33,7 +33,7 @@ class CI2C3 {
 public:
   CI2C3();
 
-  bool init();
+  void init();
 
   uint8_t write(uint8_t addr, const uint8_t* data, uint16_t length);
 
