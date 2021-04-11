@@ -77,6 +77,9 @@ void CI2C3::init()
 
 uint8_t CI2C3::write(uint8_t addr, const uint8_t* data, uint16_t length)
 {
+  DEBUG2("OLED Data", addr);
+  DEBUG_DUMP(data, length);
+
   // Wait for the I2C transmitter to become free
   if (waitISRFlagsSet(I2C_ISR_BUSY))
     return 6U;

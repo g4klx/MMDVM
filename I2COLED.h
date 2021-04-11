@@ -46,7 +46,6 @@ private:
 
   void sendCommand(uint8_t c);
   void sendCommand(uint8_t c0, uint8_t c1);
-  void sendCommand(uint8_t c0, uint8_t c1, uint8_t c2);
   void sendData(const uint8_t* c, uint16_t length);
 };
 

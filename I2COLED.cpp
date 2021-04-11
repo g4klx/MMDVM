@@ -29,7 +29,7 @@ const uint8_t  OLED_ADDRESS = 0x78U;
 
 const uint8_t  OLED_WIDTH  = 64U;
 const uint8_t  OLED_HEIGHT = 32U;
-const uint16_t OLED_BUFFER_SIZE = OLED_HEIGHT * OLED_WIDTH / 8U;
+const uint16_t OLED_BUFFER_SIZE = (OLED_HEIGHT * OLED_WIDTH) / 8U;
 
 const uint8_t SSD_Command_Mode = 0x00U;  /* C0 and DC bit are 0         */
 const uint8_t SSD_Data_Mode    = 0x40U;  /* C0 bit is 0 and DC bit is 1 */
@@ -41,7 +41,7 @@ const uint8_t SSD1306_Set_Start_Line                  = 0x40U;
 const uint8_t CHAR_HEIGHT = 5U;
 const uint8_t CHAR_WIDTH  = 7U;
 
-// standard ascii 5x7 font
+// Standard ascii 5x7 font
 const uint8_t FONT[] = {
   0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
   0x3EU, 0x5BU, 0x4FU, 0x5BU, 0x3EU,
@@ -318,38 +318,38 @@ void CI2COLED::init()
   m_i2c.init();
 
   // Initialise the VG-6432TSWEG02 OLED display
-  sendCommand(0xAEU);    /*display off*/
+  sendCommand(0xAEU);		/* Display off */
 
-  sendCommand(0x00U);    /*set lower column address*/
-  sendCommand(0x12U);    /*set higher column address*/
+  sendCommand(0x00U);		/* Set lower column address */
+  sendCommand(0x12U);		/* Set higher column address */
 
-  sendCommand(0x00U);    /*set display start line*/
+  sendCommand(0x00U);		/* Set display start line */
 
-  sendCommand(0xB0U);    /*set page address*/
+  sendCommand(0xB0U);		/* Set page address */
 
-  sendCommand(0x81U, 0x41U);  /*contract control*/
+  sendCommand(0x81U, 0x41U);	/* Contract control */
 
-  sendCommand(0xA1U);    /*set segment remap*/
+  sendCommand(0xA1U);		/* Set segment remap */
 
-  sendCommand(0xA6U);    /*normal / reverse*/
+  sendCommand(0xA6U);		/* Normal/reverse */
 
-  sendCommand(0xA8U, 0x1FU);  /*multiplex ratio*/
+  sendCommand(0xA8U, 0x1FU);	/* Multiplex ratio */
 
-  sendCommand(0xC8U);    /*Com scan direction*/
+  sendCommand(0xC8U);		/* Com scan direction */
 
-  sendCommand(0xD3U, 0x00U);  /*set display offset*/
+  sendCommand(0xD3U, 0x00U);	/* Set display offset */
 
-  sendCommand(0xD5U, 0x80U);  /*set osc division*/
+  sendCommand(0xD5U, 0x80U);	/* Set osc division */
 
-  sendCommand(0xD9U, 0x1FU);  /*set pre-charge period*/
+  sendCommand(0xD9U, 0x1FU);	/* Set pre-charge period */
 
-  sendCommand(0xDAU, 0x12U);  /*set COM pins*/
+  sendCommand(0xDAU, 0x12U);	/* Set COM pins */
 
-  sendCommand(0xDBU, 0x40U);  /*set vcomh*/
+  sendCommand(0xDBU, 0x40U);	/* Set vcomh */
 
-  sendCommand(0x8DU, 0x10U);  /*set charge pump enable*/
+  sendCommand(0x8DU, 0x10U);	/* Set charge pump enable*/
 
-  sendCommand(0xAFU);    /*display ON*/
+  sendCommand(0xAFU);		/* Display on */
 }
 
 void CI2COLED::setMode(int state)
@@ -395,19 +395,6 @@ void CI2COLED::setMode(int state)
   display();
 }
 
-void CI2COLED::sendCommand(uint8_t c0, uint8_t c1, uint8_t c2)
-{
-  uint8_t buff[4U];
-
-  buff[0U] = SSD_Command_Mode;
-  buff[1U] = c0;
-  buff[2U] = c1;
-  buff[3U] = c2;
-
-  // Write Data on I2C
-  m_i2c.write(OLED_ADDRESS, buff, 4U);
-}
-
 void CI2COLED::sendCommand(uint8_t c0, uint8_t c1)
 {
   uint8_t buff[3U];
@@ -433,13 +420,13 @@ void CI2COLED::sendCommand(uint8_t c)
 
 void CI2COLED::sendData(const uint8_t* data, uint16_t length)
 {
-  uint8_t buff[1U];
+  uint8_t buff[20U];
 
   buff[0U] = SSD_Data_Mode;
+  ::memcpy(buff + 1U, data, length * sizeof(uint8_t));
 
   // Write Data on I2C
-  m_i2c.write(OLED_ADDRESS, buff, 1U);
-  m_i2c.write(OLED_ADDRESS, data, length);
+  m_i2c.write(OLED_ADDRESS, buff, length + 1U);
 }
 
 void CI2COLED::clear()
@@ -471,12 +458,12 @@ void CI2COLED::write(uint8_t x, uint8_t y, char c, uint8_t size)
   for (uint8_t i = 0U; i < 6U; i++) {
     uint8_t line;
     if (i == 5U)
-      line = 0x00U;
+      line = 0U;
     else
-      line = FONT[(c * 5) + i];
+      line = FONT[(c * 5U) + i];
 
     for (uint8_t j = 0U; j < 8U; j++) {
-      if (line & 0x1) {
+      if (line & 0x1U) {
         if (size == 1U) // default size
           drawPixel(x + i, y + j);
         else  // big size
@@ -507,12 +494,11 @@ void CI2COLED::drawPixel(uint8_t x, uint8_t y)
 
 void CI2COLED::display()
 {
-  sendCommand(SSD1306_Set_Lower_Column_Start_Address | 0x0); // low col = 0
-  sendCommand(SSD1306_Set_Higher_Column_Start_Address | 0x0); // hi col = 0
-  sendCommand(SSD1306_Set_Start_Line | 0x0); // line #0
+  sendCommand(SSD1306_Set_Lower_Column_Start_Address | 0x00U);	// Low col = 0
+  sendCommand(SSD1306_Set_Higher_Column_Start_Address | 0x00U);	// High col = 0
+  sendCommand(SSD1306_Set_Start_Line | 0x00U);			// Line #0
 
-  // loop trough all OLED buffer and 
-  // send a bunch of 16 data byte in one xmission
+  // loop trough all OLED buffer and send a bunch of 16 data byte in one transmission
   for (uint16_t i = 0U; i < OLED_BUFFER_SIZE; i += 16U)
     sendData(m_oledBuffer + i, 16U);
 }

@@ -2005,6 +2005,9 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
 
 void CSerialPort::writeDebugDump(const uint8_t* data, uint16_t length)
 {
+  if (length > 500U)
+    length = 500U;
+
   uint8_t reply[512U];
 
   reply[0U] = MMDVM_FRAME_START;
