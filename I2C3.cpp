@@ -24,8 +24,6 @@
 
 #include "Globals.h"
 
-const uint16_t MAX_NBYTES_SIZE = 255U;
-
 CI2C3::CI2C3()
 {
 }
@@ -75,66 +73,39 @@ void CI2C3::init()
   I2C_Cmd(I2C3, ENABLE);
 }
 
-uint8_t CI2C3::write(uint8_t addr, const uint8_t* data, uint16_t length)
+void CI2C3::write(uint8_t addr, const uint8_t* data, uint16_t length)
 {
   DEBUG2("OLED Data", addr);
   DEBUG_DUMP(data, length);
 
   // Wait for the I2C transmitter to become free
-  if (waitISRFlagsSet(I2C_ISR_BUSY))
-    return 6U;
+  waitISRFlagsSet(I2C_ISR_BUSY);
 
   // Configure the data transfer
-  uint16_t size;
-  if (length > MAX_NBYTES_SIZE)
-    size = MAX_NBYTES_SIZE;
-  else
-    size = length;
-  configureDataTransfer(size, addr);
+  configureDataTransfer(length, addr);
 
   // Start Writing Data
-  while (length > 0U) {
+  for (uint16_t i = 0U; i < length; i++) {
     // Wait for the TXIS flag to be set
-    if (waitISRFlagsSet(I2C_ISR_TXIS))
-      return 6U;
+    waitISRFlagsSet(I2C_ISR_TXIS);
 
     // Write the byte to the TXDR
-    I2C3->TXDR = *data++;
-    length--;
-    size--;
-
-    // Configure the data transfer
-    if (size == 0U && length > 0U) {
-      if (length > MAX_NBYTES_SIZE)
-        size = MAX_NBYTES_SIZE;
-      else
-        size = length;
-      configureDataTransfer(size, addr);
-    }
+    I2C3->TXDR = data[i];
   }
 
-  if (waitISRFlagsSet(I2C_ISR_STOPF))
-    return 6U;
+  waitISRFlagsSet(I2C_ISR_STOPF);
 
   I2C3->ISR &= ~I2C_ISR_STOPF;
   
   I2C3->CR2 &= (uint32_t)~((uint32_t)(I2C_CR2_SADD | I2C_CR2_HEAD10R | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_RD_WRN));
-
-  return 0U;
 }
 
-bool CI2C3::waitISRFlagsSet(uint32_t flags)
+void CI2C3::waitISRFlagsSet(uint32_t flags)
 {
   // Wait till the specified ISR Bits are set
   // More than 1 Flag can be "or"ed.
-  uint32_t timeOut = HSI_VALUE;
-  
-  while ((I2C3->ISR & flags) != flags) {
-    if (!(timeOut--))
-      return false;
-  } 
-
-  return true;
+  while ((I2C3->ISR & flags) != flags)
+  	;
 }
 
 void CI2C3::configureDataTransfer(uint8_t size, uint8_t addr)
