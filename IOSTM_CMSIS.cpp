@@ -1,7 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016, 2017 by Andy Uribe CA6JAU
- *   Copyright (C) 2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017,2018,2020,2021 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Wojciech Krutnik N0CALL
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -361,9 +361,6 @@ void CIO::initInt()
 #endif
 #if defined(MODE_OLED)
   oled.init();
-#endif
-#if defined(I2C_REPEATER)
-  i2c1.init();
 #endif
 }
 

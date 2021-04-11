@@ -18,7 +18,7 @@
 
 #include "Config.h"
 
-#if defined(MODE_OLED) || defined(I2C_REPEATER)
+#if defined(MODE_OLED)
 
 #if !defined(I2CPORT_H)
 #define  I2CPORT_H
@@ -31,27 +31,13 @@
 
 class CI2CPort {
 public:
-  CI2CPort(uint8_t n);
+  CI2CPort();
 
   bool init();
 
   uint8_t write(uint8_t addr, const uint8_t* data, uint16_t length);
 
 private:
-  I2C_TypeDef*  m_port;
-  uint32_t      m_clock;
-  uint32_t      m_busSCL;
-  uint32_t      m_busSDA;
-  uint8_t       m_af;
-  GPIO_TypeDef* m_gpioSCL;
-  GPIO_TypeDef* m_gpioSDA;
-  uint32_t      m_pinSCL;
-  uint32_t      m_pinSDA;
-  uint16_t      m_pinSourceSCL;
-  uint16_t      m_pinSourceSDA;
-  bool          m_ok;
-  uint8_t       m_addr;
-  
   bool waitISRFlagsSet(uint32_t flags);
   void configureDataTransfer(uint8_t size);
 };

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -305,7 +305,7 @@ const uint8_t FONT[] = {
 
 
 CI2COLED::CI2COLED() :
-m_i2c(3U),
+m_i2c(),
 m_oledBuffer(NULL)
 {
   m_oledBuffer = new uint8_t[OLED_BUFFER_SIZE];

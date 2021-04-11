@@ -148,10 +148,6 @@ extern CIO io;
 extern CI2COLED oled;
 #endif
 
-#if defined(I2C_REPEATER)
-extern CI2CPort i2C1;
-#endif
-
 #if defined(MODE_DSTAR)
 extern CDStarRX dstarRX;
 extern CDStarTX dstarTX;

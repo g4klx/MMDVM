@@ -110,9 +110,6 @@
 // Use the modem as a serial repeater for Nextion displays
 // #define SERIAL_REPEATER
 
-// Use the modem as an I2C repeater for an OLED display on I2C1
-#define I2C_REPEATER
-
 // To reduce CPU load, you can remove the DC blocker by commenting out the next line
 #define USE_DCBLOCKER
 

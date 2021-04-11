@@ -84,7 +84,6 @@ const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
 
 const uint8_t MMDVM_SERIAL_DATA  = 0x80U;
-const uint8_t MMDVM_I2C_DATA     = 0x81U;
 
 const uint8_t MMDVM_TRANSPARENT  = 0x90U;
 const uint8_t MMDVM_QSO_INFO     = 0x91U;
@@ -1338,17 +1337,6 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
     case MMDVM_SERIAL_DATA: {
       for (uint16_t i = 0U; i < length; i++)
         m_serialData.put(buffer[i]);
-      }
-      break;
-#endif
-
-#if defined(I2C_REPEATER)
-    case MMDVM_I2C_DATA: {
-        err = i2C1.write(buffer[0U], buffer + 1U, length - 1U);
-        if (err != 0U) {
-          DEBUG2("Received invalid I2C data", err);
-          sendNAK(err);
-        }
       }
       break;
 #endif
