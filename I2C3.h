@@ -39,7 +39,7 @@ public:
 
 private:
   bool waitISRFlagsSet(uint32_t flags);
-  void configureDataTransfer(uint8_t size);
+  void configureDataTransfer(uint8_t size, uint8_t addr);
 };
 
 #endif

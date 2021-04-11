@@ -89,7 +89,7 @@ uint8_t CI2C3::write(uint8_t addr, const uint8_t* data, uint16_t length)
     size = MAX_NBYTES_SIZE;
   else
     size = length;
-  configureDataTransfer(size);
+  configureDataTransfer(size, addr);
 
   // Start Writing Data
   while (length > 0U) {
@@ -108,7 +108,7 @@ uint8_t CI2C3::write(uint8_t addr, const uint8_t* data, uint16_t length)
         size = MAX_NBYTES_SIZE;
       else
         size = length;
-      configureDataTransfer(size);
+      configureDataTransfer(size, addr);
     }
   }
 
@@ -136,7 +136,7 @@ bool CI2C3::waitISRFlagsSet(uint32_t flags)
   return true;
 }
 
-void CI2C3::configureDataTransfer(uint8_t size)
+void CI2C3::configureDataTransfer(uint8_t size, uint8_t addr)
 {
   I2C3->CR2 &= ~(I2C_CR2_SADD    |
                    I2C_CR2_NBYTES  |
@@ -145,7 +145,7 @@ void CI2C3::configureDataTransfer(uint8_t size)
                    (I2C_CR2_RD_WRN & (uint32_t)(I2C_Generate_Start_Write >> (31U - I2C_CR2_RD_WRN_Pos))) |
                    I2C_CR2_START   |
                    I2C_CR2_STOP);
-  I2C3->CR2 |= (uint32_t)(((uint32_t)m_addr & I2C_CR2_SADD) |
+  I2C3->CR2 |= (uint32_t)(((uint32_t)addr & I2C_CR2_SADD) |
                  (((uint32_t)size << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES) |
                  (uint32_t)I2C_CR2_RELOAD |
                  (uint32_t)I2C_Generate_Start_Write);
