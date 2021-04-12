@@ -35,14 +35,12 @@ public:
 
   void init();
 
-  void write(uint8_t addr, const uint8_t* data, uint16_t length);
+  void write(uint8_t addr, const uint8_t* data, uint8_t length);
 
 private:
-  void waitISRFlagsSet(uint32_t flags);
-  void configureDataTransfer(uint8_t size, uint8_t addr);
+  void transferConfig(uint16_t addr, uint8_t length, uint32_t mode, uint32_t request);
 };
 
 #endif
 
 #endif
-
