@@ -39,6 +39,9 @@ public:
 
 private:
   void transferConfig(uint16_t addr, uint8_t length, uint32_t mode, uint32_t request);
+  void configAnalogFilter(uint32_t AnalogFilter);
+  void configDigitalFilter(uint32_t DigitalFilter);
+  void initI2C3();
 };
 
 #endif

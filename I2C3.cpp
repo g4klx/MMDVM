@@ -35,6 +35,36 @@
 
 #define	I2C_MODIFY_REG(REG, CLEARMASK, SETMASK)	I2C_WRITE_REG((REG), (((I2C_READ_REG(REG)) & (~(CLEARMASK))) | (SETMASK)))
 
+#define	TIMING_CLEAR_MASK				(0xF0FFFFFFU)
+
+#define	I2C_DUALADDRESS_DISABLE			(0x00000000U)
+#define	I2C_DUALADDRESS_ENABLE				I2C_OAR2_OA2EN
+
+#define	I2C_GENERALCALL_DISABLE			(0x00000000U)
+
+#define	I2C_NOSTRETCH_DISABLE				(0x00000000U)
+
+#define	I2C_ANALOGFILTER_ENABLE			0x00000000U
+
+#define	RCC_I2C3CLKSOURCE_PCLK1			((uint32_t)0x00000000U)
+
+#define	I2C_OA2_NOMASK					((uint8_t)0x00U)
+
+#define	I2C_ENABLE()					(SET_BIT(I2C3->CR1,  I2C_CR1_PE))
+
+#define	I2C_DISABLE()					(CLEAR_BIT(I2C3->CR1, I2C_CR1_PE))
+
+#define	RCC_GPIOA_CLK_ENABLE()				do { \
+									__IO uint32_t tmpreg; \
+									SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOAEN);\
+									tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOAEN);\
+								} while(0)
+
+#define	RCC_GPIOC_CLK_ENABLE()				do { \
+									__IO uint32_t tmpreg; \
+									SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);\
+									tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);\
+								} while(0)
 
 CI2C3::CI2C3()
 {
@@ -42,129 +72,20 @@ CI2C3::CI2C3()
 
 void CI2C3::init()
 {
-  // Enable I2C3
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C3, ENABLE);
-  // LL_RCC_SetI2CClockSource(LL_RCC_I2C3_CLKSOURCE_PCLK1);
-/*
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C3;
-  PeriphClkInitStruct.I2c3ClockSelection = RCC_I2C3CLKSOURCE_PCLK1;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-*/
+  // Enable the I2C3 clock
+  I2C_MODIFY_REG(RCC->DCKCFGR2, RCC_DCKCFGR2_I2C3SEL, RCC_I2C3CLKSOURCE_PCLK1);
 
   // Enable the GPIOs for the SCL/SDA Pins
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOC, ENABLE);
-  // LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
-  // LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+  RCC_GPIOC_CLK_ENABLE();
+  RCC_GPIOA_CLK_ENABLE();
 
-  // LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
-  // LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+  initI2C3();
 
-/*
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-*/
-
-  // Configure and initialize the GPIOs
-  GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_8;
-  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_High_Speed;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_High_Speed;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-/*
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_9;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-  GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
-  LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_8;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-  GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
-  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-*/
-
-  // LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C3);
-
-  // Connect GPIO pins to I2C3
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF4_I2C3);
-  GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF4_I2C3);
-  
-  // Configure and Initialize I2C3
-  I2C_InitTypeDef I2C_InitStructure;
-  I2C_InitStructure.I2C_Timing              = 0x0010061AU;	// 400kHz (Fast Mode)
-  I2C_InitStructure.I2C_AnalogFilter        = I2C_AnalogFilter_Enable;
-  I2C_InitStructure.I2C_DigitalFilter       = 0U;		// No digital filter
-  I2C_InitStructure.I2C_Mode                = I2C_Mode_I2C;
-  I2C_InitStructure.I2C_OwnAddress1         = 0x00U;		// We are the master. We don't need this
-  I2C_InitStructure.I2C_Ack                 = I2C_Ack_Enable;
-  I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-  
-  // Initialize the Peripheral
-  I2C_Init(I2C3, &I2C_InitStructure);
-
-  // I2C Peripheral Enable
-  I2C_Cmd(I2C3, ENABLE);
-
-/*
-  LL_I2C_EnableAutoEndMode(I2C3);
-  LL_I2C_SetOwnAddress2(I2C3, 0, LL_I2C_OWNADDRESS2_NOMASK);
-  LL_I2C_DisableOwnAddress2(I2C3);
-  LL_I2C_DisableGeneralCall(I2C3);
-  LL_I2C_EnableClockStretching(I2C3);
-
-  I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-  I2C_InitStruct.Timing = 0x0010061A;
-  I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
-  I2C_InitStruct.DigitalFilter = 0;
-  I2C_InitStruct.OwnAddress1 = 0;
-  I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
-  I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
-  LL_I2C_Init(I2C3, &I2C_InitStruct);
-*/
-
-/*
-  hi2c3.Instance = I2C3;
-  hi2c3.Init.Timing = 0x0010061A;
-  hi2c3.Init.OwnAddress1 = 0;
-  hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c3.Init.OwnAddress2 = 0;
-  hi2c3.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c3) != HAL_OK)
-  {
-    Error_Handler();
-  }
   // Configure Analogue filter
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  configAnalogFilter(I2C_ANALOGFILTER_ENABLE);
+
   // Configure Digital filter
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-*/
+  configDigitalFilter(0U);
 }
 
 void CI2C3::write(uint8_t addr, const uint8_t* data, uint8_t length)
@@ -207,6 +128,75 @@ void CI2C3::transferConfig(uint16_t addr, uint8_t length, uint32_t mode, uint32_
                 (I2C_CR2_RD_WRN & (uint32_t)(request >> (31U - I2C_CR2_RD_WRN_Pos))) | I2C_CR2_START | I2C_CR2_STOP)), \
                 (uint32_t)(((uint32_t)addr & I2C_CR2_SADD) |
                         (((uint32_t)length << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES) | (uint32_t)mode | (uint32_t)request));
+}
+
+void CI2C3::configAnalogFilter(uint32_t AnalogFilter)
+{
+  // Disable the selected I2C peripheral
+  I2C_DISABLE();
+
+  // Reset I2Cx ANOFF bit
+  I2C3->CR1 &= ~(I2C_CR1_ANFOFF);
+
+  // Set analog filter bit
+  I2C3->CR1 |= AnalogFilter;
+
+  I2C_ENABLE();
+}
+
+void CI2C3::configDigitalFilter(uint32_t DigitalFilter)
+{
+  // Disable the selected I2C peripheral
+  I2C_DISABLE();
+
+  // Get the old register value
+  uint32_t tmpreg = I2C3->CR1;
+
+  // Reset I2Cx DNF bits [11:8]
+  tmpreg &= ~(I2C_CR1_DNF);
+
+  // Set I2Cx DNF coefficient
+  tmpreg |= DigitalFilter << 8U;
+
+  // Store the new register value
+  I2C3->CR1 = tmpreg;
+
+  I2C_ENABLE();
+}
+
+void CI2C3::initI2C3()
+{
+  /* Disable the selected I2C peripheral */
+  I2C_DISABLE();
+
+  /*---------------------------- I2Cx TIMINGR Configuration ------------------*/
+  /* Configure I2Cx: Frequency range */
+  I2C3->TIMINGR = 0x0010061AU & TIMING_CLEAR_MASK;
+
+  /*---------------------------- I2Cx OAR1 Configuration ---------------------*/
+  /* Disable Own Address1 before set the Own Address1 configuration */
+  I2C3->OAR1 &= ~I2C_OAR1_OA1EN;
+
+  /* Configure I2Cx: Own Address1 and ack own address1 mode */
+  I2C3->OAR1 = (I2C_OAR1_OA1EN | 0U);
+
+  /*---------------------------- I2Cx CR2 Configuration ----------------------*/
+  /* Enable the AUTOEND by default, and enable NACK (should be disable only during Slave process */
+  I2C3->CR2 |= (I2C_CR2_AUTOEND | I2C_CR2_NACK);
+
+  /*---------------------------- I2Cx OAR2 Configuration ---------------------*/
+  /* Disable Own Address2 before set the Own Address2 configuration */
+  I2C3->OAR2 &= ~I2C_DUALADDRESS_ENABLE;
+
+  /* Configure I2Cx: Dual mode and Own Address2 */
+  I2C3->OAR2 = (I2C_DUALADDRESS_DISABLE | 0U | (I2C_OA2_NOMASK << 8));
+
+  /*---------------------------- I2Cx CR1 Configuration ----------------------*/
+  /* Configure I2Cx: Generalcall and NoStretch mode */
+  I2C3->CR1 = (I2C_GENERALCALL_DISABLE | I2C_NOSTRETCH_DISABLE);
+
+  /* Enable the selected I2C peripheral */
+  I2C_ENABLE();
 }
 
 #endif
