@@ -25,17 +25,15 @@
 #include "Globals.h"
 
 
-#define	WRITE_REG(REG, VAL)						((REG) = (VAL))
+#define	I2C_WRITE_REG(REG, VAL)			((REG) = (VAL))
+#define	I2C_READ_REG(REG)				((REG))
 
-#define	READ_REG(REG)							((REG))
+#define	I2C_CLEAR_FLAG(__FLAG__)			(((__FLAG__) == I2C_FLAG_TXE) ? (I2C3->ISR |= (__FLAG__)) : (I2C3->ICR = (__FLAG__)))
+#define	I2C_GET_FLAG(__FLAG__)				((((I2C3->ISR) & (__FLAG__)) == (__FLAG__)) ? SET : RESET)
 
-#define	I2C_CLEAR_FLAG(__FLAG__)				(((__FLAG__) == I2C_FLAG_TXE) ? (I2C3->ISR |= (__FLAG__)) : (I2C3->ICR = (__FLAG__)))
+#define	I2C_RESET_CR2()				(I2C3->CR2 &= (uint32_t)~((uint32_t)(I2C_CR2_SADD | I2C_CR2_HEAD10R | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_RD_WRN)))
 
-#define	I2C_GET_FLAG(__FLAG__)					((((I2C3->Instance->ISR) & (__FLAG__)) == (__FLAG__)) ? SET : RESET)
-
-#define	I2C_RESET_CR2()							((I2C3->CR2 &= (uint32_t)~((uint32_t)(I2C_CR2_SADD | I2C_CR2_HEAD10R | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_RD_WRN)))
-
-#define	MODIFY_REG(REG, CLEARMASK, SETMASK)		WRITE_REG((REG), (((READ_REG(REG)) & (~(CLEARMASK))) | (SETMASK)))
+#define	I2C_MODIFY_REG(REG, CLEARMASK, SETMASK)	I2C_WRITE_REG((REG), (((I2C_READ_REG(REG)) & (~(CLEARMASK))) | (SETMASK)))
 
 
 CI2C3::CI2C3()
@@ -179,7 +177,7 @@ void CI2C3::write(uint8_t addr, const uint8_t* data, uint8_t length)
     ;
 
   // Configure the data transfer
-  transferConfig(addr, length, I2C_AUTOEND_MODE, I2C_GENERATE_START_WRITE);
+  transferConfig(addr, length, I2C_CR2_AUTOEND, I2C_Generate_Start_Write);
 
   // Start Writing Data
   for (uint16_t i = 0U; i < length; i++) {
@@ -191,21 +189,25 @@ void CI2C3::write(uint8_t addr, const uint8_t* data, uint8_t length)
     I2C3->TXDR = data[i];
   }
 
+  // No need to Check TC flag, with AUTOEND mode the stop is automatically generated Wait until STOPF flag is set
   while (I2C_GET_FLAG(I2C_FLAG_STOPF) == RESET)
     ;
 
+  // Clear STOP flag
   I2C_CLEAR_FLAG(I2C_FLAG_STOPF);
 
+  // Clear Configuration Register 2
   I2C_RESET_CR2();
 }
 
 void CI2C3::transferConfig(uint16_t addr, uint8_t length, uint32_t mode, uint32_t request)
 {
-  /* update CR2 register */
-  MODIFY_REG(I2C3->CR2, ((I2C_CR2_SADD | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_AUTOEND | \
-               (I2C_CR2_RD_WRN & (uint32_t)(request >> (31U - I2C_CR2_RD_WRN_Pos))) | I2C_CR2_START | I2C_CR2_STOP)), \
-             (uint32_t)(((uint32_t)addr & I2C_CR2_SADD) |
+  // Update CR2 register
+  I2C_MODIFY_REG(I2C3->CR2, ((I2C_CR2_SADD | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_AUTOEND | \
+                (I2C_CR2_RD_WRN & (uint32_t)(request >> (31U - I2C_CR2_RD_WRN_Pos))) | I2C_CR2_START | I2C_CR2_STOP)), \
+                (uint32_t)(((uint32_t)addr & I2C_CR2_SADD) |
                         (((uint32_t)length << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES) | (uint32_t)mode | (uint32_t)request));
 }
 
 #endif
+
