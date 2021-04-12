@@ -50,6 +50,14 @@
 
 #define	I2C_OA2_NOMASK					((uint8_t)0x00U)
 
+#define	GPIO_MODE_AF_OD				((uint32_t)0x00000012U)
+
+#define	GPIO_OUTPUT_TYPE				((uint32_t)0x00000010U)
+
+#define	GPIO_MODE					((uint32_t)0x00000003U)
+
+#define	GPIO_NUMBER					(16U)
+
 #define	I2C_ENABLE()					(SET_BIT(I2C3->CR1,  I2C_CR1_PE))
 
 #define	I2C_DISABLE()					(CLEAR_BIT(I2C3->CR1, I2C_CR1_PE))
@@ -64,6 +72,12 @@
 									__IO uint32_t tmpreg; \
 									SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);\
 									tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);\
+								} while(0)
+
+#define	RCC_I2C3_CLK_ENABLE()				do { \
+									__IO uint32_t tmpreg; \
+									SET_BIT(RCC->APB1ENR, RCC_APB1ENR_I2C3EN);\
+									tmpreg = READ_BIT(RCC->APB1ENR, RCC_APB1ENR_I2C3EN);\
 								} while(0)
 
 CI2C3::CI2C3()
@@ -88,10 +102,13 @@ void CI2C3::init()
   configDigitalFilter(0U);
 }
 
-void CI2C3::write(uint8_t addr, const uint8_t* data, uint8_t length)
+void CI2C3::write(uint16_t addr, const uint8_t* data, uint8_t length)
 {
   DEBUG2("OLED Data", addr);
   DEBUG_DUMP(data, length);
+
+  // Shift the address to the left
+  addr <<= 3;
 
   // Wait for the I2C transmitter to become free
   while (I2C_GET_FLAG(I2C_FLAG_BUSY) == SET)
@@ -166,6 +183,8 @@ void CI2C3::configDigitalFilter(uint32_t DigitalFilter)
 
 void CI2C3::initI2C3()
 {
+  initMSP();
+
   /* Disable the selected I2C peripheral */
   I2C_DISABLE();
 
@@ -197,6 +216,68 @@ void CI2C3::initI2C3()
 
   /* Enable the selected I2C peripheral */
   I2C_ENABLE();
+}
+
+void CI2C3::initMSP()
+{
+  RCC_GPIOC_CLK_ENABLE();
+  RCC_GPIOA_CLK_ENABLE();
+
+  /* I2C3 GPIO Configuration
+     PC9     ------> I2C3_SDA
+     PA8     ------> I2C3_SCL
+  */
+  initGPIO(GPIOC, GPIO_Pin_9);
+  initGPIO(GPIOA, GPIO_Pin_8);
+
+  // Peripheral clock enable
+  RCC_I2C3_CLK_ENABLE();
+}
+
+void CI2C3::initGPIO(GPIO_TypeDef* GPIOx, uint32_t Pin)
+{
+  // Configure the port pins
+  for (uint32_t position = 0U; position < GPIO_NUMBER; position++)
+  {
+    // Get the IO position
+    uint32_t ioposition = ((uint32_t)0x01) << position;
+
+    // Get the current IO position
+    uint32_t iocurrent = Pin & ioposition;
+
+    if (iocurrent == ioposition)
+    {
+      // Configure the IO Speed
+      uint32_t temp = GPIOx->OSPEEDR; 
+      temp &= ~(GPIO_OSPEEDER_OSPEEDR0 << (position * 2));
+      temp |= (GPIO_High_Speed << (position * 2));
+      GPIOx->OSPEEDR = temp;
+
+      // Configure the IO Output Type
+      temp = GPIOx->OTYPER;
+      temp &= ~(GPIO_OTYPER_OT_0 << position) ;
+      temp |= (((GPIO_MODE_AF_OD & GPIO_OUTPUT_TYPE) >> 4) << position);
+      GPIOx->OTYPER = temp;
+
+      // Activate the Pull Up resistor for the current IO
+      temp = GPIOx->PUPDR;
+      temp &= ~(GPIO_PUPDR_PUPDR0 << (position * 2));
+      temp |= ((GPIO_PuPd_UP) << (position * 2));
+      GPIOx->PUPDR = temp;
+
+      // Configure Alternate function mapped with the current IO
+      temp = GPIOx->AFR[position >> 3];
+      temp &= ~((uint32_t)0xF << ((uint32_t)(position & (uint32_t)0x07) * 4)) ;
+      temp |= ((uint32_t)(GPIO_AF4_I2C3) << (((uint32_t)position & (uint32_t)0x07) * 4));
+      GPIOx->AFR[position >> 3] = temp;
+      
+      // Configure IO Direction mode (Input, Output, Alternate or Analog)
+      temp = GPIOx->MODER;
+      temp &= ~(GPIO_MODER_MODER0 << (position * 2));
+      temp |= ((GPIO_MODE_AF_OD & GPIO_MODE) << (position * 2));
+      GPIOx->MODER = temp;
+    }
+  }
 }
 
 #endif
