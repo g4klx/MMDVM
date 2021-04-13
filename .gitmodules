@@ -4,3 +4,6 @@
 [submodule "STM32F10X_Lib"]
 	path = STM32F10X_Lib
 	url = https://github.com/shawnchain/STM32F10X_Lib.git
+[submodule "STM32F7XX_Lib"]
+	path = STM32F7XX_Lib
+	url = https://github.com/g4klx/STM32F7XX_Lib.git
