@@ -112,6 +112,10 @@ const uint8_t MMDVM_DEBUG_DUMP   = 0xFAU;
 #define	HW_TYPE	"MMDVM DRCC_DVM_NQF"
 #elif defined(DRCC_DVM_HHP446)
 #define	HW_TYPE	"MMDVM DRCC_DVM_HHP(446)"
+#elif defined(DRCC_DVM_722)
+#define HW_TYPE "MMDVM RB_STM32_DVM(722)"
+#elif defined(DRCC_DVM_446)
+#define HW_TYPE "MMDVM RB_STM32_DVM(446)"
 #else
 #define	HW_TYPE	"MMDVM"
 #endif
