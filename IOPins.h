@@ -59,6 +59,9 @@
 #elif defined(STM32F4_DVM)
     #include "pins/pins_f4_stm32dvm_v3.h"
 
+#elif defined(STM32F7_DVM)
+    #include "pins/pins_f7_stm32dvm_v5.h"
+
 #elif defined(DRCC_DVM_NQF)
     #include "pins/pins_f4_drcc_nqf.h"
 
