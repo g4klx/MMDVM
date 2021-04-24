@@ -318,38 +318,40 @@ void CI2COLED::init()
   m_i2c.init();
 
   // Initialise the VG-6432TSWEG02 OLED display
-  sendCommand(0xAEU);		/* Display off */
+  // Taken from https://datasheet.lcsc.com/szlcsc/1912111437_WiseChip-VG-6432TSWAG01-IIC-sh1106_C194312.pdf
 
-  sendCommand(0x00U);		/* Set lower column address */
-  sendCommand(0x12U);		/* Set higher column address */
+  sendCommand(0xAEU);			// Display off
 
-  sendCommand(0x00U);		/* Set display start line */
+  sendCommand(0x00U);			// Set lower column address
+  sendCommand(0x12U);			// Set higher column address
 
-  sendCommand(0xB0U);		/* Set page address */
+  sendCommand(0x00U);			// Set display start line
 
-  sendCommand(0x81U, 0x41U);	/* Contract control */
+  sendCommand(0xB0U);			// Set page address
 
-  sendCommand(0xA1U);		/* Set segment remap */
+  sendCommand(0x81U, 0x4FU);	// Contract control, 128
 
-  sendCommand(0xA6U);		/* Normal/reverse */
+  sendCommand(0xA1U);			// Set segment remap
 
-  sendCommand(0xA8U, 0x1FU);	/* Multiplex ratio */
+  sendCommand(0xA6U);			// Normal/reverse
 
-  sendCommand(0xC8U);		/* Com scan direction */
+  sendCommand(0xA8U, 0x1FU);	// Multiplex ratio, duty = 1/32
 
-  sendCommand(0xD3U, 0x00U);	/* Set display offset */
+  sendCommand(0xC8U);			// Com scan direction
 
-  sendCommand(0xD5U, 0x80U);	/* Set osc division */
+  sendCommand(0xD3U, 0x00U);	// Set display offset
 
-  sendCommand(0xD9U, 0x1FU);	/* Set pre-charge period */
+  sendCommand(0xD5U, 0x80U);	// Set osc division
 
-  sendCommand(0xDAU, 0x12U);	/* Set COM pins */
+  sendCommand(0xD9U, 0x1FU);	// Set pre-charge period
 
-  sendCommand(0xDBU, 0x40U);	/* Set vcomh */
+  sendCommand(0xDAU, 0x12U);	// Set COM pins
 
-  sendCommand(0x8DU, 0x10U);	/* Set charge pump enable*/
+  sendCommand(0xDBU, 0x40U);	// Set vcomh
 
-  sendCommand(0xAFU);		/* Display on */
+  sendCommand(0x8DU, 0x14U);	// Set charge pump enable
+
+  sendCommand(0xAFU);			// Display on
 }
 
 void CI2COLED::setMode(int state)
@@ -489,7 +491,7 @@ void CI2COLED::drawPixel(uint8_t x, uint8_t y)
   uint8_t* p = m_oledBuffer + (x + (y / 8U) * OLED_WIDTH);
 
   // x is which column
-  *p |= _BV((y % 8));
+  *p |= _BV((y % 8U));
 }
 
 void CI2COLED::display()
