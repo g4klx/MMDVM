@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -30,13 +30,13 @@ const uint32_t FRAME_SYNC_MASK = 0x00FFFFFFU;
 const uint8_t  FRAME_SYNC_ERRS = 1U;
 
 // D-Star bit order version of 0x55 0x2D 0x16
-const uint32_t DATA_SYNC_DATA = 0x00AAB468U;
-const uint32_t DATA_SYNC_MASK = 0x00FFFFFFU;
+const uint64_t DATA_SYNC_DATA = 0x0000000000AAB468U;
+const uint64_t DATA_SYNC_MASK = 0x0000000000FFFFFFU;
 const uint8_t  DATA_SYNC_ERRS = 2U;
 
 // D-Star bit order version of 0x55 0x55 0xC8 0x7A
-const uint32_t END_SYNC_DATA = 0xAAAA135EU;
-const uint32_t END_SYNC_MASK = 0xFFFFFFFFU;
+const uint64_t END_SYNC_DATA = 0x0000AAAAAAAA135EU;
+const uint64_t END_SYNC_MASK = 0x0000FFFFFFFFFFFFU;
 const uint8_t  END_SYNC_ERRS = 1U;
 
 const uint8_t BIT_MASK_TABLE0[] = {0x7FU, 0xBFU, 0xDFU, 0xEFU, 0xF7U, 0xFBU, 0xFDU, 0xFEU};

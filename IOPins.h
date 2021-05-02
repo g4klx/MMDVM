@@ -59,8 +59,17 @@
 #elif defined(STM32F4_DVM)
     #include "pins/pins_f4_stm32dvm_v3.h"
 
+#elif defined(STM32F7_DVM)
+    #include "pins/pins_f7_stm32dvm_v5.h"
+
 #elif defined(DRCC_DVM_NQF)
     #include "pins/pins_f4_drcc_nqf.h"
+
+#elif defined(DRCC_DVM_HHP446)
+    #include "pins/pins_f4_drcc_hhp446.h"
+
+#elif defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
+    #include "pins/pins_f4_stm32eda.h"
 
 #else
     #error "A valid board type macro need to be defined."

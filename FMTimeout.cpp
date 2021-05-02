@@ -36,24 +36,22 @@ m_n(0U)
 
 void CFMTimeout::setParams(uint8_t level)
 {
-  m_level = q15_t(level * 128);
+  m_level = q15_t(level * 5);
 }
 
 q15_t CFMTimeout::getAudio()
 {
-  q15_t sample = 0U;
+  q15_t sample = 0;
   if (!m_running)
     return sample;
 
-  if (m_pos > 12000U) {
-    q31_t sample = BUSY_AUDIO[m_n] * m_level;
-    sample = q15_t(__SSAT((sample >> 15), 16));
+  if (m_pos >= 12000U) {
+    q31_t sample31 = BUSY_AUDIO[m_n] * m_level;
+    sample = q15_t(__SSAT((sample31 >> 15), 16));
 
     m_n++;
     if (m_n >= BUSY_AUDIO_LEN)
       m_n = 0U;
-  } else {
-    sample = 0U;
   }
 
   m_pos++;
