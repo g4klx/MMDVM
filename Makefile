@@ -133,12 +133,18 @@ DEFS_PI_F722=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_PI -DHSE_VAL
 DEFS_F7M=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_F7M -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # MMDVM_RPT_Hat F0DEI, DB9MAT, DF2ET board:
 DEFS_RPT_HAT=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F722_RPT_HAT -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
-# STM32F4 DVM board:
+# RB STM32F4_DVM board:
 DEFS_DVM=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_DVM -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# RB STM32F7 DVM board:
+DEFS_DVM722=-DUSE_HAL_DRIVER -DSTM32F722xx -DSTM32F7XX -DSTM32F7_DVM -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # MMDVM_RPT_Hat BG4TGO, BG5HHP board:
 DEFS_RPT_HAT_TGO=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_RPT_HAT_TGO -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # DRCC_DVM BG7NQF board:
 DEFS_DRCC_DVM=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DDRCC_DVM -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# WA0EDA F405 MTR2K, MASTR3 board:
+DEFS_EDA_405=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F40_41xxx -DSTM32F4_EDA_405 -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
+# WA0EDA F446 MTR2K, MASTR3 board:
+DEFS_EDA_446=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_EDA_446 -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 
 
 # Build compiler flags
@@ -218,16 +224,40 @@ f767: LDFLAGS+=$(LDFLAGS_F767)
 f767: release_f7
 
 dvm: GitVersion.h
-dvm: CFLAGS+=$(CFLAGS_F4) $(DEFS_DVM)
-dvm: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DVM)
+dvm: CFLAGS+=$(CFLAGS_F4) $(DEFS_DVM) -DDRCC_DVM_446
+dvm: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DVM) -DDRCC_DVM_446
 dvm: LDFLAGS+=$(LDFLAGS_F4)
 dvm: release_f4
+
+dvm722: GitVersion.h
+dvm722: CFLAGS+=$(CFLAGS_F7) $(DEFS_DVM722) -DDRCC_DVM_722
+dvm722: CXXFLAGS+=$(CXXFLAGS_F7) $(DEFS_DVM722) -DDRCC_DVM_722
+dvm722: LDFLAGS+=$(LDFLAGS_F722)
+dvm722: release_f7
 
 drcc_nqf: GitVersion.h
 drcc_nqf: CFLAGS+=$(CFLAGS_F4) $(DEFS_DRCC_DVM) -DDRCC_DVM_NQF
 drcc_nqf: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DRCC_DVM) -DDRCC_DVM_NQF
 drcc_nqf: LDFLAGS+=$(LDFLAGS_F4)
 drcc_nqf: release_f4
+
+hhp446: GitVersion.h
+hhp446: CFLAGS+=$(CFLAGS_F4) $(DEFS_DRCC_DVM) -DDRCC_DVM_HHP446
+hhp446: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_DRCC_DVM) -DDRCC_DVM_HHP446
+hhp446: LDFLAGS+=$(LDFLAGS_F4)
+hhp446: release_f4
+
+eda405: GitVersion.h
+eda405: CFLAGS+=$(CFLAGS_F4) $(DEFS_EDA_405)
+eda405: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_EDA_405)
+eda405: LDFLAGS+=$(LDFLAGS_F4)
+eda405: release_f4
+
+eda446: GitVersion.h
+eda446: CFLAGS+=$(CFLAGS_F4) $(DEFS_EDA_446)
+eda446: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_EDA_446)
+eda446: LDFLAGS+=$(LDFLAGS_F4)
+eda446: release_f4
 
 release_f4: $(BINDIR)
 release_f4: $(OBJDIR_F4)
@@ -338,27 +368,27 @@ endif
 deploy-pi:
 ifneq ($(wildcard /usr/local/bin/stm32flash),)
 	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
-	-/usr/local/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F4)
-	/usr/local/bin/stm32flash -v -w bin/$(BINBIN_F4) -g 0x0 -R -c /dev/ttyAMA0
+	/usr/local/bin/stm32flash -v -w bin/$(BINBIN_F4) -g 0x0 -R /dev/ttyAMA0
 endif
 
 ifneq ($(wildcard /usr/bin/stm32flash),)
 	-/usr/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
-	-/usr/bin/stm32ld /dev/ttyAMA0 57600 bin/$(BINBIN_F4)
-	/usr/bin/stm32flash -v -w bin/$(BINBIN_F4) -g 0x0 -R -c /dev/ttyAMA0
+	/usr/bin/stm32flash -v -w bin/$(BINBIN_F4) -g 0x0 -R /dev/ttyAMA0
 endif
 
 deploy-f4m: deploy-pi
 deploy-dvm: deploy-pi
+deploy-eda405: deploy-pi
+deploy-eda446: deploy-pi
 
 deploy-pi-f7:
 ifneq ($(wildcard /usr/local/bin/stm32flash),)
 	-/usr/local/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
-	/usr/local/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
+	/usr/local/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R /dev/ttyAMA0
 
 else ifneq ($(wildcard /usr/bin/stm32flash),)
 	-/usr/bin/stm32flash -i 20,-21,21:-20,21 /dev/ttyAMA0
-	/usr/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R -c /dev/ttyAMA0
+	/usr/bin/stm32flash -v -w bin/$(BINBIN_F7) -g 0x0 -R /dev/ttyAMA0
 endif
 
 deploy-f7m:   deploy-pi-f7

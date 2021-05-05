@@ -16,11 +16,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _PINS_F4_STM32DVM_V3_H
-#define _PINS_F4_STM32DVM_V3_H
+#ifndef _PINS_F4_STM32EDA
+#define _PINS_F4_STM32EDA
 
 /*
-Pin definitions for STM32F4 STM32-DVM rev 3 Board:
+Pin definitions for STM32F4 STM32-DVM-MTR2K & STM32-DVM-MASTR3:
 
 COS      PB13   input
 PTT      PB12   output
@@ -32,7 +32,8 @@ NXDN     PB9    output
 DSTAR    PB6    output
 DMR      PB5    output
 YSF      PB7    output
-POCSAG   PC10   output (Not Valid)
+POCSAG   PC10   output
+FM       PC11   output
 
 RX       PB0    analog input
 RSSI     PB1    analog input
@@ -78,15 +79,13 @@ EXT_CLK  PA15   input
 #define PORT_YSF          GPIOB
 #define RCC_Per_YSF       RCC_AHB1Periph_GPIOB
 
-/*
 #define PIN_POCSAG        GPIO_Pin_10
 #define PORT_POCSAG       GPIOC
 #define RCC_Per_POCSAG    RCC_AHB1Periph_GPIOC
-*/
 
-#define PIN_FM            GPIO_Pin_14
-#define PORT_FM           GPIOB
-#define RCC_Per_FM        RCC_AHB1Periph_GPIOB
+#define PIN_FM            GPIO_Pin_11
+#define PORT_FM           GPIOC
+#define RCC_Per_FM        RCC_AHB1Periph_GPIOC
 
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
@@ -106,3 +105,4 @@ EXT_CLK  PA15   input
 #define PIN_TX_CH         DAC_Channel_1
 
 #endif
+

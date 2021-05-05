@@ -16,11 +16,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _PINS_F4_STM32DVM_V3_H
-#define _PINS_F4_STM32DVM_V3_H
+#ifndef _PINS_F7_STM32DVM_V5_H
+#define _PINS_F7_STM32DVM_V5_H
 
 /*
-Pin definitions for STM32F4 STM32-DVM rev 3 Board:
+Pin definitions for STM32F4 STM32-DVM rev 5 Board:
 
 COS      PB13   input
 PTT      PB12   output
