@@ -1017,6 +1017,13 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         sendNAK(err);
       }
       break;
+#else
+    case MMDVM_FM_PARAMS1:
+    case MMDVM_FM_PARAMS2:
+    case MMDVM_FM_PARAMS3:
+    case MMDVM_FM_PARAMS4:
+      sendACK();
+      break;
 #endif
 
     case MMDVM_CAL_DATA:
