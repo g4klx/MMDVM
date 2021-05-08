@@ -333,7 +333,7 @@ int CSerialPort::availableForReadInt(uint8_t n)
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return m_USART3.availble();//AvailUSART3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F7_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          return m_USART1.available();//AvailUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return m_USART2.available();//AvailUSART2();
@@ -359,7 +359,7 @@ int CSerialPort::availableForWriteInt(uint8_t n)
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return m_USART3.availableForWrite(); //AvailForWriteUSART3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F7_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          return m_USART1.availableForWrite(); //AvailForWriteUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return m_USART2.availableForWrite();//AvailForWriteUSART2();
@@ -385,7 +385,7 @@ uint8_t CSerialPort::readInt(uint8_t n)
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
          return m_USART3.read();//ReadUSART3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F7_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          return m_USART1.read();//ReadUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
          return m_USART2.read();//ReadUSART2();
@@ -413,7 +413,7 @@ void CSerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool
          m_USART3.write(data, length); //WriteUSART3(data, length);
          if (flush)
             m_USART3.flush();//TXSerialFlush3();
-         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
+         #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F7_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          m_USART1.write(data, length);//WriteUSART1(data, length);
          if (flush)
             m_USART1.flush();//TXSerialFlush1();
