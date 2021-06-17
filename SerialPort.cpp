@@ -146,26 +146,26 @@ m_i2CData()
 {
 }
 
-void CSerialPort::sendACK()
+void CSerialPort::sendACK(uint8_t type)
 {
   uint8_t reply[4U];
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 4U;
   reply[2U] = MMDVM_ACK;
-  reply[3U] = m_buffer[2U];
+  reply[3U] = type;
 
   writeInt(1U, reply, 4);
 }
 
-void CSerialPort::sendNAK(uint8_t err)
+void CSerialPort::sendNAK(uint8_t type, uint8_t err)
 {
   uint8_t reply[5U];
 
   reply[0U] = MMDVM_FRAME_START;
   reply[1U] = 5U;
   reply[2U] = MMDVM_NAK;
-  reply[3U] = m_buffer[2U];
+  reply[3U] = type;
   reply[4U] = err;
 
   writeInt(1U, reply, 5);
@@ -980,61 +980,61 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
     case MMDVM_SET_CONFIG:
       err = setConfig(buffer, length);
       if (err == 0U)
-        sendACK();
+        sendACK(type);
       else
-        sendNAK(err);
+        sendNAK(type, err);
       break;
 
     case MMDVM_SET_MODE:
       err = setMode(buffer, length);
       if (err == 0U)
-        sendACK();
+        sendACK(type);
       else
-        sendNAK(err);
+        sendNAK(type, err);
       break;
 
     case MMDVM_SET_FREQ:
-      sendACK();
+      sendACK(type);
       break;
 
 #if defined(MODE_FM)
     case MMDVM_FM_PARAMS1:
       err = setFMParams1(buffer, length);
       if (err == 0U) {
-        sendACK();
+        sendACK(type);
       } else {
         DEBUG2("Received invalid FM params 1", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
     case MMDVM_FM_PARAMS2:
       err = setFMParams2(buffer, length);
       if (err == 0U) {
-        sendACK();
+        sendACK(type);
       } else {
         DEBUG2("Received invalid FM params 2", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
     case MMDVM_FM_PARAMS3:
       err = setFMParams3(buffer, length);
       if (err == 0U) {
-        sendACK();
+        sendACK(type);
       } else {
         DEBUG2("Received invalid FM params 3", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
     case MMDVM_FM_PARAMS4:
       err = setFMParams4(buffer, length);
       if (err == 0U) {
-        sendACK();
+        sendACK(type);
       } else {
         DEBUG2("Received invalid FM params 4", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #else
@@ -1042,7 +1042,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
     case MMDVM_FM_PARAMS2:
     case MMDVM_FM_PARAMS3:
     case MMDVM_FM_PARAMS4:
-      sendACK();
+      sendACK(type);
       break;
 #endif
 
@@ -1072,10 +1072,10 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         err = calPOCSAG.write(buffer, length);
 #endif
       if (err == 0U) {
-        sendACK();
+        sendACK(type);
       } else {
         DEBUG2("Received invalid calibration data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1085,7 +1085,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         err = cwIdTX.write(buffer, length);
       if (err != 0U) {
         DEBUG2("Invalid CW Id data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1100,7 +1100,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_DSTAR);
       } else {
         DEBUG2("Received invalid D-Star header", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1114,7 +1114,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_DSTAR);
       } else {
         DEBUG2("Received invalid D-Star data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1128,7 +1128,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_DSTAR);
       } else {
         DEBUG2("Received invalid D-Star EOT", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1146,7 +1146,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_DMR);
       } else {
         DEBUG2("Received invalid DMR data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1164,7 +1164,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_DMR);
       } else {
         DEBUG2("Received invalid DMR data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1185,7 +1185,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
       }
       if (err != 0U) {
         DEBUG2("Received invalid DMR start", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1194,7 +1194,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         err = dmrTX.writeShortLC(buffer, length);
       if (err != 0U) {
         DEBUG2("Received invalid DMR Short LC", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1203,7 +1203,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         err = dmrTX.writeAbort(buffer, length);
       if (err != 0U) {
         DEBUG2("Received invalid DMR Abort", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1219,7 +1219,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_YSF);
       } else {
         DEBUG2("Received invalid System Fusion data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1235,7 +1235,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_P25);
       } else {
         DEBUG2("Received invalid P25 header", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1249,7 +1249,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_P25);
       } else {
         DEBUG2("Received invalid P25 LDU", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1265,7 +1265,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_NXDN);
       } else {
         DEBUG2("Received invalid NXDN data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1281,7 +1281,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_M17);
       } else {
         DEBUG2("Received invalid M17 link setup data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1295,7 +1295,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_M17);
       } else {
         DEBUG2("Received invalid M17 stream data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 
@@ -1309,7 +1309,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_M17);
       } else {
         DEBUG2("Received invalid M17 packet data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1325,7 +1325,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_POCSAG);
       } else {
         DEBUG2("Received invalid POCSAG data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1341,7 +1341,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
           setMode(STATE_FM);
       } else {
         DEBUG2("Received invalid FM data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1354,7 +1354,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
       }
       if (err != 0U) {
         DEBUG2("Received invalid AX.25 data", err);
-        sendNAK(err);
+        sendNAK(type, err);
       }
       break;
 #endif
@@ -1382,7 +1382,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 
     default:
       // Handle this, send a NAK back
-      sendNAK(1U);
+      sendNAK(type, 1U);
       break;
   }
 
