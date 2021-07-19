@@ -58,7 +58,7 @@
 // Frequencies such as 10.0 Mhz (48000 * 208.333) or 20 Mhz (48000 * 416.666) are not suitable.
 //
 // For 12 MHz
-// #define EXTERNAL_OSC 12000000
+#define EXTERNAL_OSC 12000000
 // For 12.288 MHz
 // #define EXTERNAL_OSC 12288000
 // For 14.4 MHz
@@ -66,10 +66,10 @@
 // For 19.2 MHz
 // #define EXTERNAL_OSC 19200000
 
-// Use a higher baudrate for host communication. Required for FM network !
-// #define SERIAL_SPEED 115200 //suitable for most older boards (Arduino, Due STM32F1_POG etc). External FM will NOT work with this !
-// #define SERIAL_SPEED 230400 // Only works on newer board M4, M7, Teensy. External FM might work with this
-#define SERIAL_SPEED 460800 // Only works on newer board M4, M7, Teensy. External FM should work with this
+// Select a baud rate for host communication. The faster speeds are needed for external FM to work.
+// #define SERIAL_SPEED 115200 // Suitable for most older boards (Arduino Due, STM32F1_POG, etc). External FM will NOT work with this!
+// #define SERIAL_SPEED 230400 // Only works on newer boards like fast M4, M7, Teensy 3.x. External FM might work with this
+#define SERIAL_SPEED 460800	// Only works on newer boards like fast M4, M7, Teensy 3.x. External FM should work with this
 
 // Allow the use of the COS line to lockout the modem
 // #define USE_COS_AS_LOCKOUT
@@ -128,6 +128,12 @@
 
 // Use the D-Star and YSF LEDs for FM
 #define USE_ALTERNATE_FM_LEDS
+
+#if defined(STM32F1_POG)
+// Slower boards need to run their serial at 115200 baud
+#undef SERIAL_SPEED
+#define SERIAL_SPEED 115200
+#endif
 
 #endif
 

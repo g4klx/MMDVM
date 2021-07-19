@@ -214,6 +214,8 @@ void CM17RX::processData(q15_t sample)
       case M17RXS_PACKET:
         DEBUG4("M17RX: packet sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
         break;
+      default:
+        break;  
     }
 
     uint8_t frame[M17_FRAME_LENGTH_BYTES + 3U];
@@ -249,6 +251,8 @@ void CM17RX::processData(q15_t sample)
         case M17RXS_PACKET:
           writeRSSIPacket(frame);
           break;
+        default:
+          break;  
       }
 
       m_maxCorr   = 0;

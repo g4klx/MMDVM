@@ -746,6 +746,7 @@ void CIO::setMode(MMDVM_STATE state)
     case STATE_M17:    setM17Int(false);    break;
     case STATE_POCSAG: setPOCSAGInt(false); break;
     case STATE_FM:     setFMInt(false);     break;
+    default: break;
   }
 
   switch (state) {
@@ -757,6 +758,7 @@ void CIO::setMode(MMDVM_STATE state)
     case STATE_M17:    setM17Int(true);    break;
     case STATE_POCSAG: setPOCSAGInt(true); break;
     case STATE_FM:     setFMInt(true);     break;
+    default: break;
   }
 #endif
 

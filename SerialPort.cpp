@@ -374,22 +374,41 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   bool rxInvert        = (data[0U] & 0x01U) == 0x01U;
   bool txInvert        = (data[0U] & 0x02U) == 0x02U;
   bool pttInvert       = (data[0U] & 0x04U) == 0x04U;
+#if defined(MODE_YSF)
   bool ysfLoDev        = (data[0U] & 0x08U) == 0x08U;
+#endif
   bool useCOSAsLockout = (data[0U] & 0x20U) == 0x20U;
   bool simplex         = (data[0U] & 0x80U) == 0x80U;
 
   m_debug = (data[0U] & 0x10U) == 0x10U;
 
+#if defined(MODE_DSTAR)
   bool dstarEnable  = (data[1U] & 0x01U) == 0x01U;
+#endif
+#if defined(MODE_DMR)
   bool dmrEnable    = (data[1U] & 0x02U) == 0x02U;
+#endif
+#if defined(MODE_YSF)
   bool ysfEnable    = (data[1U] & 0x04U) == 0x04U;
+#endif
+#if defined(MODE_P25)
   bool p25Enable    = (data[1U] & 0x08U) == 0x08U;
+#endif
+#if defined(MODE_NXDN)
   bool nxdnEnable   = (data[1U] & 0x10U) == 0x10U;
+#endif
+#if defined(MODE_FM)
   bool fmEnable     = (data[1U] & 0x20U) == 0x20U;
+#endif
+#if defined(MODE_M17)
   bool m17Enable    = (data[1U] & 0x40U) == 0x40U;
-
+#endif
+#if defined(MODE_POCSAG)
   bool pocsagEnable = (data[2U] & 0x01U) == 0x01U;
+#endif
+#if defined(MODE_AX25)
   bool ax25Enable   = (data[2U] & 0x02U) == 0x02U;
+#endif
 
   uint8_t txDelay = data[3U];
   if (txDelay > 50U)
@@ -480,17 +499,28 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   uint8_t fmTXLevel     = data[16U];
   uint8_t ax25TXLevel   = data[17U];
 
+#if defined(MODE_YSF)
   uint8_t ysfTXHang     = data[20U];
+#endif
+#if defined(MODE_P25)
   uint8_t p25TXHang     = data[21U];
+#endif
+#if defined(MODE_NXDN)
   uint8_t nxdnTXHang    = data[22U];
+#endif
+#if defined(MODE_M17)
   uint8_t m17TXHang     = data[23U];
+#endif
 
+#if defined(MODE_DMR)
   uint8_t colorCode = data[26U];
   if (colorCode > 15U)
     return 4U;
 
   uint8_t dmrDelay = data[27U];
+#endif
 
+#if defined(MODE_AX25)
   int8_t ax25RXTwist    = int8_t(data[28U]) - 128;
   if (ax25RXTwist < -4 || ax25RXTwist > 10)
     return 4U;
@@ -498,6 +528,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   uint8_t ax25TXDelay   = data[29U];
   uint8_t ax25SlotTime  = data[30U];
   uint8_t ax25PPersist  = data[31U];
+#endif
 
   setMode(modemState);
 
@@ -939,7 +970,7 @@ void CSerialPort::process()
     }
     writeSerialData(buffer, serialAvail - m_lastSerialAvail);
     m_lastSerialAvailCount = 0U;
-  } else if (serialAvail > 0U && serialAvail == m_lastSerialAvail) {
+  } else if (serialAvail > 0 && serialAvail == m_lastSerialAvail) {
     m_lastSerialAvailCount++;
   } else {
     m_lastSerialAvail      = serialAvail;
