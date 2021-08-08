@@ -19,7 +19,7 @@
 #if !defined(VERSION_H)
 #define  VERSION_H
 
-#define VERSION "20210719"
+#define VERSION "20210808"
 
 #endif
 
