@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2018,2020,2021 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -33,10 +33,10 @@ static q15_t RRC_0_5_FILTER[] = {0, 0, 0, 0, -290, -174, 142, 432, 438, 90, -387
 				  438, 432, 142, -174, -290}; // numTaps = 45, L = 5
 const uint16_t RRC_0_5_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
-const q15_t M17_LEVELA =  1683;
-const q15_t M17_LEVELB =  561;
-const q15_t M17_LEVELC = -561;
-const q15_t M17_LEVELD = -1683;
+const q15_t M17_LEVELA =  1481;
+const q15_t M17_LEVELB =  494;
+const q15_t M17_LEVELC = -494;
+const q15_t M17_LEVELD = -1481;
 
 const uint8_t M17_START_SYNC = 0x77U;
 const uint8_t M17_END_SYNC   = 0xFFU;
