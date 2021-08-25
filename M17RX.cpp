@@ -28,6 +28,7 @@ const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
 const uint8_t MAX_SYNC_BIT_START_ERRS = 0U;
 const uint8_t MAX_SYNC_BIT_RUN_ERRS   = 2U;
+const uint8_t MAX_EOF_BIT_ERRS        = 2U;
 
 const uint8_t MAX_SYNC_SYMBOL_START_ERRS = 0U;
 const uint8_t MAX_SYNC_SYMBOL_RUN_ERRS   = 1U;
@@ -53,6 +54,8 @@ m_endPtr(NOENDPTR),
 m_syncPtr(NOENDPTR),
 m_minSyncPtr(NOENDPTR),
 m_maxSyncPtr(NOENDPTR),
+m_minEOFPtr(NOENDPTR),
+m_maxEOFPtr(NOENDPTR),
 m_maxCorr(0),
 m_lostCount(0U),
 m_countdown(0U),
@@ -79,6 +82,8 @@ void CM17RX::reset()
   m_syncPtr      = NOENDPTR;
   m_minSyncPtr   = NOENDPTR;
   m_maxSyncPtr   = NOENDPTR;
+  m_minEOFPtr    = NOENDPTR;
+  m_maxEOFPtr    = NOENDPTR;
   m_centreVal    = 0;
   m_thresholdVal = 0;
   m_lostCount    = 0U;
@@ -157,6 +162,14 @@ void CM17RX::processNone(q15_t sample)
     if (m_maxSyncPtr >= M17_FRAME_LENGTH_SAMPLES)
       m_maxSyncPtr -= M17_FRAME_LENGTH_SAMPLES;
 
+    m_minEOFPtr = m_minSyncPtr + M17_EOF_LENGTH_SAMPLES - M17_SYNC_LENGTH_SAMPLES;
+    if (m_minEOFPtr >= M17_FRAME_LENGTH_SAMPLES)
+      m_minEOFPtr -= M17_FRAME_LENGTH_SAMPLES;
+
+    m_maxEOFPtr = m_maxSyncPtr + M17_EOF_LENGTH_SAMPLES - M17_SYNC_LENGTH_SAMPLES;
+    if (m_maxEOFPtr >= M17_FRAME_LENGTH_SAMPLES)
+      m_maxEOFPtr -= M17_FRAME_LENGTH_SAMPLES;
+
     m_state     = m_nextState;
     m_countdown = 0U;
     m_nextState = M17RXS_NONE;
@@ -183,6 +196,46 @@ void CM17RX::processData(q15_t sample)
     }
   }
 
+  if (m_minEOFPtr < m_maxEOFPtr) {
+    if (m_dataPtr >= m_minEOFPtr && m_dataPtr <= m_maxEOFPtr) {
+      bool ret = detectEOF();
+      if (ret) {
+        DEBUG2("M17RX: eof found pos", m_dataPtr);
+
+        io.setDecode(false);
+        io.setADCDetection(false);
+
+        serial.writeM17EOT();
+
+        m_state      = M17RXS_NONE;
+        m_endPtr     = NOENDPTR;
+        m_averagePtr = NOAVEPTR;
+        m_countdown  = 0U;
+        m_nextState  = M17RXS_NONE;
+        m_maxCorr    = 0;
+      }
+    }
+  } else {
+    if (m_dataPtr >= m_minEOFPtr || m_dataPtr <= m_maxEOFPtr) {
+      bool ret = detectEOF();
+      if (ret) {
+        DEBUG2("M17RX: eof found pos", m_dataPtr);
+
+        io.setDecode(false);
+        io.setADCDetection(false);
+
+        serial.writeM17EOT();
+
+        m_state      = M17RXS_NONE;
+        m_endPtr     = NOENDPTR;
+        m_averagePtr = NOAVEPTR;
+        m_countdown  = 0U;
+        m_nextState  = M17RXS_NONE;
+        m_maxCorr    = 0;
+      }
+    }
+  }
+
   if (m_dataPtr == m_endPtr) {
     // Only update the centre and threshold if they are from a good sync
     if (m_lostCount == MAX_SYNC_FRAMES) {
@@ -193,6 +246,14 @@ void CM17RX::processData(q15_t sample)
       m_maxSyncPtr = m_syncPtr + 1U;
       if (m_maxSyncPtr >= M17_FRAME_LENGTH_SAMPLES)
         m_maxSyncPtr -= M17_FRAME_LENGTH_SAMPLES;
+
+      m_minEOFPtr = m_minSyncPtr + M17_EOF_LENGTH_SAMPLES - M17_SYNC_LENGTH_SAMPLES;
+      if (m_minEOFPtr >= M17_FRAME_LENGTH_SAMPLES)
+        m_minEOFPtr -= M17_FRAME_LENGTH_SAMPLES;
+
+      m_maxEOFPtr = m_maxSyncPtr + M17_EOF_LENGTH_SAMPLES - M17_SYNC_LENGTH_SAMPLES;
+      if (m_maxEOFPtr >= M17_FRAME_LENGTH_SAMPLES)
+        m_maxEOFPtr -= M17_FRAME_LENGTH_SAMPLES;
     }
 
     calculateLevels(m_startPtr, M17_FRAME_LENGTH_SYMBOLS);
@@ -322,6 +383,22 @@ bool CM17RX::correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, 
   }
 
   return false;
+}
+
+bool CM17RX::detectEOF()
+{
+  uint16_t startPtr = m_dataPtr + M17_FRAME_LENGTH_SAMPLES - M17_EOF_LENGTH_SAMPLES + M17_RADIO_SYMBOL_LENGTH;
+  if (startPtr >= M17_FRAME_LENGTH_SAMPLES)
+    startPtr -= M17_FRAME_LENGTH_SAMPLES;
+
+  uint8_t eof[M17_EOF_LENGTH_BYTES];
+  samplesToBits(startPtr, M17_EOF_LENGTH_SYMBOLS, eof, 0U, m_centreVal, m_thresholdVal);
+
+  uint8_t errs = 0U;
+  for (uint8_t i = 0U; i < M17_EOF_LENGTH_BYTES; i++)
+    errs += countBits8((eof[i] ^ M17_EOF_BYTES[i]) & M17_EOF_MASK[i]);
+
+  return errs <= MAX_EOF_BIT_ERRS;
 }
 
 void CM17RX::calculateLevels(uint16_t start, uint16_t count)
