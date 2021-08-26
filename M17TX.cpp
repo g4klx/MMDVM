@@ -147,11 +147,11 @@ uint8_t CM17TX::writeStream(const uint8_t* data, uint8_t length)
 uint8_t CM17TX::writeEOT()
 {
   uint16_t space = m_buffer.getSpace();
-  if (space < M17_EOF_LENGTH_BYTES)
+  if (space < M17_SYNC_LENGTH_BYTES)
     return 5U;
 
-  for (uint8_t i = 0U; i < M17_EOF_LENGTH_BYTES; i++)
-    m_buffer.put(M17_EOF_BYTES[i]);
+  for (uint8_t i = 0U; i < M17_SYNC_LENGTH_BYTES; i++)
+    m_buffer.put(M17_EOF_SYNC_BYTES[i]);
 
   return 0U;
 }

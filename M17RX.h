@@ -50,8 +50,6 @@ private:
   uint16_t    m_syncPtr;
   uint16_t    m_minSyncPtr;
   uint16_t    m_maxSyncPtr;
-  uint16_t    m_minEOFPtr;
-  uint16_t    m_maxEOFPtr;
   q31_t       m_maxCorr;
   uint16_t    m_lostCount;
   uint8_t     m_countdown;
@@ -67,7 +65,6 @@ private:
   void processNone(q15_t sample);
   void processData(q15_t sample);
   bool correlateSync(uint8_t syncSymbols, const int8_t* syncSymbolValues, const uint8_t* syncBytes, uint8_t maxSymbolErrs, uint8_t maxBitErrs);
-  bool detectEOF();
   void calculateLevels(uint16_t start, uint16_t count);
   void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
   void writeRSSILinkSetup(uint8_t* data);
