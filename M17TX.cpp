@@ -114,7 +114,7 @@ void CM17TX::process()
   }
 }
 
-uint8_t CM17TX::writeHeader(const uint8_t* data, uint8_t length)
+uint8_t CM17TX::writeLinkSetup(const uint8_t* data, uint8_t length)
 {
   if (length != (M17_FRAME_LENGTH_BYTES + 1U))
     return 4U;

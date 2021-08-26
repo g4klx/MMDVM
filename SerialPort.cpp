@@ -1306,7 +1306,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
     case MMDVM_M17_LINK_SETUP:
       if (m_m17Enable) {
         if (m_modemState == STATE_IDLE || m_modemState == STATE_M17)
-          err = m17TX.writeHeader(buffer, length);
+          err = m17TX.writeLinkSetup(buffer, length);
       }
       if (err == 0U) {
         if (m_modemState == STATE_IDLE)
