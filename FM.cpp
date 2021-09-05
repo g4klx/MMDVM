@@ -28,13 +28,6 @@ const uint16_t FM_SERIAL_BLOCK_SIZE = 80U;//this is the number of sample pairs t
                                           //three times this value shall never exceed 252
 const uint16_t FM_SERIAL_BLOCK_SIZE_BYTES = FM_SERIAL_BLOCK_SIZE * 3U;
 
-/*
- * Access Mode values are:
- *   0 - Carrier access with COS
- *   1 - CTCSS only access without COS
- *   2 - CTCSS only access with COS
- *   3 - CTCSS only access with COS to start, then carrier access with COS
- */
 
 CFM::CFM() :
 m_callsign(),
@@ -63,6 +56,7 @@ m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_accessMode(1U),
+m_simpleMode(false),
 m_cosInvert(false),
 m_noiseSquelch(false),
 m_rfAudioBoost(1U),
@@ -317,9 +311,10 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool simpleMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
   m_accessMode   = accessMode;
+  m_simpleMode   = simpleMode;
   m_cosInvert    = cosInvert;
   m_noiseSquelch = noiseSquelch;
 
@@ -356,10 +351,14 @@ uint8_t CFM::setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t
 
 void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
 {
-  if (m_duplex)
-    duplexStateMachine(validRFSignal, validExtSignal);
-  else
-    simplexStateMachine(validRFSignal, validExtSignal);
+  if (m_simpleMode) {
+      simpleStateMachine(validRFSignal, validExtSignal);
+  } else {
+    if (m_duplex)
+      duplexStateMachine(validRFSignal, validExtSignal);
+    else
+      simplexStateMachine(validRFSignal, validExtSignal);
+  }
 }
 
 void CFM::simplexStateMachine(bool validRFSignal, bool validExtSignal)
@@ -1006,6 +1005,61 @@ void CFM::timeoutExtWaitStateSimplex(bool validSignal)
       m_timeoutTimer.stop();
       m_needReverse = true;
     }
+  }
+}
+
+void CFM::simpleStateMachine(bool validRFSignal, bool validExtSignal)
+{
+  switch (m_state) {
+    case FS_LISTENING:
+      if (validRFSignal) {
+        io.setDecode(true);
+        io.setADCDetection(true);
+
+        insertSilence(50U);
+
+        DEBUG1("State to RELAYING_RF");
+        m_state = FS_RELAYING_RF;
+        serial.writeFMStatus(m_state);
+      } else if (validExtSignal) {
+        io.setDecode(true);
+        io.setADCDetection(true);
+
+        insertSilence(50U);
+
+        DEBUG1("State to RELAYING_EXT");
+        m_state = FS_RELAYING_EXT;
+        serial.writeFMStatus(m_state);
+      }
+      break;
+
+    case FS_RELAYING_RF:
+      if (!validRFSignal) {
+        io.setDecode(false);
+        io.setADCDetection(false);
+
+        DEBUG1("State to LISTENING");
+        m_state = FS_LISTENING;
+
+        if (m_extEnabled)
+          serial.writeFMEOT();
+
+        if (m_duplex)
+          m_needReverse = true;
+      }
+      break;
+
+    case FS_RELAYING_EXT:
+      if (!validExtSignal) {
+        io.setDecode(false);
+        io.setADCDetection(false);
+
+        DEBUG1("State to LISTENING");
+        m_state = FS_LISTENING;
+
+        m_needReverse = true;
+      }
+      break;
   }
 }
 
