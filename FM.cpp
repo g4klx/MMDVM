@@ -1016,10 +1016,13 @@ void CFM::simpleStateMachine(bool validRFSignal, bool validExtSignal)
         io.setDecode(true);
         io.setADCDetection(true);
 
-        insertSilence(50U);
+        if (m_duplex)
+          insertSilence(50U);
 
         DEBUG1("State to RELAYING_RF");
         m_state = FS_RELAYING_RF;
+
+        m_statusTimer.start();
         serial.writeFMStatus(m_state);
       } else if (validExtSignal) {
         io.setDecode(true);
@@ -1029,6 +1032,8 @@ void CFM::simpleStateMachine(bool validRFSignal, bool validExtSignal)
 
         DEBUG1("State to RELAYING_EXT");
         m_state = FS_RELAYING_EXT;
+
+        m_statusTimer.start();
         serial.writeFMStatus(m_state);
       }
       break;
@@ -1046,6 +1051,8 @@ void CFM::simpleStateMachine(bool validRFSignal, bool validExtSignal)
 
         if (m_duplex)
           m_needReverse = true;
+
+        m_statusTimer.stop();
       }
       break;
 
@@ -1058,6 +1065,8 @@ void CFM::simpleStateMachine(bool validRFSignal, bool validExtSignal)
         m_state = FS_LISTENING;
 
         m_needReverse = true;
+
+        m_statusTimer.stop();
       }
       break;
   }
