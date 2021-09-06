@@ -63,7 +63,7 @@ public:
 
   uint8_t setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch);
   uint8_t setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_t minTime, uint16_t delay, uint8_t level);
-  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool simpleMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel);
+  uint8_t setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool linkMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel);
   uint8_t setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t frequency, uint8_t level);
 
   uint8_t getSpace() const;
@@ -97,7 +97,7 @@ private:
   CFMDirectFormI       m_filterStage3;
   CFMBlanking          m_blanking;
   uint8_t              m_accessMode;
-  bool                 m_simpleMode;
+  bool                 m_linkMode;
   bool                 m_cosInvert;
   bool                 m_noiseSquelch;
   q15_t                m_rfAudioBoost;
@@ -136,7 +136,7 @@ private:
   void timeoutExtStateSimplex(bool validSignal);
   void timeoutExtWaitStateSimplex(bool validSignal);
 
-  void simpleStateMachine(bool validRFSignal, bool validExtSignal);
+  void linkStateMachine(bool validRFSignal, bool validExtSignal);
 
   void clock(uint8_t length);
 

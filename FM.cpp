@@ -56,7 +56,7 @@ m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_accessMode(1U),
-m_simpleMode(false),
+m_linkMode(false),
 m_cosInvert(false),
 m_noiseSquelch(false),
 m_rfAudioBoost(1U),
@@ -311,10 +311,10 @@ uint8_t CFM::setAck(const char* rfAck, uint8_t speed, uint16_t frequency, uint8_
   return m_rfAck.setParams(rfAck, speed, frequency, level, level);
 }
 
-uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool simpleMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
+uint8_t CFM::setMisc(uint16_t timeout, uint8_t timeoutLevel, uint8_t ctcssFrequency, uint8_t ctcssHighThreshold, uint8_t ctcssLowThreshold, uint8_t ctcssLevel, uint8_t kerchunkTime, uint8_t hangTime, uint8_t accessMode, bool linkMode, bool cosInvert, bool noiseSquelch, uint8_t squelchHighThreshold, uint8_t squelchLowThreshold, uint8_t rfAudioBoost, uint8_t maxDev, uint8_t rxLevel)
 {
   m_accessMode   = accessMode;
-  m_simpleMode   = simpleMode;
+  m_linkMode     = linkMode;
   m_cosInvert    = cosInvert;
   m_noiseSquelch = noiseSquelch;
 
@@ -351,8 +351,8 @@ uint8_t CFM::setExt(const char* ack, uint8_t audioBoost, uint8_t speed, uint16_t
 
 void CFM::stateMachine(bool validRFSignal, bool validExtSignal)
 {
-  if (m_simpleMode) {
-      simpleStateMachine(validRFSignal, validExtSignal);
+  if (m_linkMode) {
+      linkStateMachine(validRFSignal, validExtSignal);
   } else {
     if (m_duplex)
       duplexStateMachine(validRFSignal, validExtSignal);
@@ -1008,7 +1008,7 @@ void CFM::timeoutExtWaitStateSimplex(bool validSignal)
   }
 }
 
-void CFM::simpleStateMachine(bool validRFSignal, bool validExtSignal)
+void CFM::linkStateMachine(bool validRFSignal, bool validExtSignal)
 {
   switch (m_state) {
     case FS_LISTENING:

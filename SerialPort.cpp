@@ -652,7 +652,7 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint16_t length)
   uint8_t  hangTime       = data[7U];
 
   uint8_t  accessMode     = data[8U] & 0x0FU;
-  bool     simpleMode     = (data[8U] & 0x20U) == 0x20U;
+  bool     linkMode       = (data[8U] & 0x20U) == 0x20U;
   bool     noiseSquelch   = (data[8U] & 0x40U) == 0x40U;
   bool     cosInvert      = (data[8U] & 0x80U) == 0x80U;
 
@@ -663,7 +663,7 @@ uint8_t CSerialPort::setFMParams3(const uint8_t* data, uint16_t length)
   uint8_t  squelchHighThreshold = data[12U];
   uint8_t  squelchLowThreshold  = data[13U];
 
-  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold, ctcssLevel, kerchunkTime, hangTime, accessMode, simpleMode, cosInvert, noiseSquelch, squelchHighThreshold, squelchLowThreshold, rfAudioBoost, maxDev, rxLevel);
+  return fm.setMisc(timeout, timeoutLevel, ctcssFrequency, ctcssHighThreshold, ctcssLowThreshold, ctcssLevel, kerchunkTime, hangTime, accessMode, linkMode, cosInvert, noiseSquelch, squelchHighThreshold, squelchLowThreshold, rfAudioBoost, maxDev, rxLevel);
 }
 
 uint8_t CSerialPort::setFMParams4(const uint8_t* data, uint16_t length)
