@@ -108,6 +108,8 @@ private:
   CRingBuffer<q15_t>   m_inputRFRB;
   CRingBuffer<q15_t>   m_outputRFRB;
   CFMUpSampler         m_inputExtRB;
+  bool                 m_rfSignal;
+  bool                 m_extSignal;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
 

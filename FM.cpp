@@ -66,7 +66,9 @@ m_extEnabled(false),
 m_rxLevel(1),
 m_inputRFRB(2401U),   // 100ms of audio + 1 sample
 m_outputRFRB(2400U),  // 100ms of audio
-m_inputExtRB()
+m_inputExtRB(),
+m_rfSignal(false),
+m_extSignal(false)
 {
   m_statusTimer.setTimeout(1U, 0U);
   m_reverseTimer.setTimeout(0U, 150U);
@@ -158,28 +160,42 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     if (m_modemState != STATE_FM)
       continue;
 
-    if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted() && !m_reverseTimer.isRunning())
-      continue;
+    q15_t currentSample;
 
-    q15_t currentSample = currentRFSample;
-    q15_t currentBoost  = m_rfAudioBoost;
-    if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-      currentSample = currentExtSample;
-      currentBoost  = m_extAudioBoost;
-    }
-
-    // Only let RF audio through when relaying RF audio
-    if (m_duplex) {
-      if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-        currentSample = m_blanking.process(currentSample);
-        if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-          m_downSampler.addSample(currentSample);
-
-        currentSample *= currentBoost;
-      } else {
-        currentSample = 0;
+    if (m_linkMode) {
+      if (m_rfSignal && m_extEnabled) {
+        q15_t currentSample = m_blanking.process(currentRFSample);
+        m_downSampler.addSample(currentSample);
       }
+
+      if (m_extSignal)
+        currentSample = currentExtSample * m_extAudioBoost;
+
+      if (!m_extSignal)
+        continue;
     } else {
+      if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted() && !m_reverseTimer.isRunning())
+        continue;
+
+      q15_t currentSample = currentRFSample;
+      q15_t currentBoost  = m_rfAudioBoost;
+      if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+        currentSample = currentExtSample;
+        currentBoost  = m_extAudioBoost;
+      }
+
+      // Only let RF audio through when relaying RF audio
+      if (m_duplex) {
+        if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+          currentSample = m_blanking.process(currentSample);
+          if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
+            m_downSampler.addSample(currentSample);
+
+          currentSample *= currentBoost;
+        } else {
+          currentSample = 0;
+        }
+      } else {
         if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
           currentSample *= currentBoost;
         } else {
@@ -187,6 +203,7 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
             m_downSampler.addSample(currentSample);
           continue; 
         }
+      }
     }
 
     if (!m_callsign.isRunning() && !m_extAck.isRunning())
@@ -281,6 +298,8 @@ void CFM::reset()
   m_squelch.reset();
   
   m_needReverse = false;
+  m_rfSignal    = false;
+  m_extSignal   = false;
 }
 
 uint8_t CFM::setCallsign(const char* callsign, uint8_t speed, uint16_t frequency, uint8_t time, uint8_t holdoff, uint8_t highLevel, uint8_t lowLevel, bool callsignAtStart, bool callsignAtEnd, bool callsignAtLatch)
@@ -1010,65 +1029,58 @@ void CFM::timeoutExtWaitStateSimplex(bool validSignal)
 
 void CFM::linkStateMachine(bool validRFSignal, bool validExtSignal)
 {
-  switch (m_state) {
-    case FS_LISTENING:
-      if (validRFSignal) {
-        io.setDecode(true);
-        io.setADCDetection(true);
+  if (validRFSignal && !m_rfSignal) {
+    io.setDecode(true);
+    io.setADCDetection(true);
 
-        if (m_duplex)
-          insertSilence(50U);
+    if (!m_extSignal) {
+      DEBUG1("State to RELAYING_RF");
+      m_state = FS_RELAYING_RF;
+      m_statusTimer.start();
+      serial.writeFMStatus(m_state);
+    }
 
-        DEBUG1("State to RELAYING_RF");
-        m_state = FS_RELAYING_RF;
+    m_rfSignal = true;
+  }
 
-        m_statusTimer.start();
-        serial.writeFMStatus(m_state);
-      } else if (validExtSignal) {
-        io.setDecode(true);
-        io.setADCDetection(true);
+  if (validExtSignal && !m_extSignal) {
+    if (!m_rfSignal) {
+      DEBUG1("State to RELAYING_EXT");
+      m_state = FS_RELAYING_EXT;
+      m_statusTimer.start();
+      serial.writeFMStatus(m_state);
+    }
 
-        insertSilence(50U);
+    insertSilence(50U);
 
-        DEBUG1("State to RELAYING_EXT");
-        m_state = FS_RELAYING_EXT;
+    m_extSignal = true;
+  }
 
-        m_statusTimer.start();
-        serial.writeFMStatus(m_state);
-      }
-      break;
+  if (!validRFSignal && m_rfSignal) {
+    io.setDecode(false);
+    io.setADCDetection(false);
 
-    case FS_RELAYING_RF:
-      if (!validRFSignal) {
-        io.setDecode(false);
-        io.setADCDetection(false);
+    if (!m_extSignal) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_statusTimer.stop();
+    }
 
-        DEBUG1("State to LISTENING");
-        m_state = FS_LISTENING;
+    m_rfSignal = false;
 
-        if (m_extEnabled)
-          serial.writeFMEOT();
+    if (m_extEnabled)
+      serial.writeFMEOT();
+  }
 
-        if (m_duplex)
-          m_needReverse = true;
+  if (!validExtSignal && m_extSignal) {
+    if (!m_rfSignal) {
+      DEBUG1("State to LISTENING");
+      m_state = FS_LISTENING;
+      m_statusTimer.stop();
+    }
 
-        m_statusTimer.stop();
-      }
-      break;
-
-    case FS_RELAYING_EXT:
-      if (!validExtSignal) {
-        io.setDecode(false);
-        io.setADCDetection(false);
-
-        DEBUG1("State to LISTENING");
-        m_state = FS_LISTENING;
-
-        m_needReverse = true;
-
-        m_statusTimer.stop();
-      }
-      break;
+    m_needReverse = true;
+    m_extSignal   = false;
   }
 }
 
