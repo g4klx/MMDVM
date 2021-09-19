@@ -29,9 +29,7 @@ class CM17TX {
 public:
   CM17TX();
 
-  uint8_t writeLinkSetup(const uint8_t* data, uint8_t length);
-  uint8_t writeStream(const uint8_t* data, uint8_t length);
-  uint8_t writeEOT();
+  uint8_t writeData(const uint8_t* data, uint8_t length);
 
   void process();
 
