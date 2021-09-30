@@ -113,6 +113,9 @@ private:
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
 
+  void repeaterSamples(bool cos, q15_t* samples, uint8_t length);
+  void linkSamples(bool cos, q15_t* samples, uint8_t length);
+
   void duplexStateMachine(bool validRFSignal, bool validExtSignal);
   void listeningStateDuplex(bool validRFSignal, bool validExtSignal);
   void kerchunkRFStateDuplex(bool validSignal);

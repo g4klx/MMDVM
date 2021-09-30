@@ -78,6 +78,14 @@ m_extSignal(false)
 
 void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 {
+  if (m_linkMode)
+    linkSamples(cos, samples, length);
+  else
+    repeaterSamples(cos, samples, length);
+}
+
+void CFM::repeaterSamples(bool cos, q15_t* samples, uint8_t length)
+{
   if (m_cosInvert)
     cos = !cos;
 
@@ -160,42 +168,28 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
     if (m_modemState != STATE_FM)
       continue;
 
-    q15_t currentSample;
+    if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted() && !m_reverseTimer.isRunning())
+      continue;
 
-    if (m_linkMode) {
-      if (m_rfSignal && m_extEnabled) {
-        q15_t currentSample = m_blanking.process(currentRFSample);
-        m_downSampler.addSample(currentSample);
-      }
+    q15_t currentSample = currentRFSample;
+    q15_t currentBoost  = m_rfAudioBoost;
+    if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+      currentSample = currentExtSample;
+      currentBoost  = m_extAudioBoost;
+    }
 
-      if (m_extSignal)
-        currentSample = currentExtSample * m_extAudioBoost;
+    // Only let RF audio through when relaying RF audio
+    if (m_duplex) {
+      if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
+        currentSample = m_blanking.process(currentSample);
+        if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
+          m_downSampler.addSample(currentSample);
 
-      if (!m_extSignal)
-        continue;
-    } else {
-      if (m_state == FS_LISTENING && !m_rfAck.isWanted() && !m_extAck.isWanted() && !m_callsign.isWanted() && !m_reverseTimer.isRunning())
-        continue;
-
-      q15_t currentSample = currentRFSample;
-      q15_t currentBoost  = m_rfAudioBoost;
-      if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-        currentSample = currentExtSample;
-        currentBoost  = m_extAudioBoost;
-      }
-
-      // Only let RF audio through when relaying RF audio
-      if (m_duplex) {
-        if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
-          currentSample = m_blanking.process(currentSample);
-          if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-            m_downSampler.addSample(currentSample);
-
-          currentSample *= currentBoost;
-        } else {
-          currentSample = 0;
-        }
+        currentSample *= currentBoost;
       } else {
+        currentSample = 0;
+      }
+    } else {
         if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
           currentSample *= currentBoost;
         } else {
@@ -203,7 +197,6 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
             m_downSampler.addSample(currentSample);
           continue; 
         }
-      }
     }
 
     if (!m_callsign.isRunning() && !m_extAck.isRunning())
@@ -223,6 +216,108 @@ void CFM::samples(bool cos, q15_t* samples, uint8_t length)
 
     if (!m_callsign.isRunning() && !m_rfAck.isRunning() && !m_extAck.isRunning())
       currentSample += m_timeoutTone.getAudio();
+
+    currentSample += m_ctcssTX.getAudio(m_reverseTimer.isRunning());
+
+    m_outputRFRB.put(currentSample);
+  }
+}
+
+void CFM::linkSamples(bool cos, q15_t* samples, uint8_t length)
+{
+  if (m_cosInvert)
+    cos = !cos;
+
+  clock(length);
+
+  uint8_t i = 0U;
+  for (; i < length; i++) {
+    // ARMv7-M has hardware integer division 
+    q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
+
+    if (m_noiseSquelch)
+      cos = m_squelch.process(currentRFSample);
+
+    q15_t currentExtSample;
+    bool inputExt = m_inputExtRB.getSample(currentExtSample);//always consume the external input data so it does not overflow
+    inputExt = inputExt && m_extEnabled;
+
+    switch (m_accessMode) {
+      case 0U:
+        if (!inputExt && !cos && m_modemState != STATE_FM)
+          continue;
+        else
+          stateMachine(cos, inputExt);
+        break;
+
+      case 1U: {
+          bool ctcss = m_ctcssRX.process(currentRFSample);
+
+          // Delay the audio by 100ms to better match the CTCSS detector output
+          m_inputRFRB.put(currentRFSample);
+          m_inputRFRB.get(currentRFSample);
+
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
+            continue;
+          } else if ((inputExt || ctcss) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss, inputExt);
+            if (m_state == FS_LISTENING)
+              continue;
+          } else {
+            stateMachine(ctcss, inputExt);
+          }
+        }
+        break;
+
+      case 2U: {
+          bool ctcss = m_ctcssRX.process(currentRFSample);
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
+            continue;
+          } else if ((inputExt || (ctcss && cos)) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss && cos, inputExt);
+            if (m_state == FS_LISTENING)
+              continue;
+          } else {
+            stateMachine(ctcss && cos, inputExt);
+          }
+        }
+        break;
+
+      default: {
+          bool ctcss = m_ctcssRX.process(currentRFSample);
+          if (!inputExt && !ctcss && m_modemState != STATE_FM) {
+            // No CTCSS detected, just carry on
+            continue;
+          } else if ((inputExt || (ctcss && cos)) && m_modemState != STATE_FM) {
+            // We had CTCSS or external input
+            stateMachine(ctcss && cos, inputExt);
+            if (m_state == FS_LISTENING)
+              continue;
+          } else {
+            stateMachine(cos, inputExt);
+          }
+        }
+        break;
+    }
+
+    if (m_modemState != STATE_FM)
+      continue;
+
+    if (m_rfSignal && m_extEnabled) {
+      q15_t currentSample = m_blanking.process(currentRFSample);
+      m_downSampler.addSample(currentSample);
+    }
+
+    if (!m_extSignal)
+      continue;
+
+    q15_t currentSample = currentExtSample * m_extAudioBoost;
+
+    currentSample = m_filterStage3.filter(m_filterStage2.filter(m_filterStage1.filter(currentSample)));
 
     currentSample += m_ctcssTX.getAudio(m_reverseTimer.isRunning());
 
