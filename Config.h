@@ -71,9 +71,6 @@
 // #define SERIAL_SPEED 230400 // Only works on newer boards like fast M4, M7, Teensy 3.x. External FM might work with this
 #define SERIAL_SPEED 460800	// Only works on newer boards like fast M4, M7, Teensy 3.x. External FM should work with this
 
-// Allow the use of the COS line to lockout the modem
-// #define USE_COS_AS_LOCKOUT
-
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS
 
