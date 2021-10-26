@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -81,9 +81,14 @@ private:
   q15_t                m_gaussianState[40U];      // NoTaps + BlockSize - 1, 12 + 20 - 1 plus some spare
 #endif
 
-#if defined(MODE_DMR) || defined(MODE_YSF)
-  arm_fir_instance_q15 m_rrc02Filter;
-  q15_t                m_rrc02State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+#if defined(MODE_DMR)
+  arm_fir_instance_q15 m_rrc02Filter1;
+  q15_t                m_rrc02State1[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+#endif
+
+#if defined(MODE_YSF)
+  arm_fir_instance_q15 m_rrc02Filter2;
+  q15_t                m_rrc02State2[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
 #endif
 
 #if defined(MODE_P25)

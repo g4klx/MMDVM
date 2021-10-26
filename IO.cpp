@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -91,9 +91,13 @@ m_dcState(),
 m_gaussianFilter(),
 m_gaussianState(),
 #endif
-#if defined(MODE_DMR) || defined(MODE_YSF)
-m_rrc02Filter(),
-m_rrc02State(),
+#if defined(MODE_DMR)
+m_rrc02Filter1(),
+m_rrc02State1(),
+#endif
+#if defined(MODE_YSF)
+m_rrc02Filter2(),
+m_rrc02State2(),
 #endif
 #if defined(MODE_P25)
 m_boxcar5Filter(),
@@ -138,7 +142,7 @@ m_watchdog(0U),
 m_lockout(false)
 {
 #if defined(USE_DCBLOCKER)
-  ::memset(m_dcState,       0x00U,   4U * sizeof(q31_t));
+  ::memset(m_dcState, 0x00U, 4U * sizeof(q31_t));
   m_dcFilter.numStages = DC_FILTER_STAGES;
   m_dcFilter.pState    = m_dcState;
   m_dcFilter.pCoeffs   = DC_FILTER;
@@ -152,11 +156,18 @@ m_lockout(false)
   m_gaussianFilter.pCoeffs = GAUSSIAN_0_5_FILTER;
 #endif
 
-#if defined(MODE_DMR) || defined(MODE_YSF)
-  ::memset(m_rrc02State, 0x00U, 70U * sizeof(q15_t));
-  m_rrc02Filter.numTaps = RRC_0_2_FILTER_LEN;
-  m_rrc02Filter.pState  = m_rrc02State;
-  m_rrc02Filter.pCoeffs = RRC_0_2_FILTER;
+#if defined(MODE_DMR)
+  ::memset(m_rrc02State1, 0x00U, 70U * sizeof(q15_t));
+  m_rrc02Filter1.numTaps = RRC_0_2_FILTER_LEN;
+  m_rrc02Filter1.pState  = m_rrc02State1;
+  m_rrc02Filter1.pCoeffs = RRC_0_2_FILTER;
+#endif
+
+#if defined(MODE_YSF)
+  ::memset(m_rrc02State2, 0x00U, 70U * sizeof(q15_t));
+  m_rrc02Filter2.numTaps = RRC_0_2_FILTER_LEN;
+  m_rrc02Filter2.pState  = m_rrc02State2;
+  m_rrc02Filter2.pCoeffs = RRC_0_2_FILTER;
 #endif
 
 #if defined(MODE_P25)
@@ -458,7 +469,7 @@ void CIO::process()
 #if defined(MODE_DMR)
       if (m_dmrEnable) {
         q15_t DMRVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_rrc02Filter, samples, DMRVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrc02Filter1, samples, DMRVals, RX_BLOCK_SIZE);
 
         if (m_duplex)
           dmrIdleRX.samples(DMRVals, RX_BLOCK_SIZE);
@@ -471,9 +482,9 @@ void CIO::process()
       if (m_ysfEnable) {
         q15_t YSFVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
-        ::arm_fir_fast_q15(&m_rrc02Filter, dcSamples, YSFVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrc02Filter2, dcSamples, YSFVals, RX_BLOCK_SIZE);
 #else
-        ::arm_fir_fast_q15(&m_rrc02Filter, samples, YSFVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrc02Filter2, samples, YSFVals, RX_BLOCK_SIZE);
 #endif
         ysfRX.samples(YSFVals, rssi, RX_BLOCK_SIZE);
       }
@@ -531,7 +542,7 @@ void CIO::process()
     else if (m_modemState == STATE_DMR) {
       if (m_dmrEnable) {
         q15_t DMRVals[RX_BLOCK_SIZE];
-        ::arm_fir_fast_q15(&m_rrc02Filter, samples, DMRVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrc02Filter1, samples, DMRVals, RX_BLOCK_SIZE);
 
         if (m_duplex) {
           // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
@@ -551,9 +562,9 @@ void CIO::process()
       if (m_ysfEnable) {
         q15_t YSFVals[RX_BLOCK_SIZE];
 #if defined(USE_DCBLOCKER)
-        ::arm_fir_fast_q15(&m_rrc02Filter, dcSamples, YSFVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrc02Filter2, dcSamples, YSFVals, RX_BLOCK_SIZE);
 #else
-        ::arm_fir_fast_q15(&m_rrc02Filter, samples, YSFVals, RX_BLOCK_SIZE);
+        ::arm_fir_fast_q15(&m_rrc02Filter2, samples, YSFVals, RX_BLOCK_SIZE);
 #endif
         ysfRX.samples(YSFVals, rssi, RX_BLOCK_SIZE);
       }
