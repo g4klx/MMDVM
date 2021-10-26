@@ -332,7 +332,7 @@ int CSerialPort::availableForReadInt(uint8_t n)
    switch (n) {
       case 1U:
          #if defined(STM32F4_DISCOVERY) || defined(STM32F7_NUCLEO)
-         return m_USART3.availble();//AvailUSART3();
+         return m_USART3.available();//AvailUSART3();
          #elif defined(STM32F4_PI) || defined(STM32F4_F4M) || defined(STM32F722_PI) || defined(STM32F722_F7M) || defined(STM32F722_RPT_HAT) || defined(STM32F4_DVM) || defined(STM32F7_DVM) || defined(STM32F4_EDA_405) || defined(STM32F4_EDA_446)
          return m_USART1.available();//AvailUSART1();
          #elif defined(STM32F4_NUCLEO) || defined(STM32F4_RPT_HAT_TGO)
