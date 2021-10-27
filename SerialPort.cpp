@@ -417,7 +417,9 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 
   MMDVM_STATE modemState = MMDVM_STATE(data[4U]);
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_M17 && modemState != STATE_POCSAG && modemState != STATE_FM && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K && modemState != STATE_POCSAGCAL && modemState != STATE_FMCAL10K && modemState != STATE_FMCAL12K && modemState != STATE_FMCAL15K && modemState != STATE_FMCAL20K && modemState != STATE_FMCAL25K && modemState != STATE_FMCAL30K)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_M17 && modemState != STATE_POCSAG && modemState != STATE_FM &&
+      modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K && modemState != STATE_M17CAL && modemState != STATE_POCSAGCAL &&
+      modemState != STATE_FMCAL10K && modemState != STATE_FMCAL12K && modemState != STATE_FMCAL15K && modemState != STATE_FMCAL20K && modemState != STATE_FMCAL25K && modemState != STATE_FMCAL30K)
     return 4U;
 
 #if defined(MODE_DSTAR)
@@ -696,7 +698,9 @@ uint8_t CSerialPort::setMode(const uint8_t* data, uint16_t length)
   if (modemState == m_modemState)
     return 0U;
 
-  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_M17 && modemState != STATE_POCSAG && modemState != STATE_FM && modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K && modemState != STATE_POCSAGCAL && modemState != STATE_FMCAL10K  && modemState != STATE_FMCAL12K && modemState != STATE_FMCAL15K && modemState != STATE_FMCAL20K && modemState != STATE_FMCAL25K && modemState != STATE_FMCAL30K)
+  if (modemState != STATE_IDLE && modemState != STATE_DSTAR && modemState != STATE_DMR && modemState != STATE_YSF && modemState != STATE_P25 && modemState != STATE_NXDN && modemState != STATE_M17 && modemState != STATE_POCSAG && modemState != STATE_FM &&
+      modemState != STATE_DSTARCAL && modemState != STATE_DMRCAL && modemState != STATE_RSSICAL && modemState != STATE_LFCAL && modemState != STATE_DMRCAL1K && modemState != STATE_P25CAL1K && modemState != STATE_DMRDMO1K && modemState != STATE_NXDNCAL1K && modemState != STATE_M17CAL && modemState != STATE_POCSAGCAL &&
+      modemState != STATE_FMCAL10K  && modemState != STATE_FMCAL12K && modemState != STATE_FMCAL15K && modemState != STATE_FMCAL20K && modemState != STATE_FMCAL25K && modemState != STATE_FMCAL30K)
     return 4U;
 
 #if defined(MODE_DSTAR)
@@ -836,6 +840,9 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
       break;
     case STATE_POCSAGCAL:
       DEBUG1("Mode set to POCSAG Calibrate");
+      break;
+    case STATE_M17CAL:
+      DEBUG1("Mode set to M17 Calibrate");
       break;
     default:        // STATE_IDLE
       DEBUG1("Mode set to Idle");
@@ -1099,6 +1106,10 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 #if defined(MODE_NXDN)
       if (m_modemState == STATE_NXDNCAL1K)
         err = calNXDN.write(buffer, length);
+#endif
+#if defined(MODE_M17)
+      if (m_modemState == STATE_M17CAL)
+        err = 0U;
 #endif
 #if defined(MODE_POCSAG)
       if (m_modemState == STATE_POCSAGCAL)

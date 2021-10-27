@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -82,6 +82,8 @@ CCalNXDN calNXDN;
 #if defined(MODE_M17)
 CM17RX m17RX;
 CM17TX m17TX;
+
+CCalM17 calM17;
 #endif
 
 #if defined(MODE_POCSAG)
@@ -190,6 +192,11 @@ void loop()
 #if defined(MODE_NXDN)
   if (m_modemState == STATE_NXDNCAL1K)
     calNXDN.process();
+#endif
+
+#if defined(MODE_M17)
+  if (m_modemState == STATE_M17CAL)
+    calM17.process();
 #endif
 
 #if defined(MODE_POCSAG)

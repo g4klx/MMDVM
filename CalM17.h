@@ -1,5 +1,6 @@
 /*
- *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2015,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,10 +17,24 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(VERSION_H)
-#define  VERSION_H
+#include "Config.h"
 
-#define VERSION "20211027"
+#if defined(MODE_M17)
+
+#if !defined(CALM17_H)
+#define  CALM17_H
+
+
+class CCalM17 {
+public:
+  CCalM17();
+
+  void process();
+
+private:
+};
+
+#endif
 
 #endif
 

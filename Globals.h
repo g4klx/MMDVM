@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -72,7 +72,8 @@ enum MMDVM_STATE {
   STATE_FMCAL15K  = 104,
   STATE_FMCAL20K  = 105,
   STATE_FMCAL25K  = 106,
-  STATE_FMCAL30K  = 107
+  STATE_FMCAL30K  = 107,
+  STATE_M17CAL    = 108
 };
 
 #include "SerialPort.h"
@@ -103,6 +104,7 @@ enum MMDVM_STATE {
 #include "CWIdTX.h"
 #include "AX25RX.h"
 #include "AX25TX.h"
+#include "CalM17.h"
 #include "Debug.h"
 #include "IO.h"
 #include "FM.h"
@@ -188,6 +190,8 @@ extern CCalPOCSAG calPOCSAG;
 #if defined(MODE_M17)
 extern CM17RX m17RX;
 extern CM17TX m17TX;
+
+extern CCalM17 calM17;
 #endif
 
 #if defined(MODE_FM)
