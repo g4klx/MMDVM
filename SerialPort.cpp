@@ -1109,7 +1109,7 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 #endif
 #if defined(MODE_M17)
       if (m_modemState == STATE_M17CAL)
-        err = 0U;
+        err = calM17.write(buffer, length);
 #endif
 #if defined(MODE_POCSAG)
       if (m_modemState == STATE_POCSAGCAL)

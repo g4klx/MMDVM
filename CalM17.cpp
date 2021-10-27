@@ -33,7 +33,8 @@ const uint8_t PREAMBLE[] = {0x00U,
 	0x77U, 0x77U, 0x77U, 0x77U, 0x77U, 0x77U, 0x77U, 0x77U,
 	0x77U, 0x77U, 0x77U, 0x77U, 0x77U, 0x77U, 0x77U, 0x77U};
 
-CCalM17::CCalM17()
+CCalM17::CCalM17() :
+m_transmit(false)
 {
 }
 
@@ -41,11 +42,24 @@ void CCalM17::process()
 {
   m17TX.process();
 
+  if (!m_transmit)
+    return;
+
   uint16_t space = m17TX.getSpace();
   if (space < 2U)
     return;
 
   m17TX.writeData(PREAMBLE, M17_FRAME_LENGTH_BYTES + 1U);
+}
+
+uint8_t CCalM17::write(const uint8_t* data, uint16_t length)
+{
+  if (length != 1U)
+    return 4U;
+
+  m_transmit = data[0U] == 1U;
+
+  return 0U;
 }
 
 #endif
