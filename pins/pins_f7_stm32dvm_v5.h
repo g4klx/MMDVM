@@ -20,7 +20,7 @@
 #define _PINS_F7_STM32DVM_V5_H
 
 /*
-Pin definitions for STM32F4 STM32-DVM rev 5 Board:
+Pin definitions for STM32F7 STM32-DVM rev 5 Board:
 
 COS      PB13   input
 PTT      PB12   output
@@ -33,6 +33,7 @@ DSTAR    PB6    output
 DMR      PB5    output
 YSF      PB7    output
 POCSAG   PC10   output (Not Valid)
+FM       PB14   output
 
 RX       PB0    analog input
 RSSI     PB1    analog input
@@ -44,7 +45,6 @@ EXT_CLK  PA15   input
 #define PIN_COS           GPIO_Pin_13
 #define PORT_COS          GPIOB
 #define RCC_Per_COS       RCC_AHB1Periph_GPIOB
-
 
 #define PIN_PTT           GPIO_Pin_12
 #define PORT_PTT          GPIOB
