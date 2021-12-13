@@ -4,4 +4,4 @@ It runs on the Arduino Due, the ST-Micro STM32F1xxx, STM32F4xxx and STM32F7xxx p
 
 In order to build this software for the Arduino Due, you will need to edit a file within the Arduino GUI and that is detailed in the BUILD.txt file. The STM32 support is supplied via the ARM GCC compiler. The Teensy support uses Teensyduino.
 
-This software is licenced under the GPL v2 and is intended for amateur and educational use only. Use of this software for commercial purposes is strictly forbidden.
+This software is licenced under the GPL v2 and is primarily intended for amateur and educational use.
