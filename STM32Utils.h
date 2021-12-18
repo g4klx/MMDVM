@@ -1,5 +1,7 @@
 /*
- *   source: http://mightydevices.com/?p=144
+ *   Copyright (C) 2017 by Wojciech Krutnik N0CALL
+ *
+ *   Source: http://mightydevices.com/?p=144
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
