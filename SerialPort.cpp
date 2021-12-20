@@ -1806,7 +1806,7 @@ void CSerialPort::writeFMData(const uint8_t* data, uint16_t length)
     reply[2U] = (length + 4U) - 255U;
     reply[3U] = MMDVM_FM_DATA;
 
-    for (uint8_t i = 0U; i < length; i++)
+    for (int i = 0U; i < length; i++)
       reply[i + 4U] = data[i];
 
     writeInt(1U, reply, length + 4U);
@@ -1875,7 +1875,7 @@ void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
     reply[2U] = (length + 4U) - 255U;
     reply[3U] = MMDVM_AX25_DATA;
 
-    for (uint8_t i = 0U; i < length; i++)
+    for (int i = 0U; i < length; i++)
       reply[i + 4U] = data[i];
 
     writeInt(1U, reply, length + 4U);
@@ -2110,7 +2110,7 @@ void CSerialPort::writeDebugDump(const uint8_t* data, uint16_t length)
     reply[2U] = (length + 4U) - 255U;
     reply[3U] = MMDVM_DEBUG_DUMP;
 
-    for (uint8_t i = 0U; i < length; i++)
+    for (int i = 0U; i < length; i++)
       reply[i + 4U] = data[i];
 
     writeInt(1U, reply, length + 4U);
