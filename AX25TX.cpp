@@ -160,7 +160,7 @@ void CAX25TX::writeBit(bool b)
       m_tablePtr += 11U;
     }
 
-    buffer[i] = value;
+    buffer[i] = value >> 1;
 
     if (m_tablePtr >= AUDIO_TABLE_LEN)
       m_tablePtr -= AUDIO_TABLE_LEN;
