@@ -282,27 +282,26 @@ void CSerialPort::getStatus()
   reply[13U] = 0U;
 #endif
 
-  reply[14U] = 0x00U;
-  reply[15U] = 0x00U;
-
 #if defined(MODE_POCSAG)
   if (m_pocsagEnable)
-    reply[16U] = pocsagTX.getSpace();
+    reply[14U] = pocsagTX.getSpace();
   else
-    reply[16U] = 0U;
+    reply[14U] = 0U;
 #else
-  reply[16U] = 0U;
+  reply[14U] = 0U;
 #endif
 
 #if defined(MODE_AX25)
   if (m_ax25Enable)
-    reply[17U] = ax25TX.getSpace();
+    reply[15U] = ax25TX.getSpace();
   else
-    reply[17U] = 0U;
+    reply[15U] = 0U;
 #else
-  reply[17U] = 0U;
+  reply[15U] = 0U;
 #endif
 
+  reply[16U] = 0x00U;
+  reply[17U] = 0x00U;
   reply[18U] = 0x00U;
   reply[19U] = 0x00U;
 
