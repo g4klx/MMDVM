@@ -70,6 +70,7 @@
 // #define SERIAL_SPEED 115200 // Suitable for most older boards (Arduino Due, STM32F1_POG, etc). External FM will NOT work with this!
 // #define SERIAL_SPEED 230400 // Only works on newer boards like fast M4, M7, Teensy 3.x. External FM might work with this
 #define SERIAL_SPEED 460800	// Only works on newer boards like fast M4, M7, Teensy 3.x. External FM should work with this
+//#define SERIAL_SPEED 500000  // Used with newer boards and Armbian on AllWinner SOCs (H2, H3) that do not support 460800
 
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS
