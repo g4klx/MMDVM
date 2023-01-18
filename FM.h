@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -35,21 +35,6 @@
 #include "FMUpSampler.h"
 #include "FMNoiseSquelch.h"
 
-enum FM_STATE {
-  FS_LISTENING,
-  FS_KERCHUNK_RF,
-  FS_RELAYING_RF,
-  FS_RELAYING_WAIT_RF,
-  FS_TIMEOUT_RF,
-  FS_TIMEOUT_WAIT_RF,
-  FS_KERCHUNK_EXT,
-  FS_RELAYING_EXT,
-  FS_RELAYING_WAIT_EXT,
-  FS_TIMEOUT_EXT,
-  FS_TIMEOUT_WAIT_EXT,
-  FS_HANG
-};
-
 
 class CFM {
 public:
@@ -78,7 +63,7 @@ private:
   CFMCTCSSTX           m_ctcssTX;
   CFMNoiseSquelch      m_squelch;
   CFMTimeout           m_timeoutTone;
-  FM_STATE             m_state;
+  uint8_t              m_state;
   bool                 m_callsignAtStart;
   bool                 m_callsignAtEnd;
   bool                 m_callsignAtLatch;
@@ -89,7 +74,6 @@ private:
   CFMTimer             m_ackMinTimer;
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
-  CFMTimer             m_statusTimer;
   CFMTimer             m_reverseTimer;
   bool                 m_needReverse;
   CFMDirectFormI       m_filterStage1;
