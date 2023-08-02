@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -73,11 +73,13 @@ public:
 
 #if defined(MODE_AX25)
   void writeAX25Data(const uint8_t* data, uint16_t length);
+  void writeAX25DataEx(uint16_t rssi, const uint8_t* data, uint16_t length);
 #endif
 
 #if defined(MODE_FM)
   void writeFMData(const uint8_t* data, uint16_t length);
   void writeFMStatus(uint8_t status);
+  void writeFMRSSI(uint16_t rssi);
   void writeFMEOT();
 #endif
 

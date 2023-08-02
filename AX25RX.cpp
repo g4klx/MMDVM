@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ m_c(0xF6U)
   initRand();
 }
 
-void CAX25RX::samples(q15_t* samples, uint8_t length)
+void CAX25RX::samples(q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   q15_t output[RX_BLOCK_SIZE];
   ::arm_fir_fast_q15(&m_filter, samples, output, RX_BLOCK_SIZE);
@@ -95,32 +95,56 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
 
   CAX25Frame frame;
 
-  bool ret = m_demod1.process(output, length, frame);
+  bool ret = m_demod1.process(output, rssi, length, frame);
   if (ret) {
     if (frame.m_fcs != m_lastFCS || m_count > 2U) {
       m_lastFCS = frame.m_fcs;
       m_count   = 0U;
+#if defined(SEND_RSSI_DATA)
+      uint16_t rssi = m_demod1.getRSSI();
+      if (rssi > 0U)
+        serial.writeAX25DataEx(rssi, frame.m_data, frame.m_length - 2U);
+      else
+        serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+#else
       serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+#endif
     }
     DEBUG1("Decoder 1 reported");
   }
 
-  ret = m_demod2.process(output, length, frame);
+  ret = m_demod2.process(output, rssi, length, frame);
   if (ret) {
     if (frame.m_fcs != m_lastFCS || m_count > 2U) {
       m_lastFCS = frame.m_fcs;
       m_count   = 0U;
+#if defined(SEND_RSSI_DATA)
+      uint16_t rssi = m_demod2.getRSSI();
+      if (rssi > 0U)
+        serial.writeAX25DataEx(rssi, frame.m_data, frame.m_length - 2U);
+      else
+        serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+#else
       serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+#endif
     }
     DEBUG1("Decoder 2 reported");
   }
 
-  ret = m_demod3.process(output, length, frame);
+  ret = m_demod3.process(output, rssi, length, frame);
   if (ret) {
     if (frame.m_fcs != m_lastFCS || m_count > 2U) {
       m_lastFCS = frame.m_fcs;
       m_count   = 0U;
+#if defined(SEND_RSSI_DATA)
+      uint16_t rssi = m_demod3.getRSSI();
+      if (rssi > 0U)
+        serial.writeAX25DataEx(rssi, frame.m_data, frame.m_length - 2U);
+      else
+        serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+#else
       serial.writeAX25Data(frame.m_data, frame.m_length - 2U);
+#endif
     }
     DEBUG1("Decoder 3 reported");
   }

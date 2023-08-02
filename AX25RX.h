@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ class CAX25RX {
 public:
   CAX25RX();
 
-  void samples(q15_t* samples, uint8_t length);
+  void samples(q15_t* samples, const uint16_t* rssi, uint8_t length);
 
   void setParams(int8_t twist, uint8_t slotTime, uint8_t pPersist);
 

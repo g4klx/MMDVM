@@ -80,22 +80,24 @@ m_inputRFRB(2401U),   // 100ms of audio + 1 sample
 m_outputRFRB(2400U),  // 100ms of audio
 m_inputExtRB(),
 m_rfSignal(false),
-m_extSignal(false)
+m_extSignal(false),
+m_rssiAccum(0U),
+m_rssiCount(0U)
 {
   m_reverseTimer.setTimeout(0U, 150U);
 
   insertDelay(100U);
 }
 
-void CFM::samples(bool cos, q15_t* samples, uint8_t length)
+void CFM::samples(bool cos, q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   if (m_linkMode)
     linkSamples(cos, samples, length);
   else
-    repeaterSamples(cos, samples, length);
+    repeaterSamples(cos, samples, rssi, length);
 }
 
-void CFM::repeaterSamples(bool cos, q15_t* samples, uint8_t length)
+void CFM::repeaterSamples(bool cos, q15_t* samples, const uint16_t* rssi, uint8_t length)
 {
   if (m_cosInvert)
     cos = !cos;
@@ -104,6 +106,11 @@ void CFM::repeaterSamples(bool cos, q15_t* samples, uint8_t length)
 
   uint8_t i = 0U;
   for (; i < length; i++) {
+    if (m_state == FS_RELAYING_RF) {
+      m_rssiAccum += rssi[i];
+      m_rssiCount++;
+    }
+
     // ARMv7-M has hardware integer division 
     q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
@@ -613,6 +620,9 @@ void CFM::listeningStateDuplex(bool validRFSignal, bool validExtSignal)
       m_state = FS_RELAYING_RF;
       serial.writeFMStatus(m_state);
 
+      m_rssiAccum = 0U;
+      m_rssiCount = 0U;
+
       if (m_callsignAtStart)
         sendCallsign();
     }
@@ -689,6 +699,9 @@ void CFM::kerchunkRFStateDuplex(bool validSignal)
       m_state = FS_RELAYING_RF;
       serial.writeFMStatus(m_state);
 
+      m_rssiAccum = 0U;
+      m_rssiCount = 0U;
+
       m_kerchunkTimer.stop();
       if (m_callsignAtStart && m_callsignAtLatch) {
         sendCallsign();
@@ -716,6 +729,16 @@ void CFM::kerchunkRFStateDuplex(bool validSignal)
 void CFM::relayingRFStateDuplex(bool validSignal)
 {
   if (validSignal) {
+#if defined(SEND_RSSI_DATA)
+    if (m_rssiCount >= 24000U) {
+      uint16_t rssi = m_rssiAccum / m_rssiCount;
+      serial.writeFMRSSI(rssi);
+
+      m_rssiAccum = 0U;
+      m_rssiCount = 0U;
+    }
+#endif
+
     if (m_timeoutTimer.isRunning() && m_timeoutTimer.hasExpired()) {
       DEBUG1("State to TIMEOUT_RF");
       m_state = FS_TIMEOUT_RF;
@@ -785,6 +808,9 @@ void CFM::relayingRFWaitStateDuplex(bool validSignal)
     DEBUG1("State to RELAYING_RF");
     m_state = FS_RELAYING_RF;
     serial.writeFMStatus(m_state);
+
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
 
     m_ackDelayTimer.stop();
   } else {
@@ -976,6 +1002,9 @@ void CFM::hangStateDuplex(bool validRFSignal, bool validExtSignal)
     DEBUG1("State to RELAYING_RF");
     m_state = FS_RELAYING_RF;
     serial.writeFMStatus(m_state);
+
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
 
     DEBUG1("Stop ack");
     m_rfAck.stop();

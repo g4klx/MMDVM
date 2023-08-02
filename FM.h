@@ -40,7 +40,7 @@ class CFM {
 public:
   CFM();
 
-  void samples(bool cos, q15_t* samples, uint8_t length);
+  void samples(bool cos, q15_t* samples, const uint16_t* rssi, uint8_t length);
 
   void process();
 
@@ -94,10 +94,12 @@ private:
   CFMUpSampler         m_inputExtRB;
   bool                 m_rfSignal;
   bool                 m_extSignal;
+  uint32_t             m_rssiAccum;
+  uint16_t             m_rssiCount;
 
   void stateMachine(bool validRFSignal, bool validExtSignal);
 
-  void repeaterSamples(bool cos, q15_t* samples, uint8_t length);
+  void repeaterSamples(bool cos, q15_t* samples, const uint16_t* rssi, uint8_t length);
   void linkSamples(bool cos, q15_t* samples, uint8_t length);
 
   void duplexStateMachine(bool validRFSignal, bool validExtSignal);

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -506,9 +506,9 @@ void CIO::process()
       if (m_fmEnable) {
         bool cos = getCOSInt();
 #if defined(USE_DCBLOCKER)
-        fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
+        fm.samples(cos, dcSamples, rssi, RX_BLOCK_SIZE);
 #else
-        fm.samples(cos, samples, RX_BLOCK_SIZE);
+        fm.samples(cos, samples, rssi, RX_BLOCK_SIZE);
 #endif
       }
 #endif
@@ -516,9 +516,9 @@ void CIO::process()
 #if defined(MODE_FM) && defined(MODE_AX25)
       if (m_ax25Enable) {
 #if defined(USE_DCBLOCKER)
-        ax25RX.samples(dcSamples, RX_BLOCK_SIZE);
+        ax25RX.samples(dcSamples, rssi, RX_BLOCK_SIZE);
 #else
-        ax25RX.samples(samples, RX_BLOCK_SIZE);
+        ax25RX.samples(samples, rssi, RX_BLOCK_SIZE);
 #endif
       }
 #endif
@@ -627,18 +627,18 @@ void CIO::process()
     else if (m_modemState == STATE_FM) {
       bool cos = getCOSInt();
 #if defined(USE_DCBLOCKER)
-      fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
+      fm.samples(cos, dcSamples, rssi, RX_BLOCK_SIZE);
 
 #if defined(MODE_AX25)
       if (m_ax25Enable)
-        ax25RX.samples(dcSamples, RX_BLOCK_SIZE);
+        ax25RX.samples(dcSamples, rssi, RX_BLOCK_SIZE);
 #endif
 #else
-      fm.samples(cos, samples, RX_BLOCK_SIZE);
+      fm.samples(cos, samples, rssi, RX_BLOCK_SIZE);
 
 #if defined(MODE_AX25)
       if (m_ax25Enable)
-        ax25RX.samples(samples, RX_BLOCK_SIZE);
+        ax25RX.samples(samples, rssi, RX_BLOCK_SIZE);
 #endif
 #endif
     }

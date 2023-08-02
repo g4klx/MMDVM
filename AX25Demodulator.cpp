@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
  *   Copyright 2015-2019 Mobilinkd LLC <rob@mobilinkd.com>
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -85,7 +85,9 @@ m_hdlcOnes(0U),
 m_hdlcFlag(false),
 m_hdlcBuffer(0U),
 m_hdlcBits(0U),
-m_hdlcState(AX25_IDLE)
+m_hdlcState(AX25_IDLE),
+m_rssiAccum(0U),
+m_rssiCount(0U)
 {
   m_delayLine = new bool[DELAY_LEN];
 
@@ -101,7 +103,7 @@ m_hdlcState(AX25_IDLE)
     m_iirHistory[i] = 0.0F;
 }
 
-bool CAX25Demodulator::process(q15_t* samples, uint8_t length, CAX25Frame& frame)
+bool CAX25Demodulator::process(q15_t* samples, const uint16_t* rssi, uint8_t length, CAX25Frame& frame)
 {
   bool result = false;
 
@@ -119,6 +121,9 @@ bool CAX25Demodulator::process(q15_t* samples, uint8_t length, CAX25Frame& frame
   ::arm_fir_fast_q15(&m_lpfFilter, buffer, fc, RX_BLOCK_SIZE);
 
   for (uint8_t i = 0; i < length; i++) {
+    m_rssiAccum += rssi[i];
+    m_rssiCount++;
+
     bool bit = fc[i] >= 0;
     bool sample = PLL(bit);
 
@@ -266,6 +271,8 @@ bool CAX25Demodulator::HDLC(bool b)
         // Start of frame data.
         m_hdlcState = AX25_RECEIVE;
         m_frame.append(m_hdlcBuffer);
+        m_rssiAccum = 0U;
+        m_rssiCount = 0U;
         m_hdlcBits = 0U;
       }
       break;
@@ -313,6 +320,20 @@ float32_t CAX25Demodulator::iir(float32_t input)
     result += PLL_LOCK_B[i] * m_iirHistory[i];
 
   return result;
+}
+
+uint16_t CAX25Demodulator::getRSSI()
+{
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
+
+    m_rssiAccum = 0U;
+    m_rssiCount = 0U;
+
+    return rssi;
+  }
+
+  return 0U;
 }
 
 #endif

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -36,11 +36,13 @@ class CAX25Demodulator {
 public:
   CAX25Demodulator(int8_t n);
 
-  bool process(q15_t* samples, uint8_t length, CAX25Frame& frame);
+  bool process(q15_t* samples, const uint16_t* rssi, uint8_t length, CAX25Frame& frame);
 
   void setTwist(int8_t n);
 
   bool isDCD();
+
+  uint16_t getRSSI();
 
 private:
   CAX25Frame           m_frame;
@@ -63,6 +65,8 @@ private:
   uint16_t             m_hdlcBuffer;
   uint16_t             m_hdlcBits;
   AX25_STATE           m_hdlcState;
+  uint32_t             m_rssiAccum;
+  uint16_t             m_rssiCount;
 
   bool delay(bool b);
   bool NRZI(bool b);

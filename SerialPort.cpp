@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2013,2015-2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2013,2015-2021,2023 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -72,6 +72,7 @@ const uint8_t MMDVM_M17_EOT        = 0x49U;
 const uint8_t MMDVM_POCSAG_DATA  = 0x50U;
 
 const uint8_t MMDVM_AX25_DATA    = 0x55U;
+const uint8_t MMDVM_AX25_DATA_EX = 0x56U;
 
 const uint8_t MMDVM_FM_PARAMS1   = 0x60U;
 const uint8_t MMDVM_FM_PARAMS2   = 0x61U;
@@ -80,6 +81,7 @@ const uint8_t MMDVM_FM_PARAMS4   = 0x63U;
 const uint8_t MMDVM_FM_DATA      = 0x65U;
 const uint8_t MMDVM_FM_STATUS    = 0x66U;
 const uint8_t MMDVM_FM_EOT       = 0x67U;
+const uint8_t MMDVM_FM_RSSI      = 0x68U;
 
 const uint8_t MMDVM_ACK          = 0x70U;
 const uint8_t MMDVM_NAK          = 0x7FU;
@@ -1838,6 +1840,25 @@ void CSerialPort::writeFMStatus(uint8_t status)
   writeInt(1U, reply, 4U);
 }
 
+void CSerialPort::writeFMRSSI(uint16_t rssi)
+{
+  if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
+    return;
+
+  if (!m_fmEnable)
+    return;
+
+  uint8_t reply[10U];
+
+  reply[0U] = MMDVM_FRAME_START;
+  reply[1U] = 5U;
+  reply[2U] = MMDVM_FM_RSSI;
+  reply[3U] = (rssi >> 8) & 0xFFU;
+  reply[4U] = (rssi >> 0) & 0xFFU;
+
+  writeInt(1U, reply, 5U);
+}
+
 void CSerialPort::writeFMEOT()
 {
   if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
@@ -1886,6 +1907,44 @@ void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
       reply[i + 3U] = data[i];
 
     writeInt(1U, reply, length + 3U);
+  }
+}
+
+void CSerialPort::writeAX25DataEx(uint16_t rssi, const uint8_t* data, uint16_t length)
+{
+  if (m_modemState != STATE_FM && m_modemState != STATE_IDLE)
+    return;
+
+  if (!m_ax25Enable)
+    return;
+
+  uint8_t reply[512U];
+
+  reply[0U] = MMDVM_FRAME_START;
+
+  if (length > 250U) {
+    reply[1U] = 0U;
+    reply[2U] = (length + 6U) - 255U;
+    reply[3U] = MMDVM_AX25_DATA_EX;
+
+    reply[4U] = (rssi >> 8) & 0xFFU;
+    reply[5U] = (rssi >> 0) & 0xFFU;
+  
+    for (uint16_t i = 0U; i < length; i++)
+      reply[i + 6U] = data[i];
+
+    writeInt(1U, reply, length + 6U);
+  } else {
+    reply[1U] = length + 5U;
+    reply[2U] = MMDVM_AX25_DATA_EX;
+
+    reply[3U] = (rssi >> 8) & 0xFFU;
+    reply[4U] = (rssi >> 0) & 0xFFU;
+  
+    for (uint16_t i = 0U; i < length; i++)
+      reply[i + 5U] = data[i];
+
+    writeInt(1U, reply, length + 5U);
   }
 }
 #endif
