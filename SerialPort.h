@@ -106,10 +106,8 @@ private:
   uint16_t  m_ptr;
   uint16_t  m_len;
   bool      m_debug;
-  CRingBuffer<uint8_t> m_serialData;
   int       m_lastSerialAvail;
   uint16_t  m_lastSerialAvailCount;
-  CRingBuffer<uint8_t> m_i2CData;
 
   void    sendACK(uint8_t type);
   void    sendNAK(uint8_t type, uint8_t err);
