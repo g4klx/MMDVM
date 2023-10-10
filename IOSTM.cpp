@@ -1,7 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016,2017,2018 by Andy Uribe CA6JAU
- *   Copyright (C) 2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017,2018,2020,2023 by Jonathan Naylor G4KLX
  *   Copyright (C) 2019,2020 by BG5HHP
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -365,9 +365,15 @@ void CIO::interrupt()
 #endif
    }
 
-   // trigger next ADC1
+   // Trigger next ADC1
    ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
    ADC_SoftwareStartConv(ADC1);
+
+#if defined(SEND_RSSI_DATA)
+   // Trigger next ADC2
+   ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
+   ADC_SoftwareStartConv(ADC2);
+#endif
 
    m_rxBuffer.put(sample);
    m_rssiBuffer.put(rawRSSI);
