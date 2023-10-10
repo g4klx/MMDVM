@@ -175,7 +175,7 @@ void CNXDNTX::writeByte(uint8_t c)
 
 void CNXDNTX::writeSilence()
 {
-  q15_t inBuffer[4U] = {0x00U, 0x00U, 0x00U, 0x00U};
+  q15_t inBuffer[4U] = {0, 0, 0, 0};
   q15_t intBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
   q15_t outBuffer[NXDN_RADIO_SYMBOL_LENGTH * 4U];
 

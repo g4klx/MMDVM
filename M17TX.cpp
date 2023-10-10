@@ -160,7 +160,7 @@ void CM17TX::writeByte(uint8_t c)
 
 void CM17TX::writeSilence()
 {
-  q15_t inBuffer[4U] = {0x00U, 0x00U, 0x00U, 0x00U};
+  q15_t inBuffer[4U] = {0, 0, 0, 0};
   q15_t outBuffer[M17_RADIO_SYMBOL_LENGTH * 4U];
 
   ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
