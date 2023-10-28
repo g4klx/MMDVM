@@ -73,19 +73,26 @@ private:
 class CSTMUART {
 public:
   CSTMUART();
+
   void init(USART_TypeDef* usart);
+
   void write(const uint8_t * data, uint16_t length);
   uint8_t read();
+
   void handleIRQ();
+
   void flush();
+
   uint16_t available();
   uint16_t availableForWrite();
 
 private:
-  USART_TypeDef * m_usart;
-  CSTMUARTFIFO    m_rxFifo;
-  CSTMUARTFIFO    m_txFifo;
+  USART_TypeDef* m_usart;
+  CSTMUARTFIFO   m_rxFifo;
+  CSTMUARTFIFO   m_txFifo;
 };
 
 #endif
+
 #endif
+

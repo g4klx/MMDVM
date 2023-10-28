@@ -34,18 +34,16 @@ void CSTMUART::init(USART_TypeDef* usart)
 
 void CSTMUART::write(const uint8_t * data, uint16_t length)
 {
-  if(length == 0U || m_usart == NULL)
+  if (length == 0U || m_usart == NULL)
     return;
 
-
   m_txFifo.put(data[0]);
-  USART_ITConfig(m_usart, USART_IT_TXE, ENABLE);//switch TX IRQ is on
+  USART_ITConfig(m_usart, USART_IT_TXE, ENABLE);	// Switch TX IRQ is on
 
-  for(uint16_t i = 1U; i < length; i++) {
+  for (uint16_t i = 1U; i < length; i++)
     m_txFifo.put(data[i]);
-  }
 
-  USART_ITConfig(m_usart, USART_IT_TXE, ENABLE);//make sure TX IRQ is on
+  USART_ITConfig(m_usart, USART_IT_TXE, ENABLE);	// Make sure TX IRQ is on
 }
 
 uint8_t CSTMUART::read()
@@ -55,36 +53,37 @@ uint8_t CSTMUART::read()
 
 void CSTMUART::handleIRQ()
 {
-  if(m_usart == NULL)
+  if (m_usart == NULL)
     return;
 
   if (USART_GetITStatus(m_usart, USART_IT_RXNE)) {
-    if(!m_rxFifo.isFull())
+    if (!m_rxFifo.isFull())
       m_rxFifo.put((uint8_t) USART_ReceiveData(m_usart));
+
     USART_ClearITPendingBit(USART1, USART_IT_RXNE);
   }
 
   if (USART_GetITStatus(m_usart, USART_IT_TXE)) {
-    if(!m_txFifo.isEmpty())
+    if (!m_txFifo.isEmpty())
       USART_SendData(m_usart, m_txFifo.get());
 
     USART_ClearITPendingBit(m_usart, USART_IT_TXE);
 
-    if (m_txFifo.isEmpty()) // if there's no more data to transmit then turn off TX interrupts
+    if (m_txFifo.isEmpty())	// If there's no more data to transmit then turn off TX interrupts
       USART_ITConfig(m_usart, USART_IT_TXE, DISABLE);
   }
 }
 
-  // Flushes the transmit shift register
+// Flushes the transmit shift register
 // warning: this call is blocking
 void CSTMUART::flush()
 {
-  if(m_usart == NULL)
+  if (m_usart == NULL)
     return;
 
-   // wait until the TXE shows the shift register is empty
-   while (USART_GetITStatus(m_usart, USART_FLAG_TXE))
-      ;
+  // wait until the TXE shows the shift register is empty
+  while (USART_GetITStatus(m_usart, USART_FLAG_TXE))
+    ;
 }
 
 uint16_t CSTMUART::available()

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,17 +23,12 @@
 #include "stm32f4xx.h"
 #elif defined(STM32F7XX)
 #include "stm32f7xx.h"
-#elif defined(STM32F105xC)
-#include "stm32f1xx.h"
-#include "STM32Utils.h"
 #else
 #include <Arduino.h>
 #undef PI //Undefine PI to get rid of annoying warning as it is also defined in arm_math.h.
 #endif
 
-#if defined(__SAM3X8E__) || defined(STM32F105xC)
-#define  ARM_MATH_CM3
-#elif defined(STM32F7XX)
+#if defined(STM32F7XX)
 #define  ARM_MATH_CM7
 #elif defined(STM32F4XX) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define  ARM_MATH_CM4
