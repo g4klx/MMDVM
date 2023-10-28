@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -75,20 +75,6 @@
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS
 
-// For the original Arduino Due pin layout
-// #define ARDUINO_DUE_PAPA
-
-#if defined(STM32F1)
-// For the SQ6POG board
-#define STM32F1_POG
-#else
-// For the ZUM V1.0 and V1.0.1 boards pin layout
-// #define ARDUINO_DUE_ZUM_V10
-#endif
-
-// For the SP8NTH board
-// #define ARDUINO_DUE_NTH
-
 // For ST Nucleo-64 STM32F446RE board
 // #define STM32F4_NUCLEO_MORPHO_HEADER
 // #define STM32F4_NUCLEO_ARDUINO_HEADER
@@ -126,12 +112,6 @@
 
 // Use the D-Star and YSF LEDs for FM
 #define USE_ALTERNATE_FM_LEDS
-
-#if defined(STM32F1_POG)
-// Slower boards need to run their serial at 115200 baud
-#undef SERIAL_SPEED
-#define SERIAL_SPEED 115200
-#endif
 
 #endif
 
