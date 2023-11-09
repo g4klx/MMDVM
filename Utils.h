@@ -23,9 +23,6 @@
 #include "stm32f4xx.h"
 #elif defined(STM32F7XX)
 #include "stm32f7xx.h"
-#elif defined(STM32F105xC)
-#include "stm32f1xx.h"
-#include <cstddef>
 #else
 #include <Arduino.h>
 #endif
