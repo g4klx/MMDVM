@@ -388,7 +388,6 @@ void CFM::process()
 void CFM::reset()
 {
   m_state = FS_LISTENING;
-  serial.writeFMStatus(m_state);
 
   m_callsignTimer.stop();
   m_timeoutTimer.stop();
