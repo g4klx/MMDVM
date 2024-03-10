@@ -100,6 +100,9 @@
 // Use the modem as a serial repeater for Nextion displays
 #define SERIAL_REPEATER
 
+// Set the baud rate of the modem serial repeater for Nextion displays
+#define SERIAL_REPEATER_BAUD_RATE 9600
+
 // Use the modem as an I2C repeater for OLED displays
 // #define I2C_REPEATER
 
