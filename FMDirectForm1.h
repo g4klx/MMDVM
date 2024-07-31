@@ -42,8 +42,7 @@ class CFMDirectFormI
 public:
 
 	// convenience function which takes the a0 argument but ignores it!
-	CFMDirectFormI(const q31_t b0, const q31_t b1, const q31_t b2,
-			const q31_t, const q31_t a1, const q31_t a2)
+	CFMDirectFormI(const q31_t b0, const q31_t b1, const q31_t b2, const q31_t, const q31_t a1, const q31_t a2)
 	{
 		// FIR coefficients
 		c_b0 = b0;
@@ -57,21 +56,21 @@ public:
 
 	CFMDirectFormI(const CFMDirectFormI &my)
 	{
-	// delay line
+		// delay line
 		m_x2 = my.m_x2; // x[n-2]
 		m_y2 = my.m_y2; // y[n-2]
 		m_x1 = my.m_x1; // x[n-1]
 		m_y1 = my.m_y1; // y[n-1]
 
-	// coefficients
+		// coefficients
 		c_b0 = my.c_b0;
 		c_b1 = my.c_b1;
 		c_b2 = my.c_b2; // FIR
 		c_a1 = my.c_a1;
 		c_a2 = my.c_a2; // IIR
-    }
+	}
 
-	void reset ()
+	void reset()
 	{
 		m_x1 = 0;
 		m_x2 = 0;
@@ -83,11 +82,7 @@ public:
 	inline q15_t filter(const q15_t in)
 	{
 		// calculate the output
-		register q31_t out_upscaled = c_b0 * in
-									+ c_b1 * m_x1
-									+ c_b2 * m_x2
-									- c_a1 * m_y1
-									- c_a2 * m_y2;
+		q31_t out_upscaled = c_b0 * in + c_b1 * m_x1 + c_b2 * m_x2 - c_a1 * m_y1 - c_a2 * m_y2;
 
 		q15_t out = __SSAT(out_upscaled >> 15, 15);
 
