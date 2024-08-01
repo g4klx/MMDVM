@@ -896,7 +896,11 @@ void CSerialPort::start()
   beginInt(1U, SERIAL_SPEED);
 
 #if defined(SERIAL_REPEATER)
-  beginInt(3U, 9600);
+  #if defined(SERIAL_REPEATER_BAUD_RATE)
+    beginInt(3U, SERIAL_REPEATER_BAUD_RATE);
+  #else
+    beginInt(3U, 9600);
+  #endif
 #endif
 #if defined(I2C_REPEATER)
   beginInt(10U, 9600);
