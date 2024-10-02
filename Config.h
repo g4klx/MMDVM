@@ -20,7 +20,7 @@
 #define  CONFIG_H
 
 // Allow for the selection of which modes to compile into the firmware. This is particularly useful for processors
-// which have limited code space and processing power like the STM32F103, which is found on older/cheaper boards.
+// which have limited code space and processing power.
 
 // Enable D-Star support.
 #define MODE_DSTAR
@@ -67,7 +67,7 @@
 // #define EXTERNAL_OSC 19200000
 
 // Select a baud rate for host communication. The faster speeds are needed for external FM to work.
-// #define SERIAL_SPEED 115200 // Suitable for most older boards (Arduino Due, STM32F1_POG, etc). External FM will NOT work with this!
+// #define SERIAL_SPEED 115200 // Suitable for most older boards (Arduino Due, etc). External FM will NOT work with this!
 // #define SERIAL_SPEED 230400 // Only works on newer boards like fast M4, M7, Teensy 3.x. External FM might work with this
 #define SERIAL_SPEED 460800	// Only works on newer boards like fast M4, M7, Teensy 3.x. External FM should work with this
 //#define SERIAL_SPEED 500000  // Used with newer boards and Armbian on AllWinner SOCs (H2, H3) that do not support 460800
@@ -78,13 +78,8 @@
 // For the original Arduino Due pin layout
 // #define ARDUINO_DUE_PAPA
 
-#if defined(STM32F1)
-// For the SQ6POG board
-#define STM32F1_POG
-#else
 // For the ZUM V1.0 and V1.0.1 boards pin layout
 // #define ARDUINO_DUE_ZUM_V10
-#endif
 
 // For the SP8NTH board
 // #define ARDUINO_DUE_NTH
@@ -104,6 +99,9 @@
 
 // Use the modem as a serial repeater for Nextion displays
 #define SERIAL_REPEATER
+
+// Set the baud rate of the modem serial repeater for Nextion displays
+#define SERIAL_REPEATER_BAUD_RATE 9600
 
 // Use the modem as an I2C repeater for OLED displays
 // #define I2C_REPEATER
@@ -126,12 +124,6 @@
 
 // Use the D-Star and YSF LEDs for FM
 #define USE_ALTERNATE_FM_LEDS
-
-#if defined(STM32F1_POG)
-// Slower boards need to run their serial at 115200 baud
-#undef SERIAL_SPEED
-#define SERIAL_SPEED 115200
-#endif
 
 #endif
 

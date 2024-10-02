@@ -24,15 +24,12 @@
 #include "stm32f4xx.h"
 #elif defined(STM32F7XX)
 #include "stm32f7xx.h"
-#elif defined(STM32F105xC)
-#include "stm32f1xx.h"
-#include <cstddef>
 #else
 #include <Arduino.h>
 #undef PI
 #endif
 
-#if defined(__SAM3X8E__) || defined(STM32F105xC)
+#if defined(__SAM3X8E__)
 #define  ARM_MATH_CM3
 #elif defined(STM32F7XX)
 #define  ARM_MATH_CM7
