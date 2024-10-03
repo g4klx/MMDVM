@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ enum MMDVM_STATE {
   STATE_NXDN      = 5,
   STATE_POCSAG    = 6,
   STATE_M17       = 7,
+  STATE_DPMR      = 8,
   STATE_FM        = 10,
   STATE_AX25      = 11,
 
@@ -79,6 +80,8 @@ enum MMDVM_STATE {
 #include "DMRDMOTX.h"
 #include "DStarRX.h"
 #include "DStarTX.h"
+#include "DPMRRX.h"
+#include "DPMRTX.h"
 #include "DMRRX.h"
 #include "DMRTX.h"
 #include "YSFRX.h"
@@ -130,6 +133,7 @@ extern bool m_p25Enable;
 extern bool m_nxdnEnable;
 extern bool m_pocsagEnable;
 extern bool m_m17Enable;
+extern bool m_dpmrEnable;
 extern bool m_fmEnable;
 extern bool m_ax25Enable;
 
@@ -189,6 +193,13 @@ extern CM17RX m17RX;
 extern CM17TX m17TX;
 
 extern CCalM17 calM17;
+#endif
+
+#if defined(MODE_DPMR)
+extern CDPMRRX dpmrRX;
+extern CDPMRTX dpmrTX;
+
+extern CCalNXDN calNXDN;
 #endif
 
 #if defined(MODE_FM)

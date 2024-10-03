@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2024 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -44,12 +44,13 @@ static q15_t RRC_0_5_FILTER[] = {-147, -88, 72, 220, 223, 46, -197, -285, -79, 3
 const uint16_t RRC_0_5_FILTER_LEN = 42U;
 #endif
 
-#if defined(MODE_NXDN)
-#if defined(USE_NXDN_BOXCAR)
+#if defined(MODE_NXDN) && defined(USE_NXDN_BOXCAR)
 // One symbol boxcar filter
 static q15_t   BOXCAR10_FILTER[] = {6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000};
 const uint16_t BOXCAR10_FILTER_LEN = 10U;
-#else
+#endif
+
+#if defined(MODE_DPMR) || (defined(MODE_NXDN) && !defined(USE_NXDN_BOXCAR))
 // Generated using rcosdesign(0.2, 8, 10, 'sqrt') in MATLAB
 static q15_t NXDN_0_2_FILTER[] = {284, 198, 73, -78, -240, -393, -517, -590, -599, -533, -391, -181, 79, 364, 643, 880, 1041, 1097, 1026, 819,
                                   483, 39, -477, -1016, -1516, -1915, -2150, -2164, -1914, -1375, -545, 557, 1886, 3376, 4946, 6502, 7946, 9184,
@@ -61,7 +62,6 @@ const uint16_t NXDN_0_2_FILTER_LEN = 82U;
 static q15_t NXDN_ISINC_FILTER[] = {790, -1085, -1073, -553, 747, 2341, 3156, 2152, -893, -4915, -7834, -7536, -3102, 4441, 12354, 17394, 17394,
                                    12354, 4441, -3102, -7536, -7834, -4915, -893, 2152, 3156, 2341, 747, -553, -1073, -1085, 790};
 const uint16_t NXDN_ISINC_FILTER_LEN = 32U;
-#endif
 #endif
 
 #if defined(MODE_DSTAR)
@@ -103,16 +103,15 @@ m_rrc02State2(),
 m_boxcar5Filter(),
 m_boxcar5State(),
 #endif
-#if defined(MODE_NXDN)
-#if defined(USE_NXDN_BOXCAR)
+#if defined(MODE_NXDN) && defined(USE_NXDN_BOXCAR)
 m_boxcar10Filter(),
 m_boxcar10State(),
-#else
+#endif
+#if defined(MODE_DPMR) || (defined(MODE_NXDN) && !defined(USE_NXDN_BOXCAR))
 m_nxdnFilter(),
 m_nxdnISincFilter(),
 m_nxdnState(),
 m_nxdnISincState(),
-#endif
 #endif
 #if defined(MODE_M17)
 m_rrc05Filter(),
@@ -127,6 +126,7 @@ m_ysfTXLevel(128 * 128),
 m_p25TXLevel(128 * 128),
 m_nxdnTXLevel(128 * 128),
 m_m17TXLevel(128 * 128),
+m_dpmrTXLevel(128 * 128),
 m_pocsagTXLevel(128 * 128),
 m_fmTXLevel(128 * 128),
 m_ax25TXLevel(128 * 128),
@@ -177,13 +177,14 @@ m_lockout(false)
   m_boxcar5Filter.pCoeffs = BOXCAR5_FILTER;
 #endif
 
-#if defined(MODE_NXDN)
-#if defined(USE_NXDN_BOXCAR)
+#if defined(MODE_NXDN) && defined(USE_NXDN_BOXCAR)
   ::memset(m_boxcar10State, 0x00U, 40U * sizeof(q15_t));
   m_boxcar10Filter.numTaps = BOXCAR10_FILTER_LEN;
   m_boxcar10Filter.pState  = m_boxcar10State;
   m_boxcar10Filter.pCoeffs = BOXCAR10_FILTER;
-#else
+#endif
+
+#if defined(MODE_DPMR) || (defined(MODE_NXDN) && !defined(USE_NXDN_BOXCAR))
   ::memset(m_nxdnState,      0x00U, 110U * sizeof(q15_t));
   ::memset(m_nxdnISincState, 0x00U, 60U * sizeof(q15_t));
 
@@ -194,7 +195,6 @@ m_lockout(false)
   m_nxdnISincFilter.numTaps = NXDN_ISINC_FILTER_LEN;
   m_nxdnISincFilter.pState  = m_nxdnISincState;
   m_nxdnISincFilter.pCoeffs = NXDN_ISINC_FILTER;
-#endif
 #endif
 
 #if defined(MODE_M17)
@@ -236,6 +236,9 @@ void CIO::selfTest()
 #if !defined(USE_ALTERNATE_FM_LEDS)
     setFMInt(ledValue);
 #endif
+#if !defined(USE_ALTERNATE_DPMR_LEDS)
+    setDPMRInt(ledValue);
+#endif
 #endif
     delayInt(250);
   }
@@ -256,6 +259,9 @@ void CIO::selfTest()
 #endif
 #if !defined(USE_ALTERNATE_FM_LEDS)
   setFMInt(false);
+#endif
+#if !defined(USE_ALTERNATE_DPMR_LEDS)
+  setDPMRInt(false);
 #endif
   setDStarInt(true);
 
@@ -286,9 +292,19 @@ void CIO::selfTest()
 #if !defined(USE_ALTERNATE_FM_LEDS)
   delayInt(250);
   setFMInt(true);
+#endif
+
+#if !defined(USE_ALTERNATE_DPMR_LEDS)
+  delayInt(250);
+  setDPMRInt(true);
 
   delayInt(250);
-  setFMInt(false);
+  setDPMRInt(false);
+#endif
+
+#if !defined(USE_ALTERNATE_FM_LEDS)
+  delayInt(250);
+  setFMInt(true);
 #endif
 
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
@@ -338,7 +354,7 @@ void CIO::process()
   if (m_started) {
     // Two seconds timeout
     if (m_watchdog >= 48000U) {
-      if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF || m_modemState == STATE_P25 || m_modemState == STATE_NXDN || m_modemState == STATE_M17 || m_modemState == STATE_POCSAG) {
+      if (m_modemState == STATE_DSTAR || m_modemState == STATE_DMR || m_modemState == STATE_YSF || m_modemState == STATE_P25 || m_modemState == STATE_NXDN || m_modemState == STATE_M17 || m_modemState == STATE_DPMR || m_modemState == STATE_POCSAG) {
 #if defined(MODE_DMR)
         if (m_modemState == STATE_DMR && m_tx)
           dmrTX.setStart(false);
@@ -502,6 +518,22 @@ void CIO::process()
       }
 #endif
 
+#if defined(MODE_DPMR)
+      if (m_dpmrEnable) {
+        q15_t DPMRValsTmp[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
+        ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, DPMRValsTmp, RX_BLOCK_SIZE);
+#else
+        ::arm_fir_fast_q15(&m_nxdnFilter, samples, DPMRValsTmp, RX_BLOCK_SIZE);
+#endif
+
+        q15_t DPMRVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_nxdnISincFilter, DPMRValsTmp, DPMRVals, RX_BLOCK_SIZE);
+
+        dpmrRX.samples(DPMRVals, rssi, RX_BLOCK_SIZE);
+      }
+#endif
+
 #if defined(MODE_FM)
       if (m_fmEnable) {
         bool cos = getCOSInt();
@@ -623,6 +655,24 @@ void CIO::process()
     }
 #endif
 
+#if defined(MODE_DPMR)
+    else if (m_modemState == STATE_DPMR) {
+      if (m_dpmrEnable) {
+        q15_t DPMRValsTmp[RX_BLOCK_SIZE];
+#if defined(USE_DCBLOCKER)
+        ::arm_fir_fast_q15(&m_nxdnFilter, dcSamples, DPMRValsTmp, RX_BLOCK_SIZE);
+#else
+        ::arm_fir_fast_q15(&m_nxdnFilter, samples, DPMRValsTmp, RX_BLOCK_SIZE);
+#endif
+
+        q15_t DPMRVals[RX_BLOCK_SIZE];
+        ::arm_fir_fast_q15(&m_nxdnISincFilter, DPMRValsTmp, DPMRVals, RX_BLOCK_SIZE);
+
+        dpmrRX.samples(DPMRVals, rssi, RX_BLOCK_SIZE);
+      }
+    }
+#endif
+
 #if defined(MODE_FM)
     else if (m_modemState == STATE_FM) {
       bool cos = getCOSInt();
@@ -694,6 +744,9 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
     case STATE_M17:
       txLevel = m_m17TXLevel;
       break;
+    case STATE_DPMR:
+      txLevel = m_dpmrTXLevel;
+      break;
     case STATE_POCSAG:
       txLevel = m_pocsagTXLevel;
       break;
@@ -755,6 +808,7 @@ void CIO::setMode(MMDVM_STATE state)
     case STATE_P25:    setP25Int(false);    break;
     case STATE_NXDN:   setNXDNInt(false);   break;
     case STATE_M17:    setM17Int(false);    break;
+    case STATE_DPMR:   setDPMRInt(false);   break;
     case STATE_POCSAG: setPOCSAGInt(false); break;
     case STATE_FM:     setFMInt(false);     break;
     default: break;
@@ -767,6 +821,7 @@ void CIO::setMode(MMDVM_STATE state)
     case STATE_P25:    setP25Int(true);    break;
     case STATE_NXDN:   setNXDNInt(true);   break;
     case STATE_M17:    setM17Int(true);    break;
+    case STATE_DPMR:   setDPMRInt(true);   break;
     case STATE_POCSAG: setPOCSAGInt(true); break;
     case STATE_FM:     setFMInt(true);     break;
     default: break;
@@ -776,7 +831,7 @@ void CIO::setMode(MMDVM_STATE state)
   m_modemState = state;
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)
+void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t dpmrTXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout)
 {
   m_pttInvert = pttInvert;
 
@@ -788,6 +843,7 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
   m_p25TXLevel    = q15_t(p25TXLevel * 128);
   m_nxdnTXLevel   = q15_t(nxdnTXLevel * 128);
   m_m17TXLevel    = q15_t(m17TXLevel * 128);
+  m_dpmrTXLevel   = q15_t(dpmrTXLevel * 128);
   m_pocsagTXLevel = q15_t(pocsagTXLevel * 128);
   m_fmTXLevel     = q15_t(fmTXLevel * 128);
   m_ax25TXLevel   = q15_t(ax25TXLevel * 128);
@@ -807,6 +863,7 @@ void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rx
     m_p25TXLevel    = -m_p25TXLevel;
     m_nxdnTXLevel   = -m_nxdnTXLevel;
     m_m17TXLevel    = -m_m17TXLevel;
+    m_dpmrTXLevel   = -m_dpmrTXLevel;
     m_pocsagTXLevel = -m_pocsagTXLevel;
   }
 }

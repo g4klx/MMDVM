@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -69,6 +69,13 @@ public:
   void writeM17Stream(const uint8_t* data, uint8_t length);
   void writeM17Lost();
   void writeM17EOT();
+#endif
+
+#if defined(MODE_DPMR)
+  void writeDPMRHeader(const uint8_t* header, uint8_t length);
+  void writeDPMRData(const uint8_t* data, uint8_t length);
+  void writeDPMRLost();
+  void writeDPMREOT();
 #endif
 
 #if defined(MODE_AX25)

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2024 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,7 @@ bool m_ysfEnable    = true;
 bool m_p25Enable    = true;
 bool m_nxdnEnable   = true;
 bool m_m17Enable    = true;
+bool m_dpmrEnable   = true;
 bool m_pocsagEnable = true;
 bool m_fmEnable     = true;
 bool m_ax25Enable   = true;
@@ -81,6 +82,11 @@ CM17RX m17RX;
 CM17TX m17TX;
 
 CCalM17 calM17;
+#endif
+
+#if defined(MODE_NXDN)
+CDPMRRX dpmrRX;
+CDPMRTX dpmrTX;
 #endif
 
 #if defined(MODE_POCSAG)
@@ -149,6 +155,11 @@ void loop()
 #if defined(MODE_M17)
   if (m_m17Enable && m_modemState == STATE_M17)
     m17TX.process();
+#endif
+
+#if defined(MODE_DPMR)
+  if (m_dpmrEnable && m_modemState == STATE_DPMR)
+    dpmrTX.process();
 #endif
 
 #if defined(MODE_POCSAG)

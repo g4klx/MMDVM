@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -37,6 +37,9 @@
 // Enable NXDN support, the boxcar filter sometimes improves the performance of NXDN receive on some systems.
 #define MODE_NXDN
 #define USE_NXDN_BOXCAR
+
+// Enable dPMR support.
+#define	MODE_DPMR
 
 // Enable M17 support.
 #define MODE_M17
@@ -124,6 +127,9 @@
 
 // Use the D-Star and YSF LEDs for FM
 #define USE_ALTERNATE_FM_LEDS
+
+// Use the DMR and YSF LEDs for dPMR
+#define USE_ALTERNATE_DPMR_LEDS
 
 #endif
 

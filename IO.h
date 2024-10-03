@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t dpmrLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -96,16 +96,16 @@ private:
   q15_t                m_boxcar5State[30U];        // NoTaps + BlockSize - 1,  6 + 20 - 1 plus some spare
 #endif
 
-#if defined(MODE_NXDN)
-#if defined(USE_NXDN_BOXCAR)
+#if defined(MODE_NXDN) && defined(USE_NXDN_BOXCAR)
   arm_fir_instance_q15 m_boxcar10Filter;
   q15_t                m_boxcar10State[40U];      // NoTaps + BlockSize - 1, 10 + 20 - 1 plus some spare
-#else
+#endif
+
+#if defined(MODE_DPMR) || (defined(MODE_NXDN) && !defined(USE_NXDN_BOXCAR))
   arm_fir_instance_q15 m_nxdnFilter;
   arm_fir_instance_q15 m_nxdnISincFilter;
   q15_t                m_nxdnState[110U];         // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
   q15_t                m_nxdnISincState[60U];     // NoTaps + BlockSize - 1, 32 + 20 - 1 plus some spare
-#endif
 #endif
 
 #if defined(MODE_M17)
@@ -122,6 +122,7 @@ private:
   q15_t                m_p25TXLevel;
   q15_t                m_nxdnTXLevel;
   q15_t                m_m17TXLevel;
+  q15_t                m_dpmrTXLevel;
   q15_t                m_pocsagTXLevel;
   q15_t                m_fmTXLevel;
   q15_t                m_ax25TXLevel;
@@ -160,6 +161,7 @@ private:
   void setNXDNInt(bool on);
   void setPOCSAGInt(bool on);
   void setM17Int(bool on);
+  void setDPMRInt(bool on);
   void setFMInt(bool on);
   
   void delayInt(unsigned int dly);
