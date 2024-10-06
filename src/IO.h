@@ -161,8 +161,6 @@ private:
   void setPOCSAGInt(bool on);
   void setM17Int(bool on);
   void setFMInt(bool on);
-  
-  void delayInt(unsigned int dly);
 };
 
 #endif

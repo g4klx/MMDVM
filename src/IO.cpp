@@ -237,7 +237,7 @@ void CIO::selfTest()
     setFMInt(ledValue);
 #endif
 #endif
-    delayInt(250);
+    ::delay(250);
   }
 
 #if defined(MODE_LEDS)
@@ -259,63 +259,63 @@ void CIO::selfTest()
 #endif
   setDStarInt(true);
 
-  delayInt(250);
+  ::delay(250);
   setDMRInt(true);
 
-  delayInt(250);
+  ::delay(250);
   setYSFInt(true);
 
-  delayInt(250);
+  ::delay(250);
   setP25Int(true);
 
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
-  delayInt(250);
+  ::delay(250);
   setNXDNInt(true);
 #endif
 
 #if !defined(USE_ALTERNATE_M17_LEDS)
-  delayInt(250);
+  ::delay(250);
   setM17Int(true);
 #endif
 
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
-  delayInt(250);
+  ::delay(250);
   setPOCSAGInt(true);
 #endif
 
 #if !defined(USE_ALTERNATE_FM_LEDS)
-  delayInt(250);
+  ::delay(250);
   setFMInt(true);
 
-  delayInt(250);
+  ::delay(250);
   setFMInt(false);
 #endif
 
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
-  delayInt(250);
+  ::delay(250);
   setPOCSAGInt(false);
 #endif
 
 #if !defined(USE_ALTERNATE_M17_LEDS)
-  delayInt(250);
+  ::delay(250);
   setM17Int(false);
 #endif
 
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
-  delayInt(250);
+  ::delay(250);
   setNXDNInt(false);
 #endif
 
-  delayInt(250);
+  ::delay(250);
   setP25Int(false);
 
-  delayInt(250);
+  ::delay(250);
   setYSFInt(false);
 
-  delayInt(250);
+  ::delay(250);
   setDMRInt(false);
 
-  delayInt(250);
+  ::delay(250);
   setDStarInt(false);
 #endif
 }

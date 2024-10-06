@@ -78,7 +78,7 @@ void CP25TX::process()
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = P25_START_SYNC;
     } else {
-      uint8_t length;
+      uint8_t length = 0U;
       m_buffer.get(length);
       for (uint8_t i = 0U; i < length; i++) {
         uint8_t c = 0U;

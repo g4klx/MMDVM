@@ -193,7 +193,7 @@ void CAX25RX::initRand() //Can also be used to seed the rng with more entropy du
 {
   m_a = (m_a ^ m_c ^ m_x);
   m_b = (m_b + m_a);
-  m_c = (m_c + (m_b >> 1) ^ m_a);
+  m_c = (m_c + ((m_b >> 1) ^ m_a));
 }
 
 uint8_t CAX25RX::rand()
@@ -202,7 +202,7 @@ uint8_t CAX25RX::rand()
 
   m_a = (m_a ^ m_c ^ m_x);         //note the mix of addition and XOR
   m_b = (m_b + m_a);               //And the use of very few instructions
-  m_c = (m_c + (m_b >> 1) ^ m_a);  //the right shift is to ensure that high-order bits from b can affect  
+  m_c = (m_c + ((m_b >> 1) ^ m_a));  //the right shift is to ensure that high-order bits from b can affect  
 
   return uint8_t(m_c);             //low order bits of other variables
 }
