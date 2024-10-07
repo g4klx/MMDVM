@@ -100,14 +100,20 @@ public:
   void writeDebugDump(const uint8_t* data, uint16_t length);
 
 private:
-  uint8_t   m_buffer[512U];
-  uint16_t  m_ptr;
-  uint16_t  m_len;
-  bool      m_debug;
+  HardwareSerial m_host;
+#if defined(SERIAL_REPEATER)
+  HardwareSerial m_rpt;
+#endif
+  uint8_t        m_buffer[512U];
+  uint16_t       m_ptr;
+  uint16_t       m_len;
+  bool           m_debug;
   CRingBuffer<uint8_t> m_serialData;
-  int       m_lastSerialAvail;
-  uint16_t  m_lastSerialAvailCount;
+  int            m_lastSerialAvail;
+  uint16_t       m_lastSerialAvailCount;
+#if defined(I2C_REPEATER)
   CRingBuffer<uint8_t> m_i2CData;
+#endif
 
   void    sendACK(uint8_t type);
   void    sendNAK(uint8_t type, uint8_t err);

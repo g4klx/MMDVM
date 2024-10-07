@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2013,2015-2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2013,2015-2021,2024 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 
 #include "SerialPort.h"
 #include "Version.h"
+#include "IOPins.h"
 
 const uint8_t MMDVM_FRAME_START  = 0xE0U;
 
@@ -97,18 +98,6 @@ const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 const uint8_t MMDVM_DEBUG_DUMP   = 0xFAU;
 
-#if EXTERNAL_OSC == 12000000
-#define TCXO "12.0000 MHz"
-#elif EXTERNAL_OSC == 12288000
-#define TCXO "12.2880 MHz"
-#elif EXTERNAL_OSC == 14400000
-#define TCXO "14.4000 MHz"
-#elif EXTERNAL_OSC == 19200000
-#define TCXO "19.2000 Mhz"
-#else
-#define TCXO "NO TCXO"
-#endif
-
 #if defined(DRCC_DVM_NQF)
 #define	HW_TYPE	"MMDVM DRCC_DVM_NQF"
 #elif defined(DRCC_DVM_HHP446)
@@ -122,11 +111,11 @@ const uint8_t MMDVM_DEBUG_DUMP   = 0xFAU;
 #endif
 
 #if defined(GITVERSION)
-#define concat(h, a, b, c) h " " a " " b " GitID #" c ""
-const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, GITVERSION);
+#define concat(h, a, b) h " " a " GitID #" b ""
+const char HARDWARE[] = concat(HW_TYPE, VERSION, GITVERSION);
 #else
-#define concat(h, a, b, c, d) h " " a " " b " (Build: " c " " d ")"
-const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, __TIME__, __DATE__);
+#define concat(h, a, b, c) h " " a " (Build: " b " " c ")"
+const char HARDWARE[] = concat(HW_TYPE, VERSION, __TIME__, __DATE__);
 #endif
 
 const uint8_t PROTOCOL_VERSION   = 2U;
@@ -136,14 +125,20 @@ const int      MAX_SERIAL_DATA  = 250;
 const uint16_t MAX_SERIAL_COUNT = 100U;
 
 CSerialPort::CSerialPort() :
+m_host(PIN_HOST_RXD, PIN_HOST_TXD),
+#if defined(SERIAL_REPEATER)
+m_rpt(PIN_RPT_RXD, PIN_RPT_TXD),
+#endif
 m_buffer(),
 m_ptr(0U),
 m_len(0U),
 m_debug(false),
 m_serialData(),
 m_lastSerialAvail(0),
-m_lastSerialAvailCount(0U),
-m_i2CData()
+m_lastSerialAvailCount(0U)
+#if defined(I2C_REPEATER)
+,m_i2CData()
+#endif
 {
 }
 
@@ -156,7 +151,7 @@ void CSerialPort::sendACK(uint8_t type)
   reply[2U] = MMDVM_ACK;
   reply[3U] = type;
 
-  writeInt(1U, reply, 4);
+  m_host.write(reply, 4);
 }
 
 void CSerialPort::sendNAK(uint8_t type, uint8_t err)
@@ -169,7 +164,7 @@ void CSerialPort::sendNAK(uint8_t type, uint8_t err)
   reply[3U] = type;
   reply[4U] = err;
 
-  writeInt(1U, reply, 5);
+  m_host.write(reply, 5);
 }
 
 void CSerialPort::getStatus()
@@ -305,7 +300,7 @@ void CSerialPort::getStatus()
   reply[18U] = 0x00U;
   reply[19U] = 0x00U;
 
-  writeInt(1U, reply, 20);
+  m_host.write(reply, 20);
 }
 
 void CSerialPort::getVersion()
@@ -363,7 +358,7 @@ void CSerialPort::getVersion()
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
@@ -893,24 +888,24 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
 
 void CSerialPort::start()
 {
-  beginInt(1U, SERIAL_SPEED);
+  m_host.begin(SERIAL_SPEED);
 
 #if defined(SERIAL_REPEATER)
   #if defined(SERIAL_REPEATER_BAUD_RATE)
-    beginInt(3U, SERIAL_REPEATER_BAUD_RATE);
+    m_rpt.begin(SERIAL_REPEATER_BAUD_RATE);
   #else
-    beginInt(3U, 9600);
+    m_rpt.begin(9600);
   #endif
 #endif
 #if defined(I2C_REPEATER)
-  beginInt(10U, 9600);
+  m_rpt.begin(9600);
 #endif
 }
 
 void CSerialPort::process()
 {
-  while (availableForReadInt(1U)) {
-    uint8_t c = readInt(1U);
+  while (m_host.available()) {
+    uint8_t c = m_host.read();
 
     if (m_ptr == 0U) {
       if (c == MMDVM_FRAME_START) {
@@ -961,23 +956,23 @@ void CSerialPort::process()
   // Write any outgoing serial data
   uint16_t serialSpace = m_serialData.getData();
   if (serialSpace > 0U) {
-    int avail = availableForWriteInt(3U);
+    int avail = m_rpt.availableForWrite();
     if (avail < serialSpace)
       serialSpace = avail;
 
     for (uint16_t i = 0U; i < serialSpace; i++) {
       uint8_t c = 0U;
       m_serialData.get(c);
-      writeInt(3U, &c, 1U);
+      m_rpt.write(&c, 1U);
     }
   }
 
   // Read any incoming serial data, and send out in batches
-  int serialAvail = availableForReadInt(3U);
+  int serialAvail = m_rpt.available();
   if ((serialAvail > 0 && serialAvail == m_lastSerialAvail && m_lastSerialAvailCount >= MAX_SERIAL_COUNT) || (serialAvail >= MAX_SERIAL_DATA)) {
     uint8_t buffer[MAX_SERIAL_DATA];
     for (int i = 0; i < serialAvail && i < MAX_SERIAL_DATA; i++) {
-      buffer[i] = readInt(3U);
+      buffer[i] = m_rpt.read();
       m_lastSerialAvail--;
     }
     writeSerialData(buffer, serialAvail - m_lastSerialAvail);
@@ -994,14 +989,14 @@ void CSerialPort::process()
   // Write any outgoing serial data
   uint16_t i2CSpace = m_i2CData.getData();
   if (i2CSpace > 0U) {
-    int avail = availableForWriteInt(10U);
+    int avail = m_rpt.available();
     if (avail < i2CSpace)
       i2CSpace = avail;
 
     for (uint16_t i = 0U; i < i2CSpace; i++) {
       uint8_t c = 0U;
       m_i2CData.get(c);
-      writeInt(10U, &c, 1U);
+      m_rpt.write(&c, 1U);
     }
   }
 #endif
@@ -1457,7 +1452,7 @@ void CSerialPort::writeDStarHeader(const uint8_t* header, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDStarData(const uint8_t* data, uint8_t length)
@@ -1480,7 +1475,7 @@ void CSerialPort::writeDStarData(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDStarLost()
@@ -1497,7 +1492,7 @@ void CSerialPort::writeDStarLost()
   reply[1U] = 3U;
   reply[2U] = MMDVM_DSTAR_LOST;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 
 void CSerialPort::writeDStarEOT()
@@ -1514,7 +1509,7 @@ void CSerialPort::writeDStarEOT()
   reply[1U] = 3U;
   reply[2U] = MMDVM_DSTAR_EOT;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 #endif
 
@@ -1539,7 +1534,7 @@ void CSerialPort::writeDMRData(bool slot, const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDMRLost(bool slot)
@@ -1556,7 +1551,7 @@ void CSerialPort::writeDMRLost(bool slot)
   reply[1U] = 3U;
   reply[2U] = slot ? MMDVM_DMR_LOST2 : MMDVM_DMR_LOST1;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 #endif
 
@@ -1581,7 +1576,7 @@ void CSerialPort::writeYSFData(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeYSFLost()
@@ -1598,7 +1593,7 @@ void CSerialPort::writeYSFLost()
   reply[1U] = 3U;
   reply[2U] = MMDVM_YSF_LOST;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 #endif
 
@@ -1623,7 +1618,7 @@ void CSerialPort::writeP25Hdr(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeP25Ldu(const uint8_t* data, uint8_t length)
@@ -1646,7 +1641,7 @@ void CSerialPort::writeP25Ldu(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeP25Lost()
@@ -1663,7 +1658,7 @@ void CSerialPort::writeP25Lost()
   reply[1U] = 3U;
   reply[2U] = MMDVM_P25_LOST;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 #endif
 
@@ -1688,7 +1683,7 @@ void CSerialPort::writeNXDNData(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeNXDNLost()
@@ -1705,7 +1700,7 @@ void CSerialPort::writeNXDNLost()
   reply[1U] = 3U;
   reply[2U] = MMDVM_NXDN_LOST;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 #endif
 
@@ -1730,7 +1725,7 @@ void CSerialPort::writeM17LinkSetup(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeM17Stream(const uint8_t* data, uint8_t length)
@@ -1753,7 +1748,7 @@ void CSerialPort::writeM17Stream(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeM17EOT()
@@ -1770,7 +1765,7 @@ void CSerialPort::writeM17EOT()
   reply[1U] = 3U;
   reply[2U] = MMDVM_M17_EOT;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 
 void CSerialPort::writeM17Lost()
@@ -1787,7 +1782,7 @@ void CSerialPort::writeM17Lost()
   reply[1U] = 3U;
   reply[2U] = MMDVM_M17_LOST;
 
-  writeInt(1U, reply, 3);
+  m_host.write(reply, 3);
 }
 #endif
 
@@ -1812,7 +1807,7 @@ void CSerialPort::writeFMData(const uint8_t* data, uint16_t length)
     for (uint16_t i = 0U; i < length; i++)
       reply[i + 4U] = data[i];
 
-    writeInt(1U, reply, length + 4U);
+    m_host.write(reply, length + 4U);
   } else {
     reply[1U] = length + 3U;
     reply[2U] = MMDVM_FM_DATA;
@@ -1820,7 +1815,7 @@ void CSerialPort::writeFMData(const uint8_t* data, uint16_t length)
     for (uint16_t i = 0U; i < length; i++)
       reply[i + 3U] = data[i];
 
-    writeInt(1U, reply, length + 3U);
+    m_host.write(reply, length + 3U);
   }
 }
 
@@ -1839,7 +1834,7 @@ void CSerialPort::writeFMStatus(uint8_t status)
   reply[2U] = MMDVM_FM_STATUS;
   reply[3U] = status;
 
-  writeInt(1U, reply, 4U);
+  m_host.write(reply, 4U);
 }
 
 void CSerialPort::writeFMEOT()
@@ -1856,7 +1851,7 @@ void CSerialPort::writeFMEOT()
   reply[1U] = 3U;
   reply[2U] = MMDVM_FM_EOT;
 
-  writeInt(1U, reply, 3U);
+  m_host.write(reply, 3U);
 }
 #endif
 
@@ -1881,7 +1876,7 @@ void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
     for (uint16_t i = 0U; i < length; i++)
       reply[i + 4U] = data[i];
 
-    writeInt(1U, reply, length + 4U);
+    m_host.write(reply, length + 4U);
   } else {
     reply[1U] = length + 3U;
     reply[2U] = MMDVM_AX25_DATA;
@@ -1889,7 +1884,7 @@ void CSerialPort::writeAX25Data(const uint8_t* data, uint16_t length)
     for (uint16_t i = 0U; i < length; i++)
       reply[i + 3U] = data[i];
 
-    writeInt(1U, reply, length + 3U);
+    m_host.write(reply, length + 3U);
   }
 }
 #endif
@@ -1909,7 +1904,7 @@ void CSerialPort::writeSerialData(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 #endif
 
@@ -1928,7 +1923,7 @@ void CSerialPort::writeI2CData(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 #endif
 
@@ -1949,7 +1944,7 @@ void CSerialPort::writeCalData(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
@@ -1969,7 +1964,7 @@ void CSerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDebug(const char* text)
@@ -1989,7 +1984,7 @@ void CSerialPort::writeDebug(const char* text)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count, true);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1)
@@ -2012,7 +2007,7 @@ void CSerialPort::writeDebug(const char* text, int16_t n1)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count, true);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
@@ -2038,7 +2033,7 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count, true);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3)
@@ -2067,7 +2062,7 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count, true);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4)
@@ -2099,7 +2094,7 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
 
   reply[1U] = count;
 
-  writeInt(1U, reply, count, true);
+  m_host.write(reply, count);
 }
 
 void CSerialPort::writeDebugDump(const uint8_t* data, uint16_t length)
@@ -2116,7 +2111,7 @@ void CSerialPort::writeDebugDump(const uint8_t* data, uint16_t length)
     for (uint16_t i = 0U; i < length; i++)
       reply[i + 4U] = data[i];
 
-    writeInt(1U, reply, length + 4U);
+    m_host.write(reply, length + 4U);
   } else {
     reply[1U] = length + 3U;
     reply[2U] = MMDVM_DEBUG_DUMP;
@@ -2124,6 +2119,6 @@ void CSerialPort::writeDebugDump(const uint8_t* data, uint16_t length)
     for (uint16_t i = 0U; i < length; i++)
       reply[i + 3U] = data[i];
 
-    writeInt(1U, reply, length + 3U);
+    m_host.write(reply, length + 3U);
   }
 }

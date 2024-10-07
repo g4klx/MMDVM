@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -143,24 +143,24 @@ private:
 
   bool                 m_lockout;
 
-  // Hardware specific routines
-  void initInt();
-  void startInt();
+  // Hardware access routines
+  void initHardware();
+  void startHardware();
 
-  bool getCOSInt();
+  bool getCOS();
 
-  void setLEDInt(bool on);
-  void setPTTInt(bool on);
-  void setCOSInt(bool on);
+  void setLED(bool on);
+  void setPTT(bool on);
+  void setCOS(bool on);
 
-  void setDStarInt(bool on);
-  void setDMRInt(bool on);
-  void setYSFInt(bool on);
-  void setP25Int(bool on);
-  void setNXDNInt(bool on);
-  void setPOCSAGInt(bool on);
-  void setM17Int(bool on);
-  void setFMInt(bool on);
+  void setDStar(bool on);
+  void setDMR(bool on);
+  void setYSF(bool on);
+  void setP25(bool on);
+  void setNXDN(bool on);
+  void setPOCSAG(bool on);
+  void setM17(bool on);
+  void setFM(bool on);
 };
 
 #endif

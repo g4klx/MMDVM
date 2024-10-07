@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2024 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -20,6 +20,7 @@
 
 #include "Config.h"
 #include "Globals.h"
+#include "IOPins.h"
 #include "IO.h"
 
 #if defined(USE_DCBLOCKER)
@@ -204,7 +205,7 @@ m_lockout(false)
   m_rrc05Filter.pCoeffs = RRC_0_5_FILTER;
 #endif
 
-  initInt();
+  initHardware();
   
   selfTest();
 }
@@ -217,106 +218,106 @@ void CIO::selfTest()
     ledValue = !ledValue;
 
     // We exclude PTT to avoid trigger the transmitter
-    setLEDInt(ledValue);
-    setCOSInt(ledValue);
+    setLED(ledValue);
+    setCOS(ledValue);
 #if defined(MODE_LEDS)
-    setDStarInt(ledValue);
-    setDMRInt(ledValue);
-    setYSFInt(ledValue);
-    setP25Int(ledValue);
+    setDStar(ledValue);
+    setDMR(ledValue);
+    setYSF(ledValue);
+    setP25(ledValue);
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
-    setNXDNInt(ledValue);
+    setNXDN(ledValue);
 #endif
 #if !defined(USE_ALTERNATE_M17_LEDS)
-    setM17Int(ledValue);
+    setM17(ledValue);
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
-    setPOCSAGInt(ledValue);
+    setPOCSAG(ledValue);
 #endif
 #if !defined(USE_ALTERNATE_FM_LEDS)
-    setFMInt(ledValue);
+    setFM(ledValue);
 #endif
 #endif
     ::delay(250);
   }
 
 #if defined(MODE_LEDS)
-  setDStarInt(false);
-  setDMRInt(false);
-  setYSFInt(false);
-  setP25Int(false);
+  setDStar(false);
+  setDMR(false);
+  setYSF(false);
+  setP25(false);
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
-  setNXDNInt(false);
+  setNXDN(false);
 #endif
 #if !defined(USE_ALTERNATE_M17_LEDS)
-  setM17Int(false);
+  setM17(false);
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
-  setPOCSAGInt(false);
+  setPOCSAG(false);
 #endif
 #if !defined(USE_ALTERNATE_FM_LEDS)
-  setFMInt(false);
+  setFM(false);
 #endif
-  setDStarInt(true);
+  setDStar(true);
 
   ::delay(250);
-  setDMRInt(true);
+  setDMR(true);
 
   ::delay(250);
-  setYSFInt(true);
+  setYSF(true);
 
   ::delay(250);
-  setP25Int(true);
+  setP25(true);
 
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
   ::delay(250);
-  setNXDNInt(true);
+  setNXDN(true);
 #endif
 
 #if !defined(USE_ALTERNATE_M17_LEDS)
   ::delay(250);
-  setM17Int(true);
+  setM17(true);
 #endif
 
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   ::delay(250);
-  setPOCSAGInt(true);
+  setPOCSAG(true);
 #endif
 
 #if !defined(USE_ALTERNATE_FM_LEDS)
   ::delay(250);
-  setFMInt(true);
+  setFM(true);
 
   ::delay(250);
-  setFMInt(false);
+  setFM(false);
 #endif
 
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   ::delay(250);
-  setPOCSAGInt(false);
+  setPOCSAG(false);
 #endif
 
 #if !defined(USE_ALTERNATE_M17_LEDS)
   ::delay(250);
-  setM17Int(false);
+  setM17(false);
 #endif
 
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
   ::delay(250);
-  setNXDNInt(false);
+  setNXDN(false);
 #endif
 
   ::delay(250);
-  setP25Int(false);
+  setP25(false);
 
   ::delay(250);
-  setYSFInt(false);
+  setYSF(false);
 
   ::delay(250);
-  setDMRInt(false);
+  setDMR(false);
 
   ::delay(250);
-  setDStarInt(false);
+  setDStar(false);
 #endif
 }
 
@@ -325,7 +326,7 @@ void CIO::start()
   if (m_started)
     return;
 
-  startInt();
+  startHardware();
 
   m_started = true;
 
@@ -350,30 +351,30 @@ void CIO::process()
     }
 
 #if defined(CONSTANT_SRV_LED)
-    setLEDInt(true);
+    setLED(true);
 #else
     if (m_ledCount >= 24000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
-      setLEDInt(m_ledValue);
+      setLED(m_ledValue);
     }
 #endif
   } else {
     if (m_ledCount >= 240000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
-      setLEDInt(m_ledValue);
+      setLED(m_ledValue);
     }
     return;
   }
 
   if (m_useCOSAsLockout)
-    m_lockout = getCOSInt();
+    m_lockout = getCOS();
 
   // Switch off the transmitter if needed
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
-    setPTTInt(m_pttInvert ? true : false);
+    setPTT(m_pttInvert ? true : false);
     DEBUG1("TX OFF");
   }
 
@@ -504,7 +505,7 @@ void CIO::process()
 
 #if defined(MODE_FM)
       if (m_fmEnable) {
-        bool cos = getCOSInt();
+        bool cos = getCOS();
 #if defined(USE_DCBLOCKER)
         fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
 #else
@@ -625,7 +626,7 @@ void CIO::process()
 
 #if defined(MODE_FM)
     else if (m_modemState == STATE_FM) {
-      bool cos = getCOSInt();
+      bool cos = getCOS();
 #if defined(USE_DCBLOCKER)
       fm.samples(cos, dcSamples, RX_BLOCK_SIZE);
 
@@ -670,7 +671,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   // Switch the transmitter on if needed
   if (!m_tx) {
     m_tx = true;
-    setPTTInt(m_pttInvert ? false : true);
+    setPTT(m_pttInvert ? false : true);
     DEBUG1("TX ON");
   }
 
@@ -732,7 +733,7 @@ uint16_t CIO::getSpace() const
 void CIO::setDecode(bool dcd)
 {
   if (dcd != m_dcd)
-    setCOSInt(dcd ? true : false);
+    setCOS(dcd ? true : false);
 
   m_dcd = dcd;
 }
@@ -749,26 +750,26 @@ void CIO::setMode(MMDVM_STATE state)
 
 #if defined(MODE_LEDS)
   switch (m_modemState) {
-    case STATE_DSTAR:  setDStarInt(false);  break;
-    case STATE_DMR:    setDMRInt(false);    break;
-    case STATE_YSF:    setYSFInt(false);    break;
-    case STATE_P25:    setP25Int(false);    break;
-    case STATE_NXDN:   setNXDNInt(false);   break;
-    case STATE_M17:    setM17Int(false);    break;
-    case STATE_POCSAG: setPOCSAGInt(false); break;
-    case STATE_FM:     setFMInt(false);     break;
+    case STATE_DSTAR:  setDStar(false);  break;
+    case STATE_DMR:    setDMR(false);    break;
+    case STATE_YSF:    setYSF(false);    break;
+    case STATE_P25:    setP25(false);    break;
+    case STATE_NXDN:   setNXDN(false);   break;
+    case STATE_M17:    setM17(false);    break;
+    case STATE_POCSAG: setPOCSAG(false); break;
+    case STATE_FM:     setFM(false);     break;
     default: break;
   }
 
   switch (state) {
-    case STATE_DSTAR:  setDStarInt(true);  break;
-    case STATE_DMR:    setDMRInt(true);    break;
-    case STATE_YSF:    setYSFInt(true);    break;
-    case STATE_P25:    setP25Int(true);    break;
-    case STATE_NXDN:   setNXDNInt(true);   break;
-    case STATE_M17:    setM17Int(true);    break;
-    case STATE_POCSAG: setPOCSAGInt(true); break;
-    case STATE_FM:     setFMInt(true);     break;
+    case STATE_DSTAR:  setDStar(true);  break;
+    case STATE_DMR:    setDMR(true);    break;
+    case STATE_YSF:    setYSF(true);    break;
+    case STATE_P25:    setP25(true);    break;
+    case STATE_NXDN:   setNXDN(true);   break;
+    case STATE_M17:    setM17(true);    break;
+    case STATE_POCSAG: setPOCSAG(true); break;
+    case STATE_FM:     setFM(true);     break;
     default: break;
   }
 #endif
@@ -843,4 +844,157 @@ uint32_t CIO::getWatchdog()
 bool CIO::hasLockout() const
 {
   return m_lockout;
+}
+
+void CIO::initHardware()
+{
+#if defined(PIN_COS)
+  ::pinMode(PIN_COS, INPUT);
+#endif
+
+#if defined(PIN_LED)
+  ::pinMode(PIN_LED, OUTPUT);
+#endif
+#if defined(PIN_PTT)
+  ::pinMode(PIN_PTT, OUTPUT);
+#endif
+#if defined(PIN_COSLED)
+  ::pinMode(PIN_COSLED, OUTPUT);
+#endif
+
+#if defined(MODE_LEDS)
+#if defined(PIN_DSTAR)
+  ::pinMode(PIN_DSTAR, OUTPUT);
+#endif
+#if defined(PIN_DMR)
+  ::pinMode(PIN_DMR, OUTPUT);
+#endif
+#if defined(PIN_YSF)
+  ::pinMode(PIN_YSF, OUTPUT);
+#endif
+#if defined(PIN_P25)
+  ::pinMode(PIN_P25, OUTPUT);
+#endif
+#if defined(PIN_NXDN) && !defined(USE_ALTERNATE_NXDN_LEDS)
+  ::pinMode(PIN_NXDN, OUTPUT);
+#endif
+#if defined(PIN_POCSAG) && !defined(USE_ALTERNATE_POCSAG_LEDS)
+  ::pinMode(PIN_POCSAG, OUTPUT);
+#endif
+#if defined(PIN_FM) && !defined(USE_ALTERNATE_FM_LEDS)
+  ::pinMode(PIN_FM, OUTPUT);
+#endif
+#if defined(PIN_M17) && !defined(USE_ALTERNATE_M17_LEDS)
+  ::pinMode(PIN_M17, OUTPUT);
+#endif
+#endif
+}
+
+void CIO::startHardware()
+{
+  
+}
+
+bool CIO::getCOS()
+{
+  return ::digitalRead(PIN_COS) == HIGH;
+}
+
+void CIO::setLED(bool on)
+{
+   ::digitalWrite(PIN_LED, on ? HIGH : LOW);
+}
+
+void CIO::setPTT(bool on)
+{
+   ::digitalWrite(PIN_PTT, on ? HIGH : LOW);
+}
+
+void CIO::setCOS(bool on)
+{
+   ::digitalWrite(PIN_COSLED, on ? HIGH : LOW);
+}
+
+void CIO::setDStar(bool on)
+{
+#if defined(MODE_LEDS) && defined(PIN_DSTAR)
+   ::digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setDMR(bool on)
+{
+#if defined(MODE_LEDS) && defined(PIN_DMR)
+   ::digitalWrite(PIN_DMR, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setYSF(bool on)
+{
+#if defined(MODE_LEDS) && defined(PIN_YSF)
+   ::digitalWrite(PIN_YSF, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setP25(bool on)
+{
+#if defined(MODE_LEDS) && defined(PIN_P25)
+   ::digitalWrite(PIN_P25, on ? HIGH : LOW);
+#endif
+}
+
+void CIO::setNXDN(bool on)
+{
+#if defined(MODE_LEDS)
+#if defined(USE_ALTERNATE_NXDN_LEDS)
+   ::digitalWrite(PIN_YSF, on ? HIGH : LOW);
+   ::digitalWrite(PIN_P25, on ? HIGH : LOW);
+#else
+#if defined(PIN_NXDN)
+   ::digitalWrite(PIN_NXDN, on ? HIGH : LOW);
+#endif
+#endif
+#endif
+}
+
+void CIO::setM17(bool on)
+{
+#if defined(MODE_LEDS)
+#if defined(USE_ALTERNATE_M17_LEDS)
+   ::digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+   ::digitalWrite(PIN_P25, on ? HIGH : LOW);
+#else
+#if defined(PIN_M17)
+   ::digitalWrite(PIN_M17, on ? HIGH : LOW);
+#endif
+#endif
+#endif
+}
+
+void CIO::setPOCSAG(bool on)
+{
+#if defined(MODE_LEDS)
+#if defined(USE_ALTERNATE_POCSAG_LEDS)
+   ::digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+   ::digitalWrite(PIN_DMR, on ? HIGH : LOW);
+#else
+#if defined(PIN_POCSAG)
+   ::digitalWrite(PIN_POCSAG, on ? HIGH : LOW);
+#endif
+#endif
+#endif
+}
+
+void CIO::setFM(bool on)
+{
+#if defined(MODE_LEDS)
+#if defined(USE_ALTERNATE_FM_LEDS)
+   ::digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
+   ::digitalWrite(PIN_YSF, on ? HIGH : LOW);
+#else
+#if defined(PIN_FM)
+   ::digitalWrite(PIN_FM, on ? HIGH : LOW);
+#endif
+#endif
+#endif
 }

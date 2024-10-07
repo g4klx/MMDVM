@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -50,49 +50,14 @@
 // Enable AX.25 support, this is only enabled if FM is also enabled.
 #define MODE_AX25
 
-// Allow for the use of high quality external clock oscillators
-// The number is the frequency of the oscillator in Hertz.
-//
-// The frequency of the TCXO must be an integer multiple of 48000.
-// Frequencies such as 12.0 Mhz (48000 * 250) and 14.4 Mhz (48000 * 300) are suitable.
-// Frequencies such as 10.0 Mhz (48000 * 208.333) or 20 Mhz (48000 * 416.666) are not suitable.
-//
-// For 12 MHz
-#define EXTERNAL_OSC 12000000
-// For 12.288 MHz
-// #define EXTERNAL_OSC 12288000
-// For 14.4 MHz
-// #define EXTERNAL_OSC 14400000
-// For 19.2 MHz
-// #define EXTERNAL_OSC 19200000
-
 // Select a baud rate for host communication. The faster speeds are needed for external FM to work.
-// #define SERIAL_SPEED 115200 // Suitable for most older boards (Arduino Due, etc). External FM will NOT work with this!
-// #define SERIAL_SPEED 230400 // Only works on newer boards like fast M4, M7, Teensy 3.x. External FM might work with this
-#define SERIAL_SPEED 460800	// Only works on newer boards like fast M4, M7, Teensy 3.x. External FM should work with this
+// #define SERIAL_SPEED 115200 // Suitable for most older boards. External FM will NOT work with this!
+// #define SERIAL_SPEED 230400 // Only works on newer boards like fast M4, M7. External FM might work with this
+#define SERIAL_SPEED 460800	// Only works on newer boards like fast M4, M7. External FM will work with this
 //#define SERIAL_SPEED 500000  // Used with newer boards and Armbian on AllWinner SOCs (H2, H3) that do not support 460800
 
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS
-
-// For the original Arduino Due pin layout
-// #define ARDUINO_DUE_PAPA
-
-// For the ZUM V1.0 and V1.0.1 boards pin layout
-// #define ARDUINO_DUE_ZUM_V10
-
-// For the SP8NTH board
-// #define ARDUINO_DUE_NTH
-
-// For ST Nucleo-64 STM32F446RE board
-// #define STM32F4_NUCLEO_MORPHO_HEADER
-// #define STM32F4_NUCLEO_ARDUINO_HEADER
-
-// Use separate mode pins to switch external channel/filters/bandwidth for example
-// #define MODE_PINS
-
-// For the VK6MST Pi3 Shield communicating over i2c. i2c address & speed defined in i2cTeensy.cpp
-// #define VK6MST_TEENSY_PI3_SHIELD_I2C
 
 // Pass RSSI information to the host
 #define SEND_RSSI_DATA
@@ -108,6 +73,16 @@
 
 // To reduce CPU load, you can remove the DC blocker by commenting out the next line
 #define USE_DCBLOCKER
+
+// Choose the type of modem board in use, only one.
+// The KI6ZUM v0.9 Pi hat, STM32F446 CPU
+#define ZUM_V09_PI
+// The KI6ZUM v1.0 Pi hat, STM32F722 CPU
+// #define ZUM_V10_PI
+// The Repeater Builder V3 board, STM32F446 CPU
+// #define RB_V3_PI
+// The Repeater Builder V5 board, STM32F722 CPU
+// #define RB_V5_PI
 
 // Constant Service LED once repeater is running 
 // Do not use if employing an external hardware watchdog 
