@@ -1,7 +1,3 @@
-*.o
-obj/
-bin/
-GitVersion.h
-build/
+.pio
 .vscode
 

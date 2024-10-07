@@ -28,6 +28,10 @@
 #include "Version.h"
 #include "IOPins.h"
 
+#if defined(I2C_REPEATER)
+#include "Wire.h"
+#endif
+
 const uint8_t MMDVM_FRAME_START  = 0xE0U;
 
 const uint8_t MMDVM_GET_VERSION  = 0x00U;
@@ -98,14 +102,14 @@ const uint8_t MMDVM_DEBUG4       = 0xF4U;
 const uint8_t MMDVM_DEBUG5       = 0xF5U;
 const uint8_t MMDVM_DEBUG_DUMP   = 0xFAU;
 
-#if defined(DRCC_DVM_NQF)
-#define	HW_TYPE	"MMDVM DRCC_DVM_NQF"
-#elif defined(DRCC_DVM_HHP446)
-#define	HW_TYPE	"MMDVM DRCC_DVM_HHP(446)"
-#elif defined(DRCC_DVM_722)
-#define HW_TYPE "MMDVM RB_STM32_DVM(722)"
-#elif defined(DRCC_DVM_446)
-#define HW_TYPE "MMDVM RB_STM32_DVM(446)"
+#if defined(ZUM_V09_PI)
+#define	HW_TYPE	"MMDVM ZUM_V0.9 (446)"
+#elif defined(ZUM_V10_PI)
+#define	HW_TYPE	"MMDVM ZUM_V1.0 (722)"
+#elif defined(RB_V3_PI)
+#define HW_TYPE "MMDVM RB_DVM_V3 (446)"
+#elif defined(RB_V5_PI)
+#define HW_TYPE "MMDVM RB_DVM_V5 (722)"
 #else
 #define	HW_TYPE	"MMDVM"
 #endif
@@ -118,7 +122,7 @@ const char HARDWARE[] = concat(HW_TYPE, VERSION, GITVERSION);
 const char HARDWARE[] = concat(HW_TYPE, VERSION, __TIME__, __DATE__);
 #endif
 
-const uint8_t PROTOCOL_VERSION   = 2U;
+const uint8_t PROTOCOL_VERSION  = 2U;
 
 // Parameters for batching serial data
 const int      MAX_SERIAL_DATA  = 250;
@@ -129,6 +133,9 @@ m_host(PIN_HOST_RXD, PIN_HOST_TXD),
 #if defined(SERIAL_REPEATER)
 m_rpt(PIN_RPT_RXD, PIN_RPT_TXD),
 #endif
+#if defined(I2C_REPEATER)
+m_i2CData(),
+#endif
 m_buffer(),
 m_ptr(0U),
 m_len(0U),
@@ -136,9 +143,6 @@ m_debug(false),
 m_serialData(),
 m_lastSerialAvail(0),
 m_lastSerialAvailCount(0U)
-#if defined(I2C_REPEATER)
-,m_i2CData()
-#endif
 {
 }
 
@@ -346,11 +350,17 @@ void CSerialPort::getVersion()
 #endif
 
   // CPU type/manufacturer. 0=Atmel ARM, 1=NXP ARM, 2=St-Micro ARM
-  reply[6U] = io.getCPU();
+  reply[6U] = 2U;
 
   // Reserve 16 bytes for the UDID
   ::memset(reply + 7U, 0x00U, 16U);
-  io.getUDID(reply + 7U);
+#if defined(ZUM_V09_PI) || defined(RB_V3_PI)
+  ::memcpy(reply + 7U, (void *)0x1FFF7A10, 12U);
+#elif defined(ZUM_V10_PI) || defined(RB_V5_PI)
+  ::memcpy(reply + 7U, (void *)0x1FF07A10, 12U);
+#else
+  ::memcpy(reply + 7U, "????????????", 12U);
+#endif
 
   uint8_t count = 23U;
   for (uint8_t i = 0U; HARDWARE[i] != 0x00U; i++, count++)
@@ -898,7 +908,8 @@ void CSerialPort::start()
   #endif
 #endif
 #if defined(I2C_REPEATER)
-  m_rpt.begin(9600);
+  Wire.begin();
+  Wire.setClock(100000);
 #endif
 }
 
@@ -989,14 +1000,14 @@ void CSerialPort::process()
   // Write any outgoing serial data
   uint16_t i2CSpace = m_i2CData.getData();
   if (i2CSpace > 0U) {
-    int avail = m_rpt.available();
+    int avail = Wire.available();
     if (avail < i2CSpace)
       i2CSpace = avail;
 
     for (uint16_t i = 0U; i < i2CSpace; i++) {
       uint8_t c = 0U;
       m_i2CData.get(c);
-      m_rpt.write(&c, 1U);
+      Wire.write(&c, 1U);
     }
   }
 #endif

@@ -58,10 +58,6 @@ public:
   void resetWatchdog();
   uint32_t getWatchdog();
   
-  uint8_t getCPU() const;
-
-  void getUDID(uint8_t* buffer);
-
   void selfTest();
 
 private:

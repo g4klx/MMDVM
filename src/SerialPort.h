@@ -24,7 +24,7 @@
 #include "RingBuffer.h"
 
 #if !defined(SERIAL_SPEED)
-#define SERIAL_SPEED 115200
+#define SERIAL_SPEED 460800
 #endif
 
 
@@ -104,6 +104,9 @@ private:
 #if defined(SERIAL_REPEATER)
   HardwareSerial m_rpt;
 #endif
+#if defined(I2C_REPEATER)
+  CRingBuffer<uint8_t> m_i2CData;
+#endif
   uint8_t        m_buffer[512U];
   uint16_t       m_ptr;
   uint16_t       m_len;
@@ -111,9 +114,6 @@ private:
   CRingBuffer<uint8_t> m_serialData;
   int            m_lastSerialAvail;
   uint16_t       m_lastSerialAvailCount;
-#if defined(I2C_REPEATER)
-  CRingBuffer<uint8_t> m_i2CData;
-#endif
 
   void    sendACK(uint8_t type);
   void    sendNAK(uint8_t type, uint8_t err);
