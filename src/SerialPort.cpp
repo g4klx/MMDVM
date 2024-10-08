@@ -20,9 +20,8 @@
 #include "Config.h"
 #include "Globals.h"
 
-#if defined(MADEBYMAKEFILE)
-#include "GitVersion.h"
-#endif
+// TODO XXX need to find a way to get the git revision
+// #include "GitVersion.h"
 
 #include "SerialPort.h"
 #include "Version.h"

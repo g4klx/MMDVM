@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2020,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,13 +19,7 @@
 #if !defined(UTILS_H)
 #define  UTILS_H
 
-#if defined(STM32F4XX)
-#include "stm32f4xx.h"
-#elif defined(STM32F7XX)
-#include "stm32f7xx.h"
-#else
 #include <Arduino.h>
-#endif
 
 uint8_t countBits8(uint8_t bits);
 
