@@ -61,6 +61,8 @@ public:
   void selfTest();
 
 private:
+  HardwareTimer         m_timer;
+
   bool                  m_started;
 
   CRingBuffer<TSample>  m_rxBuffer;

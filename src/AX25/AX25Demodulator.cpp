@@ -25,12 +25,11 @@
 #include "AX25Demodulator.h"
 #include "AX25Defines.h"
 
-const float32_t SAMPLE_RATE = 24000.0F;
-const float32_t SYMBOL_RATE = 1200.0F;
+const uint32_t SYMBOL_RATE = 1200U;
 
 const uint16_t DELAY_LEN = 11U;
 
-const float32_t SAMPLES_PER_SYMBOL = SAMPLE_RATE / SYMBOL_RATE;
+const float32_t SAMPLES_PER_SYMBOL = float32_t(SAMPLE_RATE / SYMBOL_RATE);
 const float32_t PLL_LIMIT          = SAMPLES_PER_SYMBOL / 2.0F;
 
 const uint32_t LPF_FILTER_LEN = 48U;

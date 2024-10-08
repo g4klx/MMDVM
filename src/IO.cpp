@@ -80,6 +80,7 @@ const uint16_t BOXCAR5_FILTER_LEN = 6U;
 const uint16_t DC_OFFSET = 2048U;
 
 CIO::CIO() :
+m_timer(TIM2),
 m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
@@ -335,7 +336,6 @@ void CIO::start()
 
 void CIO::process()
 {
-  m_ledCount++;
   if (m_started) {
     // Two seconds timeout
     if (m_watchdog >= 48000U) {
@@ -360,6 +360,7 @@ void CIO::process()
     }
 #endif
   } else {
+    m_ledCount++;
     if (m_ledCount >= 240000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
@@ -846,6 +847,32 @@ bool CIO::hasLockout() const
   return m_lockout;
 }
 
+void IRQHandler()
+{
+  io.interrupt();
+}
+
+void CIO::interrupt()
+{
+  TSample sample = {DC_OFFSET, MARK_NONE};
+  uint16_t rawRSSI = 0U;
+
+  m_txBuffer.get(sample);
+  ::analogWrite(PIN_TX, sample.sample);
+
+  sample.sample = ::analogRead(PIN_RX);
+
+#if defined(SEND_RSSI_DATA)
+  rawRSSI = ::analogRead(PIN_RSSI);
+#endif
+
+  m_rxBuffer.put(sample);
+  m_rssiBuffer.put(rawRSSI);
+
+  m_ledCount++;
+  m_watchdog++;
+}
+
 void CIO::initHardware()
 {
 #if defined(PIN_COS)
@@ -888,11 +915,19 @@ void CIO::initHardware()
   ::pinMode(PIN_M17, OUTPUT);
 #endif
 #endif
+
+  ::analogReadResolution(12);
+  ::analogWriteResolution(12);
+
+  m_timer.setPrescaleFactor((SystemCoreClock / (6 * SAMPLE_RATE)) - 1);
+  m_timer.setOverflow(2);
+  m_timer.attachInterrupt(IRQHandler);
+  m_timer.refresh();              // Make register changes take effect
 }
 
 void CIO::startHardware()
 {
-  
+  m_timer.resume();
 }
 
 bool CIO::getCOS()
