@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2018,2020,2021,2025 by Jonathan Naylor G4KLX
  *   Copyright (C) 2017 by Andy Uribe CA6JAU
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -114,7 +114,7 @@ void CM17TX::process()
   }
 }
 
-uint8_t CM17TX::writeData(const uint8_t* data, uint8_t length)
+uint8_t CM17TX::writeData(const uint8_t* data, uint16_t length)
 {
   if (length != (M17_FRAME_LENGTH_BYTES + 1U))
     return 4U;

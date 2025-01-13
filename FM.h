@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ public:
 
   uint8_t getSpace() const;
 
-  uint8_t writeData(const uint8_t* data, uint8_t length);
+  uint8_t writeData(const uint8_t* data, uint16_t length);
 
 private:
   CFMKeyer             m_callsign;

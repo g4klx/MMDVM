@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2021,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -1205,7 +1205,7 @@ uint8_t CFM::getSpace() const
   return m_inputExtRB.getSpace() / FM_SERIAL_BLOCK_SIZE_BYTES;
 }
 
-uint8_t CFM::writeData(const uint8_t* data, uint8_t length)
+uint8_t CFM::writeData(const uint8_t* data, uint16_t length)
 {
   //todo check if length is a multiple of 3
   m_inputExtRB.addData(data, length);
