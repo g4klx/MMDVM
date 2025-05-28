@@ -358,7 +358,7 @@ void CSerialPort::getVersion()
   io.getUDID(reply + 7U);
 
   uint8_t count = 23U;
-  for (uint8_t i = 0U; HARDWARE[i] != 0x00U; i++, count++)
+  for (uint8_t i = 0U; HARDWARE[i] != 0x00U && i<200U; i++, count++)
     reply[count] = HARDWARE[i];
 
   reply[1U] = count;
@@ -380,6 +380,9 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   bool useCOSAsLockout = (data[0U] & 0x20U) == 0x20U;
   bool simplex         = (data[0U] & 0x80U) == 0x80U;
 
+  // add dmr user mode here or as a new mode?
+  bool dmrUserModeEnabled =  (data[0U] & 0x40U) == 0x40U;
+
   m_debug = (data[0U] & 0x10U) == 0x10U;
 
 #if defined(MODE_DSTAR)
@@ -387,6 +390,16 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 #endif
 #if defined(MODE_DMR)
   bool dmrEnable    = (data[1U] & 0x02U) == 0x02U;
+
+  if(dmrUserModeEnabled && (!m_dmrEnable || !simplex))
+  {
+    DEBUG1("DMR User mode can only be enabled when simplex DMR is enabled");
+    return 4U;
+  }
+
+  m_dmrUserMode = dmrUserModeEnabled && m_dmrEnable;
+#else
+  m_dmrUserMode = false;
 #endif
 #if defined(MODE_YSF)
   bool ysfEnable    = (data[1U] & 0x04U) == 0x04U;
@@ -549,6 +562,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
   dmrRX.setDelay(dmrDelay);
   dmrDMORX.setColorCode(colorCode);
   dmrIdleRX.setColorCode(colorCode);
+  dmrUserRX.setColorCode(colorCode);
 #endif
 #if defined(MODE_YSF)
   m_ysfEnable    = ysfEnable;
@@ -858,6 +872,7 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
     dmrIdleRX.reset();
     dmrDMORX.reset();
     dmrRX.reset();
+    dmrUserRX.reset();
   }
 #endif
 
@@ -1182,36 +1197,50 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
 
 #if defined(MODE_DMR)
     case MMDVM_DMR_DATA1:
-      if (m_dmrEnable) {
-        if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
-          if (m_duplex)
-            err = dmrTX.writeData1(buffer, length);
-        }
-      }
-      if (err == 0U) {
-        if (m_modemState == STATE_IDLE)
-          setMode(STATE_DMR);
-      } else {
-        DEBUG2("Received invalid DMR data", err);
+      if(m_dmrUserMode) {
+        // Ignore
+        err = 9;
+        DEBUG2("DMR user mode is rxonly", err);
         sendNAK(type, err);
+      } else {
+        if (m_dmrEnable) {
+          if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+            if (m_duplex)
+              err = dmrTX.writeData1(buffer, length);
+          }
+        }
+        if (err == 0U) {
+          if (m_modemState == STATE_IDLE)
+            setMode(STATE_DMR);
+        } else {
+          DEBUG2("Received invalid DMR data", err);
+          sendNAK(type, err);
+        }
       }
       break;
 
     case MMDVM_DMR_DATA2:
-      if (m_dmrEnable) {
-        if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
-          if (m_duplex)
-            err = dmrTX.writeData2(buffer, length);
-          else
-            err = dmrDMOTX.writeData(buffer, length);
-        }
-      }
-      if (err == 0U) {
-        if (m_modemState == STATE_IDLE)
-          setMode(STATE_DMR);
-      } else {
-        DEBUG2("Received invalid DMR data", err);
+      if(m_dmrUserMode) {
+        // Ignore
+        err = 9;
+        DEBUG2("DMR user mode is rxonly", err);
         sendNAK(type, err);
+      } else {
+        if (m_dmrEnable) {
+          if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+            if (m_duplex)
+              err = dmrTX.writeData2(buffer, length);
+            else
+              err = dmrDMOTX.writeData(buffer, length);
+          }
+        }
+        if (err == 0U) {
+          if (m_modemState == STATE_IDLE)
+            setMode(STATE_DMR);
+        } else {
+          DEBUG2("Received invalid DMR data", err);
+          sendNAK(type, err);
+        }
       }
       break;
 

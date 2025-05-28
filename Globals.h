@@ -81,6 +81,7 @@ enum MMDVM_STATE {
 #include "DStarTX.h"
 #include "DMRRX.h"
 #include "DMRTX.h"
+#include "DMRUserRX.h"
 #include "YSFRX.h"
 #include "YSFTX.h"
 #include "P25RX.h"
@@ -134,6 +135,7 @@ extern bool m_fmEnable;
 extern bool m_ax25Enable;
 
 extern bool m_duplex;
+extern bool m_dmrUserMode;
 
 extern bool m_tx;
 extern bool m_dcd;
@@ -154,6 +156,7 @@ extern CDMRIdleRX dmrIdleRX;
 extern CDMRRX dmrRX;
 extern CDMRTX dmrTX;
 
+extern CDMRUserRX dmrUserRX;
 extern CDMRDMORX dmrDMORX;
 extern CDMRDMOTX dmrDMOTX;
 

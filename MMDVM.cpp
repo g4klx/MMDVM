@@ -37,6 +37,7 @@ bool m_fmEnable     = true;
 bool m_ax25Enable   = true;
 
 bool m_duplex = true;
+bool m_dmrUserMode = false;
 
 bool m_tx  = false;
 bool m_dcd = false;
@@ -56,6 +57,8 @@ CDMRTX dmrTX;
 
 CDMRDMORX dmrDMORX;
 CDMRDMOTX dmrDMOTX;
+
+CDMRUserRX dmrUserRX;
 
 CCalDMR calDMR;
 #endif
@@ -127,7 +130,9 @@ void loop()
 
 #if defined(MODE_DMR)
   if (m_dmrEnable && m_modemState == STATE_DMR) {
-    if (m_duplex)
+    if(m_dmrUserMode) {
+      // Do nothing - receive only
+    } else if (m_duplex)
       dmrTX.process();
     else
       dmrDMOTX.process();
