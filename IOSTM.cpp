@@ -1,7 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016,2017,2018 by Andy Uribe CA6JAU
- *   Copyright (C) 2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017,2018,2020,2025 by Jonathan Naylor G4KLX
  *   Copyright (C) 2019,2020 by BG5HHP
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -106,14 +106,6 @@ void CIO::initInt()
    GPIO_Init(PORT_NXDN, &GPIO_InitStruct);
 #endif
 
-#if !defined(USE_ALTERNATE_M17_LEDS)
-   // M17 pin
-   RCC_AHB1PeriphClockCmd(RCC_Per_M17, ENABLE);
-   GPIO_InitStruct.GPIO_Pin   = PIN_M17;
-   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-   GPIO_Init(PORT_M17, &GPIO_InitStruct);
-#endif
-
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
    // POCSAG pin
    RCC_AHB1PeriphClockCmd(RCC_Per_POCSAG, ENABLE);
@@ -163,14 +155,6 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Pin   = PIN_MNXDN;
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_MNXDN, &GPIO_InitStruct);
-#endif
-
-#if !defined(USE_ALTERNATE_M17_LEDS)
-   // M17 mode pin
-   RCC_AHB1PeriphClockCmd(RCC_Per_MM17, ENABLE);
-   GPIO_InitStruct.GPIO_Pin   = PIN_MM17;
-   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-   GPIO_Init(PORT_MM17, &GPIO_InitStruct);
 #endif
 
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
@@ -452,27 +436,6 @@ void CIO::setNXDNInt(bool on)
    GPIO_WriteBit(PORT_MP25, PIN_MP25, on ? Bit_SET : Bit_RESET);
 #else
    GPIO_WriteBit(PORT_MNXDN, PIN_MNXDN, on ? Bit_SET : Bit_RESET);
-#endif
-#endif
-}
-
-void CIO::setM17Int(bool on)
-{
-#if defined(MODE_LEDS)
-#if defined(USE_ALTERNATE_M17_LEDS)
-   GPIO_WriteBit(PORT_DSTAR, PIN_DSTAR, on ? Bit_SET : Bit_RESET);
-   GPIO_WriteBit(PORT_P25,   PIN_P25, on ? Bit_SET : Bit_RESET);
-#else
-   GPIO_WriteBit(PORT_M17, PIN_M17, on ? Bit_SET : Bit_RESET);
-#endif
-#endif
-
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-#if defined(USE_ALTERNATE_M17_LEDS)
-   GPIO_WriteBit(PORT_MDSTAR, PIN_MDSTAR, on ? Bit_SET : Bit_RESET);
-   GPIO_WriteBit(PORT_MP25,   PIN_MP25,   on ? Bit_SET : Bit_RESET);
-#else
-   GPIO_WriteBit(PORT_MM17, PIN_MM17, on ? Bit_SET : Bit_RESET);
 #endif
 #endif
 }

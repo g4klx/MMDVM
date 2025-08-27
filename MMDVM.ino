@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2025 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -28,10 +28,8 @@ bool m_dmrEnable    = true;
 bool m_ysfEnable    = true;
 bool m_p25Enable    = true;
 bool m_nxdnEnable   = true;
-bool m_m17Enable    = true;
 bool m_pocsagEnable = true;
 bool m_fmEnable     = true;
-bool m_ax25Enable   = true;
 
 bool m_duplex = true;
 
@@ -76,13 +74,6 @@ CNXDNTX nxdnTX;
 CCalNXDN calNXDN;
 #endif
 
-#if defined(MODE_M17)
-CM17RX m17RX;
-CM17TX m17TX;
-
-CCalM17 calM17;
-#endif
-
 #if defined(MODE_POCSAG)
 CPOCSAGTX  pocsagTX;
 CCalPOCSAG calPOCSAG;
@@ -91,11 +82,6 @@ CCalPOCSAG calPOCSAG;
 #if defined(MODE_FM)
 CFM    fm;
 CCalFM calFM;
-#endif
-
-#if defined(MODE_AX25)
-CAX25RX ax25RX;
-CAX25TX ax25TX;
 #endif
 
 CCalRSSI calRSSI;
@@ -146,19 +132,9 @@ void loop()
     nxdnTX.process();
 #endif
 
-#if defined(MODE_M17)
-  if (m_m17Enable && m_modemState == STATE_M17)
-    m17TX.process();
-#endif
-
 #if defined(MODE_POCSAG)
   if (m_pocsagEnable && (m_modemState == STATE_POCSAG || pocsagTX.busy()))
     pocsagTX.process();
-#endif
-
-#if defined(MODE_AX25)
-  if (m_ax25Enable && (m_modemState == STATE_IDLE || m_modemState == STATE_FM))
-    ax25TX.process();
 #endif
 
 #if defined(MODE_FM)
@@ -189,11 +165,6 @@ void loop()
 #if defined(MODE_NXDN)
   if (m_modemState == STATE_NXDNCAL1K)
     calNXDN.process();
-#endif
-
-#if defined(MODE_M17)
-  if (m_modemState == STATE_M17CAL)
-    calM17.process();
 #endif
 
 #if defined(MODE_POCSAG)
