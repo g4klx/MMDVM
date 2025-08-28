@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -38,17 +38,11 @@
 #define MODE_NXDN
 #define USE_NXDN_BOXCAR
 
-// Enable M17 support.
-#define MODE_M17
-
 // Enable POCSAG support.
 #define MODE_POCSAG
 
 // Enable FM support.
 #define MODE_FM
-
-// Enable AX.25 support, this is only enabled if FM is also enabled.
-#define MODE_AX25
 
 // Allow for the use of high quality external clock oscillators
 // The number is the frequency of the oscillator in Hertz.
@@ -115,9 +109,6 @@
 
 // Use the YSF and P25 LEDs for NXDN
 // #define USE_ALTERNATE_NXDN_LEDS
-
-// Use the D-Star and P25 LEDs for M17
-#define USE_ALTERNATE_M17_LEDS
 
 // Use the D-Star and DMR LEDs for POCSAG
 #define USE_ALTERNATE_POCSAG_LEDS

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2016,2017,2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2016,2017,2018,2020,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -74,9 +74,6 @@ void CIO::initInt()
   pinMode(PIN_P25,    OUTPUT);
 #if !defined(USE_ALTERNATE_NXDN_LEDS)
   pinMode(PIN_NXDN,   OUTPUT);
-#endif
-#if !defined(USE_ALTERNATE_M17_LEDS)
-  pinMode(PIN_M17,    OUTPUT);
 #endif
 #if !defined(USE_ALTERNATE_POCSAG_LEDS)
   pinMode(PIN_POCSAG, OUTPUT);
@@ -237,16 +234,6 @@ void CIO::setNXDNInt(bool on)
   digitalWrite(PIN_P25, on ? HIGH : LOW);
 #else
   digitalWrite(PIN_NXDN, on ? HIGH : LOW);
-#endif
-}
-
-void CIO::setM17Int(bool on)
-{
-#if defined(USE_ALTERNATE_M17_LEDS)
-  digitalWrite(PIN_DSTAR, on ? HIGH : LOW);
-  digitalWrite(PIN_P25,   on ? HIGH : LOW);
-#else
-  digitalWrite(PIN_M17, on ? HIGH : LOW);
 #endif
 }
 

@@ -1,4 +1,4 @@
-This is the source code of the MMDVM firmware that supports D-Star, DMR, System Fusion, P25, NXDN, M17, POCSAG, AX.25, and FM modes.
+This is the source code of the MMDVM firmware that supports D-Star, DMR, System Fusion, P25, NXDN, POCSAG, and FM modes.
 
 It runs on the Arduino Due, the ST-Micro STM32F4xxx and STM32F7xxx processors, as well as the Teensy 3.5/3.6. What these platforms have in common is the use of an ARM Cortex-M3, M4, or M7 processors with a minimum clock speed greater of 80 MHz, and access to at least one analogue to digital converter, one digital to analogue converter, as well as a number of GPIO pins.
 

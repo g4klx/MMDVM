@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2009-2017,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2009-2017,2020,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ const uint8_t NOAVEPTR = 99U;
 
 const uint16_t NOENDPTR = 9999U;
 
-const unsigned int MAX_SYNC_FRAMES = 1U + 1U;
+const unsigned int MAX_SYNC_FRAMES = 4U + 1U;
 
 CYSFRX::CYSFRX() :
 m_state(YSFRXS_NONE),
