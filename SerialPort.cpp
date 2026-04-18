@@ -50,6 +50,7 @@ const uint8_t MMDVM_DMR_LOST1    = 0x19U;
 const uint8_t MMDVM_DMR_DATA2    = 0x1AU;
 const uint8_t MMDVM_DMR_LOST2    = 0x1BU;
 const uint8_t MMDVM_DMR_SHORTLC  = 0x1CU;
+const uint8_t MMDVM_DMR_ALOHA    = 0x14U;
 const uint8_t MMDVM_DMR_START    = 0x1DU;
 const uint8_t MMDVM_DMR_ABORT    = 0x1EU;
 
@@ -466,6 +467,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 #endif
 
 #if defined(MODE_DMR)
+  bool trunking = (data[25U] & 128U) == 128U;
   uint8_t colorCode = data[26U];
   if (colorCode > 15U)
     return 4U;
@@ -484,7 +486,7 @@ uint8_t CSerialPort::setConfig(const uint8_t* data, uint16_t length)
 #if defined(MODE_DMR)
   m_dmrEnable    = dmrEnable;
   dmrDMOTX.setTXDelay(txDelay);
-
+  dmrTX.setTrunking(trunking);
   dmrTX.setColorCode(colorCode);
   dmrRX.setColorCode(colorCode);
   dmrRX.setDelay(dmrDelay);
@@ -1119,6 +1121,15 @@ void CSerialPort::processMessage(uint8_t type, const uint8_t* buffer, uint16_t l
         err = dmrTX.writeShortLC(buffer, length);
       if (err != 0U) {
         DEBUG2("Received invalid DMR Short LC", err);
+        sendNAK(type, err);
+      }
+      break;
+
+    case MMDVM_DMR_ALOHA:
+      if (m_dmrEnable)
+        err = dmrTX.writeAloha(buffer, length);
+      if (err != 0U) {
+        DEBUG2("Received invalid DMR ALOHA", err);
         sendNAK(type, err);
       }
       break;
