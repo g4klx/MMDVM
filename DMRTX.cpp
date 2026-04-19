@@ -378,10 +378,12 @@ void CDMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
     m_cachPtr = 0U;
 
   if (m_cachPtr == 0U) {
-    if ((m_fifo[0U].getData() == 0U && m_fifo[1U].getData() == 0U) && !m_trunking)
-      ::memcpy(m_shortLC, EMPTY_SHORT_LC, 12U);
-    else
-      ::memcpy(m_shortLC, m_newShortLC, 12U);
+    if (m_fifo[0U].getData() == 0U && m_fifo[1U].getData() == 0U) {
+      if(!m_trunking)
+        ::memcpy(m_shortLC, EMPTY_SHORT_LC, 12U);
+      else
+        ::memcpy(m_shortLC, m_newShortLC, 12U);
+    }
   }
 
   ::memcpy(m_poBuffer, m_shortLC + m_cachPtr, 3U);
