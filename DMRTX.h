@@ -65,7 +65,7 @@ public:
   void setColorCode(uint8_t colorCode);
 
 private:
-  CRingBuffer<uint8_t>                        m_fifo[2U];
+  CRingBuffer<uint8_t>             m_fifo[2U];
   arm_fir_interpolate_instance_q15 m_modFilter;
   q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
   DMRTXSTATE                       m_state;
@@ -93,4 +93,3 @@ private:
 #endif
 
 #endif
-
