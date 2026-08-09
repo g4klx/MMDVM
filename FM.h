@@ -75,6 +75,7 @@ private:
   CFMTimer             m_ackDelayTimer;
   CFMTimer             m_hangTimer;
   CFMTimer             m_reverseTimer;
+  CFMTimer             m_extGapTimer;   // debounce for link-mode ext-audio underrun, see linkStateMachine()
   bool                 m_needReverse;
   CFMDirectFormI       m_filterStage1;
   CFMDirectFormI       m_filterStage2;
