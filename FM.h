@@ -80,6 +80,9 @@ private:
   CFMDirectFormI       m_filterStage1;
   CFMDirectFormI       m_filterStage2;
   CFMDirectFormI       m_filterStage3;
+  CFMDirectFormI       m_dsFilterStage1; // anti-alias filter for the downsampler, own state
+  CFMDirectFormI       m_dsFilterStage2;
+  CFMDirectFormI       m_dsFilterStage3;
   CFMBlanking          m_blanking;
   uint8_t              m_accessMode;
   bool                 m_linkMode;

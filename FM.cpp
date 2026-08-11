@@ -68,6 +68,9 @@ m_needReverse(false),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
+m_dsFilterStage1(  724,   1448,   724, 32768, -37895, 21352),//same design, separate state
+m_dsFilterStage2(32768,      0,-32768, 32768, -50339, 19052),
+m_dsFilterStage3(32768, -65536, 32768, 32768, -64075, 31460),
 m_blanking(),
 m_accessMode(1U),
 m_linkMode(false),
@@ -203,8 +206,10 @@ void CFM::repeaterSamples(bool cos, q15_t* samples, const uint16_t* rssi, uint8_
     if (m_duplex) {
       if (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF || m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
         currentSample = m_blanking.process(currentSample);
-        if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-          m_downSampler.addSample(currentSample);
+        if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF)) {
+          q15_t dsSample = m_dsFilterStage3.filter(m_dsFilterStage2.filter(m_dsFilterStage1.filter(currentSample)));
+          m_downSampler.addSample(dsSample);
+        }
 
         currentSample *= currentBoost;
       } else {
@@ -214,9 +219,11 @@ void CFM::repeaterSamples(bool cos, q15_t* samples, const uint16_t* rssi, uint8_
         if (m_state == FS_RELAYING_EXT || m_state == FS_KERCHUNK_EXT) {
           currentSample *= currentBoost;
         } else {
-          if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF))
-            m_downSampler.addSample(currentSample);
-          continue; 
+          if (m_extEnabled && (m_state == FS_RELAYING_RF || m_state == FS_KERCHUNK_RF)) {
+            q15_t dsSample = m_dsFilterStage3.filter(m_dsFilterStage2.filter(m_dsFilterStage1.filter(currentSample)));
+            m_downSampler.addSample(dsSample);
+          }
+          continue;
         }
     }
 
@@ -332,7 +339,8 @@ void CFM::linkSamples(bool cos, q15_t* samples, uint8_t length)
 
     if (m_rfSignal && m_extEnabled) {
       q15_t currentSample = m_blanking.process(currentRFSample);
-      m_downSampler.addSample(currentSample);
+      q15_t dsSample = m_dsFilterStage3.filter(m_dsFilterStage2.filter(m_dsFilterStage1.filter(currentSample)));
+      m_downSampler.addSample(dsSample);
     }
 
     if (!m_extSignal)
@@ -412,6 +420,9 @@ void CFM::reset()
   m_inputExtRB.reset();
 
   m_downSampler.reset();
+  m_dsFilterStage1.reset();
+  m_dsFilterStage2.reset();
+  m_dsFilterStage3.reset();
   m_squelch.reset();
   
   m_needReverse = false;
