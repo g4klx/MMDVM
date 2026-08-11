@@ -27,14 +27,8 @@ const uint16_t FM_TX_BLOCK_SIZE = 100U;
 const uint16_t FM_SERIAL_BLOCK_SIZE = 80U;//this is the number of sample pairs to send over serial. One sample pair is 3bytes.
                                           //three times this value shall never exceed 252
 const uint16_t FM_SERIAL_BLOCK_SIZE_BYTES = FM_SERIAL_BLOCK_SIZE * 3U;
-
-// How long a link-mode external-audio underrun is tolerated before it is
-// treated as a real end of transmission (see linkStateMachine()). A gap
-// shorter than this is inaudible on its own; the PTT drop-and-rekey it
-// would otherwise trigger is not. Tune here if needed -- no other code
-// depends on this value.
-const uint16_t FM_LINK_EXT_GAP_MS = 60U;
-
+const uint16_t FM_LINK_EXT_GAP_MS = 60U;// How long a link-mode external-audio underrun is tolerated before it is
+                                        // treated as a real end of transmission (see linkStateMachine()).
 const uint8_t FS_LISTENING         = 0U;
 const uint8_t FS_KERCHUNK_RF       = 1U;
 const uint8_t FS_RELAYING_RF       = 2U;
@@ -259,7 +253,6 @@ void CFM::linkSamples(bool cos, q15_t* samples, uint8_t length)
 
   uint8_t i = 0U;
   for (; i < length; i++) {
-    // ARMv7-M has hardware integer division
     q15_t currentRFSample = q15_t((q31_t(samples[i]) << 8) / m_rxLevel);
 
     if (m_noiseSquelch)
@@ -267,8 +260,7 @@ void CFM::linkSamples(bool cos, q15_t* samples, uint8_t length)
 
     // Zero-initialized: getSample() leaves this untouched on underrun, and
     // with the ext-gap debounce below, m_extSignal can now stay true for a
-    // few samples past that point -- silence, not stack garbage, must be
-    // what gets played out to the modem in that window.
+    // few samples past that point
     q15_t currentExtSample = 0;
     bool inputExt = m_inputExtRB.getSample(currentExtSample);//always consume the external input data so it does not overflow
     inputExt = inputExt && m_extEnabled;
@@ -1272,9 +1264,9 @@ void CFM::linkStateMachine(bool validRFSignal, bool validExtSignal)
     // the very first bad sample, with zero debounce -- that is what
     // actually keys the transmitter off (IO::process() drops PTT the
     // instant the downstream TX buffer runs dry, see IO.cpp). A gap well
-    // under FM_LINK_EXT_GAP_MS is inaudible on its own; the PTT
-    // drop-and-rekey it triggers is not. Give it a short grace period
-    // instead, mirroring the RELAYING_EXT/RELAYING_WAIT_EXT pattern the
+    // under FM_LINK_EXT_GAP_MS is less offensive than the PTT
+    // drop-and-rekey it triggers. Give it a short grace period
+    // mirroring the RELAYING_EXT/RELAYING_WAIT_EXT pattern the
     // non-link duplex/simplex paths already use for exactly this
     // situation (see relayingExtStateDuplex()/relayingExtWaitStateDuplex()).
     if (!m_extGapTimer.isRunning()) {
