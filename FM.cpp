@@ -68,12 +68,12 @@ m_needReverse(false),
 m_filterStage1(  724,   1448,   724, 32768, -37895, 21352),//3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
 m_filterStage2(32768,      0,-32768, 32768, -50339, 19052),
 m_filterStage3(32768, -65536, 32768, 32768, -64075, 31460),
-m_dsFilterStage1(  724,   1448,   724, 32768, -37895, 21352),//same design, separate state
-m_dsFilterStage2(32768,      0,-32768, 32768, -50339, 19052),
-m_dsFilterStage3(32768, -65536, 32768, 32768, -64075, 31460),
-m_usFilterStage1(  724,   1448,   724, 32768, -37895, 21352),//same design, separate state
-m_usFilterStage2(32768,      0,-32768, 32768, -50339, 19052),
-m_usFilterStage3(32768, -65536, 32768, 32768, -64075, 31460),
+m_dsFilterStage1(m_filterStage1),//same coefficients, separate state
+m_dsFilterStage2(m_filterStage2),
+m_dsFilterStage3(m_filterStage3),
+m_usFilterStage1(m_filterStage1),//same coefficients, separate state
+m_usFilterStage2(m_filterStage2),
+m_usFilterStage3(m_filterStage3),
 m_blanking(),
 m_accessMode(1U),
 m_linkMode(false),
