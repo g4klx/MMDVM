@@ -34,6 +34,7 @@ m_sampleIndex(0U)
 
 void CFMDownSampler::addSample(q15_t sample)
 {
+  sample = __SSAT(sample, 12);//clamp before packing to 12 bits
   uint32_t usample = uint32_t(int32_t(sample) + 2048);
   //only take one of three samples
   switch(m_sampleIndex){
@@ -74,6 +75,8 @@ uint16_t CFMDownSampler::getData()
 void CFMDownSampler::reset()
 {
   m_sampleIndex = 0U;
+  m_samplePack  = 0U;
+  m_ringBuffer.reset();
 }
 
 #endif
