@@ -76,11 +76,11 @@ bool CFMUpSampler::getSample(q15_t& sample)
     m_packPointer[1U] = pairPack.byte1;
     m_packPointer[2U] = pairPack.byte2;
 
-    sample = q15_t(m_pack >> 12) - 2048;
+    sample = (q15_t(m_pack >> 12) - 2048) * 3;//restore the 1/3 lost to zero stuffing
     break;
   }
   case 3:
-    sample = q15_t(m_pack & FM_UPSAMPLE_MASK) - 2048;
+    sample = (q15_t(m_pack & FM_UPSAMPLE_MASK) - 2048) * 3;
   break;
   default:
     sample = 0;

@@ -37,6 +37,9 @@ THE SOFTWARE.
 
 #ifndef DIRECTFORMI_H_
 #define DIRECTFORMI_H_
+
+const q31_t FM_FILTER_FRAC_BITS = 12;
+
 class CFMDirectFormI
 {
 public:
@@ -78,13 +81,13 @@ public:
 		m_y2 = 0;
 	}
 
-	// filtering operation: one sample in and one out
-	inline q15_t filter(const q15_t in)
+	// filtering operation: one sample in and one out, both with FM_FILTER_FRAC_BITS fractional bits
+	inline q31_t filter(const q31_t in)
 	{
 		// calculate the output
-		q31_t out_upscaled = c_b0 * in + c_b1 * m_x1 + c_b2 * m_x2 - c_a1 * m_y1 - c_a2 * m_y2;
+		int64_t out_upscaled = int64_t(c_b0) * in + int64_t(c_b1) * m_x1 + int64_t(c_b2) * m_x2 - int64_t(c_a1) * m_y1 - int64_t(c_a2) * m_y2;
 
-		q15_t out = __SSAT(out_upscaled >> 15, 15);
+		q31_t out = q31_t((out_upscaled + (1 << 14)) >> 15);
 
 		// update the delay lines
 		m_x2 = m_x1;
@@ -105,6 +108,38 @@ private:
 	// coefficients
 	q31_t c_b0,c_b1,c_b2; // FIR
 	q31_t c_a1,c_a2; // IIR
+};
+
+// 3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
+class CFMBandpass
+{
+public:
+	CFMBandpass() :
+	m_stage1(  724,   1448,   724, 32768, -37895, 21352),
+	m_stage2(32768,      0,-32768, 32768, -50339, 19052),
+	m_stage3(32768, -65536, 32768, 32768, -64075, 31460)
+	{
+	}
+
+	void reset()
+	{
+		m_stage1.reset();
+		m_stage2.reset();
+		m_stage3.reset();
+	}
+
+	// keep the fractional bits between the stages, round once at the end
+	inline q15_t filter(const q15_t in)
+	{
+		q31_t out = m_stage3.filter(m_stage2.filter(m_stage1.filter(q31_t(in) << FM_FILTER_FRAC_BITS)));
+
+		return q15_t(__SSAT((out + (1 << (FM_FILTER_FRAC_BITS - 1))) >> FM_FILTER_FRAC_BITS, 16));
+	}
+
+private:
+	CFMDirectFormI m_stage1;
+	CFMDirectFormI m_stage2;
+	CFMDirectFormI m_stage3;
 };
 
 #endif /* DIRECTFORMI_H */
