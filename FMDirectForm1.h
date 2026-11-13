@@ -110,38 +110,6 @@ private:
 	q31_t c_a1,c_a2; // IIR
 };
 
-// 3rd order Cheby Filter 300 to 2700Hz, 0.2dB passband ripple, sampling rate 24kHz
-class CFMBandpass
-{
-public:
-	CFMBandpass() :
-	m_stage1(  724,   1448,   724, 32768, -37895, 21352),
-	m_stage2(32768,      0,-32768, 32768, -50339, 19052),
-	m_stage3(32768, -65536, 32768, 32768, -64075, 31460)
-	{
-	}
-
-	void reset()
-	{
-		m_stage1.reset();
-		m_stage2.reset();
-		m_stage3.reset();
-	}
-
-	// keep the fractional bits between the stages, round once at the end
-	inline q15_t filter(const q15_t in)
-	{
-		q31_t out = m_stage3.filter(m_stage2.filter(m_stage1.filter(q31_t(in) << FM_FILTER_FRAC_BITS)));
-
-		return q15_t(__SSAT((out + (1 << (FM_FILTER_FRAC_BITS - 1))) >> FM_FILTER_FRAC_BITS, 16));
-	}
-
-private:
-	CFMDirectFormI m_stage1;
-	CFMDirectFormI m_stage2;
-	CFMDirectFormI m_stage3;
-};
-
 #endif /* DIRECTFORMI_H */
 
 #endif
