@@ -37,6 +37,9 @@ THE SOFTWARE.
 
 #ifndef DIRECTFORMI_H_
 #define DIRECTFORMI_H_
+
+const q31_t FM_FILTER_FRAC_BITS = 12;
+
 class CFMDirectFormI
 {
 public:
@@ -78,13 +81,13 @@ public:
 		m_y2 = 0;
 	}
 
-	// filtering operation: one sample in and one out
-	inline q15_t filter(const q15_t in)
+	// filtering operation: one sample in and one out, both with FM_FILTER_FRAC_BITS fractional bits
+	inline q31_t filter(const q31_t in)
 	{
 		// calculate the output
-		q31_t out_upscaled = c_b0 * in + c_b1 * m_x1 + c_b2 * m_x2 - c_a1 * m_y1 - c_a2 * m_y2;
+		int64_t out_upscaled = int64_t(c_b0) * in + int64_t(c_b1) * m_x1 + int64_t(c_b2) * m_x2 - int64_t(c_a1) * m_y1 - int64_t(c_a2) * m_y2;
 
-		q15_t out = __SSAT(out_upscaled >> 15, 15);
+		q31_t out = q31_t((out_upscaled + (1 << 14)) >> 15);
 
 		// update the delay lines
 		m_x2 = m_x1;

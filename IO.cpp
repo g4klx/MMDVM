@@ -622,16 +622,21 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   for (uint16_t i = 0U; i < length; i++) {
     q31_t res1 = samples[i] * txLevel;
     q15_t res2 = q15_t(__SSAT((res1 >> 15), 16));
-    uint16_t res3 = uint16_t(res2 + m_txDCOffset);
+    int32_t res3 = int32_t(res2) + m_txDCOffset;
 
-    // Detect DAC overflow
-    if (res3 > 4095U)
+    // Detect and clamp DAC overflow
+    if (res3 > 4095) {
       m_dacOverflow++;
+      res3 = 4095;
+    } else if (res3 < 0) {
+      m_dacOverflow++;
+      res3 = 0;
+    }
 
     if (control == NULL)
-      m_txBuffer.put({res3, MARK_NONE});
+      m_txBuffer.put({uint16_t(res3), MARK_NONE});
     else
-      m_txBuffer.put({res3, control[i]});
+      m_txBuffer.put({uint16_t(res3), control[i]});
   }
 }
 
